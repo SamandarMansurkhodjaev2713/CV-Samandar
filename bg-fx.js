@@ -34,12 +34,24 @@
   const ICO_OPACITY = 0.18;
   const ICO_BASE_ROTATION_Y_PER_S = 0.04;
 
-  // ── Layer 2: sphere (mid) ───────────────────────────────────────────────
-  const SPHERE_RADIUS = 2.6;
-  const SPHERE_WIDTH_SEGMENTS = 18;
-  const SPHERE_HEIGHT_SEGMENTS = 10;
-  const SPHERE_OPACITY = 0.12;
-  const SPHERE_BASE_ROTATION_Y_PER_S = -0.06; // counter-rotates for parallax depth
+  // ── Layer 2: energy waveform grid (replaces the old sphere wireframe).
+  // A flat plane is rotated into perspective and the vertex shader displaces Y
+  // by superimposed sine waves. Reads as a moving "data surface" — distinctive
+  // AI/dev aesthetic without competing with foreground content.
+  const GRID_WIDTH = 18;
+  const GRID_DEPTH = 18;
+  const GRID_SEGMENTS_X = 36;
+  const GRID_SEGMENTS_Z = 22;
+  const GRID_POS_Y = -2.2;
+  const GRID_TILT_X = -Math.PI / 2.6;
+  const GRID_TILT_Z = 0;
+  const GRID_OPACITY = 0.22;
+  const GRID_WAVE_SPEED = 0.4;
+  const GRID_WAVE_AMP_PRIMARY = 0.24;
+  const GRID_WAVE_AMP_SECONDARY = 0.16;
+  const GRID_WAVE_FREQ_PRIMARY = 0.55;
+  const GRID_WAVE_FREQ_SECONDARY = 0.85;
+  const GRID_SCROLL_AMP_BOOST = 0.6;
 
   // ── Layer 3: looping particles (near) ──────────────────────────────────
   const PARTICLE_COUNT = 64;
@@ -60,6 +72,15 @@
   const PARALLAX_LERP = 0.08;
   const PARALLAX_MAX_OFFSET = 0.45;           // world-units, total scene shift
   const SCROLL_ROTATION_TURNS = 0.7;          // total Y revolutions for full scroll
+  const SCROLL_BRIGHTNESS_LERP = 0.04;
+  const SCROLL_BRIGHTNESS_VELOCITY_TO_BOOST = 0.55; // 1 unit of velocity → 0.55 brightness gain
+
+  // ── Constellation lines (graph of nearby particles) ────────────────────
+  const CONSTELLATION_DISTANCE = 1.25;        // world-units — pairs closer than this draw a line
+  const CONSTELLATION_MAX_SEGMENTS = 220;     // upper bound; keeps draw buffer bounded
+  const CONSTELLATION_OPACITY_MAX = 0.32;
+  const CONSTELLATION_MOUSE_RADIUS = 3.5;     // world-units — pairs inside this around mouse glow brighter
+  const CONSTELLATION_DISABLE_BELOW_WIDTH = 720;  // disable on small screens (mobile perf)
 
   // ── Section hue shifts (additive, in [-1..1] per channel) ──────────────
   const HUE_SHIFTS_BY_SECTION = {
@@ -137,6 +158,9 @@
 
     let scrollProgress = 0;
     let scrollProgressTarget = 0;
+    let scrollProgressLast = 0;       // for velocity estimate
+    let scrollVelocity = 0;           // smoothed |Δ scrollProgress| per frame
+    let scrollBrightness = 0;         // smoothed brightness boost from scrollVelocity
     let parallaxX = 0;
     let parallaxXTarget = 0;
     let parallaxY = 0;
@@ -156,16 +180,60 @@
     const icoWireframe = new THREE.LineSegments(icoEdges, icoMaterial);
     sceneGroup.add(icoWireframe);
 
-    // ── Layer 2: sphere wireframe ────────────────────────────────────────
-    const sphereGeometry = new THREE.SphereGeometry(
-      SPHERE_RADIUS, SPHERE_WIDTH_SEGMENTS, SPHERE_HEIGHT_SEGMENTS,
-    );
-    const sphereWireGeom = new THREE.WireframeGeometry(sphereGeometry);
-    const sphereMaterial = new THREE.LineBasicMaterial({
-      color: 0xffffff, transparent: true, opacity: SPHERE_OPACITY, depthWrite: false,
+    // ── Layer 2: energy waveform grid (mid-depth, perspective floor).
+    // Vertex shader displaces Y by superimposed sine waves over time + scroll.
+    // Wireframe through ShaderMaterial wireframe flag — a single mesh draw.
+    const gridGeometry = new THREE.PlaneGeometry(GRID_WIDTH, GRID_DEPTH, GRID_SEGMENTS_X, GRID_SEGMENTS_Z);
+    const gridMaterial = new THREE.ShaderMaterial({
+      wireframe: true,
+      transparent: true,
+      depthWrite: false,
+      uniforms: {
+        uTime: { value: 0 },
+        uScrollBoost: { value: 0 },
+        uAccent: { value: new THREE.Vector3(accentColor.r, accentColor.g, accentColor.b) },
+        uOpacity: { value: GRID_OPACITY },
+        uAmpA: { value: GRID_WAVE_AMP_PRIMARY },
+        uAmpB: { value: GRID_WAVE_AMP_SECONDARY },
+        uFreqA: { value: GRID_WAVE_FREQ_PRIMARY },
+        uFreqB: { value: GRID_WAVE_FREQ_SECONDARY },
+      },
+      vertexShader: [
+        "uniform float uTime;",
+        "uniform float uScrollBoost;",
+        "uniform float uAmpA;",
+        "uniform float uAmpB;",
+        "uniform float uFreqA;",
+        "uniform float uFreqB;",
+        "varying float vIntensity;",
+        "void main() {",
+        "  vec3 p = position;",
+        // Superimposed sine waves give a "data surface" feel — no random noise,
+        // so the field stays smooth and predictable.
+        "  float w1 = sin(p.x * uFreqA + uTime * 0.6) * uAmpA;",
+        "  float w2 = cos(p.y * uFreqB + uTime * 0.45) * uAmpB;",
+        "  float w3 = sin((p.x + p.y) * 0.32 + uTime * 0.7) * 0.08;",
+        "  float displacement = (w1 + w2 + w3) * (1.0 + uScrollBoost);",
+        "  p.z += displacement;",
+        "  vIntensity = clamp(0.35 + abs(displacement) * 1.6, 0.2, 1.0);",
+        "  gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);",
+        "}",
+      ].join("\n"),
+      fragmentShader: [
+        "precision mediump float;",
+        "uniform vec3 uAccent;",
+        "uniform float uOpacity;",
+        "varying float vIntensity;",
+        "void main() {",
+        "  gl_FragColor = vec4(uAccent, vIntensity * uOpacity);",
+        "}",
+      ].join("\n"),
     });
-    const sphereWireframe = new THREE.LineSegments(sphereWireGeom, sphereMaterial);
-    sceneGroup.add(sphereWireframe);
+    const grid = new THREE.Mesh(gridGeometry, gridMaterial);
+    grid.rotation.x = GRID_TILT_X;
+    grid.rotation.z = GRID_TILT_Z;
+    grid.position.y = GRID_POS_Y;
+    sceneGroup.add(grid);
 
     // ── Layer 3: looping particles ───────────────────────────────────────
     // Each particle has:
@@ -248,6 +316,25 @@
     const particles = new THREE.Points(particleGeometry, particleMaterial);
     sceneGroup.add(particles);
 
+    // ── Constellation layer — dynamic line-segments connecting nearby particles.
+    // O(N²) pair-scan per frame for N=64 is 2016 distance checks → cheap.
+    // Buffer is preallocated to CONSTELLATION_MAX_SEGMENTS * 2 vertices.
+    const constellationDisabled = window.innerWidth < CONSTELLATION_DISABLE_BELOW_WIDTH;
+    const constellationPositions = new Float32Array(CONSTELLATION_MAX_SEGMENTS * 2 * 3);
+    const constellationColors    = new Float32Array(CONSTELLATION_MAX_SEGMENTS * 2 * 3);
+    const constellationGeometry = new THREE.BufferGeometry();
+    constellationGeometry.setAttribute("position", new THREE.BufferAttribute(constellationPositions, 3).setUsage(THREE.DynamicDrawUsage));
+    constellationGeometry.setAttribute("color", new THREE.BufferAttribute(constellationColors, 3).setUsage(THREE.DynamicDrawUsage));
+    constellationGeometry.setDrawRange(0, 0);
+    const constellationMaterial = new THREE.LineBasicMaterial({
+      vertexColors: true,
+      transparent: true,
+      opacity: CONSTELLATION_OPACITY_MAX,
+      depthWrite: false,
+    });
+    const constellation = new THREE.LineSegments(constellationGeometry, constellationMaterial);
+    if (!constellationDisabled) sceneGroup.add(constellation);
+
     // ── Resize ────────────────────────────────────────────────────────────
     function resize() {
       const r = canvas.getBoundingClientRect();
@@ -303,7 +390,7 @@
       particleMaterial.uniforms.uAccent2.value.set(accent2Color.r, accent2Color.g, accent2Color.b);
       tmpColor.setRGB(r, g, b);
       icoMaterial.color.copy(tmpColor);
-      sphereMaterial.color.copy(tmpColor);
+      gridMaterial.uniforms.uAccent.value.set(r, g, b);
     }
     applyAccentToMaterials();
 
@@ -318,6 +405,11 @@
 
       // Damped lerp for scroll + parallax — eliminates ALL jitter.
       scrollProgress = lerp(scrollProgress, scrollProgressTarget, SCROLL_LERP);
+      // Scroll velocity → brightness boost (smoothed both ways).
+      const instantVelocity = Math.abs(scrollProgress - scrollProgressLast) / Math.max(0.001, elapsed);
+      scrollProgressLast = scrollProgress;
+      scrollVelocity = lerp(scrollVelocity, instantVelocity, 0.1);
+      scrollBrightness = lerp(scrollBrightness, Math.min(0.5, scrollVelocity * SCROLL_BRIGHTNESS_VELOCITY_TO_BOOST), SCROLL_BRIGHTNESS_LERP);
       parallaxX = lerp(parallaxX, parallaxXTarget, PARALLAX_LERP);
       parallaxY = lerp(parallaxY, parallaxYTarget, PARALLAX_LERP);
       currentAccentShift.r = lerp(currentAccentShift.r, targetAccentShift.r, HUE_LERP);
@@ -328,8 +420,9 @@
       const scrollSpin = scrollProgress * Math.PI * 2 * SCROLL_ROTATION_TURNS;
       icoWireframe.rotation.y = tSec * ICO_BASE_ROTATION_Y_PER_S * motion + scrollSpin;
       icoWireframe.rotation.x = Math.sin(tSec * 0.05) * 0.15;
-      sphereWireframe.rotation.y = tSec * SPHERE_BASE_ROTATION_Y_PER_S * motion - scrollSpin * 0.4;
-      sphereWireframe.rotation.x = Math.cos(tSec * 0.06) * 0.2;
+      // Energy grid update — wave time advances, scroll-velocity boosts amp.
+      gridMaterial.uniforms.uTime.value = tSec * GRID_WAVE_SPEED * (prefersReducedMotion ? 0.1 : motion);
+      gridMaterial.uniforms.uScrollBoost.value = scrollVelocity * GRID_SCROLL_AMP_BOOST;
 
       // Particle update — base + sin (smooth, no teleport).
       // Optionally pull near-cursor particles toward projected ray (subtle).
@@ -375,6 +468,67 @@
       }
       particleGeometry.attributes.position.needsUpdate = true;
 
+      // ── Constellation update — O(N²) pair-scan filling the line buffer.
+      if (!constellationDisabled) {
+        let writeIdx = 0;
+        const maxSegments = CONSTELLATION_MAX_SEGMENTS;
+        const distMax = CONSTELLATION_DISTANCE;
+        const distMaxSq = distMax * distMax;
+        // Project mouse to world-XY plane for proximity bonus.
+        const w = window.innerWidth || 1;
+        const h = window.innerHeight || 1;
+        const mouseHasPos = mouseClientX > -1000;
+        const mouseWorldX = mouseHasPos ? ((mouseClientX / w) * 2 - 1) * PARTICLE_RADIUS : 0;
+        const mouseWorldY = mouseHasPos ? -((mouseClientY / h) * 2 - 1) * PARTICLE_RADIUS : 0;
+        for (let i = 0; i < PARTICLE_COUNT && writeIdx < maxSegments; i++) {
+          const ax = particlePositions[i * 3 + 0];
+          const ay = particlePositions[i * 3 + 1];
+          const az = particlePositions[i * 3 + 2];
+          for (let j = i + 1; j < PARTICLE_COUNT && writeIdx < maxSegments; j++) {
+            const bx = particlePositions[j * 3 + 0];
+            const by = particlePositions[j * 3 + 1];
+            const bz = particlePositions[j * 3 + 2];
+            const ddx = ax - bx;
+            const ddy = ay - by;
+            const ddz = az - bz;
+            const dsq = ddx * ddx + ddy * ddy + ddz * ddz;
+            if (dsq > distMaxSq) continue;
+            const t = 1 - Math.sqrt(dsq) / distMax; // 1 close → 0 far
+            // Brightness bonus if midpoint is near the mouse (XY only).
+            let bonus = 0;
+            if (mouseHasPos) {
+              const mx = (ax + bx) * 0.5 - mouseWorldX;
+              const my = (ay + by) * 0.5 - mouseWorldY;
+              const mdist = Math.sqrt(mx * mx + my * my);
+              if (mdist < CONSTELLATION_MOUSE_RADIUS) {
+                bonus = (1 - mdist / CONSTELLATION_MOUSE_RADIUS) * 0.8;
+              }
+            }
+            const intensity = Math.min(1, t * 0.6 + bonus);
+            const off = writeIdx * 6;
+            constellationPositions[off + 0] = ax;
+            constellationPositions[off + 1] = ay;
+            constellationPositions[off + 2] = az;
+            constellationPositions[off + 3] = bx;
+            constellationPositions[off + 4] = by;
+            constellationPositions[off + 5] = bz;
+            const r = renderedAccent.r * intensity;
+            const g = renderedAccent.g * intensity;
+            const b = renderedAccent.b * intensity;
+            constellationColors[off + 0] = r;
+            constellationColors[off + 1] = g;
+            constellationColors[off + 2] = b;
+            constellationColors[off + 3] = r;
+            constellationColors[off + 4] = g;
+            constellationColors[off + 5] = b;
+            writeIdx++;
+          }
+        }
+        constellationGeometry.attributes.position.needsUpdate = true;
+        constellationGeometry.attributes.color.needsUpdate = true;
+        constellationGeometry.setDrawRange(0, writeIdx * 2);
+      }
+
       // Parallax: shift scene-group by mouse (camera stays put).
       sceneGroup.position.x = parallaxX;
       sceneGroup.position.y = parallaxY;
@@ -382,11 +536,15 @@
       // Apply accent shift (cheap — only when changed enough).
       applyAccentToMaterials();
 
-      // Reduced-motion attenuates global opacity.
+      // Reduced-motion attenuates global opacity. Scroll-velocity adds brightness.
       const opacityMul = prefersReducedMotion ? REDUCED_MOTION_OPACITY_MULTIPLIER : 1;
-      icoMaterial.opacity = ICO_OPACITY * opacityMul;
-      sphereMaterial.opacity = SPHERE_OPACITY * opacityMul;
-      particleMaterial.uniforms.uOpacity.value = PARTICLE_OPACITY * opacityMul;
+      const brightnessBoost = 1 + scrollBrightness;
+      icoMaterial.opacity = ICO_OPACITY * opacityMul * brightnessBoost;
+      gridMaterial.uniforms.uOpacity.value = GRID_OPACITY * opacityMul * brightnessBoost;
+      particleMaterial.uniforms.uOpacity.value = PARTICLE_OPACITY * opacityMul * brightnessBoost;
+      if (!constellationDisabled) {
+        constellationMaterial.opacity = CONSTELLATION_OPACITY_MAX * opacityMul * brightnessBoost;
+      }
 
       // Apply dt to advance time-based effects we already incorporated — kept
       // for any future state machines that need it.
@@ -425,11 +583,12 @@
         icoGeometry.dispose();
         icoEdges.dispose();
         icoMaterial.dispose();
-        sphereGeometry.dispose();
-        sphereWireGeom.dispose();
-        sphereMaterial.dispose();
+        gridGeometry.dispose();
+        gridMaterial.dispose();
         particleGeometry.dispose();
         particleMaterial.dispose();
+        constellationGeometry.dispose();
+        constellationMaterial.dispose();
         renderer.dispose();
       },
     };

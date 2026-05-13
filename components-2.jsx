@@ -535,6 +535,9 @@ function Contact({ t, links }) {
   function onSubmit(e) {
     e.preventDefault();
     setSent(true);
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      try { navigator.vibrate(14); } catch (err) { /* opportunistic */ }
+    }
     window.setTimeout(() => setSent(false), 4500);
   }
   return (

@@ -27,6 +27,22 @@ class ErrorBoundary extends React.Component {
 const LINKS = { github: "github.com/your-username", telegram: "t.me/your-username", email: "hello@example.com" };
 const NAV_SECTIONS = ["about", "projects", "skills", "services", "cv", "contact"];
 
+// ── Haptic helper.
+// `navigator.vibrate` is supported on Android Chrome and ~most Android browsers.
+// iOS Safari silently no-ops — that's correct, we don't want to fight iOS.
+// Calls are short (6-12ms) so they read as "click confirm", not a phone-ringer.
+const HAPTIC_MS = {
+  tap: 6,
+  toggle: 8,
+  submit: 14,
+};
+function haptic(kind) {
+  const ms = HAPTIC_MS[kind] || HAPTIC_MS.tap;
+  if (typeof navigator === "undefined") return;
+  if (!navigator.vibrate) return;
+  try { navigator.vibrate(ms); } catch (e) { /* silently ignore — vibration is opportunistic */ }
+}
+
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "lang": "ru",
   "theme": "claude",
@@ -107,7 +123,7 @@ function Nav({ t, lang, setLang, active }) {
             className="nav-burger"
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
-            onClick={() => setOpen((o) => !o)}
+            onClick={() => { haptic("toggle"); setOpen((o) => !o); }}
           >
             <span /><span /><span />
           </button>
@@ -132,6 +148,107 @@ function Nav({ t, lang, setLang, active }) {
         </div>
       </div>
     </nav>
+  );
+}
+
+// ── Mobile UI overlay primitives ──────────────────────────────────────────
+// Both dock + sticky CTA share the same visibility rule: appear after the user
+// scrolls past hero, hide near contact. We use the SAME hooks rather than two
+// observers to keep the truth source single and avoid races between them.
+
+function useMidScrollVisibility() {
+  const [visible, setVisible] = useS(false);
+  useE(() => {
+    const heroEl = document.getElementById("hero");
+    const contactEl = document.getElementById("contact");
+    if (!heroEl || !contactEl) return undefined;
+
+    // Truth source: IntersectionObserver where available.
+    let inHero = true;
+    let inContact = false;
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.target.id === "hero") inHero = e.isIntersecting;
+        else if (e.target.id === "contact") inContact = e.isIntersecting;
+      });
+      setVisible(!inHero && !inContact);
+    }, { threshold: 0.1 });
+    io.observe(heroEl);
+    io.observe(contactEl);
+
+    // Scroll-based fallback — covers environments where IO is unreliable
+    // (some embedded webviews, headless previews). Computes visibility from
+    // bounding rects each rAF-throttled scroll event.
+    let raf = 0;
+    function recompute() {
+      raf = 0;
+      const vh = window.innerHeight;
+      const heroRect = heroEl.getBoundingClientRect();
+      const contactRect = contactEl.getBoundingClientRect();
+      const heroVisible = heroRect.top < vh && heroRect.bottom > 0;
+      const contactVisible = contactRect.top < vh && contactRect.bottom > 0;
+      inHero = heroVisible;
+      inContact = contactVisible;
+      setVisible(!heroVisible && !contactVisible);
+    }
+    function onScroll() { if (!raf) raf = requestAnimationFrame(recompute); }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    recompute();
+
+    return function cleanup() {
+      io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+  return visible;
+}
+
+function MobileScrollDock({ t, activeSection, visible }) {
+  // 6 dots for the main NAV sections. Tap → smooth scroll + light haptic.
+  function onDotClick(id) {
+    haptic("tap");
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  const activeIdx = Math.max(0, NAV_SECTIONS.indexOf(activeSection));
+  const activeLabel = (activeSection && t.nav && t.nav[activeSection]) || (t.nav && t.nav[NAV_SECTIONS[0]]) || "";
+  return (
+    <div className={`mobile-dock ${visible ? "is-visible" : ""}`} role="navigation" aria-label="sections">
+      <ol className="mobile-dock-dots">
+        {NAV_SECTIONS.map((id, i) => (
+          <li key={id}>
+            <button
+              type="button"
+              className={`mobile-dock-dot ${activeSection === id ? "is-active" : ""}`}
+              aria-label={t.nav && t.nav[id] ? t.nav[id] : id}
+              onClick={() => onDotClick(id)}
+            />
+          </li>
+        ))}
+      </ol>
+      <div className="mobile-dock-label mono" aria-live="polite">
+        <span className="mobile-dock-label-num">/{String(activeIdx + 1).padStart(2, "0")}</span>
+        <span>{activeLabel}</span>
+      </div>
+    </div>
+  );
+}
+
+function MobileStickyCta({ t, visible }) {
+  function onTap() { haptic("toggle"); }
+  return (
+    <a
+      href="#contact"
+      className={`mobile-sticky-cta ${visible ? "is-visible" : ""}`}
+      onClick={onTap}
+      aria-label={t.hero.cta_primary}
+    >
+      <span>{t.hero.cta_primary}</span>
+      <span className="arrow">→</span>
+    </a>
   );
 }
 
@@ -254,6 +371,9 @@ function App() {
     return () => cancelAnimationFrame(id);
   }, [lang, tweaks.density]);
 
+  // Mid-scroll visibility for mobile dock + sticky CTA.
+  const midScrollVisible = useMidScrollVisibility();
+
   return (
     <>
       <canvas ref={bgFxCanvasRef} className="bg-fx-canvas" aria-hidden="true" />
@@ -277,6 +397,11 @@ function App() {
       </main>
 
       <Footer t={t} links={LINKS} />
+
+      {/* Mobile-only overlays — sticky CTA stacks above dock. */}
+      <MobileStickyCta t={t} visible={midScrollVisible} />
+      <MobileScrollDock t={t} activeSection={activeSection} visible={midScrollVisible} />
+
       <PortfolioTweaks t={tweaks} setTweak={setTweak} />
     </>
   );

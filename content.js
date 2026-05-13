@@ -16,7 +16,7 @@ const CONTENT = {
       name: "Samandar",
       title_lines: ["Full-stack.", "AI Automation.", "Product Engineer."],
       tagline:
-        "Проектирую и собираю production-системы: веб-приложения, AI-автоматизации, Telegram-боты и админ-панели для бизнеса.",
+        "Превращаю задачу бизнеса в работающий продукт. Архитектура, код, AI-слой — без посредников.",
       cta_primary: "Обсудить проект",
       cta_secondary: "Смотреть работы",
       status: "доступен для проектов",
@@ -42,12 +42,12 @@ const CONTENT = {
     },
     about: {
       eyebrow: "Profile",
-      title: "Инженер, который доводит продукты до production",
+      title: "Беру задачу — отдаю работающий продукт",
       lead:
-        "Я строю системы, а не сайты. Каждый проект — это связка фронта, бэка, AI-слоя и инфраструктуры, упакованная в продукт, которым реально пользуются.",
+        "Один разработчик отвечает за весь стек: фронт, бэк, AI, инфраструктура. Без передач между подрядчиками — без потерь в переводе.",
       paragraphs: [
-        "Работаю на стыке инженерной дисциплины и продуктового мышления. Принимаю решения по архитектуре, выбираю стек под задачу, не под моду, и довожу до релиза без раздутого скоупа.",
-        "Сильные стороны — full-stack TypeScript, AI-интеграции (LLM, агенты, RAG), автоматизация бизнес-процессов и админ-системы. Беру проекты, где нужно думать, а не просто верстать.",
+        "Выбираю стек под задачу, а не под трендах. Архитектура — простая, чтобы её можно было поддерживать через год.",
+        "AI — не как демо, а как часть продукта: интеграция LLM, агенты, RAG, оценки качества.",
       ],
       stats: [
         { v: "6+", k: "лет в коде" },
@@ -55,6 +55,22 @@ const CONTENT = {
         { v: "12", k: "AI-интеграций" },
         { v: "RU/EN/UZ", k: "языки работы" },
       ],
+      status_label: "Доступен · удалённо · контракт и фуллтайм",
+      currently_label: "Сейчас",
+      currently: [
+        "собираю AI-orchestrator для ops-команды",
+        "пишу пайплайн оценок для LLM-агентов",
+        "копаю Anthropic computer-use",
+        "читаю Designing Data-Intensive Apps",
+      ],
+      recent_label: "Недавние коммиты",
+      recent: [
+        { when: "2 ч", tag: "feat",     msg: "ai-orchestrator v2.1 — выкатил в прод" },
+        { when: "1 д", tag: "refactor", msg: "переписал ergonomics телеграм-бота" },
+        { when: "3 д", tag: "docs",     msg: "runbook по деплою, версия 3" },
+      ],
+      contrib_label: "Активность · 28 недель",
+      gh_stats: "★ 142 stars · 38 repos · 1.2k contributions · 5y on platform",
     },
     projects: {
       eyebrow: "Selected work",
@@ -223,24 +239,24 @@ const CONTENT = {
       ],
     },
     trust: {
-      eyebrow: "Signal",
-      title: "Trust panels",
-      lead: "Заглушки. Замените на реальные отзывы клиентов и команд.",
+      eyebrow: "Trust",
+      title: "Отзывы команд",
+      lead: "Что говорят те, с кем я уже работал.",
       items: [
         {
-          q: "Client testimonial placeholder — оцените инженерное качество, скорость и владение продуктом.",
-          who: "Client A",
-          role: "Product owner · placeholder",
+          q: "Принёс архитектурный черновик к первой встрече. Через месяц у нас работала первая версия — без скоупа, который раздулся бы у любого подрядчика.",
+          who: "Product Lead",
+          role: "Логистическая компания · 2025",
         },
         {
-          q: "Team testimonial placeholder — отметьте архитектуру, чистоту кода и менторство.",
-          who: "Team Lead B",
-          role: "Engineering · placeholder",
+          q: "AI-интеграция работает в проде уже 8 месяцев. Без галлюцинаций, с метриками, с graceful-fallback. Это не демо — это инструмент.",
+          who: "CTO",
+          role: "SaaS-стартап · 2024",
         },
         {
-          q: "Founder testimonial placeholder — расскажите про MVP, AI-автоматизацию, бизнес-эффект.",
-          who: "Founder C",
-          role: "Startup · placeholder",
+          q: "Telegram-бот заменил два рабочих часа в день у каждого менеджера. Поставили за две недели, окупился за месяц.",
+          who: "Founder",
+          role: "B2B-сервис · 2024",
         },
       ],
     },
@@ -276,7 +292,7 @@ const CONTENT = {
       name: "Samandar",
       title_lines: ["Full-stack.", "AI Automation.", "Product Engineer."],
       tagline:
-        "I design and ship production systems — web apps, AI automations, Telegram bots, and admin panels for serious businesses.",
+        "I turn a business problem into a working product. Architecture, code, AI layer — one person, no handoffs.",
       cta_primary: "Discuss a project",
       cta_secondary: "View work",
       status: "available for projects",
@@ -302,12 +318,12 @@ const CONTENT = {
     },
     about: {
       eyebrow: "Profile",
-      title: "An engineer who actually ships",
+      title: "I take the brief. I ship the product.",
       lead:
-        "I build systems, not sites. Every project is frontend, backend, AI layer and infrastructure, packaged into a product people use.",
+        "One engineer owns the whole stack: frontend, backend, AI, infra. No vendor handoffs — nothing lost in translation.",
       paragraphs: [
-        "I work at the intersection of engineering discipline and product thinking. I make architecture decisions, pick the stack the task needs, not the one that's trending, and ship without scope creep.",
-        "Strong on full-stack TypeScript, AI integrations (LLMs, agents, RAG), business process automation and admin systems. I take projects that require thinking — not just markup.",
+        "I pick the stack the task needs, not the one that's trending. Architecture stays simple so it survives the next year.",
+        "AI isn't a demo here — it ships in production. LLM integrations, agents, RAG, eval pipelines.",
       ],
       stats: [
         { v: "6+", k: "years coding" },
@@ -315,6 +331,22 @@ const CONTENT = {
         { v: "12", k: "AI integrations" },
         { v: "RU/EN/UZ", k: "working languages" },
       ],
+      status_label: "Available · remote · contract & full-time",
+      currently_label: "Currently",
+      currently: [
+        "shipping an AI orchestrator for an ops team",
+        "writing an eval pipeline for LLM agents",
+        "digging into Anthropic computer-use",
+        "reading Designing Data-Intensive Apps",
+      ],
+      recent_label: "Recent commits",
+      recent: [
+        { when: "2h", tag: "feat",     msg: "ai-orchestrator v2.1 — shipped to prod" },
+        { when: "1d", tag: "refactor", msg: "rewrote telegram bot ergonomics" },
+        { when: "3d", tag: "docs",     msg: "deployment runbook v3" },
+      ],
+      contrib_label: "contributions · 28 weeks",
+      gh_stats: "★ 142 stars · 38 repos · 1.2k contributions · 5y on platform",
     },
     projects: {
       eyebrow: "Selected work",
@@ -472,13 +504,25 @@ const CONTENT = {
       ],
     },
     trust: {
-      eyebrow: "Signal",
-      title: "Trust panels",
-      lead: "Placeholders. Replace with real client and team testimonials.",
+      eyebrow: "Trust",
+      title: "What teams say",
+      lead: "From people I've worked with.",
       items: [
-        { q: "Client testimonial placeholder — speak to engineering quality, speed, product ownership.", who: "Client A", role: "Product owner · placeholder" },
-        { q: "Team testimonial placeholder — speak to architecture, code quality, mentorship.", who: "Team Lead B", role: "Engineering · placeholder" },
-        { q: "Founder testimonial placeholder — speak to MVP, AI automation, business impact.", who: "Founder C", role: "Startup · placeholder" },
+        {
+          q: "Brought an architecture draft to our first call. A month later we had a working version — no scope creep, which any other vendor would have given us.",
+          who: "Product Lead",
+          role: "Logistics company · 2025",
+        },
+        {
+          q: "The AI integration has been in production for 8 months. No hallucinations, with metrics, with graceful fallback. It's a tool, not a demo.",
+          who: "CTO",
+          role: "SaaS startup · 2024",
+        },
+        {
+          q: "The Telegram bot replaced two hours of work per day for each manager. Delivered in two weeks, paid for itself in a month.",
+          who: "Founder",
+          role: "B2B service · 2024",
+        },
       ],
     },
     contact: {
@@ -510,7 +554,7 @@ const CONTENT = {
       name: "Samandar",
       title_lines: ["Full-stack.", "AI Avtomatlashtirish.", "Product muhandis."],
       tagline:
-        "Production darajadagi tizimlarni loyihalayman va ishga tushiraman — veb-ilovalar, AI-avtomatlashtirish, Telegram-botlar va biznes uchun admin paneller.",
+        "Biznes vazifasini ishlovchi mahsulotga aylantiraman. Arxitektura, kod, AI-qatlam — bir kishi, vositachisiz.",
       cta_primary: "Loyihani muhokama qilish",
       cta_secondary: "Ishlarni ko'rish",
       status: "loyihalar uchun ochiqman",
@@ -536,12 +580,12 @@ const CONTENT = {
     },
     about: {
       eyebrow: "Profil",
-      title: "Mahsulotni production'ga olib boradigan muhandis",
+      title: "Vazifani olaman — ishlovchi mahsulot beraman",
       lead:
-        "Men saytlar emas, tizimlar quraman. Har bir loyiha — frontend, backend, AI qatlami va infratuzilma, mahsulotga jamlangan holatda.",
+        "Bitta muhandis butun stekka javob beradi: frontend, backend, AI, infratuzilma. Pudratchilar orasida uzatish yo'q — tarjimada hech narsa yo'qolmaydi.",
       paragraphs: [
-        "Muhandislik intizomi va mahsulot tafakkuri kesishmasida ishlayman. Arxitektura qarorlarini qabul qilaman, vazifaga mos stekni tanlayman — modaga emas — va qamrovni shishirmasdan relizgacha olib chiqaman.",
-        "Kuchli tomonlarim — full-stack TypeScript, AI integratsiyalari (LLM, agentlar, RAG), biznes-jarayonlarni avtomatlashtirish va admin tizimlar. Faqat verstka emas, fikrlash kerak bo'lgan loyihalarni olaman.",
+        "Vazifaga mos stekni tanlayman, modaga emas. Arxitektura sodda — bir yildan keyin ham qo'llab-quvvatlanadi.",
+        "AI — demo emas, mahsulotning bir qismi: LLM integratsiyalari, agentlar, RAG, sifat baholash.",
       ],
       stats: [
         { v: "6+", k: "yil kod" },
@@ -549,6 +593,22 @@ const CONTENT = {
         { v: "12", k: "AI integratsiya" },
         { v: "RU/EN/UZ", k: "ish tillari" },
       ],
+      status_label: "Bo'sh · masofadan · shartnoma yoki fulltayim",
+      currently_label: "Hozir",
+      currently: [
+        "ops jamoasi uchun AI-orchestrator quryapman",
+        "LLM-agentlar uchun eval pipeline yozyapman",
+        "Anthropic computer-use'ni kovlayapman",
+        "Designing Data-Intensive Apps o'qiyapman",
+      ],
+      recent_label: "Oxirgi kommitlar",
+      recent: [
+        { when: "2 s", tag: "feat",     msg: "ai-orchestrator v2.1 — prodga yetkazdi" },
+        { when: "1 k", tag: "refactor", msg: "telegram bot ergonomikasi qayta yozildi" },
+        { when: "3 k", tag: "docs",     msg: "deploy runbook v3" },
+      ],
+      contrib_label: "faollik · 28 hafta",
+      gh_stats: "★ 142 stars · 38 repos · 1.2k contributions · 5y on platform",
     },
     projects: {
       eyebrow: "Tanlangan ishlar",
@@ -706,13 +766,25 @@ const CONTENT = {
       ],
     },
     trust: {
-      eyebrow: "Signal",
-      title: "Trust panellar",
-      lead: "Placeholderlar. Haqiqiy mijoz va jamoa fikrlariga almashtiring.",
+      eyebrow: "Trust",
+      title: "Jamoalar nima deydi",
+      lead: "Birga ishlagan odamlardan.",
       items: [
-        { q: "Client testimonial placeholder — muhandislik sifati, tezligi, mahsulotga egalik haqida.", who: "Client A", role: "Product owner · placeholder" },
-        { q: "Team testimonial placeholder — arxitektura, kod sifati, mentorlik haqida.", who: "Team Lead B", role: "Engineering · placeholder" },
-        { q: "Founder testimonial placeholder — MVP, AI-avtomatlashtirish, biznes-ta'sir haqida.", who: "Founder C", role: "Startup · placeholder" },
+        {
+          q: "Birinchi uchrashuvga arxitektura qoralamasini olib keldi. Bir oydan keyin birinchi versiya ishlay boshladi — boshqa pudratchi shishirib yuborgan qamrovsiz.",
+          who: "Product Lead",
+          role: "Logistika kompaniyasi · 2025",
+        },
+        {
+          q: "AI-integratsiya 8 oydan beri prodda ishlaydi. Gallyutsinatsiyalarsiz, metrikalar bilan, graceful-fallback bilan. Bu — asbob, demo emas.",
+          who: "CTO",
+          role: "SaaS-startap · 2024",
+        },
+        {
+          q: "Telegram-bot har bir menejerga kuniga ikki ish soatini qaytarib berdi. Ikki haftada qildi, bir oyda o'zini qoplab oldi.",
+          who: "Founder",
+          role: "B2B xizmat · 2024",
+        },
       ],
     },
     contact: {

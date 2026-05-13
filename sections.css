@@ -253,13 +253,29 @@
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
 @media (max-width: 900px) {
-  .hero-grid { grid-template-columns: 1fr; gap: 28px; padding-top: calc(var(--nav-h) + 24px); }
-  .hero-right { order: -1; display: grid; gap: 16px; }
-  .hero-marquee { margin: 36px calc(-1 * var(--gutter)) 0; }
-  .hero-meta { flex-direction: column; align-items: flex-start; gap: 18px; }
+  /* Hero takeover — fill the first screen so the robot reads as the hero. */
+  .hero {
+    position: relative;
+    min-height: 100svh;
+    min-height: 100vh; /* fallback for browsers without svh */
+    display: flex;
+    align-items: stretch;
+  }
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding-top: calc(var(--nav-h) + 18px);
+    padding-bottom: 84px; /* room for the scroll-hint chevron */
+    width: 100%;
+    align-self: center;
+  }
+  .hero-right { order: -1; display: grid; gap: 14px; }
+  .hero-marquee { margin: 30px calc(-1 * var(--gutter)) 0; }
+  .hero-meta { flex-direction: column; align-items: flex-start; gap: 16px; }
   .hero-links { margin-left: 0; }
-  .hero-robot { height: 280px; }
+  .hero-robot { height: 320px; }
   .hero-terminal { font-size: 11px; }
+  .term-body { min-height: 160px; }
 }
 @media (max-width: 480px) {
   .hero-robot { height: 240px; }
@@ -369,6 +385,7 @@
   gap: 18px;
 }
 .about-avatar {
+  position: relative;
   width: 56px; height: 56px;
   border-radius: 12px;
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
@@ -382,14 +399,57 @@
   color: var(--bg-0);
   flex-shrink: 0;
   box-shadow: 0 6px 20px rgba(var(--accent-rgb) / 0.35);
+  overflow: hidden;
+  isolation: isolate;
+}
+.about-avatar-shine {
+  position: absolute;
+  inset: -50% -100%;
+  background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.45) 50%, transparent 65%);
+  transform: translateX(-100%);
+  animation: aboutAvatarShine 7s ease-in-out infinite;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+@keyframes aboutAvatarShine {
+  0%, 60%   { transform: translateX(-110%); }
+  75%       { transform: translateX(110%); }
+  100%      { transform: translateX(110%); }
+}
+.about-id-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
 }
 .about-id-handle {
   font-family: var(--f-display);
   font-size: 24px;
   font-weight: 600;
   letter-spacing: -0.02em;
-  margin: 0 0 4px;
+  margin: 0;
   color: var(--text);
+}
+.about-id-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: rgba(var(--accent-rgb) / 0.06);
+  border: 1px solid rgba(var(--accent-rgb) / 0.35);
+  color: var(--accent);
+  border-radius: 999px;
+}
+.about-id-status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+  animation: aboutPulse 2s ease-in-out infinite;
 }
 .about-id-meta {
   display: flex;
@@ -400,6 +460,7 @@
   letter-spacing: 0.06em;
   color: var(--text-mute);
 }
+.about-id-sep { color: var(--text-faint); }
 .about-id-online {
   display: inline-flex; align-items: center; gap: 6px;
   color: var(--accent);
@@ -444,6 +505,110 @@
   font-size: 10.5px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+}
+
+/* ── Currently rotator ──────────────────────────────────────── */
+.about-currently {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  background: rgba(var(--accent-rgb) / 0.04);
+  font-size: 12.5px;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+  min-height: 44px;
+}
+.about-currently-key {
+  color: var(--accent);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+.about-currently-val { color: var(--text); }
+.about-currently-caret {
+  display: inline-block;
+  width: 7px; height: 13px;
+  background: var(--accent);
+  vertical-align: -1px;
+  animation: aboutCaret .8s steps(2) infinite;
+}
+@keyframes aboutCaret { 50% { opacity: 0; } }
+
+/* ── Recent work feed ───────────────────────────────────────── */
+.about-recent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.about-recent-head {
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+.about-recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+.about-recent-item {
+  display: grid;
+  grid-template-columns: 56px 72px 1fr;
+  gap: 14px;
+  align-items: baseline;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12.5px;
+  color: var(--text-dim);
+  transition: background var(--d-fast), padding-left var(--d-fast);
+}
+.about-recent-item:hover {
+  background: rgba(var(--accent-rgb) / 0.04);
+  padding-left: 18px;
+}
+.about-recent-when {
+  color: var(--text-mute);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+.about-recent-tag {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(var(--accent-rgb) / 0.3);
+  color: var(--accent);
+  background: rgba(var(--accent-rgb) / 0.05);
+  text-align: center;
+}
+.about-recent-tag--refactor { color: #C89B5E; border-color: rgba(200,155,94,0.35); background: rgba(200,155,94,0.05); }
+.about-recent-tag--docs     { color: #6BB6FF; border-color: rgba(107,182,255,0.35); background: rgba(107,182,255,0.05); }
+.about-recent-msg { color: var(--text); }
+
+/* ── Live contribution pulse ────────────────────────────────── */
+.about-contrib-cell.is-pulsing {
+  animation: contribPulse 0.9s ease-in-out forwards;
+}
+@keyframes contribPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb) / 0); transform: scale(1); }
+  40%      { box-shadow: 0 0 14px 1px rgba(var(--accent-rgb) / 0.8); transform: scale(1.5); }
+}
+
+/* ── GitHub stats footer ────────────────────────────────────── */
+.about-gh-stats {
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  color: var(--text-mute);
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  text-align: center;
 }
 
 .about-md {
@@ -554,6 +719,12 @@
 }
 @media (max-width: 600px) {
   .about-contrib-head { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .about-recent-item  { grid-template-columns: 44px 64px 1fr; gap: 10px; padding: 9px 10px; font-size: 11.5px; }
+  .about-recent-tag   { padding: 2px 6px; font-size: 9.5px; }
+  .about-id-row       { gap: 8px; }
+  .about-id-status    { font-size: 9px; padding: 3px 8px; }
+  .about-currently    { font-size: 11.5px; padding: 10px 12px; }
+  .about-currently-key{ font-size: 9.5px; }
 }
 @media (max-width: 900px) {
   .about-body { grid-template-columns: 1fr; gap: 32px; }
@@ -1495,3 +1666,197 @@
 }
 .footer-links a:hover { color: var(--accent); }
 @media (max-width: 700px) { .footer-r { align-items: flex-start; } }
+
+/* ════════════════════════════════════════════════════════════
+   MOBILE OVERLAYS — bottom dock + sticky CTA + chapter dots
+   Hidden on viewports > 900px (handled at each component below).
+   ════════════════════════════════════════════════════════════ */
+
+.mobile-dock {
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%) translateY(40px);
+  z-index: 80;
+  display: none;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 16px 9px 14px;
+  background: linear-gradient(180deg, rgba(20,18,16,.88), rgba(11,10,9,.94));
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  box-shadow:
+    0 1px 0 rgba(244,241,234,.05) inset,
+    0 14px 36px -8px rgba(0,0,0,.55),
+    0 0 0 1px rgba(var(--accent-rgb) / 0.10);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .35s var(--ease-out), transform .45s var(--ease-emphasized);
+}
+.mobile-dock.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+.mobile-dock-dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.mobile-dock-dot {
+  appearance: none;
+  width: 8px; height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(244,241,234,.18);
+  cursor: pointer;
+  transition: background var(--d-fast), transform var(--d-fast), width var(--d-fast);
+}
+.mobile-dock-dot.is-active {
+  background: var(--accent);
+  width: 22px;
+  border-radius: 8px;
+  box-shadow: 0 0 8px rgba(var(--accent-rgb) / 0.6);
+}
+.mobile-dock-label {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  white-space: nowrap;
+  text-transform: lowercase;
+}
+.mobile-dock-label-num { color: var(--text-mute); font-size: 10px; letter-spacing: 0.14em; }
+
+/* Sticky CTA — pill above the dock. Same visibility window as the dock. */
+.mobile-sticky-cta {
+  position: fixed;
+  left: 50%;
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%) translateY(40px);
+  z-index: 79;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--bg-0);
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow:
+    0 8px 24px rgba(var(--accent-rgb) / 0.4),
+    0 0 0 6px rgba(var(--accent-rgb) / 0.08);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .35s var(--ease-out), transform .45s var(--ease-emphasized);
+}
+.mobile-sticky-cta.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+.mobile-sticky-cta:active { transform: translateX(-50%) translateY(2px); transition-duration: 80ms; }
+.mobile-sticky-cta .arrow { transition: transform var(--d-fast); }
+.mobile-sticky-cta:active .arrow { transform: translateX(3px); }
+
+/* Show mobile overlays only on small viewports. */
+@media (max-width: 900px) {
+  .mobile-dock { display: flex; }
+  .mobile-sticky-cta { display: inline-flex; }
+}
+
+/* ════════════════════════════════════════════════════════════
+   PROJECT CHAPTER DOTS — mobile-only pagination indicator
+   ════════════════════════════════════════════════════════════ */
+.proj-chapters { display: none; }
+.proj-chapters-dots {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 8px;
+}
+.proj-chapters-dot {
+  appearance: none;
+  border: 0;
+  padding: 0;
+  width: 12px; height: 4px;
+  background: rgba(244,241,234,.18);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background var(--d-fast), width var(--d-fast);
+}
+.proj-chapters-dot.is-active {
+  background: var(--accent);
+  width: 28px;
+  box-shadow: 0 0 6px rgba(var(--accent-rgb) / 0.5);
+}
+.proj-chapters-label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+}
+.proj-chapters-num  { color: var(--accent); font-weight: 500; font-size: 12px; }
+.proj-chapters-of   { color: var(--text-mute); }
+.proj-chapters-name { color: var(--text); }
+
+@media (max-width: 900px) {
+  .proj-chapters {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 24px 0 18px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   HERO SCROLL HINT — small chevron at hero bottom on mobile.
+   Hidden once user scrolls beyond hero.
+   ════════════════════════════════════════════════════════════ */
+.hero-scroll-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  pointer-events: none;
+  animation: heroHintBounce 2.4s ease-in-out infinite;
+  z-index: 4;
+}
+.hero-scroll-hint::after {
+  content: "↓";
+  font-size: 14px;
+  color: var(--accent);
+}
+@keyframes heroHintBounce {
+  0%, 100% { transform: translate(-50%, 0); opacity: 0.85; }
+  50%      { transform: translate(-50%, 6px); opacity: 1; }
+}
+@media (max-width: 900px) {
+  .hero-scroll-hint { display: flex; }
+}

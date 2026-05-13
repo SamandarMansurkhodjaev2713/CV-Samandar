@@ -91,7 +91,9 @@
 }
 .sc-cursor[data-mode="drag"] .sc-dot { width: 2px; height: 2px; left: -1px; top: -1px; }
 
-/* ── Ring */
+/* ── Ring — size + offset + border-radius are JS-driven for the morph effect,
+   so we DON'T animate them in CSS (avoids double-easing). Only opacity / color
+   are CSS-transitioned. */
 .sc-ring {
   position: fixed;
   width: 28px; height: 28px;
@@ -102,7 +104,8 @@
   margin-top: -14px;
   opacity: 0.55;
   transform-origin: center;
-  transition: border-radius .25s ease, opacity .2s ease, border-color .2s ease;
+  transition: opacity .2s ease, border-color .2s ease;
+  will-change: width, height, border-radius, transform, margin;
 }
 .sc-cursor.is-idle .sc-ring {
   border-color: rgba(var(--accent-rgb) / 0.45);
@@ -218,6 +221,83 @@
   min-height: 100vh;
   display: flex;
   align-items: center;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   VELOCITY TRAIL — SVG polyline behind the cursor at high speed.
+   ────────────────────────────────────────────────────────────── */
+.sc-trail {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0;
+  transition: opacity .14s ease;
+  color: var(--accent, #D97757);
+}
+.sc-trail-line {
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 6px rgba(var(--accent-rgb) / 0.45));
+  opacity: 0.55;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   CLICK RIPPLE — short-lived expanding ring at the click point.
+   Spawned as a body child by JS; auto-removes on animationend.
+   ────────────────────────────────────────────────────────────── */
+.sc-ripple {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9997;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  margin-top: -3px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  color: var(--accent, #D97757);
+  opacity: 0.9;
+  animation: scRipple var(--sc-ripple-dur, 620ms) cubic-bezier(.2,.7,.25,1) forwards;
+  --sc-ripple-max: 64px;
+}
+@keyframes scRipple {
+  0%   { transform: scale(0.4); opacity: 0.95; }
+  100% { transform: scale(calc(var(--sc-ripple-max) / 6)); opacity: 0; }
+}
+
+/* ──────────────────────────────────────────────────────────────
+   SECTION GLANCE — floating mono label near cursor on fast scroll.
+   ────────────────────────────────────────────────────────────── */
+.sc-glance {
+  position: fixed;
+  top: 0; left: 0;
+  z-index: 9999;
+  pointer-events: none;
+  padding: 5px 9px 5px 8px;
+  background: rgba(8,10,12,.86);
+  border: 1px solid currentColor;
+  color: var(--accent, #D97757);
+  border-radius: 4px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate(-9999px, -9999px);
+  transition: opacity .18s ease;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.sc-glance.is-on { opacity: 1; }
+
+@media (hover: none), (pointer: coarse) {
+  .sc-trail, .sc-glance, .sc-ripple { display: none !important; }
 }
 
 /* Respect reduced motion */

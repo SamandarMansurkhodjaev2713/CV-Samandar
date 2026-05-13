@@ -45,22 +45,32 @@
   const FACE_PLATE_H = 0.95;
   const FACE_PLATE_DEPTH_OFFSET = 0.001;
 
-  const EYE_RADIUS = 0.16;
-  const EYE_DISTANCE = 0.34;
+  // HUD-visor eyes: emissive rounded rectangles on the face plate (no 3D balls).
+  // Eye dimensions are width/height of the lit area; pupils are smaller emissive
+  // dots inside that drift toward the cursor within a clamped range.
+  const EYE_WIDTH = 0.22;
+  const EYE_HEIGHT = 0.12;
+  const EYE_CORNER_RADIUS = 0.04;
+  const EYE_DISTANCE = 0.38;
   const EYE_Y = 0.10;
-  const EYE_Z = HEAD_D / 2 + 0.005;        // slightly in front of face plate
-  const PUPIL_RADIUS = 0.062;
-  const PUPIL_MAX_OFFSET = 0.07;           // socket clamp
+  const EYE_Z = HEAD_D / 2 + 0.011;        // sits on face plate
+  const PUPIL_WIDTH = 0.07;
+  const PUPIL_HEIGHT = 0.07;
+  const PUPIL_MAX_OFFSET_X = 0.05;
+  const PUPIL_MAX_OFFSET_Y = 0.025;
   const PUPIL_LERP = 0.18;
 
   const MOUTH_Y = -0.22;
   const MOUTH_HALF_W = 0.20;
   const MOUTH_LERP = 0.16;
 
+  // Antenna v2 — 3 stacked segments tapering upward + small ring on top.
+  // No glowing ball; this reads as a "sensor array" instead of a cartoon antenna.
   const ANTENNA_BASE_Y = HEAD_H / 2 + 0.02;
-  const ANTENNA_LEN = 0.42;
-  const ANTENNA_RADIUS = 0.04;
-  const ANTENNA_TIP_R = 0.085;
+  const ANTENNA_SEG_HEIGHTS = [0.12, 0.10, 0.08];
+  const ANTENNA_SEG_RADII   = [0.058, 0.044, 0.032];
+  const ANTENNA_TIP_RING_RADIUS = 0.052;
+  const ANTENNA_TIP_RING_TUBE = 0.012;
 
   const CHEEK_W = 0.18;
   const CHEEK_H = 0.10;
@@ -106,12 +116,14 @@
   const EYE_PUPIL_HEX = 0x12100E;
   const NECK_HEX = 0x1B1916;
 
-  // ── Expressions: keyframe targets per expression ───────────────────────
-  /**
-   * Each expression target is a partial — we lerp toward these values every
-   * frame. Eyes scaleY < 1 = closed; mouth shape is encoded by 5 control
-   * points along the bottom of the face.
-   */
+  // ── Expressions: full personality presets per expression.
+  //
+  // `pose` is an offset added to the cursor-driven head rotation/position.
+  // `mouth` is 5 control points along the bottom (x, y per point).
+  // `antennaBend` rotates the antenna's Z axis (forward droop / backward arc).
+  // `bobMul` scales the idle bob amplitude (e.g. happy bobs faster + bigger).
+  // `winkRate` >0 enables random one-eye wink in idle frames.
+  // ─────────────────────────────────────────────────────────────────────────
   const EXPRESSION_TARGETS = {
     idle: {
       eyeScaleY: 1.0,
@@ -119,37 +131,70 @@
       mouth: [-MOUTH_HALF_W, 0, -MOUTH_HALF_W * 0.5, 0, 0, 0, MOUTH_HALF_W * 0.5, 0, MOUTH_HALF_W, 0],
       browTilt: 0,
       antennaIntensity: 0.7,
+      pose: { rotX: 0,     rotY: 0, rotZ: 0,     posY: 0 },
+      antennaBend: 0,
+      bobMul: 1.0,
+      winkRate: 0,
     },
     thinking: {
       eyeScaleY: 1.0,
-      pupilLook: { x: 0.25, y: 0.6 },     // looking up-right
-      mouth: [-MOUTH_HALF_W * 0.6, 0.02, -MOUTH_HALF_W * 0.3, -0.01, 0, -0.02, MOUTH_HALF_W * 0.3, -0.01, MOUTH_HALF_W * 0.6, 0.02],
-      browTilt: 0.08,
+      pupilLook: { x: 0.30, y: 0.55 },
+      mouth: [-MOUTH_HALF_W * 0.55, 0.02, -MOUTH_HALF_W * 0.28, -0.01, 0, -0.02, MOUTH_HALF_W * 0.28, -0.01, MOUTH_HALF_W * 0.55, 0.02],
+      browTilt: 0.10,
       antennaIntensity: 1.0,
+      // Head tilts to the right (rotZ -ve = clockwise in screen), lifted slightly.
+      pose: { rotX: 0,     rotY: 0, rotZ: -0.16,  posY: 0.04 },
+      antennaBend: 0.10,                   // slight forward lean
+      bobMul: 0.9,
+      winkRate: 0,
     },
     happy: {
-      eyeScaleY: 0.35,                     // squinted
+      eyeScaleY: 0.35,
       pupilLook: { x: 0, y: 0 },
       mouth: [-MOUTH_HALF_W, 0.03, -MOUTH_HALF_W * 0.5, -0.07, 0, -0.11, MOUTH_HALF_W * 0.5, -0.07, MOUTH_HALF_W, 0.03],
       browTilt: -0.04,
-      antennaIntensity: 0.85,
+      antennaIntensity: 0.95,
+      pose: { rotX: -0.04, rotY: 0, rotZ: 0,     posY: 0 },
+      antennaBend: 0,
+      bobMul: 1.7,                         // bouncier
+      winkRate: 0.22,                      // ~22% chance per second of a wink
     },
     surprised: {
-      eyeScaleY: 1.25,                     // wide open
+      eyeScaleY: 1.3,
       pupilLook: { x: 0, y: -0.2 },
       mouth: [-MOUTH_HALF_W * 0.4, 0, -MOUTH_HALF_W * 0.2, -0.05, 0, -0.09, MOUTH_HALF_W * 0.2, -0.05, MOUTH_HALF_W * 0.4, 0],
-      browTilt: -0.08,
-      antennaIntensity: 1.2,
+      browTilt: -0.10,
+      antennaIntensity: 1.25,
+      pose: { rotX: -0.22, rotY: 0, rotZ: 0,     posY: 0.08 },   // jolt back
+      antennaBend: -0.35,                  // antenna arcs backward
+      bobMul: 0.5,
+      winkRate: 0,
     },
     sleeping: {
-      eyeScaleY: 0.06,                     // closed eyes
+      eyeScaleY: 0.06,
       pupilLook: { x: 0, y: -0.4 },
       mouth: [-MOUTH_HALF_W, 0, -MOUTH_HALF_W * 0.5, 0, 0, 0, MOUTH_HALF_W * 0.5, 0, MOUTH_HALF_W, 0],
       browTilt: 0.05,
       antennaIntensity: 0.25,
+      pose: { rotX: 0.18,  rotY: 0, rotZ: 0,     posY: -0.06 },  // head droops down
+      antennaBend: 0.55,                   // antenna droops forward
+      bobMul: 0.35,                        // slow breath
+      winkRate: 0,
     },
   };
   const EXPRESSION_CYCLE = ["idle", "thinking", "happy", "surprised", "sleeping"];
+
+  // ── Click-nod / saccade tuning ─────────────────────────────────────────
+  const NOD_KICK_RAD = -0.22;        // forward nod on click
+  const NOD_DECAY_LERP = 0.16;
+  const SACCADE_INTERVAL_MIN_MS = 5500;
+  const SACCADE_INTERVAL_MAX_MS = 9500;
+  const SACCADE_DURATION_MS = 280;
+  const SACCADE_AMPLITUDE = 0.6;
+  const POSE_LERP = 0.10;             // smoothing rate for pose offsets
+  const ANTENNA_BEND_LERP = 0.12;
+  const WINK_CHECK_HZ = 1;            // how often we roll the wink dice (1/sec)
+  const WINK_DURATION_MS = 220;
 
   const MEDIA_REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 
@@ -298,10 +343,31 @@
       robot.add(m);
     });
 
-    // Eyes (white sphere) and pupils (dark sphere as child).
-    const eyeGeom = new THREE.SphereGeometry(EYE_RADIUS, 24, 24);
-    const eyeMat = new THREE.MeshStandardMaterial({
-      color: EYE_WHITE_HEX, metalness: 0.0, roughness: 0.55, emissive: 0x070605, emissiveIntensity: 0.15,
+    // HUD-visor eyes — rounded-rectangle emissive planes sitting on the face
+    // plate. No 3D spheres. Pupils are small accent-bright squares inside that
+    // translate to track the cursor. Reads as "sci-fi HUD", not cartoon face.
+    function makeRoundedRectShape(w, h, r) {
+      const shape = new THREE.Shape();
+      const x = -w / 2;
+      const y = -h / 2;
+      const rad = Math.min(r, Math.min(w, h) / 2 - 0.001);
+      shape.moveTo(x + rad, y);
+      shape.lineTo(x + w - rad, y);
+      shape.quadraticCurveTo(x + w, y, x + w, y + rad);
+      shape.lineTo(x + w, y + h - rad);
+      shape.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
+      shape.lineTo(x + rad, y + h);
+      shape.quadraticCurveTo(x, y + h, x, y + h - rad);
+      shape.lineTo(x, y + rad);
+      shape.quadraticCurveTo(x, y, x + rad, y);
+      return shape;
+    }
+    const eyeShape = makeRoundedRectShape(EYE_WIDTH, EYE_HEIGHT, EYE_CORNER_RADIUS);
+    const eyeGeom = new THREE.ShapeGeometry(eyeShape);
+    const eyeMat = new THREE.MeshBasicMaterial({
+      color: accentColor.getHex(),
+      transparent: true,
+      opacity: 0.92,
     });
     const eyeL = new THREE.Mesh(eyeGeom, eyeMat);
     eyeL.position.set(-EYE_DISTANCE / 2, EYE_Y, EYE_Z);
@@ -310,15 +376,35 @@
     eyeR.position.set(EYE_DISTANCE / 2, EYE_Y, EYE_Z);
     robot.add(eyeR);
 
-    const pupilGeom = new THREE.SphereGeometry(PUPIL_RADIUS, 18, 18);
-    const pupilMat = new THREE.MeshStandardMaterial({
-      color: EYE_PUPIL_HEX, metalness: 0.6, roughness: 0.2,
+    // Eye outer border (dim frame around the lit eye — adds depth).
+    const eyeFrameShape = makeRoundedRectShape(EYE_WIDTH + 0.03, EYE_HEIGHT + 0.03, EYE_CORNER_RADIUS + 0.015);
+    const eyeFrameGeom = new THREE.ShapeGeometry(eyeFrameShape);
+    const eyeFrameMat = new THREE.MeshBasicMaterial({
+      color: 0x0A0908,
+      transparent: true,
+      opacity: 0.9,
+    });
+    const eyeFrameL = new THREE.Mesh(eyeFrameGeom, eyeFrameMat);
+    eyeFrameL.position.set(-EYE_DISTANCE / 2, EYE_Y, EYE_Z - 0.001);
+    robot.add(eyeFrameL);
+    const eyeFrameR = new THREE.Mesh(eyeFrameGeom, eyeFrameMat.clone());
+    eyeFrameR.position.set(EYE_DISTANCE / 2, EYE_Y, EYE_Z - 0.001);
+    robot.add(eyeFrameR);
+
+    // Pupils — small bright squares INSIDE the eye plane, child of the eye so
+    // they inherit eye scale/rotation. They translate to track the cursor.
+    const pupilShape = makeRoundedRectShape(PUPIL_WIDTH, PUPIL_HEIGHT, PUPIL_WIDTH * 0.45);
+    const pupilGeom = new THREE.ShapeGeometry(pupilShape);
+    const pupilMat = new THREE.MeshBasicMaterial({
+      color: 0x0A0908,
+      transparent: true,
+      opacity: 0.95,
     });
     const pupilL = new THREE.Mesh(pupilGeom, pupilMat);
-    pupilL.position.set(0, 0, EYE_RADIUS - PUPIL_RADIUS + 0.005);
+    pupilL.position.set(0, 0, 0.005);
     eyeL.add(pupilL);
     const pupilR = new THREE.Mesh(pupilGeom, pupilMat.clone());
-    pupilR.position.set(0, 0, EYE_RADIUS - PUPIL_RADIUS + 0.005);
+    pupilR.position.set(0, 0, 0.005);
     eyeR.add(pupilR);
 
     // Mouth — 5 control points on a LineGeometry, vertices animated per
@@ -335,22 +421,43 @@
     const mouth = new THREE.Line(mouthGeom, mouthMat);
     robot.add(mouth);
 
-    // Antenna (cylinder + emissive tip).
-    const antennaGeom = new THREE.CylinderGeometry(ANTENNA_RADIUS, ANTENNA_RADIUS, ANTENNA_LEN, 8);
-    const antennaMat = new THREE.MeshStandardMaterial({
-      color: SHELL_DARK_HEX, metalness: 0.6, roughness: 0.35,
+    // Antenna v2 — 3 tapered cylinder segments stacked vertically + a small
+    // emissive ring on top. Reads as a sensor array, not a cartoon antenna.
+    // All segments are grouped under `antenna` so bending applies once.
+    const antenna = new THREE.Group();
+    const antennaSegmentsMat = new THREE.MeshStandardMaterial({
+      color: SHELL_DARK_HEX, metalness: 0.72, roughness: 0.32,
     });
-    const antenna = new THREE.Mesh(antennaGeom, antennaMat);
-    antenna.position.set(0, ANTENNA_BASE_Y + ANTENNA_LEN / 2, 0);
-    robot.add(antenna);
+    let cursorY = 0;
+    const antennaSegMeshes = [];
+    for (let i = 0; i < ANTENNA_SEG_HEIGHTS.length; i++) {
+      const rBottom = ANTENNA_SEG_RADII[i];
+      const rTop = ANTENNA_SEG_RADII[i + 1] !== undefined ? ANTENNA_SEG_RADII[i + 1] : rBottom * 0.85;
+      const h = ANTENNA_SEG_HEIGHTS[i];
+      const segGeom = new THREE.CylinderGeometry(rTop, rBottom, h, 10);
+      const seg = new THREE.Mesh(segGeom, antennaSegmentsMat);
+      seg.position.y = cursorY + h / 2;
+      cursorY += h;
+      antenna.add(seg);
+      antennaSegMeshes.push(seg);
+    }
 
-    const antennaTipGeom = new THREE.SphereGeometry(ANTENNA_TIP_R, 16, 16);
+    // Top emissive ring — pulses with mood + accent color.
+    const antennaTipGeom = new THREE.TorusGeometry(ANTENNA_TIP_RING_RADIUS, ANTENNA_TIP_RING_TUBE, 8, 24);
     const antennaTipMat = new THREE.MeshStandardMaterial({
-      color: accentColor.getHex(), emissive: accentColor.getHex(), emissiveIntensity: 1.4, metalness: 0.0, roughness: 0.3,
+      color: accentColor.getHex(),
+      emissive: accentColor.getHex(),
+      emissiveIntensity: 1.1,
+      metalness: 0.5,
+      roughness: 0.35,
     });
     const antennaTip = new THREE.Mesh(antennaTipGeom, antennaTipMat);
-    antennaTip.position.set(0, ANTENNA_BASE_Y + ANTENNA_LEN + ANTENNA_TIP_R * 0.5, 0);
-    robot.add(antennaTip);
+    antennaTip.position.y = cursorY + ANTENNA_TIP_RING_TUBE;
+    antennaTip.rotation.x = Math.PI / 2;
+    antenna.add(antennaTip);
+
+    antenna.position.set(0, ANTENNA_BASE_Y, 0);
+    robot.add(antenna);
 
     // Cheek screen (right) — emissive plane mounted on the side.
     const cheekGeom = new THREE.PlaneGeometry(CHEEK_W, CHEEK_H);
@@ -406,6 +513,25 @@
     }
     const browTiltCurrent = { value: 0 };
     const antennaIntensityCurrent = { value: 0.7 };
+
+    // Per-expression personality state. Lerps every frame toward target pose.
+    const poseCurrent = { rotX: 0, rotY: 0, rotZ: 0, posY: 0 };
+    const antennaBendCurrent = { value: 0 };
+
+    // Nod (click feedback) — pulse on rotX that decays back to 0.
+    let nodOffset = 0;
+
+    // Saccade — temporary pupil deflection that returns to expression target.
+    let saccadeOffset = { x: 0, y: 0 };
+    let saccadeStartedAt = 0;
+    let saccadeTarget = { x: 0, y: 0 };
+    let nextSaccadeAt = performance.now() + SACCADE_INTERVAL_MIN_MS;
+    let saccadeActive = false;
+
+    // Wink — temporary scale-Y override for one eye.
+    let winkActiveSide = null;   // 'L' | 'R' | null
+    let winkStartedAt = 0;
+    let lastWinkCheckAt = 0;
 
     function applyExpressionLerp(dtFactor) {
       const target = EXPRESSION_TARGETS[expressionCurrent] || EXPRESSION_TARGETS.idle;
@@ -474,10 +600,24 @@
     canvas.addEventListener("touchend", onPointerUp);
     canvas.addEventListener("touchcancel", onPointerUp);
 
+    // Force a synchronized blink + nod to mask the expression transition.
+    // Returning a function (rather than inlining) keeps cycleExpression /
+    // setExpression in sync without copy-pasting.
+    function onExpressionTransition() {
+      // Nod: snap to kick, then it decays each frame via NOD_DECAY_LERP.
+      nodOffset = NOD_KICK_RAD;
+      // Schedule a blink immediately to hide the snap of mouth/eyes.
+      blinkActive = true;
+      blinkStartedAt = performance.now();
+      // Push the next scheduled blink out so we don't double-fire.
+      nextBlinkAt = blinkStartedAt + BLINK_DURATION_MS + (BLINK_INTERVAL_MIN_MS + Math.random() * (BLINK_INTERVAL_MAX_MS - BLINK_INTERVAL_MIN_MS));
+    }
+
     function cycleExpression() {
       const idx = EXPRESSION_CYCLE.indexOf(expressionCurrent);
       const next = EXPRESSION_CYCLE[(idx + 1) % EXPRESSION_CYCLE.length];
       expressionCurrent = next;
+      onExpressionTransition();
       if (onExpressionChangeCb) {
         try { onExpressionChangeCb(next); }
         catch (cbErr) { /* eslint-disable-next-line no-console */ console.warn("[RobotHead] onExpressionChange threw:", cbErr); }
@@ -517,31 +657,71 @@
       const elapsed = Math.min(0.05, (now - lastFrame) / 1000);
       lastFrame = now;
       const motionMul = prefersReducedMotion ? 0.1 : motion;
-      const dtFactor = elapsed * 60 * motionMul; // normalize lerp speed
+      const dtFactor = elapsed * 60 * motionMul;
       const tSec = now * 0.001;
+      const target = EXPRESSION_TARGETS[expressionCurrent] || EXPRESSION_TARGETS.idle;
 
-      // Head tilt follows mouse + slight idle bob (sin).
-      const tiltY = mouseNDCx * HEAD_TILT_AMP_Y;
-      const tiltX = HEAD_TILT_X_BASE - mouseNDCy * HEAD_TILT_AMP_X;
+      // ── Pose lerp: per-expression head offset (additive to cursor-tilt).
+      poseCurrent.rotX = lerp(poseCurrent.rotX, target.pose.rotX, POSE_LERP);
+      poseCurrent.rotY = lerp(poseCurrent.rotY, target.pose.rotY, POSE_LERP);
+      poseCurrent.rotZ = lerp(poseCurrent.rotZ, target.pose.rotZ, POSE_LERP);
+      poseCurrent.posY = lerp(poseCurrent.posY, target.pose.posY, POSE_LERP);
+
+      // ── Nod decay (kicked on expression change).
+      nodOffset = lerp(nodOffset, 0, NOD_DECAY_LERP);
+
+      // ── Head tilt: cursor-tracking + expression pose + nod, bob is sin.
+      const tiltY = mouseNDCx * HEAD_TILT_AMP_Y + poseCurrent.rotY;
+      const tiltX = HEAD_TILT_X_BASE - mouseNDCy * HEAD_TILT_AMP_X + poseCurrent.rotX + nodOffset;
+      const tiltZ = poseCurrent.rotZ;
       robot.rotation.y = lerp(robot.rotation.y, tiltY, HEAD_TILT_LERP);
       robot.rotation.x = lerp(robot.rotation.x, tiltX, HEAD_TILT_LERP);
-      robot.position.y = Math.sin(tSec * HEAD_BOB_FREQUENCY_HZ * 2 * Math.PI) * HEAD_BOB_AMPLITUDE * motionMul;
+      robot.rotation.z = lerp(robot.rotation.z, tiltZ, HEAD_TILT_LERP);
+      const bob = Math.sin(tSec * HEAD_BOB_FREQUENCY_HZ * 2 * Math.PI * target.bobMul) *
+                  HEAD_BOB_AMPLITUDE * target.bobMul * motionMul;
+      robot.position.y = poseCurrent.posY + bob;
 
-      // Pupil tracking with clamp inside socket.
-      // pupil target = base look (from expression) + mouse delta (0..1 contribution)
-      const target = EXPRESSION_TARGETS[expressionCurrent] || EXPRESSION_TARGETS.idle;
+      // ── Saccade (random pupil twitch during idle frames).
+      if (!saccadeActive && now >= nextSaccadeAt && expressionCurrent === "idle") {
+        saccadeActive = true;
+        saccadeStartedAt = now;
+        const angle = Math.random() * Math.PI * 2;
+        saccadeTarget = {
+          x: Math.cos(angle) * SACCADE_AMPLITUDE,
+          y: Math.sin(angle) * SACCADE_AMPLITUDE,
+        };
+      }
+      if (saccadeActive) {
+        const t = (now - saccadeStartedAt) / SACCADE_DURATION_MS;
+        if (t >= 1) {
+          saccadeActive = false;
+          saccadeOffset.x = 0;
+          saccadeOffset.y = 0;
+          nextSaccadeAt = now + SACCADE_INTERVAL_MIN_MS + Math.random() * (SACCADE_INTERVAL_MAX_MS - SACCADE_INTERVAL_MIN_MS);
+        } else {
+          // Out-and-back curve: peak at t=0.4, return to 0 at t=1.
+          const peak = t < 0.4 ? t / 0.4 : 1 - (t - 0.4) / 0.6;
+          saccadeOffset.x = saccadeTarget.x * peak;
+          saccadeOffset.y = saccadeTarget.y * peak;
+        }
+      }
+
+      // ── Pupil tracking — expression base + mouse + saccade.
       const mouseInfluence = expressionCurrent === "sleeping" ? 0 : 0.7;
-      const wantX = clamp(target.pupilLook.x + mouseNDCx * mouseInfluence, -1, 1);
-      const wantY = clamp(target.pupilLook.y + mouseNDCy * mouseInfluence, -1, 1);
+      const wantX = clamp(target.pupilLook.x + mouseNDCx * mouseInfluence + saccadeOffset.x, -1, 1);
+      const wantY = clamp(target.pupilLook.y + mouseNDCy * mouseInfluence + saccadeOffset.y, -1, 1);
       pupilLookCurrent.x = lerp(pupilLookCurrent.x, wantX, PUPIL_LERP);
       pupilLookCurrent.y = lerp(pupilLookCurrent.y, wantY, PUPIL_LERP);
-      pupilL.position.x = pupilLookCurrent.x * PUPIL_MAX_OFFSET;
-      pupilL.position.y = pupilLookCurrent.y * PUPIL_MAX_OFFSET;
-      pupilR.position.x = pupilLookCurrent.x * PUPIL_MAX_OFFSET;
-      pupilR.position.y = pupilLookCurrent.y * PUPIL_MAX_OFFSET;
+      pupilL.position.x = pupilLookCurrent.x * PUPIL_MAX_OFFSET_X;
+      pupilL.position.y = pupilLookCurrent.y * PUPIL_MAX_OFFSET_Y;
+      pupilR.position.x = pupilLookCurrent.x * PUPIL_MAX_OFFSET_X;
+      pupilR.position.y = pupilLookCurrent.y * PUPIL_MAX_OFFSET_Y;
 
-      // Eye blink — overrides scaleY for a brief window.
-      let eyeYNow = lerp(eyeL.scale.y, target.eyeScaleY, 0.18);
+      // ── Eye scale — base lerp toward expression eyeScaleY, then blink/wink overrides.
+      let eyeYL = lerp(eyeL.scale.y, target.eyeScaleY, 0.18);
+      let eyeYR = lerp(eyeR.scale.y, target.eyeScaleY, 0.18);
+
+      // Blink — both eyes scale-Y → near 0 → back.
       if (now >= nextBlinkAt && !blinkActive) {
         blinkActive = true;
         blinkStartedAt = now;
@@ -552,34 +732,64 @@
           blinkActive = false;
           scheduleNextBlink(now);
         } else {
-          // smooth 1 → 0 → 1
-          const closed = 1 - Math.abs(0.5 - t) * 2;     // peak at t=0.5
-          eyeYNow = Math.max(0.05, eyeYNow * (1 - closed));
+          const closed = 1 - Math.abs(0.5 - t) * 2;
+          const factor = (1 - closed);
+          eyeYL *= factor;
+          eyeYR *= factor;
         }
       }
-      eyeL.scale.set(1, eyeYNow, 1);
-      eyeR.scale.set(1, eyeYNow, 1);
 
-      // Mouth + antenna intensity + brow drift toward expression target.
+      // Wink (happy only) — one eye closes briefly.
+      if (target.winkRate > 0 && now - lastWinkCheckAt > 1000 / WINK_CHECK_HZ) {
+        lastWinkCheckAt = now;
+        if (!winkActiveSide && Math.random() < target.winkRate) {
+          winkActiveSide = Math.random() < 0.5 ? "L" : "R";
+          winkStartedAt = now;
+        }
+      }
+      if (winkActiveSide) {
+        const t = (now - winkStartedAt) / WINK_DURATION_MS;
+        if (t >= 1) {
+          winkActiveSide = null;
+        } else {
+          const closed = 1 - Math.abs(0.5 - t) * 2;
+          const factor = 1 - closed;
+          if (winkActiveSide === "L") eyeYL *= factor;
+          else eyeYR *= factor;
+        }
+      }
+
+      const fL = Math.max(0.05, eyeYL);
+      const fR = Math.max(0.05, eyeYR);
+      eyeL.scale.set(1, fL, 1);
+      eyeR.scale.set(1, fR, 1);
+      // Eye frame follows the eye's vertical scale so the dim border doesn't
+      // poke out when the HUD closes.
+      eyeFrameL.scale.set(1, Math.max(0.2, fL), 1);
+      eyeFrameR.scale.set(1, Math.max(0.2, fR), 1);
+
+      // Mouth + brow + antenna intensity toward expression target.
       applyExpressionLerp(dtFactor);
 
-      // Antenna pulse — driven by per-expression rate + accent emissive.
+      // Antenna pulse + bend.
+      // The whole antenna (segments + ring tip) is now a single group, so
+      // bending = rotation.z around the group's base — no manual sync needed.
       const rate = ANTENNA_PULSE_RATE_BY_EXPRESSION[expressionCurrent] || 1.0;
       const pulse = 0.65 + 0.55 * (0.5 + 0.5 * Math.sin(tSec * rate * 2 * Math.PI));
       antennaTipMat.emissiveIntensity = pulse * antennaIntensityCurrent.value;
       antennaTipMat.color.setRGB(accentColor.r, accentColor.g, accentColor.b);
       antennaTipMat.emissive.setRGB(accentColor.r, accentColor.g, accentColor.b);
+      antennaBendCurrent.value = lerp(antennaBendCurrent.value, target.antennaBend, ANTENNA_BEND_LERP);
+      antenna.rotation.z = antennaBendCurrent.value;
 
       // Temple LED blink (every ~1.6s, half-second on).
       const ledOn = (tSec * 0.625) % 1 < 0.35;
       templeMat.opacity = ledOn ? 1 : 0.25;
       templeMat.transparent = true;
 
-      // Cheek screen color follows accent2.
       cheekMat.color.setRGB(accent2Color.r, accent2Color.g, accent2Color.b);
       collarMat.color.setRGB(accentColor.r, accentColor.g, accentColor.b);
 
-      // Use brow tilt to bend mouth as a poor-mans expression boost.
       mouth.rotation.z = browTiltCurrent.value;
 
       renderer.render(scene, camera);
@@ -593,11 +803,12 @@
       },
       setMotion(m) { motion = clamp(m, 0, 2); },
       setExpression(name) {
-        if (EXPRESSION_TARGETS[name]) {
-          expressionCurrent = name;
-          if (onExpressionChangeCb) {
-            try { onExpressionChangeCb(name); } catch (cbErr) { /* eslint-disable-next-line no-console */ console.warn("[RobotHead] onExpressionChange threw:", cbErr); }
-          }
+        if (!EXPRESSION_TARGETS[name]) return;
+        if (name === expressionCurrent) return;
+        expressionCurrent = name;
+        onExpressionTransition();
+        if (onExpressionChangeCb) {
+          try { onExpressionChangeCb(name); } catch (cbErr) { /* eslint-disable-next-line no-console */ console.warn("[RobotHead] onExpressionChange threw:", cbErr); }
         }
       },
       getExpression() { return expressionCurrent; },
@@ -616,11 +827,15 @@
         document.removeEventListener("visibilitychange", onVisibilityChange);
         if (motionMedia.removeEventListener) motionMedia.removeEventListener("change", onMotionPrefChange);
         else if (motionMedia.removeListener) motionMedia.removeListener(onMotionPrefChange);
-        // Dispose all geometries and materials.
-        const objects = [head, headEdges, facePlate, sidePanelL, sidePanelR,
-          eyeL, eyeR, pupilL, pupilR, mouth, antenna, antennaTip,
-          cheekScreen, cheekBorder, templeLED, neck, collar];
-        objects.forEach(function disposeOne(obj) {
+        // Dispose all geometries and materials. Antenna is a THREE.Group whose
+        // children we dispose individually; the group itself has no geometry.
+        const meshObjects = [
+          head, headEdges, facePlate, sidePanelL, sidePanelR,
+          eyeL, eyeR, eyeFrameL, eyeFrameR, pupilL, pupilR,
+          mouth, antennaTip,
+          cheekScreen, cheekBorder, templeLED, neck, collar,
+        ].concat(antennaSegMeshes);
+        meshObjects.forEach(function disposeOne(obj) {
           if (obj.geometry && obj.geometry.dispose) obj.geometry.dispose();
           if (obj.material && obj.material.dispose) obj.material.dispose();
         });

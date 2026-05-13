@@ -72,6 +72,11 @@ function Hero({ t, links }) {
   }, []);
 
   function onRobotClick() {
+    // Light haptic — Android only, iOS no-ops. Done via window.navigator
+    // directly so this component stays decoupled from app.jsx's haptic helper.
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      try { navigator.vibrate(8); } catch (e) { /* opportunistic */ }
+    }
     if (robotRef.current && robotRef.current.cycleExpression) {
       robotRef.current.cycleExpression();
     }
@@ -165,6 +170,9 @@ function Hero({ t, links }) {
           </div>
         </aside>
       </div>
+
+      {/* Mobile-only scroll cue at the bottom of the takeover-hero. CSS hides it on desktop. */}
+      <div className="hero-scroll-hint mono" aria-hidden="true">scroll</div>
 
       {/* Tech-stack marquee — fills the otherwise-empty bottom band of the hero
           and ties the section to the rest of the page with a single moving line. */}
@@ -402,16 +410,73 @@ function AboutStat({ stat, runCounters, index }) {
 
 const CONTRIB_ROWS = 7;
 const CONTRIB_COLS = 28;
+const CONTRIB_TOTAL_CELLS = CONTRIB_ROWS * CONTRIB_COLS;
+const CONTRIB_PULSE_INTERVAL_MIN_MS = 1800;
+const CONTRIB_PULSE_INTERVAL_MAX_MS = 3400;
+const CONTRIB_PULSE_DURATION_MS = 900;
+const CURRENTLY_ROTATE_INTERVAL_MS = 5200;
+const CURRENTLY_TYPE_INTERVAL_MS = 30;
 const TECH_CHIPS = ["TypeScript", "React", "Next.js", "Node.js", "Postgres", "OpenAI", "Anthropic", "LangChain", "n8n", "Three.js", "Telegram Bot", "Docker"];
+
+// Currently-rotator — types/erases the active phrase with a soft typewriter.
+function useCurrentlyRotator(phrases) {
+  const [text, setText] = useState("");
+  const [phase, setPhase] = useState("typing"); // typing | hold | erasing
+  const idxRef = useRef(0);
+  const cursorRef = useRef(0);
+  useEffect(() => {
+    if (!phrases || phrases.length === 0) return undefined;
+    let timer = 0;
+    let cancelled = false;
+    function step() {
+      if (cancelled) return;
+      const active = phrases[idxRef.current % phrases.length] || "";
+      if (phase === "typing") {
+        cursorRef.current += 1;
+        const next = active.slice(0, cursorRef.current);
+        setText(next);
+        if (cursorRef.current >= active.length) {
+          setPhase("hold");
+          timer = window.setTimeout(step, CURRENTLY_ROTATE_INTERVAL_MS);
+        } else {
+          timer = window.setTimeout(step, CURRENTLY_TYPE_INTERVAL_MS);
+        }
+      } else if (phase === "hold") {
+        setPhase("erasing");
+        timer = window.setTimeout(step, CURRENTLY_TYPE_INTERVAL_MS);
+      } else if (phase === "erasing") {
+        cursorRef.current = Math.max(0, cursorRef.current - 1);
+        const next = active.slice(0, cursorRef.current);
+        setText(next);
+        if (cursorRef.current === 0) {
+          idxRef.current = (idxRef.current + 1) % phrases.length;
+          setPhase("typing");
+          timer = window.setTimeout(step, CURRENTLY_TYPE_INTERVAL_MS * 2);
+        } else {
+          timer = window.setTimeout(step, CURRENTLY_TYPE_INTERVAL_MS * 0.65);
+        }
+      }
+    }
+    timer = window.setTimeout(step, CURRENTLY_TYPE_INTERVAL_MS);
+    return function cleanup() {
+      cancelled = true;
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [phrases, phase]);
+  return text;
+}
 
 function About({ t }) {
   const ref = useRevealRoot([t]);
   const cardRef = useRef(null);
   const [runCounters, setRunCounters] = useState(false);
   const [clock, setClock] = useState(() => formatTashkentTime(new Date()));
+  const [pulseIndex, setPulseIndex] = useState(-1);
   const contribCells = useMemo(() => buildContribCells(CONTRIB_ROWS, CONTRIB_COLS), []);
+  const currentlyPhrases = t.about.currently || [];
+  const currentlyText = useCurrentlyRotator(currentlyPhrases);
 
-  // Section-in-view trigger to start counters.
+  // Section-in-view trigger to start counters + activate contribution pulses.
   useEffect(() => {
     if (!cardRef.current) return undefined;
     const io = new IntersectionObserver((entries) => {
@@ -432,6 +497,42 @@ function About({ t }) {
     return () => clearInterval(id);
   }, []);
 
+  // Live contribution pulse — periodically flash a random cell to level-4
+  // for ~900ms, then revert. Indices are deterministic via a counter so we
+  // don't pick the same cell twice in a row.
+  useEffect(() => {
+    if (!runCounters) return undefined;
+    let cleared = false;
+    let scheduleTimer = 0;
+    let revertTimer = 0;
+    function scheduleNext() {
+      const delay = CONTRIB_PULSE_INTERVAL_MIN_MS + Math.random() * (CONTRIB_PULSE_INTERVAL_MAX_MS - CONTRIB_PULSE_INTERVAL_MIN_MS);
+      scheduleTimer = window.setTimeout(() => {
+        if (cleared) return;
+        const idx = Math.floor(Math.random() * CONTRIB_TOTAL_CELLS);
+        setPulseIndex(idx);
+        revertTimer = window.setTimeout(() => {
+          if (cleared) return;
+          setPulseIndex(-1);
+          scheduleNext();
+        }, CONTRIB_PULSE_DURATION_MS);
+      }, delay);
+    }
+    scheduleNext();
+    return function cleanup() {
+      cleared = true;
+      if (scheduleTimer) window.clearTimeout(scheduleTimer);
+      if (revertTimer) window.clearTimeout(revertTimer);
+    };
+  }, [runCounters]);
+
+  const recentItems = t.about.recent || [];
+  const statusLabel = t.about.status_label || "Available";
+  const currentlyLabel = t.about.currently_label || "Currently";
+  const recentLabel = t.about.recent_label || "Recent work";
+  const contribLabel = t.about.contrib_label || "contributions · 28 weeks";
+  const ghStats = t.about.gh_stats || "";
+
   return (
     <section data-section="about" id="about" ref={ref}>
       <div className="shell">
@@ -442,18 +543,29 @@ function About({ t }) {
           <header className="about-readme-head">
             <div className="about-avatar" aria-hidden="true">
               <span>SA</span>
+              <span className="about-avatar-shine" />
             </div>
             <div className="about-id">
-              <h3 className="about-id-handle">@samandar</h3>
+              <div className="about-id-row">
+                <h3 className="about-id-handle">@samandar</h3>
+                <span className="about-id-status mono"><span className="about-id-status-dot" />{statusLabel}</span>
+              </div>
               <div className="about-id-meta mono">
                 <span className="about-id-online"><span className="about-id-dot" />online</span>
-                <span>·</span>
+                <span className="about-id-sep">·</span>
                 <span>Tashkent · UTC+5</span>
-                <span>·</span>
+                <span className="about-id-sep">·</span>
                 <span className="about-clock num-tab">{clock}</span>
               </div>
             </div>
           </header>
+
+          {/* Currently rotator */}
+          <div className="about-currently mono">
+            <span className="about-currently-key">{currentlyLabel}:</span>
+            <span className="about-currently-val">{currentlyText}</span>
+            <span className="about-currently-caret" aria-hidden="true" />
+          </div>
 
           {/* Stats counters */}
           <div className="about-stats">
@@ -480,10 +592,26 @@ function About({ t }) {
             ))}
           </div>
 
+          {/* Recent work feed */}
+          {recentItems.length > 0 && (
+            <div className="about-recent">
+              <div className="about-recent-head mono">{recentLabel}</div>
+              <ul className="about-recent-list">
+                {recentItems.map((item, i) => (
+                  <li key={i} className="about-recent-item">
+                    <span className="about-recent-when mono">{item.when}</span>
+                    <span className={`about-recent-tag mono about-recent-tag--${item.tag}`}>{item.tag}</span>
+                    <span className="about-recent-msg">{item.msg}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Contribution graph */}
           <div className="about-contrib">
             <div className="about-contrib-head mono">
-              <span>contributions · 28 weeks</span>
+              <span>{contribLabel}</span>
               <span className="about-contrib-legend">
                 <span>less</span>
                 <span className="about-contrib-legend-cell" data-level="0" />
@@ -499,18 +627,24 @@ function About({ t }) {
               style={{ gridTemplateColumns: `repeat(${CONTRIB_COLS}, 1fr)` }}
               aria-hidden="true"
             >
-              {contribCells.map((cell) => (
-                <span
-                  key={`${cell.row}-${cell.col}`}
-                  className="about-contrib-cell"
-                  data-level={cell.level}
-                  style={{
-                    animationDelay: `${(cell.col * 35 + cell.row * 25)}ms`,
-                  }}
-                />
-              ))}
+              {contribCells.map((cell, idx) => {
+                const isPulsing = idx === pulseIndex;
+                return (
+                  <span
+                    key={`${cell.row}-${cell.col}`}
+                    className={`about-contrib-cell ${isPulsing ? "is-pulsing" : ""}`}
+                    data-level={isPulsing ? 4 : cell.level}
+                    style={{ animationDelay: `${(cell.col * 35 + cell.row * 25)}ms` }}
+                  />
+                );
+              })}
             </div>
           </div>
+
+          {/* GitHub-style stats footer */}
+          {ghStats && (
+            <div className="about-gh-stats mono">{ghStats}</div>
+          )}
         </article>
       </div>
     </section>
@@ -592,13 +726,72 @@ function ProjectCard({ p, i, cta }) {
   );
 }
 
+// Mobile chapter-indicator: shows N dots above the project grid, highlights
+// whichever card is most-in-view, taps scroll to that card. Only meaningful
+// on small screens where the grid collapses to one column.
+function ProjectChapterDots({ items, gridRef }) {
+  const [activeIdx, setActiveIdx] = useState(0);
+  const cardRefs = useRef([]);
+
+  useEffect(() => {
+    const cards = (gridRef.current ? gridRef.current.querySelectorAll(".proj-card") : []);
+    if (!cards.length) return undefined;
+    cardRefs.current = Array.from(cards);
+    // Track each card's intersection ratio; pick the largest.
+    const ratios = new Array(cards.length).fill(0);
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        const idx = cardRefs.current.indexOf(e.target);
+        if (idx >= 0) ratios[idx] = e.intersectionRatio;
+      });
+      let best = 0;
+      let bestRatio = -1;
+      for (let i = 0; i < ratios.length; i++) {
+        if (ratios[i] > bestRatio) { bestRatio = ratios[i]; best = i; }
+      }
+      setActiveIdx(best);
+    }, { threshold: [0.1, 0.4, 0.7, 0.95] });
+    cards.forEach((c) => io.observe(c));
+    return function cleanup() { io.disconnect(); };
+  }, [gridRef]);
+
+  function onDot(i) {
+    const el = cardRefs.current[i];
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  return (
+    <nav className="proj-chapters" aria-label="project list">
+      <ol className="proj-chapters-dots">
+        {items.map((p, i) => (
+          <li key={i}>
+            <button
+              type="button"
+              className={`proj-chapters-dot ${i === activeIdx ? "is-active" : ""}`}
+              aria-label={p.name}
+              onClick={() => onDot(i)}
+            />
+          </li>
+        ))}
+      </ol>
+      <div className="proj-chapters-label mono">
+        <span className="proj-chapters-num">{String(activeIdx + 1).padStart(2, "0")}</span>
+        <span className="proj-chapters-of">/ {String(items.length).padStart(2, "0")}</span>
+        <span className="proj-chapters-name">{items[activeIdx]?.name || ""}</span>
+      </div>
+    </nav>
+  );
+}
+
 function Projects({ t }) {
   const ref = useRevealRoot([t]);
+  const gridRef = useRef(null);
   return (
     <section data-section="projects" id="projects" ref={ref}>
       <div className="shell">
         <SecHead num="03" eyebrow={t.projects.eyebrow} title={t.projects.title} meta={`${t.projects.items.length} cases · 2024–26`} />
-        <div className="proj-grid">
+        <ProjectChapterDots items={t.projects.items} gridRef={gridRef} />
+        <div className="proj-grid" ref={gridRef}>
           {t.projects.items.map((p, i) => <ProjectCard key={i} p={p} i={i} cta={t.projects.cta} />)}
         </div>
       </div>
