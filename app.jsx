@@ -1,0 +1,289 @@
+// app.jsx — Main app with scene-engine, themes, fonts, scroll-driven 3D
+
+const { useEffect: useE, useRef: useR, useState: useS } = React;
+
+// ── Error Boundary (class component — required by React API)
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(err) { return { error: err }; }
+  componentDidCatch(err, info) { console.error("[ErrorBoundary]", err, info); }
+  render() {
+    if (this.state.error) {
+      return React.createElement("div", {
+        style: {
+          position: "fixed", inset: 0, background: "#07090B", color: "#B8FF3D",
+          fontFamily: "monospace", fontSize: "13px", padding: "80px 40px",
+          zIndex: 9999, overflowY: "auto", whiteSpace: "pre-wrap"
+        }
+      },
+        "⚠ RENDER ERROR\n\n" + String(this.state.error) + "\n\n" +
+        (this.state.error.stack || "")
+      );
+    }
+    return this.props.children;
+  }
+}
+
+const LINKS = { github: "github.com/your-username", telegram: "t.me/your-username", email: "hello@example.com" };
+const NAV_SECTIONS = ["about", "projects", "skills", "services", "cv", "contact"];
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "lang": "ru",
+  "theme": "claude",
+  "font": "geist",
+  "motion": 1,
+  "density": "regular"
+}/*EDITMODE-END*/;
+
+function useScrollEngine(coreRef, bgFxRef, setActiveSection) {
+  useE(() => {
+    const progressEl = document.querySelector(".scroll-progress");
+    let raf = 0;
+    function tick() {
+      raf = 0;
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const y = max > 0 ? window.scrollY / max : 0;
+      if (progressEl) progressEl.style.width = `${(y * 100).toFixed(2)}%`;
+      if (coreRef.current && coreRef.current.setScroll) coreRef.current.setScroll(y);
+      if (bgFxRef.current && bgFxRef.current.setScroll) bgFxRef.current.setScroll(y);
+    }
+    function onScroll() { if (!raf) raf = requestAnimationFrame(tick); }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    tick();
+    const sections = document.querySelectorAll("section[data-section]");
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting && e.intersectionRatio > 0.3) {
+          const id = e.target.getAttribute("data-section");
+          setActiveSection(id);
+          if (bgFxRef.current && bgFxRef.current.setSection) bgFxRef.current.setSection(id);
+        }
+      });
+    }, { threshold: [0.3, 0.5, 0.7] });
+    sections.forEach((s) => io.observe(s));
+    return () => { window.removeEventListener("scroll", onScroll); if (raf) cancelAnimationFrame(raf); io.disconnect(); };
+  }, []);
+}
+
+function Nav({ t, lang, setLang, active }) {
+  const [open, setOpen] = useS(false);
+
+  // Lock scroll while drawer open, restore on close/unmount.
+  useE(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [open]);
+
+  // Close drawer when section clicked or Escape pressed.
+  useE(() => {
+    if (!open) return;
+    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  return (
+    <nav className={`nav ${open ? "nav-open" : ""}`}>
+      <div className="nav-inner">
+        <a href="#hero" className="brand" data-cursor="link" data-cursor-label="↑ top">
+          <span className="brand-mark" />
+          <span>SAMANDAR<span className="brand-sub"> · EXEC.AI.LAB</span></span>
+        </a>
+        <ul className="nav-links">
+          {NAV_SECTIONS.map((k) => (
+            <li key={k}><a href={`#${k}`} className={active === k ? "active" : ""} data-cursor="link" data-cursor-label={`→ ${t.nav[k]}`}>{t.nav[k]}</a></li>
+          ))}
+        </ul>
+        <div className="nav-right">
+          <div className="lang" role="group" aria-label="language">
+            {["ru", "en", "uz"].map((L) => (
+              <button key={L} onClick={() => setLang(L)} className={lang === L ? "active" : ""} aria-pressed={lang === L}>{L.toUpperCase()}</button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="nav-burger"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            onClick={() => setOpen((o) => !o)}
+          >
+            <span /><span /><span />
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile drawer — full-height overlay with nav links + lang. */}
+      <div className={`nav-drawer ${open ? "is-open" : ""}`} aria-hidden={!open}>
+        <ul className="nav-drawer-links">
+          {NAV_SECTIONS.map((k, i) => (
+            <li key={k} style={{ "--i": i }}>
+              <a href={`#${k}`} onClick={() => setOpen(false)} className={active === k ? "active" : ""}>
+                <span className="nav-drawer-num">/{String(i + 1).padStart(2, "0")}</span>
+                <span>{t.nav[k]}</span>
+                <span className="nav-drawer-arrow">→</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        <div className="nav-drawer-foot">
+          <div className="nav-drawer-meta mono">EXECUTIVE AI CODE LAB · v.2026</div>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+function PortfolioTweaks({ t, setTweak }) {
+  const themeOptions = Object.keys(window.THEMES);
+  const fontOptions = Object.keys(window.FONT_STACKS);
+  return (
+    <TweaksPanel>
+      <TweakSection label="Language" />
+      <TweakRadio label="Lang" value={t.lang} options={["ru","en","uz"]} onChange={(v) => setTweak("lang", v)} />
+
+      <TweakSection label="Theme" />
+      <TweakSelect label="Theme" value={t.theme} options={themeOptions} onChange={(v) => setTweak("theme", v)} />
+      <TweakSelect label="Font" value={t.font} options={fontOptions} onChange={(v) => setTweak("font", v)} />
+
+      <TweakSection label="Layout" />
+      <TweakRadio label="Density" value={t.density} options={["compact","regular","airy"]} onChange={(v) => setTweak("density", v)} />
+      <TweakSlider label="Motion" value={t.motion} min={0} max={1.6} step={0.1} onChange={(v) => setTweak("motion", v)} />
+    </TweaksPanel>
+  );
+}
+
+function App() {
+  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [activeSection, setActiveSection] = useS("hero");
+  const [coreReady, setCoreReady] = useS(false);
+  const canvasRef = useR(null);
+  const coreRef = useR(null);
+  const bgFxCanvasRef = useR(null);
+  const bgFxRef = useR(null);
+  const lang = tweaks.lang in window.CONTENT ? tweaks.lang : "ru";
+  const t = window.CONTENT[lang];
+
+  // Backfill CV doc fields (id, langs, strengths, foot) so the resume layout
+  // renders even if the content bundles haven't been extended yet.
+  useE(() => {
+    const I18N = {
+      ru: {
+        id: { name: "Самандар", role: "Full-Stack · AI Automation · Product Engineer",
+              meta: ["Ташкент · UTC+5", "Открыт к проектам", "EN · RU · UZ"],
+              stats: [{ k: "опыт", v: "5+ лет" }, { k: "релизов", v: "20+" }, { k: "стек", v: "TS / Py / SQL" }, { k: "ответ", v: "< 24h" }] },
+        exp_title: "опыт", langs_title: "языки", strengths_title: "сильные стороны",
+        strengths: ["Системное мышление от прод-идеи до прод-деплоя", "AI-интеграции уровня продакшна, не демки", "Тёплая, понятная коммуникация на трёх языках", "Самостоятельный темп, без надзора"],
+        langs: [{ k: "Русский", lv: 100, label: "native" }, { k: "English", lv: 85, label: "C1" }, { k: "Oʻzbek", lv: 95, label: "fluent" }],
+        foot: "сгенерировано 2026 · подписанная версия по запросу",
+      },
+      en: {
+        id: { name: "Samandar", role: "Full-Stack · AI Automation · Product Engineer",
+              meta: ["Tashkent · UTC+5", "Open to projects", "EN · RU · UZ"],
+              stats: [{ k: "experience", v: "5+ yrs" }, { k: "releases", v: "20+" }, { k: "stack", v: "TS / Py / SQL" }, { k: "reply", v: "< 24h" }] },
+        exp_title: "experience", langs_title: "languages", strengths_title: "strengths",
+        strengths: ["End-to-end ownership from product idea to prod deploy", "Production AI integrations, not demos", "Calm, precise communication across three languages", "Async-first; runs without supervision"],
+        langs: [{ k: "Russian", lv: 100, label: "native" }, { k: "English", lv: 85, label: "C1" }, { k: "Uzbek", lv: 95, label: "fluent" }],
+        foot: "generated 2026 · signed copy on request",
+      },
+      uz: {
+        id: { name: "Samandar", role: "Full-Stack · AI Automation · Product Engineer",
+              meta: ["Toshkent · UTC+5", "Loyihalarga ochiq", "EN · RU · UZ"],
+              stats: [{ k: "tajriba", v: "5+ yil" }, { k: "relizlar", v: "20+" }, { k: "stek", v: "TS / Py / SQL" }, { k: "javob", v: "< 24h" }] },
+        exp_title: "tajriba", langs_title: "tillar", strengths_title: "kuchli tomonlar",
+        strengths: ["Mahsulot g'oyasidan prod-deploygacha to'liq egalik", "Production darajadagi AI integratsiyalar", "Uch tilda aniq va xotirjam muloqot", "Mustaqil sur'at, nazoratsiz ishlash"],
+        langs: [{ k: "Ruscha", lv: 100, label: "native" }, { k: "English", lv: 85, label: "C1" }, { k: "Oʻzbek", lv: 100, label: "ona tili" }],
+        foot: "2026 yil · imzolangan nusxa so'rov asosida",
+      },
+    };
+    Object.entries(I18N).forEach(([L, patch]) => {
+      const cv = window.CONTENT?.[L]?.cv;
+      if (!cv) return;
+      for (const k of Object.keys(patch)) if (cv[k] == null) cv[k] = patch[k];
+    });
+  }, []);
+
+  // Apply theme/font/density
+  useE(() => {
+    const theme = window.applyTheme(tweaks.theme);
+    if (coreRef.current && theme) coreRef.current.setAccent(theme.accent, theme.accent2);
+    if (bgFxRef.current && theme) bgFxRef.current.setAccent(theme.accent, theme.accent2);
+  }, [tweaks.theme]);
+  useE(() => { window.applyFontStack(tweaks.font); }, [tweaks.font]);
+  useE(() => {
+    document.documentElement.setAttribute("data-density", tweaks.density);
+    document.documentElement.setAttribute("lang", lang);
+  }, [tweaks.density, lang]);
+  useE(() => {
+    document.documentElement.style.setProperty("--motion", String(tweaks.motion));
+    if (coreRef.current && coreRef.current.setMotion) coreRef.current.setMotion(tweaks.motion);
+    if (bgFxRef.current && bgFxRef.current.setMotion) bgFxRef.current.setMotion(tweaks.motion);
+  }, [tweaks.motion]);
+
+  // Apply theme/font once on mount + init bg-fx canvas
+  useE(() => {
+    window.applyTheme(tweaks.theme);
+    window.applyFontStack(tweaks.font);
+    setCoreReady(true);
+    if (bgFxCanvasRef.current && window.BgFx) {
+      const rootStyles = getComputedStyle(document.documentElement);
+      const a1 = rootStyles.getPropertyValue("--accent").trim() || "#D97757";
+      const a2 = rootStyles.getPropertyValue("--accent-2").trim() || "#C89B5E";
+      bgFxRef.current = window.BgFx.create(bgFxCanvasRef.current, {
+        accent: a1, accent2: a2, motion: tweaks.motion,
+      });
+    }
+    return () => {
+      if (bgFxRef.current && bgFxRef.current.dispose) bgFxRef.current.dispose();
+      bgFxRef.current = null;
+    };
+  }, []);
+
+  useScrollEngine(coreRef, bgFxRef, setActiveSection);
+
+  // Motion: init smart cursor + reveal observers after first paint, refresh on lang change.
+  // isInViewport check in motion.js handles the "no-flash" problem for visible elements.
+  useE(() => {
+    document.body.classList.add("page-loaded");
+    if (window.Motion) window.Motion.init();
+  }, []);
+  useE(() => {
+    if (!window.Motion) return;
+    const id = requestAnimationFrame(() => window.Motion.refresh());
+    return () => cancelAnimationFrame(id);
+  }, [lang, tweaks.density]);
+
+  return (
+    <>
+      <canvas ref={bgFxCanvasRef} className="bg-fx-canvas" aria-hidden="true" />
+      <div className="bg-grid" />
+      <div className="bg-noise" />
+      <div className="scroll-progress" />
+
+      <Nav t={t} lang={lang} setLang={(v) => setTweak("lang", v)} active={activeSection} />
+
+      <main>
+        <Hero t={t} links={LINKS} />
+        <Signal t={t} />
+        <About t={t} />
+        <Projects t={t} />
+        <Skills t={t} />
+        <Services t={t} />
+        <CV t={t} links={LINKS} />
+        <Process t={t} />
+        <Trust t={t} />
+        <Contact t={t} links={LINKS} />
+      </main>
+
+      <Footer t={t} links={LINKS} />
+      <PortfolioTweaks t={tweaks} setTweak={setTweak} />
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>
+);

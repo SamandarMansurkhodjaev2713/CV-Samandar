@@ -1,0 +1,362 @@
+/* cv-doc.css — Resume document layout (CV section).
+   Hero robot styling moved entirely into sections.css. */
+
+/* ════════════════════════════════════════════════════════════
+   CV — Real resume document
+   ════════════════════════════════════════════════════════════ */
+.cv-doc {
+  margin-top: 32px;
+  background: linear-gradient(180deg, rgba(15,18,22,0.7), rgba(11,14,17,0.85));
+  border: 1px solid var(--line-strong, rgba(244,241,234,0.12));
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.cv-doc-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line, rgba(244,241,234,0.08));
+  background: rgba(7,9,11,0.6);
+  flex-wrap: wrap;
+}
+.cv-doc-tabs { display: flex; gap: 2px; }
+.cv-doc-tab {
+  font-size: 11px;
+  padding: 8px 14px;
+  color: rgba(244,241,234,0.45);
+  background: transparent;
+  border-radius: 6px 6px 0 0;
+  border-bottom: 2px solid transparent;
+  letter-spacing: 0.04em;
+}
+.cv-doc-tab.is-active {
+  color: var(--text, #f4f1ea);
+  border-bottom-color: var(--accent, #B8FF3D);
+  background: rgba(244,241,234,0.03);
+}
+.cv-doc-actions { display: flex; gap: 6px; }
+.cv-action {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 12px;
+  font-size: 11px;
+  color: rgba(244,241,234,0.7);
+  background: transparent;
+  border: 1px solid var(--line-strong, rgba(244,241,234,0.12));
+  border-radius: 6px;
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: color .2s, border-color .2s, background .2s;
+}
+.cv-action:hover { color: var(--accent, #B8FF3D); border-color: rgba(184,255,61,0.35); }
+.cv-action-ico { color: rgba(244,241,234,0.4); font-size: 10px; }
+
+/* Identity strip */
+.cv-id {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 32px;
+  padding: 36px 40px 28px;
+  border-bottom: 1px dashed var(--line, rgba(244,241,234,0.08));
+  align-items: end;
+}
+.cv-id-name {
+  font-family: var(--f-display, "Instrument Serif", serif);
+  font-size: clamp(38px, 5vw, 64px);
+  line-height: 0.95;
+  letter-spacing: -0.025em;
+  color: var(--text, #f4f1ea);
+  margin: 0 0 8px;
+  font-weight: 400;
+}
+.cv-id-role {
+  font-size: 15px;
+  color: rgba(244,241,234,0.7);
+  margin: 0 0 14px;
+  max-width: 48ch;
+  line-height: 1.5;
+}
+.cv-id-meta {
+  display: flex; gap: 8px;
+  flex-wrap: wrap;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(244,241,234,0.45);
+}
+.cv-id-meta > * + *::before {
+  content: "·"; margin-right: 8px; color: rgba(244,241,234,0.25);
+}
+
+.cv-id-stats {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 18px 28px;
+  margin: 0;
+  padding: 0;
+}
+.cv-id-stat dt {
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(244,241,234,0.4);
+  margin-bottom: 4px;
+}
+.cv-id-stat dd {
+  font-family: var(--f-display, "Instrument Serif", serif);
+  font-size: 22px;
+  letter-spacing: -0.015em;
+  color: var(--accent, #B8FF3D);
+  margin: 0;
+  line-height: 1;
+}
+
+/* Body grid */
+.cv-doc-body {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  gap: 0;
+}
+.cv-main { padding: 32px 40px 40px; border-right: 1px solid var(--line, rgba(244,241,234,0.08)); }
+.cv-side { padding: 32px 32px 40px; display: flex; flex-direction: column; gap: 32px; }
+
+.cv-block-h {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(244,241,234,0.42);
+  margin: 0 0 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line, rgba(244,241,234,0.08));
+  display: flex; align-items: center; gap: 10px;
+}
+.cv-block-h::before {
+  content: ""; width: 6px; height: 6px;
+  background: var(--accent, #B8FF3D); border-radius: 1px;
+}
+
+/* Roles list */
+.cv-roles {
+  list-style: none;
+  padding: 0; margin: 0;
+  display: flex; flex-direction: column;
+  gap: 4px;
+}
+.cv-role {
+  border-bottom: 1px solid var(--line, rgba(244,241,234,0.07));
+}
+.cv-role:last-child { border-bottom: 0; }
+.cv-role-head {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 110px 1fr auto auto;
+  gap: 16px;
+  align-items: baseline;
+  padding: 18px 4px;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  transition: background .25s ease, padding .25s ease;
+}
+.cv-role-head:hover { background: rgba(244,241,234,0.025); }
+.cv-role.is-open .cv-role-head { background: rgba(184,255,61,0.04); }
+
+.cv-role-y {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: rgba(244,241,234,0.45);
+}
+.cv-role.is-open .cv-role-y { color: var(--accent, #B8FF3D); }
+.cv-role-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.cv-role-title {
+  font-family: var(--f-display, "Instrument Serif", serif);
+  font-size: 21px;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  color: var(--text, #f4f1ea);
+}
+.cv-role-org {
+  font-size: 12.5px;
+  color: rgba(244,241,234,0.55);
+}
+.cv-role-tag {
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border: 1px solid rgba(244,241,234,0.12);
+  border-radius: 3px;
+  color: rgba(244,241,234,0.55);
+  align-self: center;
+}
+.cv-role.is-open .cv-role-tag { border-color: rgba(184,255,61,0.3); color: var(--accent, #B8FF3D); }
+.cv-role-chev {
+  font-family: var(--f-mono, monospace);
+  font-size: 16px;
+  color: rgba(244,241,234,0.4);
+  width: 18px; text-align: center;
+}
+.cv-role.is-open .cv-role-chev { color: var(--accent, #B8FF3D); }
+
+.cv-role-body {
+  padding: 4px 4px 24px 126px;
+  animation: cvRoleIn .35s cubic-bezier(.2,.7,.2,1);
+}
+@keyframes cvRoleIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.cv-role-body[hidden] { display: none; }
+
+.cv-points {
+  list-style: none; padding: 0; margin: 0 0 14px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.cv-points li {
+  position: relative;
+  padding-left: 18px;
+  color: rgba(244,241,234,0.78);
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+.cv-points li::before {
+  content: "›";
+  position: absolute;
+  left: 0; top: 0;
+  color: var(--accent, #B8FF3D);
+  font-family: var(--f-mono, monospace);
+}
+
+.cv-role-stack { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.cv-chip {
+  font-size: 10.5px;
+  padding: 3px 8px;
+  background: rgba(244,241,234,0.04);
+  border: 1px solid var(--line, rgba(244,241,234,0.08));
+  border-radius: 3px;
+  color: rgba(244,241,234,0.7);
+}
+
+/* Side blocks */
+.cv-block { display: flex; flex-direction: column; }
+.cv-side-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0; }
+.cv-edu-row {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line, rgba(244,241,234,0.06));
+  align-items: baseline;
+}
+.cv-edu-row:last-child { border-bottom: 0; }
+.cv-edu-y { font-size: 11px; color: rgba(244,241,234,0.45); letter-spacing: 0.04em; }
+.cv-edu-k { font-size: 13.5px; color: rgba(244,241,234,0.85); line-height: 1.4; }
+
+.cv-strengths li {
+  position: relative;
+  padding: 10px 0 10px 0;
+  font-size: 13.5px;
+  color: rgba(244,241,234,0.78);
+  line-height: 1.45;
+  border-bottom: 1px solid var(--line, rgba(244,241,234,0.06));
+  display: flex; gap: 8px;
+}
+.cv-strengths li:last-child { border-bottom: 0; }
+.cv-bullet-mark {
+  color: var(--accent, #B8FF3D);
+  font-family: var(--f-mono, monospace);
+  flex-shrink: 0;
+}
+
+/* Languages */
+.cv-langs { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.cv-lang {
+  display: grid;
+  grid-template-columns: 100px 1fr 60px;
+  gap: 12px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--text, #f4f1ea);
+}
+.cv-lang-bar {
+  position: relative;
+  height: 3px;
+  background: rgba(244,241,234,0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.cv-lang-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent, #B8FF3D);
+  border-radius: 2px;
+  transform-origin: left;
+  animation: barIn 1.2s cubic-bezier(.2,.7,.2,1) both;
+}
+@keyframes barIn { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.cv-lang-lvl { font-size: 10.5px; color: rgba(244,241,234,0.5); letter-spacing: 0.06em; text-align: right; }
+
+.cv-doc-foot {
+  display: flex; justify-content: space-between; gap: 16px;
+  padding: 14px 22px;
+  border-top: 1px solid var(--line, rgba(244,241,234,0.08));
+  background: rgba(7,9,11,0.5);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(244,241,234,0.4);
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  .cv-id { grid-template-columns: 1fr; padding: 28px 22px 22px; }
+  .cv-id-stats { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .cv-doc-body { grid-template-columns: 1fr; }
+  .cv-main { padding: 24px 22px; border-right: 0; border-bottom: 1px solid var(--line, rgba(244,241,234,0.08)); }
+  .cv-side { padding: 24px 22px; gap: 26px; }
+  .cv-role-head { grid-template-columns: 1fr auto; gap: 10px; padding: 16px 0; }
+  .cv-role-y { grid-column: 1 / -1; }
+  .cv-role-tag { display: none; }
+  .cv-role-body { padding: 4px 0 18px; }
+  .cv-doc-foot { flex-direction: column; gap: 4px; padding: 12px 18px; }
+}
+@media (max-width: 520px) {
+  .cv-id-stats { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Print — clean resume doc */
+@media print {
+  body * { visibility: hidden; }
+  .cv-doc, .cv-doc * { visibility: visible; }
+  .cv-doc { position: absolute; inset: 0; margin: 0; border: 0; background: white; color: #111; }
+  .cv-doc * { color: #111 !important; background: transparent !important; border-color: #ddd !important; }
+  .cv-action, .cv-doc-actions { display: none !important; }
+  .cv-role-body[hidden] { display: block !important; }
+  .cv-role-chev { display: none; }
+  .cv-block-h::before { background: #111 !important; }
+  .cv-lang-bar { background: #eee !important; }
+  .cv-lang-bar-fill { background: #111 !important; animation: none !important; }
+  .cv-id-stat dd, .cv-role.is-open .cv-role-y, .cv-points li::before, .cv-bullet-mark { color: #111 !important; }
+}
+
+/* ════════════════════════════════════════════════════════════
+   GLOBAL GLOW REDUCTION — kill bloom/shadow on idle states
+   ════════════════════════════════════════════════════════════ */
+.status-dot { box-shadow: none !important; }
+.proc-step-dot { box-shadow: none !important; }
+.cv-bullet-dot { box-shadow: none !important; }
+.btn-primary { box-shadow: none !important; }
+.signal-pulse i { box-shadow: none !important; }
+.hero-terminal { box-shadow: 0 20px 60px -30px rgba(0,0,0,0.4) !important; }
+.term-cursor { animation-duration: 1.2s !important; }
+
+/* No glow halos behind cards */
+.card::after, .card::before { box-shadow: none !important; filter: none !important; }
+.proj-glow { opacity: 0 !important; } /* remove the radial glow on projects */
+.proj-card:hover .proj-glow { opacity: 0.35 !important; }
+
+/* Remove neon text-shadow */
+.em, .italic-display, .accent { text-shadow: none !important; }
+
+/* Tone down scroll progress */
+.scroll-progress { opacity: 0.5; }

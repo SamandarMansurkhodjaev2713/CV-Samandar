@@ -1,0 +1,237 @@
+/* cursor.css — Smart cursor + motion utilities */
+
+/* ── Hide native cursor only when smart cursor active and pointing fine */
+@media (hover: hover) and (pointer: fine) {
+  body.has-smart-cursor,
+  body.has-smart-cursor * { cursor: none !important; }
+  body.has-smart-cursor input,
+  body.has-smart-cursor textarea,
+  body.has-smart-cursor select { cursor: text !important; }
+}
+
+/* ── Cursor container */
+.sc-cursor {
+  position: fixed;
+  top: 0; left: 0;
+  width: 0; height: 0;
+  pointer-events: none;
+  z-index: 9999;
+  mix-blend-mode: normal;
+  color: var(--accent, #B8FF3D);
+  transition: opacity .2s ease;
+}
+.sc-cursor.is-out { opacity: 0; }
+
+/* ── Crosshair lines */
+.sc-cross {
+  position: fixed;
+  top: 0; left: 0;
+  background: currentColor;
+  opacity: 0.18;
+  pointer-events: none;
+  transition: opacity .2s ease;
+}
+.sc-cross-h {
+  height: 1px;
+  width: 100vw;
+  transform: translateY(-50%);
+  left: 0;
+  top: var(--ch-y, 0);
+}
+.sc-cross-v {
+  width: 1px;
+  height: 100vh;
+  transform: translateX(-50%);
+  top: 0;
+  left: var(--ch-x, 0);
+}
+/* Hide hairlines — anchor them via transform on body cursor instead */
+.sc-cursor .sc-cross-h,
+.sc-cursor .sc-cross-v { display: none; }
+
+/* Re-implement crosshair by drawing lines anchored to cursor itself */
+.sc-cursor::before,
+.sc-cursor::after {
+  content: "";
+  position: fixed;
+  background: currentColor;
+  opacity: 0.14;
+  pointer-events: none;
+  transition: opacity .25s ease;
+}
+.sc-cursor::before {
+  /* horizontal */
+  height: 1px;
+  width: 100vw;
+  left: -50vw;
+  top: 0;
+  transform: translate(0, 0);
+}
+.sc-cursor::after {
+  /* vertical */
+  width: 1px;
+  height: 100vh;
+  left: 0;
+  top: -50vh;
+}
+.sc-cursor[data-mode="default"]::before,
+.sc-cursor[data-mode="default"]::after { opacity: 0.09; }
+.sc-cursor[data-mode="drag"]::before,
+.sc-cursor[data-mode="drag"]::after { opacity: 0.28; }
+
+/* ── Dot */
+.sc-dot {
+  position: fixed;
+  width: 4px; height: 4px;
+  background: currentColor;
+  border-radius: 50%;
+  left: -2px; top: -2px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.4);
+  transition: width .2s ease, height .2s ease;
+}
+.sc-cursor[data-mode="drag"] .sc-dot { width: 2px; height: 2px; left: -1px; top: -1px; }
+
+/* ── Ring */
+.sc-ring {
+  position: fixed;
+  width: 28px; height: 28px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  left: 0; top: 0;
+  margin-left: -14px;
+  margin-top: -14px;
+  opacity: 0.55;
+  transform-origin: center;
+  transition: border-radius .25s ease, opacity .2s ease, border-color .2s ease;
+}
+.sc-cursor.is-idle .sc-ring {
+  border-color: rgba(var(--accent-rgb) / 0.45);
+  border-radius: 50%;
+  animation: cursorIdlePulse 2.6s ease-in-out infinite;
+}
+.sc-cursor.is-idle .sc-dot { box-shadow: 0 0 12px var(--accent), 0 0 0 1px rgba(0,0,0,.4); }
+@keyframes cursorIdlePulse {
+  0%, 100% { transform: translate(-50%,-50%) scale(1); opacity: 0.55; }
+  50%      { transform: translate(-50%,-50%) scale(1.4); opacity: 0.85; }
+}
+.sc-cursor[data-mode="link"] .sc-ring { border-radius: 6px; opacity: 0.85; }
+.sc-cursor[data-mode="drag"] .sc-ring { border-radius: 4px; opacity: 0.95; border-style: dashed; }
+.sc-cursor[data-mode="file"] .sc-ring { border-radius: 2px; opacity: 0.85; }
+.sc-cursor[data-mode="copy"] .sc-ring { border-radius: 4px; opacity: 0.8; }
+.sc-cursor[data-mode="send"] .sc-ring { border-radius: 999px; opacity: 0.9; background: rgba(var(--accent-rgb) / 0.08); }
+.sc-cursor[data-mode="input"] .sc-ring { border-radius: 2px; opacity: 0.6; transform: translate(-50%, -50%) scaleX(0.15); }
+.sc-cursor[data-mode="tab"] .sc-ring { border-radius: 999px; opacity: 0.7; border-style: dotted; }
+.sc-cursor.is-down .sc-ring { opacity: 1; transform: translate(-50%, -50%) scale(0.7); }
+
+/* ── Label (the "smart" part) */
+.sc-label {
+  position: fixed;
+  top: 16px; left: 22px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px 5px 8px;
+  background: rgba(8,10,12,0.86);
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate(-2px, 0);
+  transition: opacity .18s ease, transform .18s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.sc-cursor.has-label .sc-label { opacity: 1; transform: translate(0, 0); }
+.sc-label-key { color: rgba(244,241,234,0.55); }
+.sc-label-val { color: currentColor; font-weight: 500; }
+
+/* ── Coords */
+.sc-coords {
+  position: fixed;
+  top: -22px; left: -2px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 9px;
+  color: rgba(244,241,234,0.32);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity .25s ease;
+}
+.sc-cursor[data-mode="drag"] .sc-coords,
+.sc-cursor.is-down .sc-coords { opacity: 1; }
+
+
+/* ════════════════════════════════════════════════════════════
+   MOTION — Reveal, stagger, split-text
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Reveal — single source of truth.
+   rv-bound = JS-managed. Base hidden state via :not(.rv-in). When IntersectionObserver
+   fires, rv-in is added → element transitions in. No rv-init / rv-in coexistence quirks. */
+[data-reveal].rv-bound:not(.rv-in) {
+  opacity: 0;
+  transform: translateY(14px);
+}
+[data-reveal].rv-bound {
+  transition: opacity .85s cubic-bezier(.2,.6,.18,1), transform .85s cubic-bezier(.2,.6,.18,1);
+  will-change: opacity, transform;
+}
+
+/* Words: parent stays visible — children (.rv-w) animate. */
+.rv-w {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(0.5em);
+  transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1);
+  transition-delay: calc(var(--rv-i, 0) * 36ms);
+  will-change: opacity, transform;
+}
+[data-reveal-words].rv-in .rv-w { opacity: 1; transform: translateY(0); }
+
+/* Chars (subtle) */
+.rv-c {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(0.3em);
+  transition: opacity .5s cubic-bezier(.2,.7,.2,1), transform .5s cubic-bezier(.2,.7,.2,1);
+  transition-delay: calc(var(--rv-i, 0) * 14ms);
+}
+[data-reveal-chars].rv-in .rv-c { opacity: 1; transform: translateY(0); }
+
+/* Magnetic pull */
+[data-magnetic] {
+  transition: transform .35s cubic-bezier(.2,.7,.2,1);
+  will-change: transform;
+}
+
+/* Sticky pin */
+[data-pin] {
+  position: relative;
+}
+[data-pin] .pin-inner {
+  position: sticky;
+  top: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .sc-cursor { display: none; }
+  body.has-smart-cursor, body.has-smart-cursor * { cursor: auto !important; }
+  [data-reveal].rv-bound:not(.rv-in) { opacity: 1; transform: none; }
+  [data-reveal].rv-bound { transition: none; }
+  .rv-w, .rv-c { opacity: 1; transform: none; transition: none; }
+  [data-magnetic] { transition: none; }
+}
+
+/* Mobile / touch: no smart cursor, no magnetic */
+@media (hover: none), (max-width: 900px) {
+  .sc-cursor { display: none; }
+  [data-magnetic] { transform: none !important; }
+}
