@@ -364,6 +364,17 @@ function App() {
   useE(() => {
     document.body.classList.add("page-loaded");
     if (window.Motion) window.Motion.init();
+    // Wire the View Transitions API navigator. It binds a global click handler
+    // on anchor[href^="#"] and replaces the default scroll with a cinematic
+    // cross-fade. Safe to call multiple times — second call is a no-op.
+    if (window.SceneCinema && typeof window.SceneCinema.init === "function") {
+      window.SceneCinema.init();
+    }
+    return () => {
+      if (window.SceneCinema && typeof window.SceneCinema.dispose === "function") {
+        window.SceneCinema.dispose();
+      }
+    };
   }, []);
   useE(() => {
     if (!window.Motion) return;

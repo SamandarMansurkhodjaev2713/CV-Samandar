@@ -17,10 +17,11 @@
   <link rel="preconnect" href="https://prod.spline.design" crossorigin />
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="styles.css?v=44" />
-  <link rel="stylesheet" href="sections.css?v=44" />
-  <link rel="stylesheet" href="cursor.css?v=44" />
-  <link rel="stylesheet" href="cv-doc.css?v=44" />
+  <link rel="stylesheet" href="styles.css?v=50" />
+  <link rel="stylesheet" href="sections.css?v=50" />
+  <link rel="stylesheet" href="cursor.css?v=50" />
+  <link rel="stylesheet" href="cv-doc.css?v=50" />
+  <link rel="stylesheet" href="features.css?v=50" />
 
   <!-- Three.js r128 -->
   <script src="vendor/three.min.js"></script>
@@ -34,18 +35,25 @@
   <div id="root"></div>
 
   <!-- Content & engine -->
-  <script src="themes.js?v=44"></script>
-  <script src="content.js?v=44"></script>
-  <script src="motion.js?v=44"></script>
-  <script src="robot.js?v=44"></script>
-  <script src="robot-spline.js?v=44"></script>
-  <script src="bg-fx.js?v=44"></script>
-  <script src="scene-engine.js?v=44"></script>
+  <script src="themes.js?v=50"></script>
+  <script src="content.js?v=50"></script>
+  <script src="motion.js?v=50"></script>
+  <script src="robot.js?v=50"></script>
+  <script src="robot-spline.js?v=50"></script>
+  <script src="bg-fx.js?v=50"></script>
+  <script src="scene-engine.js?v=50"></script>
+
+  <!-- v47 feature modules — each is independent, self-disposing, no-op-safe.
+       pixel-dither.js removed in v47 (replaced by CSS scan-lines).
+       skills-constellation.js retained as no-op fallback (not mounted). -->
+  <script src="scene-cinema.js?v=50"></script>
+  <script src="robot-playground.js?v=50"></script>
+  <script src="cli-cinema.js?v=50"></script>
 
   <!-- Components & app -->
-  <script type="text/babel" src="tweaks-panel.jsx?v=44"></script>
-  <script type="text/babel" src="components-1.jsx?v=44"></script>
-  <script type="text/babel" src="components-2.jsx?v=44"></script>
-  <script type="text/babel" src="app.jsx?v=44"></script>
+  <script type="text/babel" src="tweaks-panel.jsx?v=50"></script>
+  <script type="text/babel" src="components-1.jsx?v=50"></script>
+  <script type="text/babel" src="components-2.jsx?v=50"></script>
+  <script type="text/babel" src="app.jsx?v=50"></script>
 </body>
 </html>

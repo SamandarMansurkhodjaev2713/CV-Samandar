@@ -152,6 +152,33 @@ function Hero({ t, links }) {
     };
   }, []);
 
+  // Listen for `robot-control` CustomEvents fired by the RobotPlayground in
+  // Process section. We deliberately route through events instead of a shared
+  // ref so the playground stays decoupled from Hero — if either side is
+  // unmounted (lang switch, error boundary), the other keeps working.
+  useEffect(() => {
+    function onRobotControl(ev) {
+      const ctrl = robotRef.current;
+      if (!ctrl) return;
+      const detail = ev && ev.detail ? ev.detail : null;
+      if (!detail || typeof detail.kind !== "string") return;
+      try {
+        if (detail.kind === "expr" && typeof detail.value === "string") {
+          if (ctrl.setExpression) ctrl.setExpression(detail.value);
+          setRobotMood(detail.value);
+        } else if (detail.kind === "wave") {
+          if (ctrl.cycleExpression) ctrl.cycleExpression();
+        } else if (detail.kind === "motion" && typeof detail.value === "number") {
+          if (ctrl.setMotion) ctrl.setMotion(detail.value);
+        }
+      } catch (err) {
+        console.warn("[Hero] robot-control handler threw:", err && err.message);
+      }
+    }
+    window.addEventListener("robot-control", onRobotControl);
+    return () => window.removeEventListener("robot-control", onRobotControl);
+  }, []);
+
   function onRobotClick() {
     // Light haptic — Android only, iOS no-ops.
     if (typeof navigator !== "undefined" && navigator.vibrate) {
@@ -286,237 +313,405 @@ function generateSparkline(seed, points) {
 // 6 different SVG visualizations, one per Signal card. Same deterministic
 // `sparkData` array drives all of them — only the rendering changes — so
 // each card feels purposeful, not random.
-const SIGNAL_VIZ_KINDS = ["spark", "bars", "dots", "histo", "radial", "pulse"];
-const SIGNAL_UNITS = ["ops", "req/s", "msg", "qps", "vis", "build"];
+// v49 — Six THEMATIC visualisations. Each viz is shape-matched to the
+// service it represents, not just a generic sparkline-style chart:
+//
+//   layers     → Full-stack    : 3 stacked area curves (UI / API / data)
+//   network    → AI Automation : 6 nodes + edges, pulse travels along them
+//   stream     → Telegram bots : scrolling message bubbles (right-to-left)
+//   grid       → Dashboards    : tile grid with per-cell brightness
+//   wireframe  → Landing & Web : webpage skeleton outline with sweep
+//   milestones → Product MVP   : 5-step roadmap with active pulse
+//
+// Order matches SIGNAL_VIZ_KINDS index → card index. Each viz takes the
+// same `data` array (length N≈28, values 0..1) but renders a domain-aware
+// shape. Pure SVG, no JS animation libs.
+const SIGNAL_VIZ_KINDS = ["layers", "network", "stream", "grid", "wireframe", "milestones"];
+const SIGNAL_UNITS = ["ops", "req/s", "msg", "tiles", "vis", "milestone"];
 
-// 6 polished visualizations, one per Signal card. Each is calibrated to feel
-// like part of the same design system — same height, same accent palette,
-// same visual weight — but distinct in form so the grid never reads as repeats.
-function SignalViz({ kind, data, index }) {
-  const W = 100;
-  const H = 36;
+// Shared viewBox geometry. All viz scale to the same hosting box via the
+// non-preserve aspect; per-viz code uses fractions of W/H.
+const SIG_W = 100;
+const SIG_H = 36;
+const SIG_PAD = 1.5;
+
+// Helper: extract `count` evenly-spaced samples from the live data array.
+function sampleData(data, count) {
+  const n = data.length;
+  const out = new Array(count);
+  for (let i = 0; i < count; i++) {
+    out[i] = data[Math.min(n - 1, Math.floor((i / Math.max(1, count - 1)) * (n - 1)))];
+  }
+  return out;
+}
+
+// ── 1. Layers — three stacked area curves (Full-stack). ─────────────────
+// Top layer = UI, mid = API, bottom = data. Each is the same shape but
+// offset vertically + dim. Reads as "the stack is alive across all tiers".
+function renderLayers(data, index) {
   const N = data.length;
-  const gradId = `sig-grad-${index}`;
-  const VIZ_PADDING = 1.5;       // breathing room from edges
-  const FILL_GRADIENT = (
-    <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stopColor="currentColor" stopOpacity="0.40" />
-      <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
-    </linearGradient>
+  const layerOffsets = [0.0, 0.18, 0.36]; // vertical Y-offset per layer (fraction of H)
+  const layerOpacities = [0.85, 0.55, 0.32];
+  const layerStrokes = [1.6, 1.2, 0.9];
+
+  function buildPath(yOffset) {
+    let d = "";
+    for (let i = 0; i < N; i++) {
+      const x = (i / (N - 1)) * (SIG_W - SIG_PAD * 2) + SIG_PAD;
+      // Smoothed value via 3-point moving average so layers feel organic.
+      const v0 = data[Math.max(0, i - 1)];
+      const v1 = data[i];
+      const v2 = data[Math.min(N - 1, i + 1)];
+      const smoothed = (v0 + v1 + v2) / 3;
+      const ySpan = SIG_H * 0.46;
+      const y = SIG_H - SIG_PAD - yOffset * SIG_H - smoothed * ySpan;
+      d += (i === 0 ? "M" : "L") + " " + x.toFixed(2) + " " + y.toFixed(2) + " ";
+    }
+    return d;
+  }
+  const gradId = `sig-layers-grad-${index}`;
+  return (
+    <svg viewBox={`0 0 ${SIG_W} ${SIG_H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
+      <defs>
+        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="currentColor" stopOpacity="0.45" />
+          <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {layerOffsets.map(function renderLayer(off, i) {
+        const path = buildPath(off);
+        const area = path + `L ${(SIG_W - SIG_PAD).toFixed(2)} ${(SIG_H - SIG_PAD).toFixed(2)} L ${SIG_PAD} ${(SIG_H - SIG_PAD).toFixed(2)} Z`;
+        return (
+          <g key={i}>
+            <path d={area} fill={`url(#${gradId})`} opacity={layerOpacities[i] * 0.45} />
+            <path d={path} fill="none" stroke="currentColor"
+              strokeOpacity={layerOpacities[i]} strokeWidth={layerStrokes[i]}
+              strokeLinecap="round" strokeLinejoin="round"
+              className="signal-spark-stroke" />
+          </g>
+        );
+      })}
+    </svg>
   );
+}
 
-  // ── spark: smooth line + area gradient (classic sparkline).
-  if (kind === "spark") {
-    const path = data.map(function pt(v, i) {
-      const x = (i / (N - 1)) * (W - VIZ_PADDING * 2) + VIZ_PADDING;
-      const y = H - VIZ_PADDING - v * (H - VIZ_PADDING * 2);
-      return `${i === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`;
-    }).join(" ");
-    const area = `${path} L ${W - VIZ_PADDING} ${H - VIZ_PADDING} L ${VIZ_PADDING} ${H - VIZ_PADDING} Z`;
-    return (
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
-        <defs>{FILL_GRADIENT}</defs>
-        <path d={area} fill={`url(#${gradId})`} />
-        <path d={path} fill="none" stroke="currentColor" strokeWidth="1.6"
-              strokeLinecap="round" strokeLinejoin="round" className="signal-spark-stroke" />
-      </svg>
+// ── 2. Network — 6 nodes + edges, with traveling pulses (AI Automation).
+// Topology: 3 input nodes on left, 1 hub centre, 2 output nodes right.
+// Pulse travels from a randomly-chosen input to the hub to an output
+// every ~SIG_PULSE_PERIOD; current step driven by `data[N-1]`.
+const NETWORK_NODES = [
+  // [x%, y%]
+  [0.10, 0.22], [0.10, 0.50], [0.10, 0.78],   // 3 inputs
+  [0.50, 0.50],                                // hub
+  [0.90, 0.32], [0.90, 0.70],                  // 2 outputs
+];
+const NETWORK_EDGES = [
+  [0, 3], [1, 3], [2, 3], [3, 4], [3, 5],
+];
+function renderNetwork(data, index) {
+  const x = function (p) { return (SIG_PAD + p * (SIG_W - SIG_PAD * 2)).toFixed(2); };
+  const y = function (p) { return (SIG_PAD + p * (SIG_H - SIG_PAD * 2)).toFixed(2); };
+  // The most recent data value drives which input edge is "active".
+  const last = data[data.length - 1];
+  const activeInputIdx = Math.min(2, Math.floor(last * 3));
+  const activeOutputIdx = (Math.floor(last * 7)) % 2;
+  return (
+    <svg viewBox={`0 0 ${SIG_W} ${SIG_H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
+      {/* Edges */}
+      {NETWORK_EDGES.map(function renderEdge(e, i) {
+        const a = NETWORK_NODES[e[0]];
+        const b = NETWORK_NODES[e[1]];
+        const isActive =
+          (e[0] === activeInputIdx && e[1] === 3) ||
+          (e[0] === 3 && e[1] === 4 + activeOutputIdx);
+        return (
+          <line key={i}
+            x1={x(a[0])} y1={y(a[1])} x2={x(b[0])} y2={y(b[1])}
+            stroke="currentColor"
+            strokeOpacity={isActive ? "0.85" : "0.22"}
+            strokeWidth={isActive ? "1.6" : "0.8"} />
+        );
+      })}
+      {/* Pulse dot traveling along the active input → hub edge. */}
+      {(function renderActivePulse() {
+        const a = NETWORK_NODES[activeInputIdx];
+        const b = NETWORK_NODES[3];
+        return (
+          <circle r="1.6" fill="currentColor">
+            <animate
+              attributeName="cx"
+              from={x(a[0])} to={x(b[0])}
+              dur="1.1s" repeatCount="indefinite" />
+            <animate
+              attributeName="cy"
+              from={y(a[1])} to={y(b[1])}
+              dur="1.1s" repeatCount="indefinite" />
+          </circle>
+        );
+      })()}
+      {/* Nodes */}
+      {NETWORK_NODES.map(function renderNode(p, i) {
+        const isHub = i === 3;
+        const isLit =
+          i === activeInputIdx || i === 3 || i === 4 + activeOutputIdx;
+        return (
+          <g key={i}>
+            <circle cx={x(p[0])} cy={y(p[1])}
+              r={isHub ? "3.2" : "2.2"}
+              fill="currentColor"
+              opacity={isLit ? "1" : "0.45"} />
+            {isHub && (
+              <circle cx={x(p[0])} cy={y(p[1])}
+                r="4.5" fill="none" stroke="currentColor"
+                strokeOpacity="0.5" strokeWidth="0.6" />
+            )}
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+// ── 3. Stream — scrolling chat bubbles right-to-left (Telegram bots).
+// 5 bubbles of varying widths. Position shifts each render based on the
+// trailing index of `data` (so it appears to flow on the same clock as
+// the live tick). Bubbles re-enter at the right.
+function renderStream(data, index) {
+  const bubbleCount = 5;
+  const samples = sampleData(data, bubbleCount);
+  const speed = 14;            // logical X units per data-index step
+  // Use a stable "shift" derived from data length so all bubbles step
+  // together on each live tick.
+  const shift = (data.length % bubbleCount) * 4;
+  const bubbles = [];
+  for (let i = 0; i < bubbleCount; i++) {
+    const widthFactor = 0.5 + samples[i] * 0.5;
+    const w = (SIG_W - SIG_PAD * 2) * 0.22 * widthFactor;
+    const x = (i / bubbleCount) * (SIG_W + 20) - shift;
+    const y = SIG_PAD + 4 + ((i * 7) % 12);
+    const h = 5;
+    // Fade bubbles near the left edge so they "leave" gracefully.
+    const fade = x < 8 ? Math.max(0.2, x / 8) : (x > SIG_W - w ? Math.max(0.2, (SIG_W - x) / w) : 1);
+    bubbles.push(
+      <g key={i} opacity={fade.toFixed(2)}>
+        <rect x={x.toFixed(2)} y={y.toFixed(2)}
+          width={w.toFixed(2)} height={h.toFixed(2)} rx="2.5"
+          fill="currentColor" opacity={(0.4 + samples[i] * 0.5).toFixed(2)} />
+        {/* "Tail" pointer on the right side of each bubble */}
+        <path
+          d={`M ${(x + w).toFixed(2)} ${(y + h - 1).toFixed(2)} L ${(x + w + 2).toFixed(2)} ${(y + h - 0.5).toFixed(2)} L ${(x + w - 0.5).toFixed(2)} ${(y + h).toFixed(2)} Z`}
+          fill="currentColor" opacity="0.55" />
+      </g>
     );
   }
+  return (
+    <svg viewBox={`0 0 ${SIG_W} ${SIG_H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
+      {bubbles}
+      {/* Subtle baseline line, suggests "feed" track */}
+      <line x1={SIG_PAD} y1={(SIG_H - 3).toFixed(2)}
+            x2={(SIG_W - SIG_PAD).toFixed(2)} y2={(SIG_H - 3).toFixed(2)}
+            stroke="currentColor" strokeOpacity="0.12" strokeWidth="0.4" strokeDasharray="1.5 2" />
+    </svg>
+  );
+}
 
-  // ── bars: 14 wider vertical bars, accent gradient top-to-bottom on each.
-  if (kind === "bars") {
-    const barCount = 14;
-    const totalGap = barCount - 1;
-    const gap = 2;
-    const barW = (W - VIZ_PADDING * 2 - totalGap * gap) / barCount;
-    const step = N / barCount;
-    const bars = [];
-    for (let i = 0; i < barCount; i++) {
-      const v = data[Math.floor(i * step)];
-      const bh = Math.max(3, v * (H - VIZ_PADDING * 2));
-      const x = VIZ_PADDING + i * (barW + gap);
-      const y = H - VIZ_PADDING - bh;
-      bars.push(
+// ── 4. Grid — tile dashboard (Dashboards).
+// 18 cells (6×3). Brightness per cell = corresponding data value.
+function renderGrid(data, index) {
+  const cols = 6;
+  const rows = 3;
+  const samples = sampleData(data, cols * rows);
+  const cellW = (SIG_W - SIG_PAD * 2) / cols * 0.86;
+  const cellH = (SIG_H - SIG_PAD * 2) / rows * 0.82;
+  const slotW = (SIG_W - SIG_PAD * 2) / cols;
+  const slotH = (SIG_H - SIG_PAD * 2) / rows;
+  const cells = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const i = r * cols + c;
+      const v = samples[i];
+      const x = SIG_PAD + c * slotW + (slotW - cellW) / 2;
+      const y = SIG_PAD + r * slotH + (slotH - cellH) / 2;
+      cells.push(
         <rect key={i}
           x={x.toFixed(2)} y={y.toFixed(2)}
-          width={barW.toFixed(2)} height={bh.toFixed(2)}
-          fill={`url(#${gradId})`}
-          rx="1"
-        />
-      );
-    }
-    return (
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
-        <defs>{FILL_GRADIENT}</defs>
-        {bars}
-        <line x1={VIZ_PADDING} y1={(H - VIZ_PADDING).toFixed(2)}
-              x2={(W - VIZ_PADDING).toFixed(2)} y2={(H - VIZ_PADDING).toFixed(2)}
-              stroke="currentColor" strokeOpacity="0.25" strokeWidth="0.5" />
-      </svg>
-    );
-  }
-
-  // ── dots: 12 evenly-spaced bigger dots + thin connecting line through them.
-  //         Reads as "data points on a graph" — clear and clinical.
-  if (kind === "dots") {
-    const dotCount = 12;
-    const step = N / dotCount;
-    const dots = [];
-    let line = "";
-    for (let i = 0; i < dotCount; i++) {
-      const v = data[Math.floor(i * step)];
-      const cx = VIZ_PADDING + (i / (dotCount - 1)) * (W - VIZ_PADDING * 2);
-      const cy = H - VIZ_PADDING - v * (H - VIZ_PADDING * 2);
-      line += (i === 0 ? "M" : "L") + ` ${cx.toFixed(2)} ${cy.toFixed(2)} `;
-      dots.push(
-        <circle key={i} cx={cx.toFixed(2)} cy={cy.toFixed(2)} r="2"
-          fill="currentColor" />
-      );
-    }
-    return (
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
-        <path d={line} fill="none" stroke="currentColor" strokeOpacity="0.35"
-              strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
-        {dots}
-      </svg>
-    );
-  }
-
-  // ── histo: 20 bars with full-height accent gradient + ghost baseline bars
-  //          for histogram feel without being a wall of color.
-  if (kind === "histo") {
-    const barCount = 20;
-    const step = N / barCount;
-    const barW = (W - VIZ_PADDING * 2) / barCount * 0.78;
-    const slot = (W - VIZ_PADDING * 2) / barCount;
-    const bars = [];
-    for (let i = 0; i < barCount; i++) {
-      const v = data[Math.floor(i * step)];
-      const bh = Math.max(2, v * (H - VIZ_PADDING * 2));
-      const x = VIZ_PADDING + i * slot + (slot - barW) / 2;
-      const y = H - VIZ_PADDING - bh;
-      bars.push(
-        <rect key={i}
-          x={x.toFixed(2)} y={y.toFixed(2)}
-          width={barW.toFixed(2)} height={bh.toFixed(2)}
+          width={cellW.toFixed(2)} height={cellH.toFixed(2)} rx="0.8"
           fill="currentColor"
-          opacity={(0.35 + v * 0.55).toFixed(2)}
-          rx="0.6"
-        />
+          opacity={(0.12 + v * 0.78).toFixed(2)} />
       );
     }
-    return (
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
-        {bars}
-      </svg>
-    );
   }
+  return (
+    <svg viewBox={`0 0 ${SIG_W} ${SIG_H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
+      {cells}
+    </svg>
+  );
+}
 
-  // ── radial: wide horizontal semi-circle gauge with tick marks + needle.
-  //           Reads as "live meter", not a tiny indicator.
-  if (kind === "radial") {
-    const avg = data.reduce(function sum(s, v) { return s + v; }, 0) / N;
-    const cx = W / 2;
-    const cy = H - 4;
-    const radius = Math.min(W / 2 - 6, H * 0.85);
-    const startAngle = Math.PI;
-    const endAngle = Math.PI * 2;
-    const sweepAngle = startAngle + (endAngle - startAngle) * avg;
-    const arcEndX = cx + Math.cos(sweepAngle) * radius;
-    const arcEndY = cy + Math.sin(sweepAngle) * radius;
-    const ticks = [];
-    const tickCount = 11;
-    for (let i = 0; i < tickCount; i++) {
-      const a = startAngle + (i / (tickCount - 1)) * (endAngle - startAngle);
-      const inner = radius - 2.5;
-      const outer = radius + (i === 0 || i === tickCount - 1 ? 1 : 0);
-      const t1x = cx + Math.cos(a) * inner;
-      const t1y = cy + Math.sin(a) * inner;
-      const t2x = cx + Math.cos(a) * outer;
-      const t2y = cy + Math.sin(a) * outer;
-      ticks.push(
-        <line key={i}
-          x1={t1x.toFixed(2)} y1={t1y.toFixed(2)}
-          x2={t2x.toFixed(2)} y2={t2y.toFixed(2)}
-          stroke="currentColor" strokeOpacity="0.3" strokeWidth="0.7" />
-      );
-    }
-    return (
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
-        {/* Track */}
-        <path
-          d={`M ${(cx - radius).toFixed(2)} ${cy.toFixed(2)} A ${radius} ${radius} 0 0 1 ${(cx + radius).toFixed(2)} ${cy.toFixed(2)}`}
-          fill="none" stroke="currentColor" strokeOpacity="0.18" strokeWidth="1.5" strokeLinecap="round" />
-        {/* Active arc */}
-        <path
-          d={`M ${(cx - radius).toFixed(2)} ${cy.toFixed(2)} A ${radius} ${radius} 0 ${avg > 0.5 ? 1 : 0} 1 ${arcEndX.toFixed(2)} ${arcEndY.toFixed(2)}`}
-          fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-        {ticks}
-        {/* Needle tip */}
-        <circle cx={arcEndX.toFixed(2)} cy={arcEndY.toFixed(2)} r="2.4" fill="currentColor" />
-      </svg>
-    );
-  }
+// ── 5. Wireframe — webpage outline (Landing & Web).
+// Static skeleton: header bar, hero block, 3-column row. A draw-in
+// animation runs on stroke-dashoffset via CSS so the wireframe "builds"
+// itself when the card enters view.
+function renderWireframe(data, index) {
+  const avg = data.reduce(function sum(s, v) { return s + v; }, 0) / data.length;
+  const accent = 0.5 + avg * 0.5;
+  return (
+    <svg viewBox={`0 0 ${SIG_W} ${SIG_H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
+      {/* Outer page frame */}
+      <rect x="3" y="3" width={SIG_W - 6} height={SIG_H - 6} rx="1.5"
+        fill="none" stroke="currentColor" strokeOpacity="0.7" strokeWidth="0.8"
+        className="signal-wire-draw" />
+      {/* Top nav bar */}
+      <rect x="5" y="5" width={SIG_W - 10} height="3.5" rx="0.5"
+        fill="currentColor" opacity="0.32" />
+      <rect x="6" y="6" width="3" height="1.5" rx="0.3" fill="currentColor" opacity="0.6" />
+      <rect x="11" y="6" width="3" height="1.5" rx="0.3" fill="currentColor" opacity="0.6" />
+      <rect x="16" y="6" width="3" height="1.5" rx="0.3" fill="currentColor" opacity="0.6" />
+      {/* Hero block */}
+      <rect x="5" y="11" width={(SIG_W - 10) * 0.62} height="10" rx="0.8"
+        fill="currentColor" opacity={(0.18 + accent * 0.25).toFixed(2)} />
+      <rect x={6} y={13} width="22" height="1.5" rx="0.3" fill="currentColor" opacity="0.78" />
+      <rect x={6} y={16} width="16" height="1.2" rx="0.3" fill="currentColor" opacity="0.5" />
+      <rect x={6} y={18.5} width="8"  height="1.5" rx="0.3" fill="currentColor" opacity={accent.toFixed(2)} />
+      {/* Side block */}
+      <rect x={5 + (SIG_W - 10) * 0.64} y="11" width={(SIG_W - 10) * 0.32} height="10" rx="0.8"
+        fill="none" stroke="currentColor" strokeOpacity="0.4" strokeWidth="0.6"
+        className="signal-wire-draw" />
+      {/* 3 column row */}
+      <rect x="5"  y="24" width="9" height="6" rx="0.6" fill="currentColor" opacity="0.30" />
+      <rect x="16" y="24" width="9" height="6" rx="0.6" fill="currentColor" opacity="0.30" />
+      <rect x="27" y="24" width="9" height="6" rx="0.6" fill="currentColor" opacity="0.30" />
+    </svg>
+  );
+}
 
-  // ── pulse: ECG-style heartbeat trace with sharp spikes (distinct from spark).
-  if (kind === "pulse") {
-    const beats = 3;
-    const baselineY = H * 0.6;
-    const peakY = VIZ_PADDING + 2;
-    const segments = [];
-    segments.push(`M ${VIZ_PADDING} ${baselineY.toFixed(2)}`);
-    for (let b = 0; b < beats; b++) {
-      const baseX = VIZ_PADDING + (b + 0.2) * (W - VIZ_PADDING * 2) / beats;
-      const stepX = (W - VIZ_PADDING * 2) / beats / 6;
-      // Small dip
-      segments.push(`L ${(baseX).toFixed(2)} ${baselineY.toFixed(2)}`);
-      segments.push(`L ${(baseX + stepX).toFixed(2)} ${(baselineY + 2).toFixed(2)}`);
-      // Sharp peak up
-      segments.push(`L ${(baseX + stepX * 1.5).toFixed(2)} ${peakY.toFixed(2)}`);
-      // Sharp down past baseline
-      segments.push(`L ${(baseX + stepX * 2).toFixed(2)} ${(baselineY + 5).toFixed(2)}`);
-      // Recovery
-      segments.push(`L ${(baseX + stepX * 2.5).toFixed(2)} ${baselineY.toFixed(2)}`);
-    }
-    segments.push(`L ${(W - VIZ_PADDING).toFixed(2)} ${baselineY.toFixed(2)}`);
-    const tipX = W - VIZ_PADDING - 1;
-    return (
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
-        <line x1={VIZ_PADDING} y1={baselineY.toFixed(2)}
-              x2={(W - VIZ_PADDING).toFixed(2)} y2={baselineY.toFixed(2)}
-              stroke="currentColor" strokeOpacity="0.10" strokeWidth="0.5" strokeDasharray="2 2" />
-        <path d={segments.join(" ")} fill="none" stroke="currentColor"
-              strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="signal-spark-stroke" />
-        <circle cx={tipX.toFixed(2)} cy={baselineY.toFixed(2)} r="1.6" fill="currentColor" className="signal-pulse-tip" />
-        <circle cx={tipX.toFixed(2)} cy={baselineY.toFixed(2)} r="4" fill="none" stroke="currentColor" strokeOpacity="0.5" className="signal-pulse-ring" />
-      </svg>
-    );
-  }
+// ── 6. Milestones — 5-step roadmap with active pulse (Product MVP).
+// 5 milestones evenly spaced. The "current" milestone = ceil(avg * 5),
+// derived from the data so it shifts as the live tick progresses.
+function renderMilestones(data, index) {
+  const count = 5;
+  const avg = data.reduce(function sum(s, v) { return s + v; }, 0) / data.length;
+  // Soft tween: "current" can be fractional; rendered as the next-to-fill.
+  const progress = Math.max(0, Math.min(count - 1, avg * (count - 1)));
+  const currentIdx = Math.min(count - 1, Math.floor(progress));
+  return (
+    <svg viewBox={`0 0 ${SIG_W} ${SIG_H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
+      {/* Spine */}
+      <line x1="6" y1={(SIG_H / 2).toFixed(2)}
+        x2={(SIG_W - 6).toFixed(2)} y2={(SIG_H / 2).toFixed(2)}
+        stroke="currentColor" strokeOpacity="0.22" strokeWidth="0.8" />
+      {/* Progress fill — solid line from start to currentIdx milestone */}
+      <line x1="6" y1={(SIG_H / 2).toFixed(2)}
+        x2={(6 + (SIG_W - 12) * (progress / (count - 1))).toFixed(2)} y2={(SIG_H / 2).toFixed(2)}
+        stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      {/* Milestone dots */}
+      {Array.from({ length: count }).map(function renderDot(_, i) {
+        const cx = 6 + (SIG_W - 12) * (i / (count - 1));
+        const cy = SIG_H / 2;
+        const isPassed = i < currentIdx;
+        const isCurrent = i === currentIdx;
+        return (
+          <g key={i}>
+            {isCurrent && (
+              <circle cx={cx.toFixed(2)} cy={cy.toFixed(2)} r="6" fill="none" stroke="currentColor">
+                <animate attributeName="r" values="3.5;7;3.5" dur="1.4s" repeatCount="indefinite" />
+                <animate attributeName="stroke-opacity" values="0.5;0;0.5" dur="1.4s" repeatCount="indefinite" />
+              </circle>
+            )}
+            <circle cx={cx.toFixed(2)} cy={cy.toFixed(2)}
+              r={isCurrent ? "3" : "2.2"}
+              fill={isPassed || isCurrent ? "currentColor" : "rgba(0,0,0,0.4)"}
+              stroke="currentColor"
+              strokeOpacity={isPassed || isCurrent ? "1" : "0.4"}
+              strokeWidth={isPassed || isCurrent ? "0" : "0.8"} />
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
 
-  // Fallback — should never hit but keep TypeScript-happy.
+// SignalViz — dispatches to the kind-specific renderer.
+function SignalViz({ kind, data, index }) {
+  if (kind === "layers")     return renderLayers(data, index);
+  if (kind === "network")    return renderNetwork(data, index);
+  if (kind === "stream")     return renderStream(data, index);
+  if (kind === "grid")       return renderGrid(data, index);
+  if (kind === "wireframe")  return renderWireframe(data, index);
+  if (kind === "milestones") return renderMilestones(data, index);
   return null;
 }
 
+// Per-card live data shift interval. Each card ticks on its own clock so the
+// grid feels like 6 independent monitors. Visible only when card is in
+// viewport (IO-paused below) and tab is foregrounded.
+const SIGNAL_SPARK_POINTS = 28;
+const SIGNAL_TICK_BASE_MS = 950;
+const SIGNAL_TICK_JITTER_MS = 480;
+
 function SignalCard({ card, index }) {
   const cardRef = useRef(null);
-  const SPARK_POINTS = 28;
-  const sparkData = useMemo(function memoSpark() {
-    return generateSparkline(7 + index * 13, SPARK_POINTS);
-  }, [index]);
   const vizKind = SIGNAL_VIZ_KINDS[index % SIGNAL_VIZ_KINDS.length];
   const vizUnit = SIGNAL_UNITS[index % SIGNAL_UNITS.length];
 
-  // Live counter — increments at a measured cadence so the card feels alive
-  // without distracting. Each card has its own range and tick interval.
+  // Live data — each tick we drop the leftmost point and append a new one
+  // generated from a per-card seeded PRNG. The viz re-renders with the new
+  // array, making the chart appear to scroll right-to-left.
+  const [liveData, setLiveData] = useState(function initData() {
+    return generateSparkline(7 + index * 13, SIGNAL_SPARK_POINTS);
+  });
+  const seedRef = useRef(7 + index * 13 + SIGNAL_SPARK_POINTS);
+
+  // Live counter — increments at a measured cadence so the card feels alive.
   const counterStart = 100 + index * 47;
   const [counter, setCounter] = useState(counterStart);
-  useEffect(function tickCounter() {
-    const interval = 1800 + (index % 3) * 600;
-    const id = window.setInterval(function bump() {
+
+  // Viewport-paused tick. Combines data shift + counter bump in ONE timer
+  // per card (was 2 in v47) — half the timers, same visual outcome.
+  useEffect(function tickLiveData() {
+    if (!cardRef.current) return undefined;
+    let intervalId = 0;
+    let inView = true;
+    const interval = SIGNAL_TICK_BASE_MS + (index % 3) * (SIGNAL_TICK_JITTER_MS / 3);
+
+    function bump() {
+      if (!inView || document.hidden) return;
+      // Advance PRNG, normalise to 0..1, push, shift left to keep length.
+      seedRef.current = (seedRef.current * 9301 + 49297) % 233280;
+      const noise = seedRef.current / 233280;
+      // Smooth random walk: base on a sin envelope so values don't look
+      // like white noise — they breathe up and down over time.
+      const phase = Date.now() / 1000 * 0.3 + index;
+      const base = 0.42 + 0.32 * Math.sin(phase);
+      const v = Math.max(0.05, Math.min(0.95, base + (noise - 0.5) * 0.55));
+      setLiveData(function (prev) {
+        const next = prev.slice(1);
+        next.push(v);
+        return next;
+      });
       setCounter(function (prev) { return prev + 1; });
-    }, interval);
-    return function () { window.clearInterval(id); };
+    }
+
+    intervalId = window.setInterval(bump, interval);
+
+    // Pause when card scrolls out of view — saves render cycles.
+    let io = null;
+    if ("IntersectionObserver" in window) {
+      io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.target === cardRef.current) inView = e.isIntersecting;
+        });
+      }, { threshold: [0, 0.1] });
+      io.observe(cardRef.current);
+    }
+
+    return function () {
+      window.clearInterval(intervalId);
+      if (io) io.disconnect();
+    };
   }, [index]);
+
+  const sparkData = liveData;
 
   function onMouseMove(e) {
     const el = cardRef.current;
@@ -935,6 +1130,7 @@ function ProjectCard({ p, i, cta }) {
     el.style.setProperty("--rx", `0deg`);
     el.style.setProperty("--ry", `0deg`);
   }
+
   return (
     <article ref={cardRef} className="proj-card card" data-reveal onMouseMove={onMove} onMouseLeave={onLeave}>
       <div className="proj-glow" />
@@ -957,6 +1153,9 @@ function ProjectCard({ p, i, cta }) {
             {[...Array(6)].map((_, k) => <div key={k} className="proj-screen-cell" />)}
           </div>
         </div>
+        {/* Scanline overlay — adds CRT-monitor texture without the pixel-
+            dither overhead. CSS-driven, zero JS, GPU-composited. */}
+        <div className="proj-screen-scanlines" />
       </div>
 
       <dl className="proj-meta">
@@ -1051,80 +1250,60 @@ function Projects({ t }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SKILLS — radar / orbit
+// SKILLS — SVG radar with mouse-parallax 3D tilt. v47 restores the radar
+// design users liked, and adds a wrapping CSS perspective container with
+// pointer-driven `rotateX/rotateY` so the radar feels physically present —
+// like a tilted display dish on the page — without the constellation's
+// rendering complexity.
+//
+// Depth illusion is from three stacked SVG layers in the wrap:
+//   • back layer — deeper rings, dimmer, translated -36px in Z
+//   • mid layer  — main radar (rings + scan triangle + spokes)
+//   • front layer — pulse halo around the active endpoint, +28px in Z
+//
+// Interaction:
+//   • hover over a spoke endpoint → activate that tab (synchronised)
+//   • hover over the wrap → 3D tilt follows the cursor
+//   • leave → tilt smoothly returns to neutral
 // ─────────────────────────────────────────────────────────────────────────────
-function Skills({ t }) {
-  const ref = useRevealRoot([t]);
-  const [active, setActive] = useState(0);
-  return (
-    <section data-section="skills" id="skills" ref={ref}>
-      <div className="shell">
-        <SecHead num="04" eyebrow={t.skills.eyebrow} title={t.skills.title} meta="stack.radar.v3" />
-        <p className="lead-line" data-reveal>{t.skills.lead}</p>
-        <div className="skills-layout">
-          <div className="skills-tabs" role="tablist" aria-label="stack">
-            {t.skills.groups.map((g, i) => (
-              <button
-                key={i}
-                role="tab"
-                aria-selected={active === i}
-                className={`skills-tab ${active === i ? "is-active" : ""}`}
-                onMouseEnter={() => setActive(i)}
-                onFocus={() => setActive(i)}
-                onClick={() => setActive(i)}
-              >
-                <span className="mono skills-num">/{String(i + 1).padStart(2, "0")}</span>
-                <span className="skills-k">{g.k}</span>
-                <span className="mono skills-count">{g.items.length}</span>
-              </button>
-            ))}
-          </div>
-          <div className="skills-panel card" data-reveal>
-            <div className="skills-panel-head">
-              <span className="mono">{`/stack/${t.skills.groups[active].k.toLowerCase().replace(/\W+/g, "-")}`}</span>
-              <span className="chip"><span className="chip-dot" />ready</span>
-            </div>
-            <div className="skills-items">
-              {t.skills.groups[active].items.map((it, i) => (
-                <span key={i} className="skill-item" style={{ animationDelay: `${i * 50}ms` }}>{it}</span>
-              ))}
-            </div>
-            <SkillsRadar groups={t.skills.groups} active={active} />
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
 
-// SkillsRadar — interpolated polygon morph between tabs + rotating scan-line
-// + pulsing concentric rings. The active spoke smoothly tweens its endpoint
-// between groups (radial easing) instead of snapping.
-function SkillsRadar({ groups, active }) {
+const SKILLS_RADAR_RADIUS = 110;
+const SKILLS_TWEEN_MS = 620;
+const SKILLS_SCAN_PERIOD_S = 4.5;
+// Parallax shift in CSS pixels. Pure 2D translate — no 3D perspective so the
+// SVG content cannot leak outside its container (v47 had a CSS `perspective`
+// + `translateZ(-60px)` back layer that visually projected below the panel
+// onto the bg-fx grid). Keeping the shift tight (8px max) preserves the
+// "responsive to cursor" feel without spill.
+const SKILLS_PARALLAX_MAX_PX = 8;
+const SKILLS_PARALLAX_LERP = 0.10;
+const SKILLS_VIEW_SIZE = 320;
+
+function SkillsRadar({ groups, active, onActivate }) {
   const total = groups.length;
-  const R = 120;
-  const RADAR_TWEEN_MS = 620;
-  const SCAN_PERIOD_S = 4.5;
+  const R = SKILLS_RADAR_RADIUS;
 
-  const endpoints = useMemo(() => {
-    return groups.map((g, i) => {
+  const endpoints = useMemo(function buildEndpoints() {
+    return groups.map(function buildEndpoint(g, i) {
       const a = (i / total) * Math.PI * 2 - Math.PI / 2;
       const r = R * (0.55 + Math.min(0.45, g.items.length / 10));
       return { x: Math.cos(a) * r, y: Math.sin(a) * r };
     });
   }, [groups, total]);
 
-  // Animated active endpoint (tween on tab change).
-  const [currentEnd, setCurrentEnd] = useState(() => endpoints[active] || { x: 0, y: 0 });
+  // Smooth animated active endpoint (tween on tab change).
+  const [currentEnd, setCurrentEnd] = useState(function initEnd() {
+    return endpoints[active] || { x: 0, y: 0 };
+  });
   const fromRef = useRef(currentEnd);
   const startedAtRef = useRef(0);
-  useEffect(() => {
+  useEffect(function tweenEndpoint() {
     if (!endpoints[active]) return undefined;
-    fromRef.current = { ...currentEnd };
+    fromRef.current = { x: currentEnd.x, y: currentEnd.y };
     startedAtRef.current = performance.now();
     let raf = 0;
     function step(now) {
-      const tt = Math.min(1, (now - startedAtRef.current) / RADAR_TWEEN_MS);
+      const tt = Math.min(1, (now - startedAtRef.current) / SKILLS_TWEEN_MS);
       const eased = 1 - Math.pow(1 - tt, 3);
       const target = endpoints[active];
       setCurrentEnd({
@@ -1134,89 +1313,220 @@ function SkillsRadar({ groups, active }) {
       if (tt < 1) raf = requestAnimationFrame(step);
     }
     raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  // currentEnd intentionally omitted — we want one tween per active change,
-  // not a re-tween every interpolated frame.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    return function () { cancelAnimationFrame(raf); };
+    // currentEnd intentionally omitted — we want one tween per active change,
+    // not a re-tween every interpolated frame.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, endpoints]);
 
   // Scan-line angle in real time.
   const [scanAngle, setScanAngle] = useState(-90);
-  useEffect(() => {
+  useEffect(function rotateScan() {
     let raf = 0;
     function tick(now) {
-      const t = (now / 1000) % SCAN_PERIOD_S;
-      setScanAngle((t / SCAN_PERIOD_S) * 360 - 90);
+      const t = (now / 1000) % SKILLS_SCAN_PERIOD_S;
+      setScanAngle((t / SKILLS_SCAN_PERIOD_S) * 360 - 90);
       raf = requestAnimationFrame(tick);
     }
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return function () { cancelAnimationFrame(raf); };
   }, []);
 
+  const half = SKILLS_VIEW_SIZE / 2;
   return (
-    <svg className="skills-radar" viewBox="-180 -180 360 360" aria-hidden="true">
+    <svg
+      className="skills-radar-svg"
+      viewBox={`-${half} -${half} ${SKILLS_VIEW_SIZE} ${SKILLS_VIEW_SIZE}`}
+      aria-hidden="true"
+    >
       <defs>
         <linearGradient id="skills-scan-grad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="160" y2="0">
           <stop offset="0%" stopColor="currentColor" stopOpacity="0" />
-          <stop offset="55%" stopColor="currentColor" stopOpacity="0.08" />
+          <stop offset="55%" stopColor="currentColor" stopOpacity="0.10" />
           <stop offset="100%" stopColor="currentColor" stopOpacity="0.55" />
         </linearGradient>
-        <radialGradient id="skills-rings-grad" cx="0" cy="0" r="160" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="currentColor" stopOpacity="0.18" />
-          <stop offset="60%" stopColor="currentColor" stopOpacity="0.05" />
+        <radialGradient id="skills-core-glow" cx="0" cy="0" r="60" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="currentColor" stopOpacity="0.35" />
           <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
         </radialGradient>
       </defs>
 
-      <circle r="170" fill="url(#skills-rings-grad)" />
+      {/* Central glow disc — adds depth + warmth. */}
+      <circle r="60" fill="url(#skills-core-glow)" />
 
-      {[0.4, 0.7, 1].map((s, i) => (
-        <circle
-          key={i}
-          r={R * s}
-          fill="none"
-          stroke="currentColor"
-          strokeOpacity=".10"
-          className="skills-radar-ring"
-          style={{ animationDelay: `${i * 0.8}s` }}
-        />
-      ))}
+      {/* Concentric pulsing rings. */}
+      {[0.4, 0.7, 1].map(function renderRing(s, i) {
+        return (
+          <circle
+            key={i}
+            r={R * s}
+            fill="none"
+            stroke="currentColor"
+            strokeOpacity=".10"
+            className="skills-radar-ring"
+            style={{ animationDelay: `${i * 0.8}s` }}
+          />
+        );
+      })}
 
+      {/* Cross-hairs. */}
       <line x1="-160" y1="0" x2="160" y2="0" stroke="currentColor" strokeOpacity=".06" />
       <line x1="0" y1="-160" x2="0" y2="160" stroke="currentColor" strokeOpacity=".06" />
 
-      {/* Rotating scan triangle */}
+      {/* Rotating scan triangle. */}
       <g transform={`rotate(${scanAngle.toFixed(2)})`}>
         <polygon points="0,0 160,-22 160,22" fill="url(#skills-scan-grad)" />
         <line x1="0" y1="0" x2="160" y2="0" stroke="currentColor" strokeOpacity=".5" strokeWidth="1" />
       </g>
 
-      {/* Inactive spokes (dim) */}
-      {groups.map((g, i) => {
+      {/* Inactive spokes (clickable for tab activation). */}
+      {groups.map(function renderSpoke(g, i) {
         if (i === active) return null;
         const e = endpoints[i];
         return (
-          <g key={i}>
+          <g key={i} className="skills-radar-spoke" onClick={function () { if (onActivate) onActivate(i); }}>
             <line x1="0" y1="0" x2={e.x} y2={e.y} stroke="currentColor" strokeOpacity="0.10" />
-            <circle cx={e.x} cy={e.y} r="3.5" fill="currentColor" opacity="0.45" />
-            <text x={e.x} y={e.y - 14} textAnchor="middle" fontSize="10" fontFamily="var(--f-mono)" fill="currentColor" opacity="0.45">
+            <circle cx={e.x} cy={e.y} r="5.5" fill="transparent" stroke="currentColor" strokeOpacity="0.45" />
+            <circle cx={e.x} cy={e.y} r="3" fill="currentColor" opacity="0.55" />
+            <text
+              x={e.x}
+              y={e.y - 14}
+              textAnchor="middle"
+              fontSize="10"
+              fontFamily="var(--f-mono)"
+              fill="currentColor"
+              opacity="0.55"
+            >
               {g.k}
             </text>
           </g>
         );
       })}
 
-      {/* Active spoke — animated endpoint */}
+      {/* Active spoke — pulsing endpoint with halo. */}
       <line x1="0" y1="0" x2={currentEnd.x} y2={currentEnd.y} stroke="currentColor" strokeOpacity="0.9" strokeWidth="1.5" />
+      <circle cx={currentEnd.x} cy={currentEnd.y} r="14" fill="none" stroke="currentColor" strokeOpacity="0.18">
+        <animate attributeName="r" values="10;18;10" dur="2.2s" repeatCount="indefinite" />
+        <animate attributeName="stroke-opacity" values="0.32;0.04;0.32" dur="2.2s" repeatCount="indefinite" />
+      </circle>
       <circle cx={currentEnd.x} cy={currentEnd.y} r="6.5" fill="currentColor">
         <animate attributeName="r" values="6.5;9;6.5" dur="1.6s" repeatCount="indefinite" />
       </circle>
-      <text x={currentEnd.x} y={currentEnd.y - 16} textAnchor="middle" fontSize="11" fontFamily="var(--f-mono)" fill="currentColor" opacity="1">
+      <text
+        x={currentEnd.x}
+        y={currentEnd.y - 16}
+        textAnchor="middle"
+        fontSize="11"
+        fontFamily="var(--f-mono)"
+        fill="currentColor"
+        opacity="1"
+      >
         {groups[active].k}
       </text>
 
+      {/* Centre node. */}
       <circle r="3" fill="currentColor" />
     </svg>
+  );
+}
+
+function Skills({ t }) {
+  const ref = useRevealRoot([t]);
+  const [active, setActive] = useState(0);
+  const stageRef = useRef(null);
+  const parallaxRef = useRef({ targetX: 0, targetY: 0, currentX: 0, currentY: 0 });
+  const rafRef = useRef(0);
+
+  // 2D parallax — translates the SVG by up to SKILLS_PARALLAX_MAX_PX along
+  // each axis as the cursor moves. No CSS perspective, no translateZ — so the
+  // SVG content cannot project outside the .skills-radar-stage box. Lerped
+  // for silky motion, snaps back to centre on pointer leave.
+  useEffect(function startParallaxLoop() {
+    function tick() {
+      const s = parallaxRef.current;
+      s.currentX = s.currentX + (s.targetX - s.currentX) * SKILLS_PARALLAX_LERP;
+      s.currentY = s.currentY + (s.targetY - s.currentY) * SKILLS_PARALLAX_LERP;
+      const el = stageRef.current;
+      if (el) {
+        el.style.setProperty("--px", `${s.currentX.toFixed(2)}px`);
+        el.style.setProperty("--py", `${s.currentY.toFixed(2)}px`);
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    }
+    rafRef.current = requestAnimationFrame(tick);
+    return function () { cancelAnimationFrame(rafRef.current); };
+  }, []);
+
+  function onPointerMove(e) {
+    const el = stageRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const nx = ((e.clientX - r.left) / r.width) * 2 - 1;  // -1..1
+    const ny = ((e.clientY - r.top) / r.height) * 2 - 1;  // -1..1
+    parallaxRef.current.targetX = nx * SKILLS_PARALLAX_MAX_PX;
+    parallaxRef.current.targetY = ny * SKILLS_PARALLAX_MAX_PX;
+  }
+  function onPointerLeave() {
+    parallaxRef.current.targetX = 0;
+    parallaxRef.current.targetY = 0;
+  }
+
+  return (
+    <section data-section="skills" id="skills" ref={ref}>
+      <div className="shell">
+        <SecHead num="04" eyebrow={t.skills.eyebrow} title={t.skills.title} meta="stack.radar.v3" />
+        <p className="lead-line" data-reveal>{t.skills.lead}</p>
+
+        <div className="skills-layout">
+          <div className="skills-tabs" role="tablist" aria-label="stack">
+            {t.skills.groups.map(function renderTab(g, i) {
+              return (
+                <button
+                  key={i}
+                  role="tab"
+                  aria-selected={active === i}
+                  className={`skills-tab ${active === i ? "is-active" : ""}`}
+                  onMouseEnter={function () { setActive(i); }}
+                  onFocus={function () { setActive(i); }}
+                  onClick={function () { setActive(i); }}
+                >
+                  <span className="mono skills-num">/{String(i + 1).padStart(2, "0")}</span>
+                  <span className="skills-k">{g.k}</span>
+                  <span className="mono skills-count">{g.items.length}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="skills-panel card" data-reveal>
+            <div className="skills-panel-head">
+              <span className="mono">{`/stack/${t.skills.groups[active].k.toLowerCase().replace(/\W+/g, "-")}`}</span>
+              <span className="chip"><span className="chip-dot" />ready</span>
+            </div>
+            <div className="skills-items">
+              {t.skills.groups[active].items.map(function renderItem(it, i) {
+                return (
+                  <span key={i} className="skill-item" style={{ animationDelay: `${i * 50}ms` }}>{it}</span>
+                );
+              })}
+            </div>
+
+            {/* Contained radar stage — clip-path-safe (overflow: hidden in CSS)
+                so the SVG can never spill into the page grid. Cursor moves the
+                SVG by a few pixels in 2D — gives a tactile feel without
+                introducing 3D transforms that would project content downward. */}
+            <div
+              ref={stageRef}
+              className="skills-radar-stage"
+              onMouseMove={onPointerMove}
+              onMouseLeave={onPointerLeave}
+            >
+              <SkillsRadar groups={t.skills.groups} active={active} onActivate={setActive} />
+              <div className="skills-radar-hint mono" aria-hidden="true">hover · radar</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 

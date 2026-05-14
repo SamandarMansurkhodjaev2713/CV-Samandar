@@ -83,17 +83,26 @@
 .hero-robot {
   position: relative;
   width: 100%;
-  /* Bigger: 460px desktop. Robot floats on the page background — no card. */
-  height: 460px;
+  /* v48: bigger on desktop (560px), with a 1.08 horizontal scale so the
+     robot reads as a more dominant focal point. Mobile heights (set in
+     responsive blocks below) keep the robot legible without crowding. */
+  height: 560px;
   cursor: pointer;
   touch-action: none;
   isolation: isolate;
-  /* No card chrome — completely transparent so the page background shows
-     through. Meta labels overlay the canvas directly. */
   background: transparent;
   border: 0;
   box-shadow: none;
   overflow: hidden;
+}
+/* Scale the Spline canvas slightly larger than its hosting box so the robot
+   feels physically present. Desktop only — mobile keeps 1:1 to avoid
+   clipping the antenna against the watermark cover. */
+@media (hover: hover) and (min-width: 901px) {
+  .hero-robot-canvas {
+    transform: scale(1.08);
+    transform-origin: 50% 55%;
+  }
 }
 .hero-robot-canvas {
   position: absolute;
@@ -377,13 +386,17 @@
   .hero-marquee { margin: 30px calc(-1 * var(--gutter)) 0; }
   .hero-meta { flex-direction: column; align-items: flex-start; gap: 16px; }
   .hero-links { margin-left: 0; }
-  .hero-robot { height: 380px; }
+  /* v48 mobile robot — bigger (440px) than v47's 380px; centred horizontally
+     with explicit max-width so the robot doesn't get cropped by the
+     watermark cover on narrow phones. */
+  .hero-robot { height: 440px; max-width: 560px; margin: 0 auto; }
   .hero-terminal { font-size: 11px; }
   .term-body { min-height: 160px; }
 }
 @media (max-width: 480px) {
-  /* Compact mobile (<480px): keep takeover hero readable on phone screens. */
-  .hero-robot { height: 340px; }
+  /* Compact mobile (<480px): height 380px (was 340px) so the robot's head
+     fits comfortably even after the watermark patch. */
+  .hero-robot { height: 380px; max-width: 100%; }
   .hero-grid { padding-top: clamp(28px, 4vh, 52px); gap: 20px; padding-bottom: 96px; }
   .hero-ctas { width: 100%; gap: 10px; }
   .hero-ctas .btn { flex: 1; justify-content: center; min-height: 50px; }

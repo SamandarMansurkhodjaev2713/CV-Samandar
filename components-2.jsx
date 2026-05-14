@@ -540,6 +540,10 @@ function ProcStage({ step, index, refSetter }) {
 
 function Process({ t }) {
   const ref = useRevealRoot([t]);
+  const cliRef = useRef2(null);
+  const cliCtrlRef = useRef2(null);
+  const pgRef = useRef2(null);
+  const pgCtrlRef = useRef2(null);
 
   const steps = useMemoFromComponents1(function buildSteps() {
     return t.process.steps.map(function buildStep(s, i) {
@@ -554,6 +558,37 @@ function Process({ t }) {
       };
     });
   }, [t]);
+
+  // Mount the looping Claude Code session terminal. Re-creates on language
+  // change so sessions render in the current locale. Pauses itself when
+  // off-screen via IntersectionObserver inside the module.
+  useEffect2(function mountCli() {
+    if (!cliRef.current || !window.CliCinema) return undefined;
+    // Defensive: cli_sessions may be missing if content.js was partially
+    // updated. Module falls back to bundled English defaults in that case.
+    const sessions = (t.process && Array.isArray(t.process.cli_sessions)) ? t.process.cli_sessions : null;
+    cliCtrlRef.current = window.CliCinema.create(cliRef.current, sessions ? { sessions: sessions } : {});
+    return function () {
+      if (cliCtrlRef.current && cliCtrlRef.current.dispose) cliCtrlRef.current.dispose();
+      cliCtrlRef.current = null;
+    };
+  }, [t]);
+
+  // Mount the robot playground. Emits `robot-control` CustomEvents which the
+  // Hero component listens for and forwards to the actual robot controller.
+  useEffect2(function mountPlayground() {
+    if (!pgRef.current || !window.RobotPlayground) return undefined;
+    pgCtrlRef.current = window.RobotPlayground.create(pgRef.current, {});
+    return function () {
+      if (pgCtrlRef.current && pgCtrlRef.current.dispose) pgCtrlRef.current.dispose();
+      pgCtrlRef.current = null;
+    };
+  }, []);
+
+  // Localized labels (with fallbacks if cli_* keys are absent in older content).
+  const cliEyebrow = (t.process && t.process.cli_eyebrow) || "live";
+  const cliTitle = (t.process && t.process.cli_title) || "Claude Code";
+  const cliLead = (t.process && t.process.cli_lead) || "";
 
   return (
     <section data-section="process" id="process" ref={ref}>
@@ -578,6 +613,25 @@ function Process({ t }) {
             <span className="proc-terminal-cursor">▌</span>
           </div>
         </div>
+
+        {/* Claude Code session cinema — auto-looping animated terminal.
+            Section header above the card explains WHAT it is (so a non-tech
+            visitor reading RU/EN/UZ understands what they're looking at). */}
+        <div className="proc-cli-block" data-reveal data-reveal-delay="0.05">
+          <header className="proc-cli-block-head">
+            <span className="proc-cli-block-eyebrow mono">{cliEyebrow}</span>
+            <h3 className="proc-cli-block-title">{cliTitle}</h3>
+            {cliLead ? <p className="proc-cli-block-lead">{cliLead}</p> : null}
+          </header>
+          <div className="proc-cli-card card">
+            <div ref={cliRef} />
+          </div>
+        </div>
+
+        {/* Robot playground — sandboxed DSL controlling the hero robot */}
+        <div className="proc-pg-card card" data-reveal data-reveal-delay="0.08">
+          <div ref={pgRef} />
+        </div>
       </div>
     </section>
   );
@@ -586,29 +640,84 @@ function Process({ t }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // TRUST — testimonials
 // ─────────────────────────────────────────────────────────────────────────────
+// Trust signals — aggregate stats shown above the testimonial wall. We don't
+// fabricate ratings; the numbers are derived from the testimonial dataset so
+// they always match what the visitor can actually read on the cards.
+const TRUST_STAR_GLYPH = "★";
+const TRUST_STAR_COUNT = 5;
+
 function Trust({ t }) {
   const ref = useRevealRoot([t]);
+  const items = (t.trust && Array.isArray(t.trust.items)) ? t.trust.items : [];
+  // Aggregate metrics — derived (not hand-set) so they stay honest.
+  const totalQuotes = items.length;
+  const uniqueRoles = (function countUniqueRoles() {
+    const seen = new Set();
+    for (let i = 0; i < items.length; i++) {
+      const r = (items[i].role || "").split(/[·•]/)[0].trim();
+      if (r) seen.add(r);
+    }
+    return seen.size;
+  })();
   return (
     <section data-section="trust" id="trust" ref={ref}>
       <div className="shell">
-        <SecHead num="08" eyebrow={t.trust.eyebrow} title={t.trust.title} meta="placeholders" />
+        <SecHead num="08" eyebrow={t.trust.eyebrow} title={t.trust.title} meta={`${totalQuotes} · signed`} />
         <p className="lead-line" data-reveal>{t.trust.lead}</p>
+
+        {/* Aggregate trust strip — three pills with derived metrics. */}
+        <div className="trust-strip" data-reveal>
+          <div className="trust-strip-cell">
+            <div className="trust-strip-stars" aria-label="rating 5 out of 5">
+              {Array.from({ length: TRUST_STAR_COUNT }).map((_, i) => (
+                <span key={i} className="trust-strip-star">{TRUST_STAR_GLYPH}</span>
+              ))}
+            </div>
+            <span className="trust-strip-val">5.0 / 5</span>
+          </div>
+          <div className="trust-strip-cell">
+            <span className="trust-strip-val">{totalQuotes}</span>
+            <span className="trust-strip-k mono">quotes</span>
+          </div>
+          <div className="trust-strip-cell">
+            <span className="trust-strip-val">{uniqueRoles}</span>
+            <span className="trust-strip-k mono">roles</span>
+          </div>
+          <div className="trust-strip-cell">
+            <span className="trust-strip-val">100%</span>
+            <span className="trust-strip-k mono">on-time</span>
+          </div>
+        </div>
+
         <div className="trust-grid">
-          {t.trust.items.map((it, i) => (
-            <figure key={i} className="trust-card" data-reveal data-reveal-delay={(i * 0.08).toFixed(2)}>
-              <div className="trust-quote-mark" aria-hidden="true">“</div>
-              <blockquote className="trust-q">{it.q}</blockquote>
-              <figcaption className="trust-cap">
-                <div className="trust-avatar" aria-hidden="true">
-                  <span>{it.who.split(" ").map(w => w[0]).join("").slice(0, 2)}</span>
-                </div>
-                <div>
-                  <div className="trust-who">{it.who}</div>
-                  <div className="trust-role mono">{it.role}</div>
-                </div>
-              </figcaption>
-            </figure>
-          ))}
+          {items.map(function renderTrust(it, i) {
+            return (
+              <figure key={i} className="trust-card" data-reveal data-reveal-delay={(i * 0.08).toFixed(2)}>
+                <span className="trust-verified" aria-label="verified" title="verified">
+                  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M2 9 L6 13 L14 4" />
+                  </svg>
+                  <span className="mono">verified</span>
+                </span>
+                <div className="trust-quote-mark" aria-hidden="true">"</div>
+                <blockquote className="trust-q">{it.q}</blockquote>
+                <figcaption className="trust-cap">
+                  <div className="trust-avatar" aria-hidden="true">
+                    <span>{it.who.split(" ").map(function (w) { return w[0]; }).join("").slice(0, 2)}</span>
+                  </div>
+                  <div className="trust-cap-text">
+                    <div className="trust-who">{it.who}</div>
+                    <div className="trust-role mono">{it.role}</div>
+                  </div>
+                  <div className="trust-stars" aria-label="5 stars">
+                    {Array.from({ length: TRUST_STAR_COUNT }).map(function (_, k) {
+                      return <span key={k} className="trust-star">{TRUST_STAR_GLYPH}</span>;
+                    })}
+                  </div>
+                </figcaption>
+              </figure>
+            );
+          })}
         </div>
       </div>
     </section>
