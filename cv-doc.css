@@ -1,5 +1,249 @@
-/* cv-doc.css — Resume document layout (CV section).
-   Hero robot styling moved entirely into sections.css. */
+/* cv-doc.css — Resume document layout (CV section) + print stylesheet.
+   Hero robot styling lives in sections.css. */
+
+/* ────────────────────────────────────────────────────────────────
+   PRINT — `window.print()` from the CV section's "print · pdf"
+   button uses these rules to produce a clean A4 page containing
+   ONLY the CV content, regardless of what else is on the page.
+   ──────────────────────────────────────────────────────────────── */
+@media print {
+  /* Page setup — A4, narrow margins to give content room. */
+  @page {
+    size: A4;
+    margin: 12mm 14mm 12mm 14mm;
+  }
+
+  /* NUCLEAR APPROACH: hide everything via visibility, then reveal only the CV
+     subtree. This avoids the `display: none` issue where ancestor containers
+     can swallow child content (esp. with React-managed [hidden] attributes).
+     Then we reposition the CV doc to (0,0) so it starts at the top of paper. */
+  html, body {
+    background: #FFFFFF !important;
+    color: #1A1614 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+  #cv, #cv * {
+    visibility: visible !important;
+  }
+  /* Reveal the print-relevant pseudo-elements too. */
+  #cv *::before, #cv *::after {
+    visibility: visible !important;
+  }
+
+  /* Strip all decorative fixed-layer artwork from the print frame entirely. */
+  .bg-fx-canvas,
+  .bg-grid,
+  .bg-noise,
+  .bg-glow,
+  .scroll-progress,
+  .nav,
+  .nav-drawer,
+  .mobile-dock,
+  .mobile-sticky-cta,
+  .sc-cursor,
+  .sc-trail,
+  .sc-ripple,
+  .sc-glance,
+  .twk-panel,
+  .hero-marquee,
+  .site-footer { display: none !important; }
+
+  /* Anchor CV section to (0,0) so the printed page starts with it. */
+  #cv {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    color: #1A1614 !important;
+  }
+  #cv .shell {
+    padding: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+  #cv .sec-head {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+    border-bottom: 1px solid #1A1614 !important;
+    margin: 0 0 10px !important;
+    padding: 0 0 8px !important;
+  }
+  #cv .sec-head::after { display: none !important; }
+  #cv .sec-head .num { color: #666 !important; font-size: 10px !important; }
+  #cv .sec-head h2 {
+    color: #1A1614 !important;
+    font-size: 22px !important;
+    margin: 0 !important;
+  }
+  #cv .sec-head h2 .em { color: #B45C2E !important; font-style: italic !important; }
+  #cv .sec-meta { color: #888 !important; font-size: 10px !important; }
+
+  /* CV document — flatten to paper, remove shadows / dark backgrounds. */
+  .cv-doc {
+    background: #FFFFFF !important;
+    border: 1px solid #1A1614 !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+    color: #1A1614 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+  .cv-doc * { color: inherit !important; }
+  .cv-doc-head { display: none !important; }
+
+  .cv-id {
+    background: #F7F2EA !important;
+    padding: 14px 18px !important;
+    border-bottom: 1px solid #1A1614 !important;
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    gap: 16px !important;
+  }
+  .cv-id-name { color: #1A1614 !important; font-size: 22px !important; margin: 0 0 4px !important; line-height: 1.1 !important; }
+  .cv-id-role { color: #2A2520 !important; font-size: 12px !important; margin: 0 0 6px !important; }
+  .cv-id-meta { color: #555 !important; font-size: 10px !important; display: flex !important; gap: 10px !important; flex-wrap: wrap !important; }
+  .cv-id-meta > * + *::before { color: #999 !important; }
+  .cv-id-stats { display: grid !important; grid-template-columns: repeat(2, auto) !important; gap: 8px 16px !important; }
+  .cv-id-stat dt { color: #888 !important; font-size: 9px !important; }
+  .cv-id-stat dd { color: #1A1614 !important; font-size: 14px !important; }
+
+  /* Two-column body — main timeline + side blocks. */
+  .cv-doc-body {
+    display: grid !important;
+    grid-template-columns: 1.5fr 1fr !important;
+    gap: 0 !important;
+    padding: 0 !important;
+  }
+  .cv-main { padding: 14px 18px !important; border-right: 1px solid #ddd !important; }
+  .cv-side { padding: 14px 18px !important; display: flex !important; flex-direction: column !important; gap: 18px !important; }
+  .cv-block-h {
+    color: #B45C2E !important;
+    font-size: 9.5px !important;
+    margin: 0 0 8px !important;
+    padding-bottom: 6px !important;
+    border-bottom: 1px solid #ddd !important;
+  }
+  .cv-block-h::before { background: #B45C2E !important; }
+
+  /* Roles — all expanded for print. */
+  .cv-roles { list-style: none !important; padding: 0 !important; margin: 0 !important; display: block !important; }
+  .cv-role { border-bottom: 1px solid #eee !important; break-inside: avoid !important; page-break-inside: avoid !important; }
+  .cv-role:last-child { border-bottom: 0 !important; }
+  .cv-role-head {
+    display: grid !important;
+    grid-template-columns: 88px 1fr auto !important;
+    gap: 12px !important;
+    padding: 10px 0 4px !important;
+    background: transparent !important;
+    border: 0 !important;
+    cursor: default !important;
+    align-items: baseline !important;
+    width: 100% !important;
+  }
+  .cv-role-y { color: #777 !important; font-size: 10px !important; letter-spacing: 0.04em !important; }
+  .cv-role-title { color: #1A1614 !important; font-size: 14px !important; font-weight: 600 !important; font-family: inherit !important; line-height: 1.2 !important; }
+  .cv-role-org { color: #555 !important; font-size: 11px !important; }
+  .cv-role-tag {
+    color: #B45C2E !important;
+    border: 1px solid #B45C2E !important;
+    background: transparent !important;
+    font-size: 8.5px !important;
+    padding: 1px 6px !important;
+  }
+
+  /* Force every role body fully expanded with text content visible. */
+  .cv-role-body,
+  .cv-role-body[hidden],
+  .cv-role.is-open .cv-role-body {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    padding: 4px 0 10px 100px !important;
+    animation: none !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .cv-role-chev { display: none !important; }
+
+  .cv-points { margin: 0 0 6px !important; padding: 0 !important; list-style: none !important; }
+  .cv-points li {
+    color: #2A2520 !important;
+    padding-left: 14px !important;
+    position: relative !important;
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+    margin: 2px 0 !important;
+  }
+  .cv-points li::before { content: "›" !important; position: absolute !important; left: 0 !important; color: #B45C2E !important; }
+  .cv-role-stack { display: flex !important; flex-wrap: wrap !important; gap: 4px !important; margin-top: 4px !important; }
+  .cv-chip {
+    background: transparent !important;
+    border: 1px solid #B45C2E !important;
+    color: #B45C2E !important;
+    font-size: 8.5px !important;
+    padding: 1px 6px !important;
+    border-radius: 3px !important;
+  }
+
+  /* Education list */
+  .cv-side-list { list-style: none !important; padding: 0 !important; margin: 0 !important; }
+  .cv-edu-row { display: grid !important; grid-template-columns: 70px 1fr !important; gap: 10px !important; padding: 6px 0 !important; border-bottom: 1px solid #eee !important; }
+  .cv-edu-row:last-child { border-bottom: 0 !important; }
+  .cv-edu-y { color: #777 !important; font-size: 10px !important; }
+  .cv-edu-k { color: #1A1614 !important; font-size: 11px !important; line-height: 1.35 !important; }
+
+  /* Strengths list */
+  .cv-strengths li {
+    color: #2A2520 !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    padding: 5px 0 !important;
+    border-bottom: 1px solid #eee !important;
+    display: flex !important;
+    gap: 6px !important;
+  }
+  .cv-strengths li:last-child { border-bottom: 0 !important; }
+  .cv-bullet-mark { color: #B45C2E !important; }
+
+  /* Languages list */
+  .cv-langs { list-style: none !important; padding: 0 !important; margin: 0 !important; }
+  .cv-lang {
+    display: grid !important;
+    grid-template-columns: 90px 1fr 50px !important;
+    gap: 8px !important;
+    align-items: center !important;
+    font-size: 11px !important;
+    color: #1A1614 !important;
+    margin: 6px 0 !important;
+  }
+  .cv-lang-bar { background: #EEE !important; height: 2px !important; border-radius: 1px !important; }
+  .cv-lang-bar-fill { background: #B45C2E !important; height: 100% !important; transform: none !important; animation: none !important; }
+  .cv-lang-lvl { color: #888 !important; font-size: 9.5px !important; }
+
+  /* Footer */
+  .cv-doc-foot {
+    background: transparent !important;
+    color: #888 !important;
+    padding: 8px 18px !important;
+    font-size: 9px !important;
+    border-top: 1px solid #ddd !important;
+    display: flex !important;
+    justify-content: space-between !important;
+  }
+}
 
 /* ════════════════════════════════════════════════════════════
    CV — Real resume document
@@ -324,20 +568,9 @@
   .cv-id-stats { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* Print — clean resume doc */
-@media print {
-  body * { visibility: hidden; }
-  .cv-doc, .cv-doc * { visibility: visible; }
-  .cv-doc { position: absolute; inset: 0; margin: 0; border: 0; background: white; color: #111; }
-  .cv-doc * { color: #111 !important; background: transparent !important; border-color: #ddd !important; }
-  .cv-action, .cv-doc-actions { display: none !important; }
-  .cv-role-body[hidden] { display: block !important; }
-  .cv-role-chev { display: none; }
-  .cv-block-h::before { background: #111 !important; }
-  .cv-lang-bar { background: #eee !important; }
-  .cv-lang-bar-fill { background: #111 !important; animation: none !important; }
-  .cv-id-stat dd, .cv-role.is-open .cv-role-y, .cv-points li::before, .cv-bullet-mark { color: #111 !important; }
-}
+/* (Second @media print block removed — was hiding everything via
+   `body * { visibility: hidden }` which conflicted with the first block
+   above and produced a blank PDF. All print rules live in the top block.) */
 
 /* ════════════════════════════════════════════════════════════
    GLOBAL GLOW REDUCTION — kill bloom/shadow on idle states

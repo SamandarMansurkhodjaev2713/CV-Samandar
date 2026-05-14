@@ -41,42 +41,125 @@ function Hero({ t, links }) {
   const ref = useRevealRoot([t]);
   const robotCanvasRef = useRef(null);
   const robotRef = useRef(null);
-  const [bootIdx, setBootIdx] = useState(0);
+  // robotMood retained for the fallback robot's label, but the Spline robot
+  // doesn't actually cycle moods — we leave the mood permanently "idle/online"
+  // there and only update if the legacy fallback factory reports otherwise.
+  // eslint-disable-next-line no-unused-vars
   const [robotMood, setRobotMood] = useState("idle");
-  const lines = t.hero.boot_lines;
 
-  useEffect(() => {
-    setBootIdx(0);
-    let i = 0;
-    const id = setInterval(() => {
-      i++;
-      setBootIdx(i);
-      if (i >= lines.length) clearInterval(id);
-    }, 380);
-    return () => clearInterval(id);
-  }, [t]);
-
+  // Robot loading strategy:
+  //   1. Prefer the Spline runtime (community asset "GENKUB - Greeting robot").
+  //      It's an async dynamic import + scene download, so it takes time.
+  //   2. We poll every ROBOT_POLL_MS for TWO global flags that robot-spline.js
+  //      sets when the load resolves:
+  //        - `window.__splineRobotLoaded = true`  → success, KEEP Spline,
+  //          tear down the poll + watchdog so we never swap to legacy.
+  //        - `window.__splineRobotFailed = <reason>` → load failed, swap to
+  //          the hand-built robot.js so the hero is never empty.
+  //   3. ROBOT_FALLBACK_MS is the "truly stuck" watchdog: if neither flag
+  //      has fired by then (e.g. runtime fetched but `app.load` never
+  //      resolves), assume the load is wedged and force the legacy robot.
+  //      This MUST be generous enough that a normal load on slow 3G still
+  //      wins — Spline's .splinecode bundles are 1–3 MB.
+  // The split keeps the page robust against blocked CDNs / offline / 4xx
+  // WITHOUT killing a successful-but-slow Spline load.
   useEffect(() => {
     if (!robotCanvasRef.current) return;
-    const factory = window.RobotHead || window.Brain;
-    if (!factory || !factory.create) return;
+    const canvas = robotCanvasRef.current;
     const rootStyles = getComputedStyle(document.documentElement);
     const a1 = rootStyles.getPropertyValue("--accent").trim() || "#D97757";
     const a2 = rootStyles.getPropertyValue("--accent-2").trim() || "#C89B5E";
-    const r = factory.create(robotCanvasRef.current, {
-      accent: a1, accent2: a2, motion: 1,
-      onExpressionChange: function onMood(name) { setRobotMood(name); },
-    });
-    robotRef.current = r;
-    return function disposeRobot() { if (r && r.dispose) r.dispose(); };
+    // 12s watchdog: covers slow 3G + first-paint blocking on cold caches.
+    // The previous 3.5s value was too aggressive and was killing successful
+    // loads on mid-range mobile.
+    const ROBOT_FALLBACK_MS = 12000;
+    const ROBOT_POLL_MS = 400;
+
+    let active = null;
+    let fallbackTimer = 0;
+    let pollTimer = 0;
+    let swapped = false;
+
+    function clearTimers() {
+      if (pollTimer) { window.clearInterval(pollTimer); pollTimer = 0; }
+      if (fallbackTimer) { window.clearTimeout(fallbackTimer); fallbackTimer = 0; }
+    }
+
+    function swapToLegacy() {
+      if (swapped) return;
+      swapped = true;
+      clearTimers();
+      // Dispose whatever Spline created (or partial controller).
+      if (active && active.dispose) {
+        try { active.dispose(); } catch (e) { /* opportunistic */ }
+      }
+      const legacy = window.RobotHead || window.Brain;
+      if (!legacy || !legacy.create) return;
+      active = legacy.create(canvas, {
+        accent: a1, accent2: a2, motion: 1,
+        onExpressionChange: function (n) { setRobotMood(n); },
+      });
+      robotRef.current = active;
+    }
+
+    // First attempt — Spline runtime.
+    if (window.RobotSpline && window.RobotSpline.create) {
+      // Reset success/failure flags BEFORE creating the controller so a
+      // stale value from a hot-reload or prior mount doesn't trick us.
+      window.__splineRobotLoaded = false;
+      window.__splineRobotFailed = null;
+
+      active = window.RobotSpline.create(canvas, {
+        accent: a1, accent2: a2, motion: 1,
+        onExpressionChange: function (n) { setRobotMood(n); },
+      });
+      robotRef.current = active;
+
+      // Poll for either outcome. Success → stop everything and keep Spline.
+      // Failure → swap to legacy immediately (don't wait for the watchdog).
+      pollTimer = window.setInterval(function poll() {
+        if (swapped) { clearTimers(); return; }
+        if (window.__splineRobotLoaded) {
+          // Spline succeeded — we're done. Cancel the watchdog so it can't
+          // fire later and clobber a working scene.
+          clearTimers();
+          return;
+        }
+        if (window.__splineRobotFailed) {
+          swapToLegacy();
+        }
+      }, ROBOT_POLL_MS);
+
+      // Final watchdog — ONLY swap if neither flag was set by the deadline,
+      // meaning the load is silently wedged (no success, no error). A normal
+      // success path will have cleared this timer via the poll() above.
+      fallbackTimer = window.setTimeout(function watchdog() {
+        fallbackTimer = 0;
+        if (swapped) return;
+        if (window.__splineRobotLoaded) return; // success raced the timer
+        swapToLegacy();
+      }, ROBOT_FALLBACK_MS);
+    } else {
+      // The robot-spline.js bundle never registered — go straight to legacy.
+      swapToLegacy();
+    }
+
+    return function disposeRobot() {
+      clearTimers();
+      if (active && active.dispose) {
+        try { active.dispose(); } catch (e) { /* opportunistic */ }
+      }
+    };
   }, []);
 
   function onRobotClick() {
-    // Light haptic — Android only, iOS no-ops. Done via window.navigator
-    // directly so this component stays decoupled from app.jsx's haptic helper.
+    // Light haptic — Android only, iOS no-ops.
     if (typeof navigator !== "undefined" && navigator.vibrate) {
       try { navigator.vibrate(8); } catch (e) { /* opportunistic */ }
     }
+    // Trigger Spline's built-in click event ("mouseDown" / "tap" reaction
+    // defined in the source scene). For the legacy fallback robot, this
+    // continues to cycle through expressions.
     if (robotRef.current && robotRef.current.cycleExpression) {
       robotRef.current.cycleExpression();
     }
@@ -129,44 +212,19 @@ function Hero({ t, links }) {
 
         <aside className="hero-right" data-reveal data-reveal-delay="0.15">
           <div className="hero-robot" onClick={onRobotClick}>
-            <canvas ref={robotCanvasRef} className="hero-robot-canvas" data-cursor="link" data-cursor-label="click · change mood" />
+            <canvas ref={robotCanvasRef} className="hero-robot-canvas" data-cursor="link" data-cursor-label="follow · interact" />
+            {/* Watermark cover — Spline's free-tier "Built with Spline" badge
+                renders into the WebGL frame (not the DOM), so CSS-hiding the
+                element doesn't work. We mask the bottom-right corner with a
+                gradient that fades to transparent toward the canvas center. */}
+            <div className="hero-robot-wm-cover" aria-hidden="true" />
             <div className="hero-robot-meta mono">
               <span>core.ai</span>
               <span className="hero-robot-state">
-                <span className={`hero-robot-dot hero-robot-dot--${robotMood}`} />
-                {robotMood}
+                <span className="hero-robot-dot hero-robot-dot--idle" />online
               </span>
             </div>
-            <div className="hero-robot-hint mono">click · cycle expression</div>
-          </div>
-
-          <div className="hero-terminal">
-            <div className="term-head">
-              <div className="term-dots"><i></i><i></i><i></i></div>
-              <div className="term-title mono">core.engine — boot</div>
-              <div className="term-meta mono">v.2026</div>
-            </div>
-            <div className="term-body mono">
-              {lines.slice(0, bootIdx).map((l, i) => (
-                <div key={i} className="term-line">
-                  <span className="term-prompt">›</span>
-                  <span>{l}</span>
-                  <span className="term-ok">ok</span>
-                </div>
-              ))}
-              {bootIdx < lines.length ? (
-                <div className="term-line term-active">
-                  <span className="term-prompt">›</span>
-                  <span>{lines[bootIdx]}</span>
-                  <span className="term-cursor">▌</span>
-                </div>
-              ) : (
-                <div className="term-line term-deploy">
-                  <span className="term-prompt">›</span>
-                  <span>READY · listening on :443</span>
-                </div>
-              )}
-            </div>
+            <div className="hero-robot-hint mono">tracks your cursor · click to greet</div>
           </div>
         </aside>
       </div>
@@ -225,28 +283,230 @@ function generateSparkline(seed, points) {
   return result;
 }
 
+// 6 different SVG visualizations, one per Signal card. Same deterministic
+// `sparkData` array drives all of them — only the rendering changes — so
+// each card feels purposeful, not random.
+const SIGNAL_VIZ_KINDS = ["spark", "bars", "dots", "histo", "radial", "pulse"];
+const SIGNAL_UNITS = ["ops", "req/s", "msg", "qps", "vis", "build"];
+
+// 6 polished visualizations, one per Signal card. Each is calibrated to feel
+// like part of the same design system — same height, same accent palette,
+// same visual weight — but distinct in form so the grid never reads as repeats.
+function SignalViz({ kind, data, index }) {
+  const W = 100;
+  const H = 36;
+  const N = data.length;
+  const gradId = `sig-grad-${index}`;
+  const VIZ_PADDING = 1.5;       // breathing room from edges
+  const FILL_GRADIENT = (
+    <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stopColor="currentColor" stopOpacity="0.40" />
+      <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+    </linearGradient>
+  );
+
+  // ── spark: smooth line + area gradient (classic sparkline).
+  if (kind === "spark") {
+    const path = data.map(function pt(v, i) {
+      const x = (i / (N - 1)) * (W - VIZ_PADDING * 2) + VIZ_PADDING;
+      const y = H - VIZ_PADDING - v * (H - VIZ_PADDING * 2);
+      return `${i === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`;
+    }).join(" ");
+    const area = `${path} L ${W - VIZ_PADDING} ${H - VIZ_PADDING} L ${VIZ_PADDING} ${H - VIZ_PADDING} Z`;
+    return (
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
+        <defs>{FILL_GRADIENT}</defs>
+        <path d={area} fill={`url(#${gradId})`} />
+        <path d={path} fill="none" stroke="currentColor" strokeWidth="1.6"
+              strokeLinecap="round" strokeLinejoin="round" className="signal-spark-stroke" />
+      </svg>
+    );
+  }
+
+  // ── bars: 14 wider vertical bars, accent gradient top-to-bottom on each.
+  if (kind === "bars") {
+    const barCount = 14;
+    const totalGap = barCount - 1;
+    const gap = 2;
+    const barW = (W - VIZ_PADDING * 2 - totalGap * gap) / barCount;
+    const step = N / barCount;
+    const bars = [];
+    for (let i = 0; i < barCount; i++) {
+      const v = data[Math.floor(i * step)];
+      const bh = Math.max(3, v * (H - VIZ_PADDING * 2));
+      const x = VIZ_PADDING + i * (barW + gap);
+      const y = H - VIZ_PADDING - bh;
+      bars.push(
+        <rect key={i}
+          x={x.toFixed(2)} y={y.toFixed(2)}
+          width={barW.toFixed(2)} height={bh.toFixed(2)}
+          fill={`url(#${gradId})`}
+          rx="1"
+        />
+      );
+    }
+    return (
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
+        <defs>{FILL_GRADIENT}</defs>
+        {bars}
+        <line x1={VIZ_PADDING} y1={(H - VIZ_PADDING).toFixed(2)}
+              x2={(W - VIZ_PADDING).toFixed(2)} y2={(H - VIZ_PADDING).toFixed(2)}
+              stroke="currentColor" strokeOpacity="0.25" strokeWidth="0.5" />
+      </svg>
+    );
+  }
+
+  // ── dots: 12 evenly-spaced bigger dots + thin connecting line through them.
+  //         Reads as "data points on a graph" — clear and clinical.
+  if (kind === "dots") {
+    const dotCount = 12;
+    const step = N / dotCount;
+    const dots = [];
+    let line = "";
+    for (let i = 0; i < dotCount; i++) {
+      const v = data[Math.floor(i * step)];
+      const cx = VIZ_PADDING + (i / (dotCount - 1)) * (W - VIZ_PADDING * 2);
+      const cy = H - VIZ_PADDING - v * (H - VIZ_PADDING * 2);
+      line += (i === 0 ? "M" : "L") + ` ${cx.toFixed(2)} ${cy.toFixed(2)} `;
+      dots.push(
+        <circle key={i} cx={cx.toFixed(2)} cy={cy.toFixed(2)} r="2"
+          fill="currentColor" />
+      );
+    }
+    return (
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
+        <path d={line} fill="none" stroke="currentColor" strokeOpacity="0.35"
+              strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+        {dots}
+      </svg>
+    );
+  }
+
+  // ── histo: 20 bars with full-height accent gradient + ghost baseline bars
+  //          for histogram feel without being a wall of color.
+  if (kind === "histo") {
+    const barCount = 20;
+    const step = N / barCount;
+    const barW = (W - VIZ_PADDING * 2) / barCount * 0.78;
+    const slot = (W - VIZ_PADDING * 2) / barCount;
+    const bars = [];
+    for (let i = 0; i < barCount; i++) {
+      const v = data[Math.floor(i * step)];
+      const bh = Math.max(2, v * (H - VIZ_PADDING * 2));
+      const x = VIZ_PADDING + i * slot + (slot - barW) / 2;
+      const y = H - VIZ_PADDING - bh;
+      bars.push(
+        <rect key={i}
+          x={x.toFixed(2)} y={y.toFixed(2)}
+          width={barW.toFixed(2)} height={bh.toFixed(2)}
+          fill="currentColor"
+          opacity={(0.35 + v * 0.55).toFixed(2)}
+          rx="0.6"
+        />
+      );
+    }
+    return (
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
+        {bars}
+      </svg>
+    );
+  }
+
+  // ── radial: wide horizontal semi-circle gauge with tick marks + needle.
+  //           Reads as "live meter", not a tiny indicator.
+  if (kind === "radial") {
+    const avg = data.reduce(function sum(s, v) { return s + v; }, 0) / N;
+    const cx = W / 2;
+    const cy = H - 4;
+    const radius = Math.min(W / 2 - 6, H * 0.85);
+    const startAngle = Math.PI;
+    const endAngle = Math.PI * 2;
+    const sweepAngle = startAngle + (endAngle - startAngle) * avg;
+    const arcEndX = cx + Math.cos(sweepAngle) * radius;
+    const arcEndY = cy + Math.sin(sweepAngle) * radius;
+    const ticks = [];
+    const tickCount = 11;
+    for (let i = 0; i < tickCount; i++) {
+      const a = startAngle + (i / (tickCount - 1)) * (endAngle - startAngle);
+      const inner = radius - 2.5;
+      const outer = radius + (i === 0 || i === tickCount - 1 ? 1 : 0);
+      const t1x = cx + Math.cos(a) * inner;
+      const t1y = cy + Math.sin(a) * inner;
+      const t2x = cx + Math.cos(a) * outer;
+      const t2y = cy + Math.sin(a) * outer;
+      ticks.push(
+        <line key={i}
+          x1={t1x.toFixed(2)} y1={t1y.toFixed(2)}
+          x2={t2x.toFixed(2)} y2={t2y.toFixed(2)}
+          stroke="currentColor" strokeOpacity="0.3" strokeWidth="0.7" />
+      );
+    }
+    return (
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
+        {/* Track */}
+        <path
+          d={`M ${(cx - radius).toFixed(2)} ${cy.toFixed(2)} A ${radius} ${radius} 0 0 1 ${(cx + radius).toFixed(2)} ${cy.toFixed(2)}`}
+          fill="none" stroke="currentColor" strokeOpacity="0.18" strokeWidth="1.5" strokeLinecap="round" />
+        {/* Active arc */}
+        <path
+          d={`M ${(cx - radius).toFixed(2)} ${cy.toFixed(2)} A ${radius} ${radius} 0 ${avg > 0.5 ? 1 : 0} 1 ${arcEndX.toFixed(2)} ${arcEndY.toFixed(2)}`}
+          fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+        {ticks}
+        {/* Needle tip */}
+        <circle cx={arcEndX.toFixed(2)} cy={arcEndY.toFixed(2)} r="2.4" fill="currentColor" />
+      </svg>
+    );
+  }
+
+  // ── pulse: ECG-style heartbeat trace with sharp spikes (distinct from spark).
+  if (kind === "pulse") {
+    const beats = 3;
+    const baselineY = H * 0.6;
+    const peakY = VIZ_PADDING + 2;
+    const segments = [];
+    segments.push(`M ${VIZ_PADDING} ${baselineY.toFixed(2)}`);
+    for (let b = 0; b < beats; b++) {
+      const baseX = VIZ_PADDING + (b + 0.2) * (W - VIZ_PADDING * 2) / beats;
+      const stepX = (W - VIZ_PADDING * 2) / beats / 6;
+      // Small dip
+      segments.push(`L ${(baseX).toFixed(2)} ${baselineY.toFixed(2)}`);
+      segments.push(`L ${(baseX + stepX).toFixed(2)} ${(baselineY + 2).toFixed(2)}`);
+      // Sharp peak up
+      segments.push(`L ${(baseX + stepX * 1.5).toFixed(2)} ${peakY.toFixed(2)}`);
+      // Sharp down past baseline
+      segments.push(`L ${(baseX + stepX * 2).toFixed(2)} ${(baselineY + 5).toFixed(2)}`);
+      // Recovery
+      segments.push(`L ${(baseX + stepX * 2.5).toFixed(2)} ${baselineY.toFixed(2)}`);
+    }
+    segments.push(`L ${(W - VIZ_PADDING).toFixed(2)} ${baselineY.toFixed(2)}`);
+    const tipX = W - VIZ_PADDING - 1;
+    return (
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
+        <line x1={VIZ_PADDING} y1={baselineY.toFixed(2)}
+              x2={(W - VIZ_PADDING).toFixed(2)} y2={baselineY.toFixed(2)}
+              stroke="currentColor" strokeOpacity="0.10" strokeWidth="0.5" strokeDasharray="2 2" />
+        <path d={segments.join(" ")} fill="none" stroke="currentColor"
+              strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="signal-spark-stroke" />
+        <circle cx={tipX.toFixed(2)} cy={baselineY.toFixed(2)} r="1.6" fill="currentColor" className="signal-pulse-tip" />
+        <circle cx={tipX.toFixed(2)} cy={baselineY.toFixed(2)} r="4" fill="none" stroke="currentColor" strokeOpacity="0.5" className="signal-pulse-ring" />
+      </svg>
+    );
+  }
+
+  // Fallback — should never hit but keep TypeScript-happy.
+  return null;
+}
+
 function SignalCard({ card, index }) {
   const cardRef = useRef(null);
   const SPARK_POINTS = 28;
   const sparkData = useMemo(function memoSpark() {
     return generateSparkline(7 + index * 13, SPARK_POINTS);
   }, [index]);
+  const vizKind = SIGNAL_VIZ_KINDS[index % SIGNAL_VIZ_KINDS.length];
+  const vizUnit = SIGNAL_UNITS[index % SIGNAL_UNITS.length];
 
-  const sparkPath = useMemo(function buildPath() {
-    const w = 100;
-    const h = 36;
-    return sparkData.map(function pt(v, i) {
-      const x = (i / (SPARK_POINTS - 1)) * w;
-      const y = h - v * h;
-      return `${i === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`;
-    }).join(" ");
-  }, [sparkData]);
-
-  const sparkArea = useMemo(function buildArea() {
-    return `${sparkPath} L 100 36 L 0 36 Z`;
-  }, [sparkPath]);
-
-  // Live counter — increments at a measured cadence so the card feels "alive"
+  // Live counter — increments at a measured cadence so the card feels alive
   // without distracting. Each card has its own range and tick interval.
   const counterStart = 100 + index * 47;
   const [counter, setCounter] = useState(counterStart);
@@ -277,7 +537,7 @@ function SignalCard({ card, index }) {
   return (
     <div
       ref={cardRef}
-      className="card signal-card"
+      className={`card signal-card signal-card--${vizKind}`}
       data-reveal
       data-reveal-delay={(index * 0.04).toFixed(2)}
       onMouseMove={onMouseMove}
@@ -290,20 +550,11 @@ function SignalCard({ card, index }) {
       <h3 className="signal-k">{card.k}</h3>
       <p className="signal-v">{card.v}</p>
       <div className="signal-spark">
-        <svg viewBox="0 0 100 36" preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
-          <defs>
-            <linearGradient id={`sig-grad-${index}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="currentColor" stopOpacity="0.35" />
-              <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          <path d={sparkArea} fill={`url(#sig-grad-${index})`} />
-          <path d={sparkPath} fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className="signal-spark-stroke" />
-        </svg>
+        <SignalViz kind={vizKind} data={sparkData} index={index} />
         <div className="signal-spark-meta mono">
           <span className="signal-spark-dot" />
           <span>{counter.toString().padStart(4, "0")}</span>
-          <span className="signal-spark-unit">ops</span>
+          <span className="signal-spark-unit">{vizUnit}</span>
         </div>
       </div>
     </div>

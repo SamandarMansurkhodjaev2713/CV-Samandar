@@ -193,9 +193,9 @@ h1, h2, h3, h4 {
   line-height: 1.02;
   color: var(--text);
 }
-h1 { font-size: clamp(48px, 7vw, 112px); letter-spacing: -0.035em; font-weight: 500; }
-h2 { font-size: clamp(36px, 4.8vw, 76px); letter-spacing: -0.03em; }
-h3 { font-size: clamp(22px, 2vw, 32px); letter-spacing: -0.02em; }
+h1 { font-size: clamp(42px, 5.4vw, 88px); letter-spacing: -0.035em; font-weight: 500; line-height: 1.0; }
+h2 { font-size: clamp(32px, 4.2vw, 64px); letter-spacing: -0.03em; line-height: 1.05; }
+h3 { font-size: clamp(20px, 1.9vw, 28px); letter-spacing: -0.02em; }
 .eyebrow {
   font-family: var(--f-mono);
   font-size: 11px;
@@ -518,6 +518,7 @@ body.cursor-hover .cursor-dot { opacity: 0; }
 
 /* — Section header — */
 .sec-head {
+  position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -525,6 +526,24 @@ body.cursor-hover .cursor-dot { opacity: 0; }
   margin-bottom: var(--gap-block);
   padding-bottom: 24px;
   border-bottom: 1px solid var(--line);
+}
+/* Section-entry "divider line" — a thin accent stripe that scales from 0
+   to full width when the SecHead becomes visible. Triggered via JS reveal
+   adding .rv-in (already wired in motion.js). */
+.sec-head::after {
+  content: "";
+  position: absolute;
+  left: 0; bottom: -1px;
+  height: 1px;
+  width: 0;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 70%, transparent 100%);
+  transform-origin: left center;
+  transition: width 1.1s cubic-bezier(.2,.7,.18,1);
+  pointer-events: none;
+}
+.sec-head.rv-in::after { width: 38%; }
+@media (max-width: 600px) {
+  .sec-head.rv-in::after { width: 60%; }
 }
 .sec-head .num {
   font-family: var(--f-mono);

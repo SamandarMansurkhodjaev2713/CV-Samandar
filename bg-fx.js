@@ -28,11 +28,15 @@
   const CAMERA_FOV = 50;
   const CAMERA_Z = 9;
 
-  // ── Layer 1: icosahedron (far) ──────────────────────────────────────────
-  const ICO_RADIUS = 4.4;
-  const ICO_DETAIL = 1;                       // 0..2 — keep low-poly
-  const ICO_OPACITY = 0.18;
-  const ICO_BASE_ROTATION_Y_PER_S = 0.04;
+  // ── Layer 1: morphing wireframe gallery (far) ───────────────────────────
+  // FOUR shape meshes coexist at the scene origin: icosahedron, cube,
+  // octahedron, torus. Only one is fully visible at any time; setSection()
+  // crossfades opacities. This gives "different scenery" per section without
+  // any geometry swap mid-render (smooth, no FOUC).
+  const SHAPE_BASE_RADIUS = 3.6;
+  const SHAPE_OPACITY = 0.22;
+  const SHAPE_ROTATION_Y_PER_S = 0.04;
+  const SHAPE_FADE_LERP = 0.045;              // per-frame opacity lerp toward target
 
   // ── Layer 2: energy waveform grid (replaces the old sphere wireframe).
   // A flat plane is rotated into perspective and the vertex shader displaces Y
@@ -81,6 +85,42 @@
   const CONSTELLATION_OPACITY_MAX = 0.32;
   const CONSTELLATION_MOUSE_RADIUS = 3.5;     // world-units — pairs inside this around mouse glow brighter
   const CONSTELLATION_DISABLE_BELOW_WIDTH = 720;  // disable on small screens (mobile perf)
+
+  // ── Section → background shape mapping ──────────────────────────────────
+  const SHAPE_BY_SECTION = {
+    hero:     "ico",
+    signal:   "ico",
+    about:    "ico",
+    projects: "cube",
+    skills:   "octa",
+    services: "cube",
+    cv:       "torus",
+    process:  "octa",
+    trust:    "torus",
+    contact:  "torus",
+  };
+  const SHAPE_KEYS = ["ico", "cube", "octa", "torus"];
+
+  // ── Section → camera composition map.
+  // Each section gets a noticeable camera-axis tilt + scene-group offset so
+  // the composition meaningfully shifts as the user scrolls. Cinematic, not
+  // subliminal. Values up to ±0.18 rad (~10°) tilt, ±0.8 world units offset.
+  const CAMERA_POSE_BY_SECTION = {
+    hero:     { tiltZ:  0.00, dollyY:  0.0,  offsetX:  0.0 },
+    signal:   { tiltZ:  0.08, dollyY: -0.1,  offsetX:  0.5 },
+    about:    { tiltZ: -0.10, dollyY: -0.4,  offsetX: -0.6 },
+    projects: { tiltZ:  0.15, dollyY: -0.7,  offsetX:  0.8 },
+    skills:   { tiltZ: -0.12, dollyY:  0.4,  offsetX: -0.7 },
+    services: { tiltZ:  0.16, dollyY:  0.1,  offsetX:  0.7 },
+    cv:       { tiltZ: -0.18, dollyY: -0.5,  offsetX: -0.4 },
+    process:  { tiltZ:  0.10, dollyY:  0.3,  offsetX:  0.4 },
+    trust:    { tiltZ: -0.14, dollyY:  0.5,  offsetX: -0.8 },
+    contact:  { tiltZ:  0.05, dollyY:  0.0,  offsetX:  0.2 },
+  };
+  const CAMERA_POSE_LERP = 0.045;       // faster — actually noticeable transitions
+  // Brief scale-pulse on every shape change. Adds drama to morphs.
+  const SHAPE_PULSE_DURATION_MS = 900;
+  const SHAPE_PULSE_OVERSHOOT = 0.25;   // 1.0 → 1.25 → 1.0
 
   // ── Section hue shifts (additive, in [-1..1] per channel) ──────────────
   const HUE_SHIFTS_BY_SECTION = {
@@ -161,6 +201,15 @@
     let scrollProgressLast = 0;       // for velocity estimate
     let scrollVelocity = 0;           // smoothed |Δ scrollProgress| per frame
     let scrollBrightness = 0;         // smoothed brightness boost from scrollVelocity
+    // Section-driven camera composition. Targets set in setSection(),
+    // smoothly lerped in tick() so the page never "lurches".
+    const camPoseTarget = { tiltZ: 0, dollyY: 0, offsetX: 0 };
+    const camPoseCurrent = { tiltZ: 0, dollyY: 0, offsetX: 0 };
+    // Per-shape pulse state — when a shape becomes active, its pulse jumps to
+    // 1 and decays. The pulse contributes an extra scale bump on top of the
+    // base opacity-derived scale.
+    let shapePulseStartedAt = -Infinity;
+    let shapePulseTargetKey = null;
     let parallaxX = 0;
     let parallaxXTarget = 0;
     let parallaxY = 0;
@@ -172,13 +221,34 @@
     scene.add(sceneGroup);
 
     // ── Layer 1: icosahedron wireframe ───────────────────────────────────
-    const icoGeometry = new THREE.IcosahedronGeometry(ICO_RADIUS, ICO_DETAIL);
-    const icoEdges = new THREE.EdgesGeometry(icoGeometry);
-    const icoMaterial = new THREE.LineBasicMaterial({
-      color: 0xffffff, transparent: true, opacity: ICO_OPACITY, depthWrite: false,
+    // Build the 4 shape wireframes. Each has its own geometry + material so
+    // crossfading is one opacity assignment per material — no rebuilds.
+    const shapeFactories = {
+      ico:   () => new THREE.IcosahedronGeometry(SHAPE_BASE_RADIUS,  1),
+      cube:  () => new THREE.BoxGeometry(SHAPE_BASE_RADIUS * 1.4, SHAPE_BASE_RADIUS * 1.4, SHAPE_BASE_RADIUS * 1.4, 2, 2, 2),
+      octa:  () => new THREE.OctahedronGeometry(SHAPE_BASE_RADIUS,  0),
+      torus: () => new THREE.TorusGeometry(SHAPE_BASE_RADIUS * 0.8, SHAPE_BASE_RADIUS * 0.18, 8, 28),
+    };
+    /** @type {Object<string,{mesh:THREE.LineSegments,material:THREE.LineBasicMaterial,opacity:number,target:number,geometry:THREE.BufferGeometry,edges:THREE.EdgesGeometry}>} */
+    const shapes = {};
+    SHAPE_KEYS.forEach((key) => {
+      const geom = shapeFactories[key]();
+      const edges = new THREE.EdgesGeometry(geom, 1);
+      const mat = new THREE.LineBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: key === "ico" ? SHAPE_OPACITY : 0,
+        depthWrite: false,
+      });
+      const mesh = new THREE.LineSegments(edges, mat);
+      sceneGroup.add(mesh);
+      shapes[key] = {
+        mesh, material: mat, geometry: geom, edges,
+        opacity: key === "ico" ? 1 : 0,
+        target: key === "ico" ? 1 : 0,
+      };
     });
-    const icoWireframe = new THREE.LineSegments(icoEdges, icoMaterial);
-    sceneGroup.add(icoWireframe);
+    let currentShapeKey = "ico";
 
     // ── Layer 2: energy waveform grid (mid-depth, perspective floor).
     // Vertex shader displaces Y by superimposed sine waves over time + scroll.
@@ -389,7 +459,8 @@
       particleMaterial.uniforms.uAccent.value.set(r, g, b);
       particleMaterial.uniforms.uAccent2.value.set(accent2Color.r, accent2Color.g, accent2Color.b);
       tmpColor.setRGB(r, g, b);
-      icoMaterial.color.copy(tmpColor);
+      // All shape wireframes adopt the current accent tint.
+      SHAPE_KEYS.forEach((k) => { if (shapes[k]) shapes[k].material.color.copy(tmpColor); });
       gridMaterial.uniforms.uAccent.value.set(r, g, b);
     }
     applyAccentToMaterials();
@@ -412,14 +483,41 @@
       scrollBrightness = lerp(scrollBrightness, Math.min(0.5, scrollVelocity * SCROLL_BRIGHTNESS_VELOCITY_TO_BOOST), SCROLL_BRIGHTNESS_LERP);
       parallaxX = lerp(parallaxX, parallaxXTarget, PARALLAX_LERP);
       parallaxY = lerp(parallaxY, parallaxYTarget, PARALLAX_LERP);
+      // Camera composition lerp — subtle tilt + dolly per section.
+      camPoseCurrent.tiltZ   = lerp(camPoseCurrent.tiltZ,   camPoseTarget.tiltZ,   CAMERA_POSE_LERP);
+      camPoseCurrent.dollyY  = lerp(camPoseCurrent.dollyY,  camPoseTarget.dollyY,  CAMERA_POSE_LERP);
+      camPoseCurrent.offsetX = lerp(camPoseCurrent.offsetX, camPoseTarget.offsetX, CAMERA_POSE_LERP);
       currentAccentShift.r = lerp(currentAccentShift.r, targetAccentShift.r, HUE_LERP);
       currentAccentShift.g = lerp(currentAccentShift.g, targetAccentShift.g, HUE_LERP);
       currentAccentShift.b = lerp(currentAccentShift.b, targetAccentShift.b, HUE_LERP);
 
       // Scene rotation — accumulates real-time spin + scroll-driven extra.
       const scrollSpin = scrollProgress * Math.PI * 2 * SCROLL_ROTATION_TURNS;
-      icoWireframe.rotation.y = tSec * ICO_BASE_ROTATION_Y_PER_S * motion + scrollSpin;
-      icoWireframe.rotation.x = Math.sin(tSec * 0.05) * 0.15;
+      // All four shapes share the same rotation, so transitions feel "still" —
+      // only the silhouette swaps under the user. Per-shape opacity lerps
+      // toward its target (the active section's chosen shape gets target=1).
+      // Each shape rotates + grows/shrinks based on its current opacity, so
+      // morphs read as "shape blooms into being" rather than a soft crossfade
+      // of static silhouettes. The active shape also gets a brief scale-pulse
+      // when first activated (dramatic morph entrance).
+      const pulseElapsed = now - shapePulseStartedAt;
+      const pulseT = Math.min(1, Math.max(0, pulseElapsed / SHAPE_PULSE_DURATION_MS));
+      // Out-and-back: peak at t=0.35, back to 0 at t=1.
+      const pulseShape = pulseT < 0.35
+        ? (pulseT / 0.35)
+        : Math.max(0, 1 - (pulseT - 0.35) / 0.65);
+      SHAPE_KEYS.forEach((k) => {
+        const s = shapes[k];
+        if (!s) return;
+        s.mesh.rotation.y = tSec * SHAPE_ROTATION_Y_PER_S * motion + scrollSpin;
+        s.mesh.rotation.x = Math.sin(tSec * 0.05) * 0.15;
+        s.opacity = lerp(s.opacity, s.target, SHAPE_FADE_LERP);
+        // Base scale 0.55..1.0 from opacity + extra pulse on the active shape.
+        const baseScale = 0.55 + 0.45 * s.opacity;
+        const pulseBump = (k === shapePulseTargetKey) ? pulseShape * SHAPE_PULSE_OVERSHOOT : 0;
+        const scale = baseScale * (1 + pulseBump);
+        s.mesh.scale.set(scale, scale, scale);
+      });
       // Energy grid update — wave time advances, scroll-velocity boosts amp.
       gridMaterial.uniforms.uTime.value = tSec * GRID_WAVE_SPEED * (prefersReducedMotion ? 0.1 : motion);
       gridMaterial.uniforms.uScrollBoost.value = scrollVelocity * GRID_SCROLL_AMP_BOOST;
@@ -530,8 +628,10 @@
       }
 
       // Parallax: shift scene-group by mouse (camera stays put).
-      sceneGroup.position.x = parallaxX;
-      sceneGroup.position.y = parallaxY;
+      // Scene transform = parallax (mouse) + camera pose (per-section composition)
+      sceneGroup.position.x = parallaxX + camPoseCurrent.offsetX;
+      sceneGroup.position.y = parallaxY + camPoseCurrent.dollyY;
+      sceneGroup.rotation.z = camPoseCurrent.tiltZ;
 
       // Apply accent shift (cheap — only when changed enough).
       applyAccentToMaterials();
@@ -539,7 +639,11 @@
       // Reduced-motion attenuates global opacity. Scroll-velocity adds brightness.
       const opacityMul = prefersReducedMotion ? REDUCED_MOTION_OPACITY_MULTIPLIER : 1;
       const brightnessBoost = 1 + scrollBrightness;
-      icoMaterial.opacity = ICO_OPACITY * opacityMul * brightnessBoost;
+      SHAPE_KEYS.forEach((k) => {
+        const s = shapes[k];
+        if (!s) return;
+        s.material.opacity = SHAPE_OPACITY * s.opacity * opacityMul * brightnessBoost;
+      });
       gridMaterial.uniforms.uOpacity.value = GRID_OPACITY * opacityMul * brightnessBoost;
       particleMaterial.uniforms.uOpacity.value = PARTICLE_OPACITY * opacityMul * brightnessBoost;
       if (!constellationDisabled) {
@@ -571,6 +675,22 @@
         targetAccentShift.r = shift.r;
         targetAccentShift.g = shift.g;
         targetAccentShift.b = shift.b;
+        // Section-driven camera composition: subtle tilt + dolly + lateral offset.
+        const pose = CAMERA_POSE_BY_SECTION[sectionId] || CAMERA_POSE_BY_SECTION.hero;
+        camPoseTarget.tiltZ = pose.tiltZ;
+        camPoseTarget.dollyY = pose.dollyY;
+        camPoseTarget.offsetX = pose.offsetX;
+        // Shape morph for this section + pulse animation on the new shape.
+        const shape = SHAPE_BY_SECTION[sectionId];
+        if (!shape || !shapes[shape] || shape === currentShapeKey) return;
+        currentShapeKey = shape;
+        SHAPE_KEYS.forEach((k) => {
+          if (shapes[k]) shapes[k].target = (k === shape) ? 1 : 0;
+        });
+        // Kick the pulse on the new shape — it'll bump to 1.25× and back over
+        // SHAPE_PULSE_DURATION_MS, making the morph feel like an entrance.
+        shapePulseStartedAt = performance.now();
+        shapePulseTargetKey = shape;
       },
       dispose() {
         cancelAnimationFrame(rafHandle);
@@ -580,9 +700,13 @@
         document.removeEventListener("visibilitychange", onVisibilityChange);
         if (motionMedia.removeEventListener) motionMedia.removeEventListener("change", onMotionPrefChange);
         else if (motionMedia.removeListener) motionMedia.removeListener(onMotionPrefChange);
-        icoGeometry.dispose();
-        icoEdges.dispose();
-        icoMaterial.dispose();
+        SHAPE_KEYS.forEach((k) => {
+          const s = shapes[k];
+          if (!s) return;
+          s.geometry.dispose();
+          s.edges.dispose();
+          s.material.dispose();
+        });
         gridGeometry.dispose();
         gridMaterial.dispose();
         particleGeometry.dispose();

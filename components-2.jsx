@@ -3,64 +3,132 @@
 const { useEffect: useEffect2, useRef: useRef2, useState: useState2, useMemo: useMemoFromComponents1 } = React;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SERVICES — terminal command cards. Each card is a faux REPL showing how the
-// service is "invoked" with a typewriter effect on hover and a status line that
-// becomes a result on completion. Way more deliberate than a flat grid.
+// SERVICES — unique cards, no terminal commands.
+//
+// Each card has:
+//   • A distinctive SVG glyph that visually telegraphs the service category
+//   • A varied "hover animation kind" cycled per index so the grid doesn't
+//     read as a uniform copy-paste — every card has its own micro-personality
+//   • A clean io-pill at the bottom showing the value transform
+//
+// Glyphs are pure inline SVG (no external icons) so they always inherit the
+// current accent color via `currentColor`. They're index-keyed: card N gets
+// glyph N. If the content array changes length, glyphs cycle from the start.
 // ─────────────────────────────────────────────────────────────────────────────
+
+const SERVICE_HOVER_KINDS = ["lift", "tilt-l", "tilt-r", "glow", "scale", "shift", "edge", "ripple"];
+
+// Inline SVG glyphs — return ReactElement keyed by index. Eight distinct
+// concepts mapped to the eight content slots in order.
+const SERVICE_GLYPHS = [
+  // 0 · Web Apps — stacked layers
+  function GlyphLayers() {
+    return (
+      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="6"  y="8"  width="28" height="6" rx="1" />
+        <rect x="6"  y="17" width="28" height="6" rx="1" />
+        <rect x="6"  y="26" width="28" height="6" rx="1" />
+        <line x1="11" y1="11" x2="11" y2="11" />
+        <line x1="11" y1="20" x2="11" y2="20" />
+        <line x1="11" y1="29" x2="11" y2="29" />
+      </svg>
+    );
+  },
+  // 1 · Landing & Sites — page outline + accent block
+  function GlyphPage() {
+    return (
+      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="8" y="6" width="24" height="28" rx="1" />
+        <line x1="13" y1="13" x2="27" y2="13" />
+        <line x1="13" y1="18" x2="22" y2="18" />
+        <rect x="13" y="22" width="14" height="6" fill="currentColor" opacity="0.25" stroke="none" />
+      </svg>
+    );
+  },
+  // 2 · Telegram Bots — speech bubble with dots
+  function GlyphBubble() {
+    return (
+      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M8 10 h24 a2 2 0 0 1 2 2 v14 a2 2 0 0 1 -2 2 H18 l-6 5 v-5 H8 a2 2 0 0 1 -2 -2 V12 a2 2 0 0 1 2 -2 z" />
+        <circle cx="14" cy="19" r="1.5" fill="currentColor" stroke="none" />
+        <circle cx="20" cy="19" r="1.5" fill="currentColor" stroke="none" />
+        <circle cx="26" cy="19" r="1.5" fill="currentColor" stroke="none" />
+      </svg>
+    );
+  },
+  // 3 · AI Automation — node graph
+  function GlyphNodes() {
+    return (
+      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="10" cy="10" r="3" fill="currentColor" stroke="none" />
+        <circle cx="30" cy="10" r="3" fill="currentColor" stroke="none" />
+        <circle cx="20" cy="22" r="3" fill="currentColor" stroke="none" />
+        <circle cx="10" cy="32" r="3" fill="currentColor" stroke="none" />
+        <circle cx="30" cy="32" r="3" fill="currentColor" stroke="none" />
+        <line x1="10" y1="10" x2="20" y2="22" />
+        <line x1="30" y1="10" x2="20" y2="22" />
+        <line x1="20" y1="22" x2="10" y2="32" />
+        <line x1="20" y1="22" x2="30" y2="32" />
+      </svg>
+    );
+  },
+  // 4 · Dashboards — bar chart
+  function GlyphChart() {
+    return (
+      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <line x1="6" y1="34" x2="34" y2="34" />
+        <rect x="9"  y="22" width="4" height="12" fill="currentColor" opacity="0.4" stroke="none" />
+        <rect x="17" y="14" width="4" height="20" fill="currentColor" opacity="0.7" stroke="none" />
+        <rect x="25" y="18" width="4" height="16" fill="currentColor" opacity="0.55" stroke="none" />
+      </svg>
+    );
+  },
+  // 5 · MVP / Prototype — arrow zig-zag (idea → prototype)
+  function GlyphArrow() {
+    return (
+      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M6 28 L14 20 L20 26 L28 14 L34 18" />
+        <path d="M28 10 L34 14 L30 20" />
+        <circle cx="6"  cy="28" r="2" fill="currentColor" stroke="none" />
+      </svg>
+    );
+  },
+  // 6 · Internal Tools — wrench / spanner
+  function GlyphTool() {
+    return (
+      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M27 10 a6 6 0 0 0 -3 11 L9 36 l4 -1 L28 20 a6 6 0 0 0 4 -10 l-3 3 -3 0 0 -3 z" />
+        <circle cx="13" cy="32" r="1" fill="currentColor" stroke="none" />
+      </svg>
+    );
+  },
+  // 7 · Tech Consulting — question / dialog
+  function GlyphChat() {
+    return (
+      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M14 10 c-3 0 -6 2 -6 5 c0 2 1 4 3 5 v3 l3 -2 c2 1 4 1 6 0" />
+        <path d="M20 17 c0 -3 3 -5 7 -5 c4 0 7 2 7 5 c0 3 -2 5 -5 5 l-4 3 v-3 c-3 -1 -5 -3 -5 -5 z" />
+        <circle cx="27" cy="17" r="1" fill="currentColor" stroke="none" />
+      </svg>
+    );
+  },
+];
+
 function ServiceCard({ item, index }) {
   const cardRef = useRef2(null);
-  const [phase, setPhase] = useState2("idle"); // idle | typing | done
-  const [typed, setTyped] = useState2("");
-  const cmdTokens = useMemoFromComponents1(function deriveCmd() {
-    const slug = String(item.k || "").toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    return `npx samandar ${slug || "service"} --mode prod`;
-  }, [item.k]);
-
-  // Run typewriter on hover (desktop) or after first scroll-into-view (mobile).
-  useEffect2(function runTyper() {
-    if (phase !== "typing") return undefined;
-    let i = 0;
-    const id = window.setInterval(function step() {
-      i++;
-      setTyped(cmdTokens.slice(0, i));
-      if (i >= cmdTokens.length) {
-        window.clearInterval(id);
-        window.setTimeout(function flipDone() { setPhase("done"); }, 220);
-      }
-    }, 24);
-    return function () { window.clearInterval(id); };
-  }, [phase, cmdTokens]);
-
-  // Auto-fire when scrolled into view (mobile fallback so cards don't sit idle).
-  useEffect2(function autoStart() {
-    if (!cardRef.current) return undefined;
-    const el = cardRef.current;
-    const io = new IntersectionObserver(function onSeen(entries) {
-      entries.forEach(function check(e) {
-        if (e.isIntersecting && e.intersectionRatio > 0.45) {
-          setPhase(function (p) { return p === "idle" ? "typing" : p; });
-          io.disconnect();
-        }
-      });
-    }, { threshold: [0.45, 0.6] });
-    io.observe(el);
-    return function () { io.disconnect(); };
-  }, []);
-
-  function onMouseEnter() {
-    setPhase(function (p) { return p === "idle" ? "typing" : p; });
-  }
+  const hoverKind = SERVICE_HOVER_KINDS[index % SERVICE_HOVER_KINDS.length];
+  const Glyph = SERVICE_GLYPHS[index % SERVICE_GLYPHS.length];
 
   function onMouseMove(e) {
     const el = cardRef.current;
-    if (!el) return;
+    if (!el || hoverKind !== "tilt-l" && hoverKind !== "tilt-r") return;
     const r = el.getBoundingClientRect();
     const x = (e.clientX - r.left) / r.width - 0.5;
     const y = (e.clientY - r.top) / r.height - 0.5;
-    el.style.setProperty("--rx", `${(-y * 4).toFixed(2)}deg`);
-    el.style.setProperty("--ry", `${(x * 4).toFixed(2)}deg`);
+    const sign = hoverKind === "tilt-l" ? 1 : -1;
+    el.style.setProperty("--rx", `${(-y * 5 * sign).toFixed(2)}deg`);
+    el.style.setProperty("--ry", `${(x * 5 * sign).toFixed(2)}deg`);
   }
-
   function onMouseLeave() {
     const el = cardRef.current;
     if (!el) return;
@@ -71,10 +139,9 @@ function ServiceCard({ item, index }) {
   return (
     <article
       ref={cardRef}
-      className={`service-card card service-card--${phase}`}
+      className={`service-card card service-card--hover-${hoverKind}`}
       data-reveal
       data-reveal-delay={(index * 0.04).toFixed(2)}
-      onMouseEnter={onMouseEnter}
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
     >
@@ -82,15 +149,13 @@ function ServiceCard({ item, index }) {
         <span className="service-card-num mono">/{String(index + 1).padStart(2, "0")}</span>
         <span className="service-card-badge mono">{item.io}</span>
       </div>
+
+      <div className="service-card-glyph" aria-hidden="true">
+        <Glyph />
+      </div>
+
       <h3 className="service-card-k">{item.k}</h3>
       <p className="service-card-v">{item.v}</p>
-
-      <div className="service-card-cmd mono" aria-hidden="true">
-        <span className="service-card-prompt">›</span>
-        <span className="service-card-typed">{typed || cmdTokens.slice(0, 0)}</span>
-        {phase === "typing" && <span className="service-card-caret" />}
-        {phase === "done" && <span className="service-card-ok">ok</span>}
-      </div>
     </article>
   );
 }
@@ -117,8 +182,34 @@ function Services({ t }) {
 function CV({ t, links }) {
   const ref = useRevealRoot([t]);
   const [openIdx, setOpenIdx] = useState2(0);
+  // Roles are an accordion: only one open at a time normally. For print we
+  // force ALL open so the printed PDF shows the full timeline, then restore
+  // the user's previous state after the print dialog closes.
+  const restoreOpenIdx = useRef2(0);
 
-  function onPrint() { window.print(); }
+  function onPrint() {
+    restoreOpenIdx.current = openIdx;
+    setOpenIdx(-2); // sentinel: "all open" (any non-numeric index that isn't matched)
+    // Use a microtask + rAF so React commits the open-state change before
+    // the synchronous window.print() blocks the main thread.
+    Promise.resolve().then(function () {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          window.print();
+        });
+      });
+    });
+  }
+
+  // afterprint event — restore the previous open role so the on-screen view
+  // doesn't stay fully expanded.
+  useEffect2(function bindAfterPrint() {
+    const handler = function () {
+      setOpenIdx(restoreOpenIdx.current);
+    };
+    window.addEventListener("afterprint", handler);
+    return function () { window.removeEventListener("afterprint", handler); };
+  }, []);
 
   // derive aggregate stats from timeline
   const years = (() => {
@@ -179,7 +270,7 @@ function CV({ t, links }) {
 
               <ol className="cv-roles">
                 {t.cv.timeline.map((node, i) => {
-                  const isOpen = openIdx === i;
+                  const isOpen = (openIdx === -2) || openIdx === i;
                   return (
                     <li key={i} className={`cv-role ${isOpen ? "is-open" : ""}`}>
                       <button
@@ -504,14 +595,12 @@ function Trust({ t }) {
         <p className="lead-line" data-reveal>{t.trust.lead}</p>
         <div className="trust-grid">
           {t.trust.items.map((it, i) => (
-            <figure key={i} className="trust-card card" data-reveal>
-              <div className="corner-tl" /><div className="corner-tr" />
-              <div className="corner-bl" /><div className="corner-br" />
-              <div className="trust-quote-mark mono">"</div>
+            <figure key={i} className="trust-card" data-reveal data-reveal-delay={(i * 0.08).toFixed(2)}>
+              <div className="trust-quote-mark" aria-hidden="true">“</div>
               <blockquote className="trust-q">{it.q}</blockquote>
               <figcaption className="trust-cap">
                 <div className="trust-avatar" aria-hidden="true">
-                  <span className="mono">{it.who.split(" ").map(w => w[0]).join("").slice(0, 2)}</span>
+                  <span>{it.who.split(" ").map(w => w[0]).join("").slice(0, 2)}</span>
                 </div>
                 <div>
                   <div className="trust-who">{it.who}</div>
@@ -532,6 +621,28 @@ function Trust({ t }) {
 function Contact({ t, links }) {
   const ref = useRevealRoot([t]);
   const [sent, setSent] = useState2(false);
+  // Multi-select chips for project scope — a single dropdown was hiding the
+  // breadth of services. Chips let the visitor click as many as apply, which
+  // also reveals the available service categories at a glance.
+  const [scopeSet, setScopeSet] = useState2(() => new Set());
+  // Budget slider — 5 fixed buckets so we don't ask for awkward exact numbers.
+  const BUDGET_BUCKETS = ["< $2k", "$2-5k", "$5-10k", "$10-20k", "$20k+"];
+  const [budgetIdx, setBudgetIdx] = useState2(1);
+  // Timeline preference — small chip row for urgency, helps scoping.
+  const TIMELINE_LABEL = t.contact.form.timeline || "Сроки";
+  const TIMELINE_OPTS = t.contact.timeline_opts || ["ASAP", "1–2 недели", "1–2 месяца", "гибко"];
+  const [timelineIdx, setTimelineIdx] = useState2(3);
+  const BUDGET_LABEL = t.contact.form.budget || "Бюджет";
+
+  function toggleScope(v) {
+    setScopeSet(function (prev) {
+      const next = new Set(prev);
+      if (next.has(v)) next.delete(v);
+      else next.add(v);
+      return next;
+    });
+  }
+
   function onSubmit(e) {
     e.preventDefault();
     setSent(true);
@@ -548,24 +659,98 @@ function Contact({ t, links }) {
 
         <div className="contact-layout">
           <form className="contact-form card" onSubmit={onSubmit} data-reveal>
-            <label className="ff">
-              <span className="ff-k mono">{t.contact.form.name}</span>
-              <input type="text" required className="ff-input" autoComplete="name" />
-            </label>
-            <label className="ff">
-              <span className="ff-k mono">{t.contact.form.email}</span>
-              <input type="text" required className="ff-input" autoComplete="email" />
-            </label>
-            <label className="ff">
+            <div className="contact-form-row">
+              <label className="ff">
+                <span className="ff-k mono">{t.contact.form.name}</span>
+                <input type="text" required className="ff-input" autoComplete="name" />
+              </label>
+              <label className="ff">
+                <span className="ff-k mono">{t.contact.form.email}</span>
+                <input type="text" required className="ff-input" autoComplete="email" />
+              </label>
+            </div>
+
+            {/* Scope chips — multi-select; click to toggle. */}
+            <div className="ff">
               <span className="ff-k mono">{t.contact.form.scope}</span>
-              <select className="ff-input" defaultValue="">
-                <option value="" disabled>—</option>
-                {t.contact.scope_opts.map((o, i) => <option key={i} value={o}>{o}</option>)}
-              </select>
-            </label>
+              <div className="ff-chips" role="group" aria-label={t.contact.form.scope}>
+                {t.contact.scope_opts.map(function renderChip(o, i) {
+                  const active = scopeSet.has(o);
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      className={`ff-chip ${active ? "is-active" : ""}`}
+                      aria-pressed={active}
+                      onClick={() => toggleScope(o)}
+                    >
+                      {o}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Budget bucket slider — 5 discrete steps with track tick marks
+                so you can SEE which bucket you're snapping to. */}
+            <div className="ff">
+              <span className="ff-k mono">
+                {BUDGET_LABEL}
+                <span className="ff-k-val">{BUDGET_BUCKETS[budgetIdx]}</span>
+              </span>
+              <div className="ff-range-wrap">
+                <input
+                  type="range"
+                  className="ff-range"
+                  min="0"
+                  max={BUDGET_BUCKETS.length - 1}
+                  step="1"
+                  value={budgetIdx}
+                  onChange={(e) => setBudgetIdx(parseInt(e.target.value, 10))}
+                  style={{ "--val-pct": `${(budgetIdx / (BUDGET_BUCKETS.length - 1)) * 100}%` }}
+                />
+                <div className="ff-range-track-marks" aria-hidden="true">
+                  {BUDGET_BUCKETS.map(function renderMark(_b, i) {
+                    const cls = i < budgetIdx ? "is-passed" : (i === budgetIdx ? "is-current" : "");
+                    return <span key={i} className={`ff-range-track-mark ${cls}`} />;
+                  })}
+                </div>
+                <div className="ff-range-ticks mono" aria-hidden="true">
+                  {BUDGET_BUCKETS.map(function renderTick(b, i) {
+                    return (
+                      <span key={i} className={`ff-range-tick ${i === budgetIdx ? "is-active" : ""}`}>
+                        {b}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Timeline urgency chips. */}
+            <div className="ff">
+              <span className="ff-k mono">{TIMELINE_LABEL}</span>
+              <div className="ff-chips" role="radiogroup" aria-label={TIMELINE_LABEL}>
+                {TIMELINE_OPTS.map(function renderTimeline(o, i) {
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      role="radio"
+                      aria-checked={i === timelineIdx}
+                      className={`ff-chip ${i === timelineIdx ? "is-active" : ""}`}
+                      onClick={() => setTimelineIdx(i)}
+                    >
+                      {o}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <label className="ff">
               <span className="ff-k mono">{t.contact.form.msg}</span>
-              <textarea required rows="4" className="ff-input ff-textarea" />
+              <textarea required rows="4" className="ff-input ff-textarea" placeholder={t.contact.form.msg_placeholder || ""} />
             </label>
             <button type="submit" className={`btn btn-primary contact-submit ${sent ? "is-sent" : ""}`} disabled={sent}>
               <span>{sent ? t.contact.form.sent : t.contact.form.submit}</span>

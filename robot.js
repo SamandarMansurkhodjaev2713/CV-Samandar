@@ -36,28 +36,32 @@
   const THREE = window.THREE;
 
   // ── Sizing (world units) ────────────────────────────────────────────────
-  const HEAD_W = 1.6;
-  const HEAD_H = 1.45;
-  const HEAD_D = 1.15;
-  const HEAD_SEGMENTS = 4;                 // bevel-ish look
-  const HEAD_CORNER_BLEND = 0.18;          // scale shrink near corners
-  const FACE_PLATE_W = 1.18;
-  const FACE_PLATE_H = 0.95;
+  // Anki-Vector proportions — slightly wider than tall, more rounded, and the
+  // face plate dominates the front (≈ 90% of width, 80% of height) so the
+  // HUD reads as "screen on a body" rather than "panel on a head".
+  const HEAD_W = 1.72;
+  const HEAD_H = 1.42;
+  const HEAD_D = 1.20;
+  const HEAD_SEGMENTS = 5;                 // more segments → smoother rounded corners
+  const HEAD_CORNER_BLEND = 0.28;          // stronger corner softening
+  const FACE_PLATE_W = 1.50;
+  const FACE_PLATE_H = 1.12;
   const FACE_PLATE_DEPTH_OFFSET = 0.001;
+  const FACE_PLATE_CORNER_R = 0.16;        // rounded corners on the screen
 
   // HUD-visor eyes: emissive rounded rectangles on the face plate (no 3D balls).
-  // Eye dimensions are width/height of the lit area; pupils are smaller emissive
-  // dots inside that drift toward the cursor within a clamped range.
-  const EYE_WIDTH = 0.22;
-  const EYE_HEIGHT = 0.12;
-  const EYE_CORNER_RADIUS = 0.04;
-  const EYE_DISTANCE = 0.38;
-  const EYE_Y = 0.10;
-  const EYE_Z = HEAD_D / 2 + 0.011;        // sits on face plate
-  const PUPIL_WIDTH = 0.07;
-  const PUPIL_HEIGHT = 0.07;
-  const PUPIL_MAX_OFFSET_X = 0.05;
-  const PUPIL_MAX_OFFSET_Y = 0.025;
+  // Larger now — the face plate is bigger so eyes scale up accordingly.
+  // Anki-Vector's eyes are the dominant face feature — almost square at idle.
+  const EYE_WIDTH = 0.32;
+  const EYE_HEIGHT = 0.26;
+  const EYE_CORNER_RADIUS = 0.08;
+  const EYE_DISTANCE = 0.52;
+  const EYE_Y = 0.14;
+  const EYE_Z = HEAD_D / 2 + 0.012;        // sits on face plate
+  const PUPIL_WIDTH = 0.10;
+  const PUPIL_HEIGHT = 0.10;
+  const PUPIL_MAX_OFFSET_X = 0.08;
+  const PUPIL_MAX_OFFSET_Y = 0.04;
   const PUPIL_LERP = 0.18;
 
   const MOUTH_Y = -0.22;
@@ -83,19 +87,49 @@
   const TEMPLE_Y = 0.18;
   const TEMPLE_Z = 0.15;
 
-  const NECK_RADIUS = 0.32;
-  const NECK_HEIGHT = 0.18;
-  const NECK_Y = -(HEAD_H / 2) - NECK_HEIGHT / 2 + 0.05;
+  const NECK_RADIUS = 0.28;
+  const NECK_HEIGHT = 0.16;
+  const NECK_Y = -(HEAD_H / 2) - NECK_HEIGHT / 2 + 0.03;
+
+  // ── Body (torso + shoulders + base) — added so the robot is a full character.
+  //     The body sits below the neck; head pivots on the neck.
+  //     Sizing keeps the silhouette readable in a 320×240 canvas without
+  //     dominating the head (head:body ≈ 0.7:1 visually).
+  const TORSO_W = 1.40;
+  const TORSO_H = 1.10;
+  const TORSO_D = 0.90;
+  const TORSO_SEGMENTS = 4;
+  const TORSO_CORNER_BLEND = 0.22;
+  const TORSO_Y = NECK_Y - NECK_HEIGHT / 2 - TORSO_H / 2 + 0.02;
+  const SHOULDER_RADIUS = 0.30;
+  const SHOULDER_X = TORSO_W / 2 + 0.05;
+  const SHOULDER_Y = TORSO_Y + TORSO_H / 2 - 0.15;
+  // Chest LED strip — animated mood indicator on the torso front.
+  const CHEST_W = 0.90;
+  const CHEST_H = 0.08;
+  const CHEST_Y = TORSO_Y;
+  const CHEST_Z = TORSO_D / 2 + 0.002;
+  // Base (treads) — a flat oval at the very bottom so the robot sits on something.
+  const BASE_RADIUS = 0.75;
+  const BASE_HEIGHT = 0.14;
+  const BASE_Y = TORSO_Y - TORSO_H / 2 - BASE_HEIGHT / 2 + 0.01;
+  // Body breathing — torso scale subtle wave so it feels alive without bobbing.
+  const BREATH_AMPLITUDE = 0.012;
+  const BREATH_FREQUENCY_HZ = 0.28;
 
   // ── Camera / interaction ────────────────────────────────────────────────
-  const CAMERA_FOV = 32;
-  const CAMERA_Z = 5.5;
+  // Camera pulled back to fit head + torso + base in frame.
+  const CAMERA_FOV = 30;
+  const CAMERA_Z = 8.4;
   const HEAD_TILT_X_BASE = 0.04;
   const HEAD_TILT_AMP_X = 0.22;
   const HEAD_TILT_AMP_Y = 0.32;
   const HEAD_TILT_LERP = 0.10;
-  const HEAD_BOB_AMPLITUDE = 0.035;
-  const HEAD_BOB_FREQUENCY_HZ = 0.4;
+  // No bobbing — the robot stays put as a stable visual anchor. The previous
+  // bob made it look "shifty" against the page; idle character comes from
+  // pupil saccades / blinks / mood cycling instead.
+  const HEAD_BOB_AMPLITUDE = 0;
+  const HEAD_BOB_FREQUENCY_HZ = 0;
 
   // ── Idle behavior ───────────────────────────────────────────────────────
   const BLINK_INTERVAL_MIN_MS = 4000;
@@ -109,12 +143,15 @@
     sleeping: 0.35,
   };
 
-  // ── Color palette (driven by accent at runtime) ────────────────────────
-  const SHELL_DARK_HEX = 0x2A2520;          // base head metal
-  const FACE_PLATE_HEX = 0x141210;          // darker inset
-  const EYE_WHITE_HEX = 0xF5F0E6;
-  const EYE_PUPIL_HEX = 0x12100E;
-  const NECK_HEX = 0x1B1916;
+  // ── Color palette ──────────────────────────────────────────────────────
+  // Anki-Vector inspired: even lighter cream shell (almost off-white), pure
+  // black screen behind the HUD for max contrast.
+  const SHELL_LIGHT_HEX = 0xE2D4B8;         // lighter cream shell (lighter than v3)
+  const SHELL_ACCENT_HEX = 0xC4B299;        // slightly darker accent for side panels
+  const FACE_PLATE_HEX = 0x0B0907;          // pure-dark screen
+  const EYE_WHITE_HEX = 0xF5F0E6;           // (unused — HUD is accent-emissive)
+  const EYE_PUPIL_HEX = 0x0B0907;           // pupil dot inside HUD eye
+  const NECK_HEX = 0x8C7E66;                // warm tan neck (matches shell family)
 
   // ── Expressions: full personality presets per expression.
   //
@@ -132,6 +169,11 @@
       browTilt: 0,
       antennaIntensity: 0.7,
       pose: { rotX: 0,     rotY: 0, rotZ: 0,     posY: 0 },
+      // bodyPose drives the torso group — independent of the head's rotation,
+      // so the body can lean while the head separately tracks the cursor.
+      bodyPose: { rotX: 0, rotZ: 0 },
+      // Chest LED color comes from accent2 in idle, accent in alerts/etc.
+      chestIntensity: 0.6,
       antennaBend: 0,
       bobMul: 1.0,
       winkRate: 0,
@@ -142,9 +184,11 @@
       mouth: [-MOUTH_HALF_W * 0.55, 0.02, -MOUTH_HALF_W * 0.28, -0.01, 0, -0.02, MOUTH_HALF_W * 0.28, -0.01, MOUTH_HALF_W * 0.55, 0.02],
       browTilt: 0.10,
       antennaIntensity: 1.0,
-      // Head tilts to the right (rotZ -ve = clockwise in screen), lifted slightly.
       pose: { rotX: 0,     rotY: 0, rotZ: -0.16,  posY: 0.04 },
-      antennaBend: 0.10,                   // slight forward lean
+      // Body also leans into the thought — slight lateral tilt.
+      bodyPose: { rotX: 0, rotZ: -0.06 },
+      chestIntensity: 0.9,
+      antennaBend: 0.10,
       bobMul: 0.9,
       winkRate: 0,
     },
@@ -155,9 +199,11 @@
       browTilt: -0.04,
       antennaIntensity: 0.95,
       pose: { rotX: -0.04, rotY: 0, rotZ: 0,     posY: 0 },
+      bodyPose: { rotX: 0, rotZ: 0 },
+      chestIntensity: 1.2,
       antennaBend: 0,
-      bobMul: 1.7,                         // bouncier
-      winkRate: 0.22,                      // ~22% chance per second of a wink
+      bobMul: 1.7,
+      winkRate: 0.22,
     },
     surprised: {
       eyeScaleY: 1.3,
@@ -165,8 +211,11 @@
       mouth: [-MOUTH_HALF_W * 0.4, 0, -MOUTH_HALF_W * 0.2, -0.05, 0, -0.09, MOUTH_HALF_W * 0.2, -0.05, MOUTH_HALF_W * 0.4, 0],
       browTilt: -0.10,
       antennaIntensity: 1.25,
-      pose: { rotX: -0.22, rotY: 0, rotZ: 0,     posY: 0.08 },   // jolt back
-      antennaBend: -0.35,                  // antenna arcs backward
+      pose: { rotX: -0.22, rotY: 0, rotZ: 0,     posY: 0.08 },
+      // Body recoils with the head — coordinated jolt back.
+      bodyPose: { rotX: -0.10, rotZ: 0 },
+      chestIntensity: 1.4,
+      antennaBend: -0.35,
       bobMul: 0.5,
       winkRate: 0,
     },
@@ -176,9 +225,12 @@
       mouth: [-MOUTH_HALF_W, 0, -MOUTH_HALF_W * 0.5, 0, 0, 0, MOUTH_HALF_W * 0.5, 0, MOUTH_HALF_W, 0],
       browTilt: 0.05,
       antennaIntensity: 0.25,
-      pose: { rotX: 0.18,  rotY: 0, rotZ: 0,     posY: -0.06 },  // head droops down
-      antennaBend: 0.55,                   // antenna droops forward
-      bobMul: 0.35,                        // slow breath
+      pose: { rotX: 0.18,  rotY: 0, rotZ: 0,     posY: -0.06 },
+      // Body slumps slightly forward.
+      bodyPose: { rotX: 0.08, rotZ: 0 },
+      chestIntensity: 0.2,
+      antennaBend: 0.55,
+      bobMul: 0.35,
       winkRate: 0,
     },
   };
@@ -262,9 +314,113 @@
     let pointerDownAt = 0;
     let pointerDownPos = { x: 0, y: 0 };
 
-    // ── Robot group ──────────────────────────────────────────────────────
+    // ── Robot scene graph ────────────────────────────────────────────────
+    // Three groups stacked:
+    //   robot       — root, used for global tilt + drift offsets
+    //     └─ body   — torso, shoulders, chest LED, base (full-body posture)
+    //     └─ headPivot — head + neck + face + antenna (head-only rotation)
+    //
+    // This separation lets idle motions on body (breathing, bodyPose lean)
+    // play independently of cursor-tracking head rotation.
     const robot = new THREE.Group();
     scene.add(robot);
+    // Center the full rig vertically. The robot spans ~3 units tall
+    // (top of antenna to bottom of base); offset Y so its midpoint lands at 0.
+    robot.position.y = 0.55;
+
+    const body = new THREE.Group();
+    robot.add(body);
+
+    const headPivot = new THREE.Group();
+    headPivot.position.y = 0;  // head pivot defaults to robot origin; expression pose adjusts
+    body.add(headPivot);
+
+    // ── Torso ────────────────────────────────────────────────────────────
+    // Same corner-softening trick as the head, smaller corner-blend so the
+    // torso reads as a stable chassis (not a balloon).
+    const torsoGeom = new THREE.BoxGeometry(TORSO_W, TORSO_H, TORSO_D, TORSO_SEGMENTS, TORSO_SEGMENTS, TORSO_SEGMENTS);
+    {
+      const pos = torsoGeom.attributes.position;
+      const hx = TORSO_W / 2, hy = TORSO_H / 2, hz = TORSO_D / 2;
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+        const dx = 1 - Math.abs(x / hx);
+        const dy = 1 - Math.abs(y / hy);
+        const dz = 1 - Math.abs(z / hz);
+        const cornerness = Math.min(dx, dy, dz);
+        const shrink = (1 - cornerness) * TORSO_CORNER_BLEND;
+        pos.setXYZ(i, x * (1 - shrink), y * (1 - shrink), z * (1 - shrink));
+      }
+      pos.needsUpdate = true;
+      torsoGeom.computeVertexNormals();
+    }
+    const torsoMat = new THREE.MeshStandardMaterial({
+      color: SHELL_LIGHT_HEX, metalness: 0.55, roughness: 0.45,
+    });
+    const torso = new THREE.Mesh(torsoGeom, torsoMat);
+    torso.position.y = TORSO_Y;
+    body.add(torso);
+
+    // Subtle wireframe edge accents on the torso — same as the head.
+    const torsoEdgeGeom = new THREE.EdgesGeometry(torsoGeom, 35);
+    const torsoEdgeMat = new THREE.LineBasicMaterial({
+      color: 0xF5F0E6, transparent: true, opacity: 0.12, depthWrite: false,
+    });
+    const torsoEdges = new THREE.LineSegments(torsoEdgeGeom, torsoEdgeMat);
+    torso.add(torsoEdges);
+
+    // ── Shoulders — soft caps on each side of the torso. Decorative, no rig.
+    const shoulderGeom = new THREE.SphereGeometry(SHOULDER_RADIUS, 18, 14);
+    const shoulderMat = new THREE.MeshStandardMaterial({
+      color: SHELL_ACCENT_HEX, metalness: 0.55, roughness: 0.42,
+    });
+    const shoulderL = new THREE.Mesh(shoulderGeom, shoulderMat);
+    shoulderL.position.set(-SHOULDER_X, SHOULDER_Y, 0);
+    body.add(shoulderL);
+    const shoulderR = new THREE.Mesh(shoulderGeom, shoulderMat.clone());
+    shoulderR.position.set(SHOULDER_X, SHOULDER_Y, 0);
+    body.add(shoulderR);
+
+    // ── Chest LED strip — accent-tinted indicator that pulses per mood.
+    const chestStripGeom = new THREE.ShapeGeometry(makeRoundedRectShape(CHEST_W, CHEST_H, CHEST_H * 0.45));
+    const chestStripMat = new THREE.MeshBasicMaterial({
+      color: accentColor.getHex(),
+      transparent: true,
+      opacity: 0.85,
+    });
+    const chestStrip = new THREE.Mesh(chestStripGeom, chestStripMat);
+    chestStrip.position.set(0, CHEST_Y, CHEST_Z);
+    body.add(chestStrip);
+
+    // Chest strip frame (slightly larger plane behind it — like a screen bezel).
+    const chestFrameGeom = new THREE.ShapeGeometry(makeRoundedRectShape(CHEST_W + 0.04, CHEST_H + 0.04, CHEST_H * 0.6));
+    const chestFrameMat = new THREE.MeshStandardMaterial({
+      color: 0x0F0C09, metalness: 0.4, roughness: 0.55,
+    });
+    const chestFrame = new THREE.Mesh(chestFrameGeom, chestFrameMat);
+    chestFrame.position.set(0, CHEST_Y, CHEST_Z - 0.001);
+    body.add(chestFrame);
+
+    // ── Base (tread plate) — flat oval sitting under the torso.
+    const baseGeom = new THREE.CylinderGeometry(BASE_RADIUS * 0.9, BASE_RADIUS, BASE_HEIGHT, 24);
+    const baseMat = new THREE.MeshStandardMaterial({
+      color: 0x4E4234, metalness: 0.7, roughness: 0.35,
+    });
+    const baseMesh = new THREE.Mesh(baseGeom, baseMat);
+    baseMesh.position.y = BASE_Y;
+    body.add(baseMesh);
+
+    // Base accent ring — accent-tinted torus on top of the base.
+    const baseRingGeom = new THREE.TorusGeometry(BASE_RADIUS * 0.85, 0.02, 8, 32);
+    const baseRingMat = new THREE.MeshBasicMaterial({
+      color: accentColor.getHex(),
+      transparent: true,
+      opacity: 0.75,
+    });
+    const baseRing = new THREE.Mesh(baseRingGeom, baseRingMat);
+    baseRing.position.y = BASE_Y + BASE_HEIGHT / 2 + 0.005;
+    baseRing.rotation.x = Math.PI / 2;
+    body.add(baseRing);
 
     // Head shell (BoxGeometry with shaped corners to look "rounded" cheaply).
     const headGeometry = new THREE.BoxGeometry(HEAD_W, HEAD_H, HEAD_D, HEAD_SEGMENTS, HEAD_SEGMENTS, HEAD_SEGMENTS);
@@ -290,10 +446,10 @@
       headGeometry.computeVertexNormals();
     }
     const headMaterial = new THREE.MeshStandardMaterial({
-      color: SHELL_DARK_HEX, metalness: 0.55, roughness: 0.42,
+      color: SHELL_LIGHT_HEX, metalness: 0.55, roughness: 0.42,
     });
     const head = new THREE.Mesh(headGeometry, headMaterial);
-    robot.add(head);
+    headPivot.add(head);
 
     // Subtle edge accents — wireframe over edges only.
     const headEdgeGeometry = new THREE.EdgesGeometry(headGeometry, 35);
@@ -303,14 +459,26 @@
     const headEdges = new THREE.LineSegments(headEdgeGeometry, headEdgeMaterial);
     head.add(headEdges);
 
-    // Face plate (darker inset rectangle).
-    const facePlateGeom = new THREE.PlaneGeometry(FACE_PLATE_W, FACE_PLATE_H);
+    // Face plate — rounded-rectangle inset that reads as a screen. Built via
+    // ShapeGeometry so corners actually have a radius (a plain plane wouldn't).
+    // makeRoundedRectShape is a function declaration hoisted from below.
+    const facePlateGeom = new THREE.ShapeGeometry(makeRoundedRectShape(FACE_PLATE_W, FACE_PLATE_H, FACE_PLATE_CORNER_R));
     const facePlateMat = new THREE.MeshStandardMaterial({
-      color: FACE_PLATE_HEX, metalness: 0.3, roughness: 0.6,
+      color: FACE_PLATE_HEX, metalness: 0.4, roughness: 0.55,
     });
     const facePlate = new THREE.Mesh(facePlateGeom, facePlateMat);
     facePlate.position.set(0, 0, HEAD_D / 2 + FACE_PLATE_DEPTH_OFFSET);
-    robot.add(facePlate);
+    headPivot.add(facePlate);
+
+    // Subtle bezel — slightly larger plane behind the rounded screen so the
+    // edge reads as a "lip" mounted into the head.
+    const bezelGeom = new THREE.ShapeGeometry(makeRoundedRectShape(FACE_PLATE_W + 0.06, FACE_PLATE_H + 0.06, FACE_PLATE_CORNER_R + 0.03));
+    const bezelMat = new THREE.MeshStandardMaterial({
+      color: 0x6E5F49, metalness: 0.6, roughness: 0.4,
+    });
+    const bezel = new THREE.Mesh(bezelGeom, bezelMat);
+    bezel.position.set(0, 0, HEAD_D / 2 + FACE_PLATE_DEPTH_OFFSET - 0.002);
+    headPivot.add(bezel);
 
     // Decorative side panels (vertical lines on the cheeks).
     const sidePanelGeom = new THREE.PlaneGeometry(0.06, 0.6);
@@ -320,28 +488,14 @@
     const sidePanelL = new THREE.Mesh(sidePanelGeom, sidePanelMat);
     sidePanelL.position.set(-HEAD_W / 2 - 0.001, -0.05, 0);
     sidePanelL.rotation.y = -Math.PI / 2;
-    robot.add(sidePanelL);
+    headPivot.add(sidePanelL);
     const sidePanelR = sidePanelL.clone();
     sidePanelR.position.x = HEAD_W / 2 + 0.001;
     sidePanelR.rotation.y = Math.PI / 2;
-    robot.add(sidePanelR);
+    headPivot.add(sidePanelR);
 
-    // Bolts on the face (tiny circles at corners).
-    const boltGeom = new THREE.CircleGeometry(0.025, 12);
-    const boltMat = new THREE.MeshStandardMaterial({
-      color: 0x3A332C, metalness: 0.8, roughness: 0.3,
-    });
-    const boltOffsets = [
-      { x: -FACE_PLATE_W / 2 + 0.06, y:  FACE_PLATE_H / 2 - 0.06 },
-      { x:  FACE_PLATE_W / 2 - 0.06, y:  FACE_PLATE_H / 2 - 0.06 },
-      { x: -FACE_PLATE_W / 2 + 0.06, y: -FACE_PLATE_H / 2 + 0.06 },
-      { x:  FACE_PLATE_W / 2 - 0.06, y: -FACE_PLATE_H / 2 + 0.06 },
-    ];
-    boltOffsets.forEach(function makeBolt(p) {
-      const m = new THREE.Mesh(boltGeom, boltMat);
-      m.position.set(p.x, p.y, HEAD_D / 2 + FACE_PLATE_DEPTH_OFFSET + 0.002);
-      robot.add(m);
-    });
+    // (Bolts removed — Anki-Vector style is cleaner without rivets.
+    //  A subtle frame inside the face plate gives the "mounted screen" feel.)
 
     // HUD-visor eyes — rounded-rectangle emissive planes sitting on the face
     // plate. No 3D spheres. Pupils are small accent-bright squares inside that
@@ -371,10 +525,10 @@
     });
     const eyeL = new THREE.Mesh(eyeGeom, eyeMat);
     eyeL.position.set(-EYE_DISTANCE / 2, EYE_Y, EYE_Z);
-    robot.add(eyeL);
+    headPivot.add(eyeL);
     const eyeR = new THREE.Mesh(eyeGeom, eyeMat.clone());
     eyeR.position.set(EYE_DISTANCE / 2, EYE_Y, EYE_Z);
-    robot.add(eyeR);
+    headPivot.add(eyeR);
 
     // Eye outer border (dim frame around the lit eye — adds depth).
     const eyeFrameShape = makeRoundedRectShape(EYE_WIDTH + 0.03, EYE_HEIGHT + 0.03, EYE_CORNER_RADIUS + 0.015);
@@ -386,10 +540,10 @@
     });
     const eyeFrameL = new THREE.Mesh(eyeFrameGeom, eyeFrameMat);
     eyeFrameL.position.set(-EYE_DISTANCE / 2, EYE_Y, EYE_Z - 0.001);
-    robot.add(eyeFrameL);
+    headPivot.add(eyeFrameL);
     const eyeFrameR = new THREE.Mesh(eyeFrameGeom, eyeFrameMat.clone());
     eyeFrameR.position.set(EYE_DISTANCE / 2, EYE_Y, EYE_Z - 0.001);
-    robot.add(eyeFrameR);
+    headPivot.add(eyeFrameR);
 
     // Pupils — small bright squares INSIDE the eye plane, child of the eye so
     // they inherit eye scale/rotation. They translate to track the cursor.
@@ -419,14 +573,14 @@
     mouthGeom.setAttribute("position", new THREE.BufferAttribute(mouthVerts, 3).setUsage(THREE.DynamicDrawUsage));
     const mouthMat = new THREE.LineBasicMaterial({ color: 0xF5F0E6, linewidth: 2 });
     const mouth = new THREE.Line(mouthGeom, mouthMat);
-    robot.add(mouth);
+    headPivot.add(mouth);
 
     // Antenna v2 — 3 tapered cylinder segments stacked vertically + a small
     // emissive ring on top. Reads as a sensor array, not a cartoon antenna.
     // All segments are grouped under `antenna` so bending applies once.
     const antenna = new THREE.Group();
     const antennaSegmentsMat = new THREE.MeshStandardMaterial({
-      color: SHELL_DARK_HEX, metalness: 0.72, roughness: 0.32,
+      color: SHELL_LIGHT_HEX, metalness: 0.72, roughness: 0.32,
     });
     let cursorY = 0;
     const antennaSegMeshes = [];
@@ -457,7 +611,7 @@
     antenna.add(antennaTip);
 
     antenna.position.set(0, ANTENNA_BASE_Y, 0);
-    robot.add(antenna);
+    headPivot.add(antenna);
 
     // Cheek screen (right) — emissive plane mounted on the side.
     const cheekGeom = new THREE.PlaneGeometry(CHEEK_W, CHEEK_H);
@@ -467,7 +621,7 @@
     const cheekScreen = new THREE.Mesh(cheekGeom, cheekMat);
     cheekScreen.position.set(CHEEK_X, CHEEK_Y, CHEEK_Z);
     cheekScreen.rotation.y = Math.PI / 2;
-    robot.add(cheekScreen);
+    headPivot.add(cheekScreen);
 
     // Cheek screen border (slightly larger plane behind).
     const cheekBorderGeom = new THREE.PlaneGeometry(CHEEK_W + 0.03, CHEEK_H + 0.025);
@@ -477,14 +631,14 @@
     const cheekBorder = new THREE.Mesh(cheekBorderGeom, cheekBorderMat);
     cheekBorder.position.set(CHEEK_X - 0.001, CHEEK_Y, CHEEK_Z);
     cheekBorder.rotation.y = Math.PI / 2;
-    robot.add(cheekBorder);
+    headPivot.add(cheekBorder);
 
     // Temple LED (left).
     const templeGeom = new THREE.SphereGeometry(TEMPLE_LED_R, 12, 12);
     const templeMat = new THREE.MeshBasicMaterial({ color: accentColor.getHex() });
     const templeLED = new THREE.Mesh(templeGeom, templeMat);
     templeLED.position.set(TEMPLE_X, TEMPLE_Y, TEMPLE_Z);
-    robot.add(templeLED);
+    headPivot.add(templeLED);
 
     // Neck.
     const neckGeom = new THREE.CylinderGeometry(NECK_RADIUS, NECK_RADIUS, NECK_HEIGHT, 18);
@@ -493,7 +647,7 @@
     });
     const neck = new THREE.Mesh(neckGeom, neckMat);
     neck.position.set(0, NECK_Y, 0);
-    robot.add(neck);
+    headPivot.add(neck);
 
     // Neck-collar accent ring.
     const collarGeom = new THREE.TorusGeometry(NECK_RADIUS * 0.95, 0.018, 8, 32);
@@ -501,7 +655,7 @@
     const collar = new THREE.Mesh(collarGeom, collarMat);
     collar.position.set(0, NECK_Y + NECK_HEIGHT / 2 - 0.02, 0);
     collar.rotation.x = Math.PI / 2;
-    robot.add(collar);
+    headPivot.add(collar);
 
     // ── Smooth animation state ────────────────────────────────────────────
     const eyeScaleYCurrent = { value: 1.0 };
@@ -516,6 +670,8 @@
 
     // Per-expression personality state. Lerps every frame toward target pose.
     const poseCurrent = { rotX: 0, rotY: 0, rotZ: 0, posY: 0 };
+    const bodyPoseCurrent = { rotX: 0, rotZ: 0 };
+    const chestIntensityCurrent = { value: 0.6 };
     const antennaBendCurrent = { value: 0 };
 
     // Nod (click feedback) — pulse on rotX that decays back to 0.
@@ -670,16 +826,32 @@
       // ── Nod decay (kicked on expression change).
       nodOffset = lerp(nodOffset, 0, NOD_DECAY_LERP);
 
-      // ── Head tilt: cursor-tracking + expression pose + nod, bob is sin.
+      // ── Head tilt: cursor-tracking + expression pose + nod (no bob — set to 0).
+      // Applied to headPivot ONLY so the body stays stable while the head moves.
       const tiltY = mouseNDCx * HEAD_TILT_AMP_Y + poseCurrent.rotY;
       const tiltX = HEAD_TILT_X_BASE - mouseNDCy * HEAD_TILT_AMP_X + poseCurrent.rotX + nodOffset;
       const tiltZ = poseCurrent.rotZ;
-      robot.rotation.y = lerp(robot.rotation.y, tiltY, HEAD_TILT_LERP);
-      robot.rotation.x = lerp(robot.rotation.x, tiltX, HEAD_TILT_LERP);
-      robot.rotation.z = lerp(robot.rotation.z, tiltZ, HEAD_TILT_LERP);
-      const bob = Math.sin(tSec * HEAD_BOB_FREQUENCY_HZ * 2 * Math.PI * target.bobMul) *
-                  HEAD_BOB_AMPLITUDE * target.bobMul * motionMul;
-      robot.position.y = poseCurrent.posY + bob;
+      headPivot.rotation.y = lerp(headPivot.rotation.y, tiltY, HEAD_TILT_LERP);
+      headPivot.rotation.x = lerp(headPivot.rotation.x, tiltX, HEAD_TILT_LERP);
+      headPivot.rotation.z = lerp(headPivot.rotation.z, tiltZ, HEAD_TILT_LERP);
+      headPivot.position.y = poseCurrent.posY;
+
+      // ── Body posture (per-expression lean) + subtle breathing (Y-scale wave).
+      if (target.bodyPose) {
+        bodyPoseCurrent.rotX = lerp(bodyPoseCurrent.rotX, target.bodyPose.rotX, POSE_LERP);
+        bodyPoseCurrent.rotZ = lerp(bodyPoseCurrent.rotZ, target.bodyPose.rotZ, POSE_LERP);
+      }
+      body.rotation.x = bodyPoseCurrent.rotX;
+      body.rotation.z = bodyPoseCurrent.rotZ;
+      const breath = 1 + Math.sin(tSec * BREATH_FREQUENCY_HZ * 2 * Math.PI) * BREATH_AMPLITUDE * motionMul;
+      body.scale.y = breath;
+
+      // Chest LED intensity lerps with expression target.
+      const chestTarget = target.chestIntensity != null ? target.chestIntensity : 0.6;
+      chestIntensityCurrent.value = lerp(chestIntensityCurrent.value, chestTarget, 0.08);
+      chestStripMat.opacity = 0.4 + chestIntensityCurrent.value * 0.55;
+      chestStripMat.color.setRGB(accentColor.r, accentColor.g, accentColor.b);
+      baseRingMat.color.setRGB(accentColor.r, accentColor.g, accentColor.b);
 
       // ── Saccade (random pupil twitch during idle frames).
       if (!saccadeActive && now >= nextSaccadeAt && expressionCurrent === "idle") {
@@ -789,6 +961,11 @@
 
       cheekMat.color.setRGB(accent2Color.r, accent2Color.g, accent2Color.b);
       collarMat.color.setRGB(accentColor.r, accentColor.g, accentColor.b);
+      // Eyes (HUD) and temple LED track accent live so they always match the
+      // current theme — without this, color was frozen at init time.
+      eyeMat.color.setRGB(accentColor.r, accentColor.g, accentColor.b);
+      eyeR.material.color.setRGB(accentColor.r, accentColor.g, accentColor.b);
+      templeMat.color.setRGB(accentColor.r, accentColor.g, accentColor.b);
 
       mouth.rotation.z = browTiltCurrent.value;
 
@@ -830,10 +1007,13 @@
         // Dispose all geometries and materials. Antenna is a THREE.Group whose
         // children we dispose individually; the group itself has no geometry.
         const meshObjects = [
-          head, headEdges, facePlate, sidePanelL, sidePanelR,
+          head, headEdges, facePlate, bezel, sidePanelL, sidePanelR,
           eyeL, eyeR, eyeFrameL, eyeFrameR, pupilL, pupilR,
           mouth, antennaTip,
           cheekScreen, cheekBorder, templeLED, neck, collar,
+          // Body pieces
+          torso, torsoEdges, shoulderL, shoulderR,
+          chestStrip, chestFrame, baseMesh, baseRing,
         ].concat(antennaSegMeshes);
         meshObjects.forEach(function disposeOne(obj) {
           if (obj.geometry && obj.geometry.dispose) obj.geometry.dispose();
