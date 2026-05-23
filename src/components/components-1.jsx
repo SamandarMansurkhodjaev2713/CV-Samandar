@@ -102,8 +102,17 @@ function Hero({ t, links }) {
       robotRef.current = active;
     }
 
-    // First attempt — Spline runtime.
-    if (window.RobotSpline && window.RobotSpline.create) {
+    // Device tier — weak hardware skips Spline entirely. Spline pulls a
+    // multi-MB runtime from a CDN and runs a full second WebGL scene
+    // alongside bg-fx; on a low-end device that is the single biggest
+    // cause of the page "freezing". Low-tier devices go straight to the
+    // lightweight hand-built fallback robot (no extra download — robot.js
+    // reuses the already-loaded THREE global).
+    const deviceTierLow =
+      (typeof window.getDeviceTier === "function") && window.getDeviceTier() === "low";
+
+    // First attempt — Spline runtime (skipped on low-tier devices).
+    if (!deviceTierLow && window.RobotSpline && window.RobotSpline.create) {
       // Reset success/failure flags BEFORE creating the controller so a
       // stale value from a hot-reload or prior mount doesn't trick us.
       window.__splineRobotLoaded = false;
@@ -140,7 +149,8 @@ function Hero({ t, links }) {
         swapToLegacy();
       }, ROBOT_FALLBACK_MS);
     } else {
-      // The robot-spline.js bundle never registered — go straight to legacy.
+      // Either the robot-spline.js bundle never registered, or this is a
+      // low-tier device — go straight to the lightweight legacy robot.
       swapToLegacy();
     }
 
@@ -152,31 +162,21 @@ function Hero({ t, links }) {
     };
   }, []);
 
-  // Listen for `robot-control` CustomEvents fired by the RobotPlayground in
-  // Process section. We deliberately route through events instead of a shared
-  // ref so the playground stays decoupled from Hero — if either side is
-  // unmounted (lang switch, error boundary), the other keeps working.
+  // v53: retint the robot when the theme swaps so it matches the new
+  // accent without a page reload. The robot.setAccent() method tints
+  // emissive materials on the Spline scene + accent dots on the legacy
+  // fallback robot. Listener cleans up on unmount.
   useEffect(() => {
-    function onRobotControl(ev) {
+    function onThemeChanged(ev) {
       const ctrl = robotRef.current;
-      if (!ctrl) return;
+      if (!ctrl || typeof ctrl.setAccent !== "function") return;
       const detail = ev && ev.detail ? ev.detail : null;
-      if (!detail || typeof detail.kind !== "string") return;
-      try {
-        if (detail.kind === "expr" && typeof detail.value === "string") {
-          if (ctrl.setExpression) ctrl.setExpression(detail.value);
-          setRobotMood(detail.value);
-        } else if (detail.kind === "wave") {
-          if (ctrl.cycleExpression) ctrl.cycleExpression();
-        } else if (detail.kind === "motion" && typeof detail.value === "number") {
-          if (ctrl.setMotion) ctrl.setMotion(detail.value);
-        }
-      } catch (err) {
-        console.warn("[Hero] robot-control handler threw:", err && err.message);
-      }
+      if (!detail) return;
+      try { ctrl.setAccent(detail.accent, detail.accent2); }
+      catch (err) { console.warn("[Hero] robot setAccent on theme-changed failed:", err && err.message); }
     }
-    window.addEventListener("robot-control", onRobotControl);
-    return () => window.removeEventListener("robot-control", onRobotControl);
+    window.addEventListener("theme-changed", onThemeChanged);
+    return () => window.removeEventListener("theme-changed", onThemeChanged);
   }, []);
 
   function onRobotClick() {
@@ -396,11 +396,14 @@ function renderLayers(data, index) {
 }
 
 // ── 2. Network — 6 nodes + edges, with traveling pulses (AI Automation).
-// Topology: 3 input nodes on left, 1 hub centre, 2 output nodes right.
-// Pulse travels from a randomly-chosen input to the hub to an output
-// every ~SIG_PULSE_PERIOD; current step driven by `data[N-1]`.
+// v51 fix: viewBox is now WIDER (200×64, aspect ~3.1:1) so circle nodes
+// render closer to round. We also use `preserveAspectRatio="xMidYMid meet"`
+// so the SVG scales uniformly — no horizontal stretch turning circles
+// into ellipses. Coordinates use the new wider canvas.
+const NETWORK_VIEWBOX_W = 200;
+const NETWORK_VIEWBOX_H = 64;
 const NETWORK_NODES = [
-  // [x%, y%]
+  // [x_frac, y_frac] — fractions of viewBox
   [0.10, 0.22], [0.10, 0.50], [0.10, 0.78],   // 3 inputs
   [0.50, 0.50],                                // hub
   [0.90, 0.32], [0.90, 0.70],                  // 2 outputs
@@ -409,15 +412,14 @@ const NETWORK_EDGES = [
   [0, 3], [1, 3], [2, 3], [3, 4], [3, 5],
 ];
 function renderNetwork(data, index) {
-  const x = function (p) { return (SIG_PAD + p * (SIG_W - SIG_PAD * 2)).toFixed(2); };
-  const y = function (p) { return (SIG_PAD + p * (SIG_H - SIG_PAD * 2)).toFixed(2); };
-  // The most recent data value drives which input edge is "active".
+  const x = function (p) { return (4 + p * (NETWORK_VIEWBOX_W - 8)).toFixed(2); };
+  const y = function (p) { return (4 + p * (NETWORK_VIEWBOX_H - 8)).toFixed(2); };
   const last = data[data.length - 1];
   const activeInputIdx = Math.min(2, Math.floor(last * 3));
   const activeOutputIdx = (Math.floor(last * 7)) % 2;
   return (
-    <svg viewBox={`0 0 ${SIG_W} ${SIG_H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
-      {/* Edges */}
+    <svg viewBox={`0 0 ${NETWORK_VIEWBOX_W} ${NETWORK_VIEWBOX_H}`}
+         preserveAspectRatio="xMidYMid meet" className="signal-spark-svg" aria-hidden="true">
       {NETWORK_EDGES.map(function renderEdge(e, i) {
         const a = NETWORK_NODES[e[0]];
         const b = NETWORK_NODES[e[1]];
@@ -432,24 +434,16 @@ function renderNetwork(data, index) {
             strokeWidth={isActive ? "1.6" : "0.8"} />
         );
       })}
-      {/* Pulse dot traveling along the active input → hub edge. */}
       {(function renderActivePulse() {
         const a = NETWORK_NODES[activeInputIdx];
         const b = NETWORK_NODES[3];
         return (
-          <circle r="1.6" fill="currentColor">
-            <animate
-              attributeName="cx"
-              from={x(a[0])} to={x(b[0])}
-              dur="1.1s" repeatCount="indefinite" />
-            <animate
-              attributeName="cy"
-              from={y(a[1])} to={y(b[1])}
-              dur="1.1s" repeatCount="indefinite" />
+          <circle r="2.4" fill="currentColor">
+            <animate attributeName="cx" from={x(a[0])} to={x(b[0])} dur="1.1s" repeatCount="indefinite" />
+            <animate attributeName="cy" from={y(a[1])} to={y(b[1])} dur="1.1s" repeatCount="indefinite" />
           </circle>
         );
       })()}
-      {/* Nodes */}
       {NETWORK_NODES.map(function renderNode(p, i) {
         const isHub = i === 3;
         const isLit =
@@ -457,13 +451,13 @@ function renderNetwork(data, index) {
         return (
           <g key={i}>
             <circle cx={x(p[0])} cy={y(p[1])}
-              r={isHub ? "3.2" : "2.2"}
+              r={isHub ? "4.5" : "3"}
               fill="currentColor"
               opacity={isLit ? "1" : "0.45"} />
             {isHub && (
               <circle cx={x(p[0])} cy={y(p[1])}
-                r="4.5" fill="none" stroke="currentColor"
-                strokeOpacity="0.5" strokeWidth="0.6" />
+                r="6.5" fill="none" stroke="currentColor"
+                strokeOpacity="0.5" strokeWidth="0.8" />
             )}
           </g>
         );
@@ -586,44 +580,45 @@ function renderWireframe(data, index) {
 }
 
 // ── 6. Milestones — 5-step roadmap with active pulse (Product MVP).
-// 5 milestones evenly spaced. The "current" milestone = ceil(avg * 5),
-// derived from the data so it shifts as the live tick progresses.
+// v51 fix: wider viewBox + meet aspect so milestone dots stay round
+// (previously got horizontally stretched into ovals).
+const MILESTONES_VIEWBOX_W = 200;
+const MILESTONES_VIEWBOX_H = 56;
 function renderMilestones(data, index) {
   const count = 5;
   const avg = data.reduce(function sum(s, v) { return s + v; }, 0) / data.length;
-  // Soft tween: "current" can be fractional; rendered as the next-to-fill.
   const progress = Math.max(0, Math.min(count - 1, avg * (count - 1)));
   const currentIdx = Math.min(count - 1, Math.floor(progress));
+  const cy = MILESTONES_VIEWBOX_H / 2;
+  const xLeft = 12;
+  const xRight = MILESTONES_VIEWBOX_W - 12;
+  const dotX = function (i) { return xLeft + (xRight - xLeft) * (i / (count - 1)); };
   return (
-    <svg viewBox={`0 0 ${SIG_W} ${SIG_H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
-      {/* Spine */}
-      <line x1="6" y1={(SIG_H / 2).toFixed(2)}
-        x2={(SIG_W - 6).toFixed(2)} y2={(SIG_H / 2).toFixed(2)}
-        stroke="currentColor" strokeOpacity="0.22" strokeWidth="0.8" />
-      {/* Progress fill — solid line from start to currentIdx milestone */}
-      <line x1="6" y1={(SIG_H / 2).toFixed(2)}
-        x2={(6 + (SIG_W - 12) * (progress / (count - 1))).toFixed(2)} y2={(SIG_H / 2).toFixed(2)}
-        stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-      {/* Milestone dots */}
+    <svg viewBox={`0 0 ${MILESTONES_VIEWBOX_W} ${MILESTONES_VIEWBOX_H}`}
+         preserveAspectRatio="xMidYMid meet" className="signal-spark-svg" aria-hidden="true">
+      <line x1={xLeft} y1={cy.toFixed(2)} x2={xRight} y2={cy.toFixed(2)}
+        stroke="currentColor" strokeOpacity="0.22" strokeWidth="1.2" />
+      <line x1={xLeft} y1={cy.toFixed(2)}
+        x2={(xLeft + (xRight - xLeft) * (progress / (count - 1))).toFixed(2)} y2={cy.toFixed(2)}
+        stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
       {Array.from({ length: count }).map(function renderDot(_, i) {
-        const cx = 6 + (SIG_W - 12) * (i / (count - 1));
-        const cy = SIG_H / 2;
+        const cx = dotX(i);
         const isPassed = i < currentIdx;
         const isCurrent = i === currentIdx;
         return (
           <g key={i}>
             {isCurrent && (
-              <circle cx={cx.toFixed(2)} cy={cy.toFixed(2)} r="6" fill="none" stroke="currentColor">
-                <animate attributeName="r" values="3.5;7;3.5" dur="1.4s" repeatCount="indefinite" />
-                <animate attributeName="stroke-opacity" values="0.5;0;0.5" dur="1.4s" repeatCount="indefinite" />
+              <circle cx={cx.toFixed(2)} cy={cy.toFixed(2)} r="9" fill="none" stroke="currentColor">
+                <animate attributeName="r" values="5;11;5" dur="1.4s" repeatCount="indefinite" />
+                <animate attributeName="stroke-opacity" values="0.55;0;0.55" dur="1.4s" repeatCount="indefinite" />
               </circle>
             )}
             <circle cx={cx.toFixed(2)} cy={cy.toFixed(2)}
-              r={isCurrent ? "3" : "2.2"}
+              r={isCurrent ? "5" : "3.5"}
               fill={isPassed || isCurrent ? "currentColor" : "rgba(0,0,0,0.4)"}
               stroke="currentColor"
               strokeOpacity={isPassed || isCurrent ? "1" : "0.4"}
-              strokeWidth={isPassed || isCurrent ? "0" : "0.8"} />
+              strokeWidth={isPassed || isCurrent ? "0" : "1.2"} />
           </g>
         );
       })}

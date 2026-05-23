@@ -86,6 +86,66 @@
   const CONSTELLATION_MOUSE_RADIUS = 3.5;     // world-units — pairs inside this around mouse glow brighter
   const CONSTELLATION_DISABLE_BELOW_WIDTH = 720;  // disable on small screens (mobile perf)
 
+  // ── Theme animation profiles (v54) ──────────────────────────────────────
+  // Each theme drives a different "feel" for the background by swapping a
+  // bounded set of TUNING NUMBERS — never structure, never new geometry.
+  // This keeps the change zero-risk: the render path is identical, only
+  // the magnitudes differ.
+  //
+  //   ember  — the original Claude background. Values are byte-for-byte the
+  //            module constants above, so the Ember theme animation is
+  //            provably unchanged.
+  //   cortex — crystalline + neural: faster shape spin, higher-frequency
+  //            grid (oscilloscope feel), denser + brighter constellation.
+  //   sage   — organic + calm: slow shape drift, low-frequency long grid
+  //            swells, sparse + dim constellation, wider lazy particle drift.
+  //
+  // `currentProfile` lerps toward `targetProfile` each frame so a theme
+  // swap eases in smoothly (BG_PROFILE_LERP) rather than snapping.
+  const BG_PROFILE_LERP = 0.045;
+  const BG_PROFILES = {
+    ember: {
+      shapeRotationPerS: SHAPE_ROTATION_Y_PER_S,
+      gridWaveSpeed: GRID_WAVE_SPEED,
+      gridAmpA: GRID_WAVE_AMP_PRIMARY,
+      gridAmpB: GRID_WAVE_AMP_SECONDARY,
+      gridFreqA: GRID_WAVE_FREQ_PRIMARY,
+      gridFreqB: GRID_WAVE_FREQ_SECONDARY,
+      particleDriftAmpX: PARTICLE_DRIFT_AMP_X,
+      particleDriftAmpY: PARTICLE_DRIFT_AMP_Y,
+      particleDriftAmpZ: PARTICLE_DRIFT_AMP_Z,
+      constellationDistance: CONSTELLATION_DISTANCE,
+      constellationOpacity: CONSTELLATION_OPACITY_MAX,
+    },
+    cortex: {
+      shapeRotationPerS: 0.085,
+      gridWaveSpeed: 0.72,
+      gridAmpA: 0.18,
+      gridAmpB: 0.12,
+      gridFreqA: 1.05,
+      gridFreqB: 1.50,
+      particleDriftAmpX: 0.42,
+      particleDriftAmpY: 0.34,
+      particleDriftAmpZ: 0.30,
+      constellationDistance: 1.70,
+      constellationOpacity: 0.46,
+    },
+    sage: {
+      shapeRotationPerS: 0.022,
+      gridWaveSpeed: 0.26,
+      gridAmpA: 0.30,
+      gridAmpB: 0.20,
+      gridFreqA: 0.40,
+      gridFreqB: 0.60,
+      particleDriftAmpX: 0.66,
+      particleDriftAmpY: 0.50,
+      particleDriftAmpZ: 0.42,
+      constellationDistance: 0.95,
+      constellationOpacity: 0.22,
+    },
+  };
+  const BG_PROFILE_DEFAULT = "ember";
+
   // ── Section → background shape mapping ──────────────────────────────────
   const SHAPE_BY_SECTION = {
     hero:     "ico",
@@ -143,7 +203,8 @@
 
   function noOpController() {
     return {
-      setAccent() {}, setMotion() {}, setScroll() {}, setSection() {}, dispose() {},
+      setAccent() {}, setMotion() {}, setScroll() {}, setSection() {},
+      setThemeProfile() {}, dispose() {},
     };
   }
 
@@ -167,6 +228,13 @@
     const options = opts || {};
     if (!THREE || !canvas) return noOpController();
 
+    // Device performance tier — drives pixel-ratio + constellation tiering.
+    // Low-end devices render at DPR 1.0 (vs 1.5) and skip the O(N²)
+    // constellation pair-scan entirely.
+    const deviceTierLow =
+      (typeof window.getDeviceTier === "function") && window.getDeviceTier() === "low";
+    const DPR_CAP = deviceTierLow ? 1.0 : 1.5;
+
     let renderer;
     try {
       renderer = new THREE.WebGLRenderer({
@@ -177,7 +245,7 @@
       console.warn("[BgFx] WebGL unavailable, background disabled:", err.message);
       return noOpController();
     }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, DPR_CAP));
     renderer.setClearColor(0x000000, 0);
 
     const scene = new THREE.Scene();
@@ -216,6 +284,38 @@
     let parallaxYTarget = 0;
     let mouseClientX = -9999;
     let mouseClientY = -9999;
+
+    // ── Theme animation profile state ────────────────────────────────────
+    // `targetProfile` is one of BG_PROFILES (read-only reference — never
+    // mutated). `currentProfile` is a private mutable copy whose fields lerp
+    // toward the target each frame. tick() reads ONLY currentProfile.
+    function resolveProfile(key) {
+      return BG_PROFILES[key] || BG_PROFILES[BG_PROFILE_DEFAULT];
+    }
+    const initialProfileKey =
+      (typeof options.themeProfile === "string" && BG_PROFILES[options.themeProfile])
+        ? options.themeProfile
+        : BG_PROFILE_DEFAULT;
+    let targetProfile = resolveProfile(initialProfileKey);
+    // Shallow copy so we never mutate the shared profile definition (C-08).
+    const currentProfile = {
+      shapeRotationPerS: targetProfile.shapeRotationPerS,
+      gridWaveSpeed: targetProfile.gridWaveSpeed,
+      gridAmpA: targetProfile.gridAmpA,
+      gridAmpB: targetProfile.gridAmpB,
+      gridFreqA: targetProfile.gridFreqA,
+      gridFreqB: targetProfile.gridFreqB,
+      particleDriftAmpX: targetProfile.particleDriftAmpX,
+      particleDriftAmpY: targetProfile.particleDriftAmpY,
+      particleDriftAmpZ: targetProfile.particleDriftAmpZ,
+      constellationDistance: targetProfile.constellationDistance,
+      constellationOpacity: targetProfile.constellationOpacity,
+    };
+    const BG_PROFILE_FIELDS = [
+      "shapeRotationPerS", "gridWaveSpeed", "gridAmpA", "gridAmpB",
+      "gridFreqA", "gridFreqB", "particleDriftAmpX", "particleDriftAmpY",
+      "particleDriftAmpZ", "constellationDistance", "constellationOpacity",
+    ];
 
     const sceneGroup = new THREE.Group();
     scene.add(sceneGroup);
@@ -389,7 +489,11 @@
     // ── Constellation layer — dynamic line-segments connecting nearby particles.
     // O(N²) pair-scan per frame for N=64 is 2016 distance checks → cheap.
     // Buffer is preallocated to CONSTELLATION_MAX_SEGMENTS * 2 vertices.
-    const constellationDisabled = window.innerWidth < CONSTELLATION_DISABLE_BELOW_WIDTH;
+    // Constellation is disabled on narrow screens (mobile perf) AND on any
+    // device flagged low-tier — the per-frame O(N²) pair-scan is the single
+    // most expensive thing bg-fx does, so weak hardware skips it outright.
+    const constellationDisabled =
+      deviceTierLow || (window.innerWidth < CONSTELLATION_DISABLE_BELOW_WIDTH);
     const constellationPositions = new Float32Array(CONSTELLATION_MAX_SEGMENTS * 2 * 3);
     const constellationColors    = new Float32Array(CONSTELLATION_MAX_SEGMENTS * 2 * 3);
     const constellationGeometry = new THREE.BufferGeometry();
@@ -491,6 +595,13 @@
       currentAccentShift.g = lerp(currentAccentShift.g, targetAccentShift.g, HUE_LERP);
       currentAccentShift.b = lerp(currentAccentShift.b, targetAccentShift.b, HUE_LERP);
 
+      // Theme profile lerp — eases every tunable toward the active theme's
+      // target so a theme swap glides in over ~1s rather than snapping.
+      for (let pf = 0; pf < BG_PROFILE_FIELDS.length; pf++) {
+        const field = BG_PROFILE_FIELDS[pf];
+        currentProfile[field] = lerp(currentProfile[field], targetProfile[field], BG_PROFILE_LERP);
+      }
+
       // Scene rotation — accumulates real-time spin + scroll-driven extra.
       const scrollSpin = scrollProgress * Math.PI * 2 * SCROLL_ROTATION_TURNS;
       // All four shapes share the same rotation, so transitions feel "still" —
@@ -509,7 +620,7 @@
       SHAPE_KEYS.forEach((k) => {
         const s = shapes[k];
         if (!s) return;
-        s.mesh.rotation.y = tSec * SHAPE_ROTATION_Y_PER_S * motion + scrollSpin;
+        s.mesh.rotation.y = tSec * currentProfile.shapeRotationPerS * motion + scrollSpin;
         s.mesh.rotation.x = Math.sin(tSec * 0.05) * 0.15;
         s.opacity = lerp(s.opacity, s.target, SHAPE_FADE_LERP);
         // Base scale 0.55..1.0 from opacity + extra pulse on the active shape.
@@ -519,8 +630,15 @@
         s.mesh.scale.set(scale, scale, scale);
       });
       // Energy grid update — wave time advances, scroll-velocity boosts amp.
-      gridMaterial.uniforms.uTime.value = tSec * GRID_WAVE_SPEED * (prefersReducedMotion ? 0.1 : motion);
+      // Amp/freq uniforms are written from the lerped theme profile each
+      // frame so a theme swap morphs the grid character (oscilloscope ↔
+      // soft swell) rather than jumping.
+      gridMaterial.uniforms.uTime.value = tSec * currentProfile.gridWaveSpeed * (prefersReducedMotion ? 0.1 : motion);
       gridMaterial.uniforms.uScrollBoost.value = scrollVelocity * GRID_SCROLL_AMP_BOOST;
+      gridMaterial.uniforms.uAmpA.value = currentProfile.gridAmpA;
+      gridMaterial.uniforms.uAmpB.value = currentProfile.gridAmpB;
+      gridMaterial.uniforms.uFreqA.value = currentProfile.gridFreqA;
+      gridMaterial.uniforms.uFreqB.value = currentProfile.gridFreqB;
 
       // Particle update — base + sin (smooth, no teleport).
       // Optionally pull near-cursor particles toward projected ray (subtle).
@@ -536,9 +654,9 @@
         const py = particlePhases[i * 3 + 1];
         const pz = particlePhases[i * 3 + 2];
 
-        let dx = Math.sin(tSec * fx + px) * PARTICLE_DRIFT_AMP_X;
-        let dy = Math.cos(tSec * fy + py) * PARTICLE_DRIFT_AMP_Y;
-        let dz = Math.sin(tSec * fz + pz) * PARTICLE_DRIFT_AMP_Z;
+        let dx = Math.sin(tSec * fx + px) * currentProfile.particleDriftAmpX;
+        let dy = Math.cos(tSec * fy + py) * currentProfile.particleDriftAmpY;
+        let dz = Math.sin(tSec * fz + pz) * currentProfile.particleDriftAmpZ;
 
         // Mouse attraction (screen-space approximation — bounded force).
         // Skip when cursor is off-screen (initial -9999 sentinel).
@@ -570,7 +688,8 @@
       if (!constellationDisabled) {
         let writeIdx = 0;
         const maxSegments = CONSTELLATION_MAX_SEGMENTS;
-        const distMax = CONSTELLATION_DISTANCE;
+        // Theme-driven link distance: cortex denser, sage sparser.
+        const distMax = currentProfile.constellationDistance;
         const distMaxSq = distMax * distMax;
         // Project mouse to world-XY plane for proximity bonus.
         const w = window.innerWidth || 1;
@@ -647,7 +766,7 @@
       gridMaterial.uniforms.uOpacity.value = GRID_OPACITY * opacityMul * brightnessBoost;
       particleMaterial.uniforms.uOpacity.value = PARTICLE_OPACITY * opacityMul * brightnessBoost;
       if (!constellationDisabled) {
-        constellationMaterial.opacity = CONSTELLATION_OPACITY_MAX * opacityMul * brightnessBoost;
+        constellationMaterial.opacity = currentProfile.constellationOpacity * opacityMul * brightnessBoost;
       }
 
       // Apply dt to advance time-based effects we already incorporated — kept
@@ -691,6 +810,16 @@
         // SHAPE_PULSE_DURATION_MS, making the morph feel like an entrance.
         shapePulseStartedAt = performance.now();
         shapePulseTargetKey = shape;
+      },
+      /**
+       * Swap the background animation profile to match a theme. The change
+       * is not instant — `currentProfile` lerps toward the new target each
+       * frame (BG_PROFILE_LERP) so the swap glides in. Unknown keys fall
+       * back to the default "ember" profile.
+       * @param {string} profileKey  one of "ember" | "cortex" | "sage"
+       */
+      setThemeProfile(profileKey) {
+        targetProfile = resolveProfile(profileKey);
       },
       dispose() {
         cancelAnimationFrame(rafHandle);

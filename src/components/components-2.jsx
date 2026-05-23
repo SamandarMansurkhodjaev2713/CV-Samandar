@@ -574,16 +574,19 @@ function Process({ t }) {
     };
   }, [t]);
 
-  // Mount the robot playground. Emits `robot-control` CustomEvents which the
-  // Hero component listens for and forwards to the actual robot controller.
-  useEffect2(function mountPlayground() {
-    if (!pgRef.current || !window.RobotPlayground) return undefined;
-    pgCtrlRef.current = window.RobotPlayground.create(pgRef.current, {});
+  // v52: replaced ProjectEstimator (felt commercial) with CursorConstellation
+  // — non-commercial, "залипательный" interactive canvas. Pure delight,
+  // no funnel. Visitor's cursor leaves a trail of glowing particles that
+  // gravitate + connect.
+  useEffect2(function mountConstellation() {
+    if (!pgRef.current || !window.CursorConstellation) return undefined;
+    const langGuess = (typeof t === "object" && t && t.lang) ? t.lang : "ru";
+    pgCtrlRef.current = window.CursorConstellation.create(pgRef.current, { lang: langGuess });
     return function () {
       if (pgCtrlRef.current && pgCtrlRef.current.dispose) pgCtrlRef.current.dispose();
       pgCtrlRef.current = null;
     };
-  }, []);
+  }, [t]);
 
   // Localized labels (with fallbacks if cli_* keys are absent in older content).
   const cliEyebrow = (t.process && t.process.cli_eyebrow) || "live";
@@ -614,9 +617,7 @@ function Process({ t }) {
           </div>
         </div>
 
-        {/* Claude Code session cinema — auto-looping animated terminal.
-            Section header above the card explains WHAT it is (so a non-tech
-            visitor reading RU/EN/UZ understands what they're looking at). */}
+        {/* Claude Code session cinema — auto-looping animated terminal. */}
         <div className="proc-cli-block" data-reveal data-reveal-delay="0.05">
           <header className="proc-cli-block-head">
             <span className="proc-cli-block-eyebrow mono">{cliEyebrow}</span>
@@ -627,10 +628,17 @@ function Process({ t }) {
             <div ref={cliRef} />
           </div>
         </div>
+      </div>
 
-        {/* Robot playground — sandboxed DSL controlling the hero robot */}
-        <div className="proc-pg-card card" data-reveal data-reveal-delay="0.08">
-          <div ref={pgRef} />
+      {/* v52 — Cursor Constellation lives in its OWN section after Process so
+          it's visually detached (full-bleed, dark backdrop). Non-commercial,
+          purely playful — visitor's cursor leaves a trail of glowing particles
+          that gravitate + connect. */}
+      <div className="constellation-section">
+        <div className="shell">
+          <div className="constellation-frame card" data-reveal>
+            <div ref={pgRef} />
+          </div>
         </div>
       </div>
     </section>
@@ -752,13 +760,28 @@ function Contact({ t, links }) {
     });
   }
 
+  // v51: full form reset on submit so the visitor sees a clean slate after
+  // the "sent" confirmation expires. We reset the native form (clears
+  // <input> / <textarea>) AND all our React state (chip selections, slider,
+  // timeline). Previous behaviour kept the text fields populated, which
+  // looked broken — the success message overlay didn't visually consume
+  // the form below it.
+  const SENT_HIDE_DELAY_MS = 4500;
   function onSubmit(e) {
     e.preventDefault();
+    const formEl = e.currentTarget;
     setSent(true);
     if (typeof navigator !== "undefined" && navigator.vibrate) {
       try { navigator.vibrate(14); } catch (err) { /* opportunistic */ }
     }
-    window.setTimeout(() => setSent(false), 4500);
+    // Native fields — name/email/textarea.
+    try { formEl.reset(); }
+    catch (err) { console.warn("[Contact] form.reset failed:", err && err.message); }
+    // React-controlled state — chips, slider, timeline.
+    setScopeSet(new Set());
+    setBudgetIdx(1);
+    setTimelineIdx(3);
+    window.setTimeout(function hideSentBanner() { setSent(false); }, SENT_HIDE_DELAY_MS);
   }
   return (
     <section data-section="contact" id="contact" ref={ref}>

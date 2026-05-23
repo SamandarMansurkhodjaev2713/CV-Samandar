@@ -51,7 +51,7 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "density": "regular"
 }/*EDITMODE-END*/;
 
-function useScrollEngine(coreRef, bgFxRef, setActiveSection) {
+function useScrollEngine(bgFxRef, setActiveSection) {
   useE(() => {
     const progressEl = document.querySelector(".scroll-progress");
     let raf = 0;
@@ -60,7 +60,6 @@ function useScrollEngine(coreRef, bgFxRef, setActiveSection) {
       const max = document.documentElement.scrollHeight - window.innerHeight;
       const y = max > 0 ? window.scrollY / max : 0;
       if (progressEl) progressEl.style.width = `${(y * 100).toFixed(2)}%`;
-      if (coreRef.current && coreRef.current.setScroll) coreRef.current.setScroll(y);
       if (bgFxRef.current && bgFxRef.current.setScroll) bgFxRef.current.setScroll(y);
     }
     function onScroll() { if (!raf) raf = requestAnimationFrame(tick); }
@@ -81,8 +80,45 @@ function useScrollEngine(coreRef, bgFxRef, setActiveSection) {
   }, []);
 }
 
-function Nav({ t, lang, setLang, active }) {
+// v54 — three showcased themes selected by the navbar segmented switcher.
+// Order is meaningful (left → right): Ember (warm), Cortex (cool),
+// Sage (calm). Keys match window.THEMES; "claude" is the internal key for
+// the Ember theme (kept for localStorage backward compat).
+const NAV_THEME_KEYS = ["claude", "cortex", "sage"];
+
+function Nav({ t, lang, setLang, active, theme, setTheme }) {
   const [open, setOpen] = useS(false);
+
+  // Pick a theme via the choreographed wave transition. The wave starts
+  // from the centre of the clicked segment; the actual theme swap runs
+  // hidden under the wave's full-coverage frame. Falls back to an instant
+  // setTheme if the ThemeTransition module didn't load (graceful degrade).
+  function onThemePick(key, ev) {
+    if (key === theme) return;            // already active — no-op
+    if (!NAV_THEME_KEYS.includes(key)) return;
+    haptic("toggle");
+    const nextDef = (window.THEMES && window.THEMES[key]) ? window.THEMES[key] : null;
+    const applyFn = function applyThemeChoice() { setTheme(key); };
+    if (window.ThemeTransition && typeof window.ThemeTransition.run === "function") {
+      let originX;
+      let originY;
+      if (ev && ev.currentTarget && ev.currentTarget.getBoundingClientRect) {
+        const r = ev.currentTarget.getBoundingClientRect();
+        originX = r.left + r.width / 2;
+        originY = r.top + r.height / 2;
+      }
+      window.ThemeTransition.run({
+        originX: originX,
+        originY: originY,
+        waveColor: nextDef ? nextDef.bg0 : undefined,
+        glowColor: nextDef ? nextDef.accent : undefined,
+        onApply: applyFn,
+      });
+    } else {
+      applyFn();
+    }
+  }
+  const activeThemeIdx = Math.max(0, NAV_THEME_KEYS.indexOf(theme));
 
   // Lock scroll while drawer open, restore on close/unmount.
   useE(() => {
@@ -113,6 +149,35 @@ function Nav({ t, lang, setLang, active }) {
           ))}
         </ul>
         <div className="nav-right">
+          {/* Theme switcher — 3-segment: Ember / Cortex / Sage. Each segment
+              is a dot tinted with that theme's accent; the sliding thumb
+              marks the active one. Clicking a segment triggers the wave
+              transition. */}
+          <div
+            className="theme-switch"
+            role="group"
+            aria-label="theme"
+            style={{ "--theme-idx": activeThemeIdx }}
+          >
+            <span className="theme-switch-thumb" aria-hidden="true" />
+            {NAV_THEME_KEYS.map((key) => {
+              const def = (window.THEMES && window.THEMES[key]) ? window.THEMES[key] : null;
+              const label = def ? def.name : key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className={`theme-switch-seg theme-switch-seg--${key} ${theme === key ? "is-active" : ""}`}
+                  aria-pressed={theme === key}
+                  aria-label={`theme: ${label}`}
+                  title={label}
+                  onClick={(ev) => onThemePick(key, ev)}
+                >
+                  <span className="theme-switch-dot" aria-hidden="true" />
+                </button>
+              );
+            })}
+          </div>
           <div className="lang" role="group" aria-label="language">
             {["ru", "en", "uz"].map((L) => (
               <button key={L} onClick={() => setLang(L)} className={lang === L ? "active" : ""} aria-pressed={lang === L}>{L.toUpperCase()}</button>
@@ -276,7 +341,6 @@ function App() {
   const [activeSection, setActiveSection] = useS("hero");
   const [coreReady, setCoreReady] = useS(false);
   const canvasRef = useR(null);
-  const coreRef = useR(null);
   const bgFxCanvasRef = useR(null);
   const bgFxRef = useR(null);
   const lang = tweaks.lang in window.CONTENT ? tweaks.lang : "ru";
@@ -321,11 +385,20 @@ function App() {
     });
   }, []);
 
-  // Apply theme/font/density
+  // Apply theme/font/density. On a theme change we update three things:
+  //   1. CSS variables (applyTheme)
+  //   2. accent colours on the scene-engine + bg-fx renderers
+  //   3. the bg-fx ANIMATION profile (Ember / Cortex / Sage) so the
+  //      background's character — spin speed, grid frequency, constellation
+  //      density — morphs to match the theme.
   useE(() => {
     const theme = window.applyTheme(tweaks.theme);
-    if (coreRef.current && theme) coreRef.current.setAccent(theme.accent, theme.accent2);
-    if (bgFxRef.current && theme) bgFxRef.current.setAccent(theme.accent, theme.accent2);
+    if (bgFxRef.current && theme) {
+      bgFxRef.current.setAccent(theme.accent, theme.accent2);
+      if (typeof bgFxRef.current.setThemeProfile === "function") {
+        bgFxRef.current.setThemeProfile(theme.bgProfile || "ember");
+      }
+    }
   }, [tweaks.theme]);
   useE(() => { window.applyFontStack(tweaks.font); }, [tweaks.font]);
   useE(() => {
@@ -334,7 +407,6 @@ function App() {
   }, [tweaks.density, lang]);
   useE(() => {
     document.documentElement.style.setProperty("--motion", String(tweaks.motion));
-    if (coreRef.current && coreRef.current.setMotion) coreRef.current.setMotion(tweaks.motion);
     if (bgFxRef.current && bgFxRef.current.setMotion) bgFxRef.current.setMotion(tweaks.motion);
   }, [tweaks.motion]);
 
@@ -347,8 +419,12 @@ function App() {
       const rootStyles = getComputedStyle(document.documentElement);
       const a1 = rootStyles.getPropertyValue("--accent").trim() || "#D97757";
       const a2 = rootStyles.getPropertyValue("--accent-2").trim() || "#C89B5E";
+      // Seed the bg-fx animation profile from the initial theme so the
+      // first paint already has the right character (no Ember→X flash).
+      const initialTheme = (window.THEMES && window.THEMES[tweaks.theme]) ? window.THEMES[tweaks.theme] : null;
       bgFxRef.current = window.BgFx.create(bgFxCanvasRef.current, {
         accent: a1, accent2: a2, motion: tweaks.motion,
+        themeProfile: initialTheme ? (initialTheme.bgProfile || "ember") : "ember",
       });
     }
     return () => {
@@ -357,7 +433,7 @@ function App() {
     };
   }, []);
 
-  useScrollEngine(coreRef, bgFxRef, setActiveSection);
+  useScrollEngine(bgFxRef, setActiveSection);
 
   // Motion: init smart cursor + reveal observers after first paint, refresh on lang change.
   // isInViewport check in motion.js handles the "no-flash" problem for visible elements.
@@ -392,7 +468,14 @@ function App() {
       <div className="bg-noise" />
       <div className="scroll-progress" />
 
-      <Nav t={t} lang={lang} setLang={(v) => setTweak("lang", v)} active={activeSection} />
+      <Nav
+        t={t}
+        lang={lang}
+        setLang={(v) => setTweak("lang", v)}
+        active={activeSection}
+        theme={tweaks.theme}
+        setTheme={(v) => setTweak("theme", v)}
+      />
 
       <main>
         <Hero t={t} links={LINKS} />
