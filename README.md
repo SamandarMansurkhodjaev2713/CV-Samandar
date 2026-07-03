@@ -2,6 +2,8 @@
 
 Interactive developer portfolio for full-stack, AI automation and product engineering work.
 
+**Live demo:** [samandarmansurkhodjaev2713.github.io/CV-Samandar](https://samandarmansurkhodjaev2713.github.io/CV-Samandar/)
+
 ## What It Is
 
 This repository contains a static interactive CV/portfolio experience. It presents my work profile as a product-style interface rather than a plain resume page: visual sections, motion, interactive widgets, localized content, code-lab positioning and a more memorable first impression for recruiters, technical leads and partners.
@@ -62,3 +64,7 @@ Then open `index.html` locally or deploy the static files.
 - performance awareness;
 - interactive/static site architecture;
 - ability to package technical work for recruiters, technical leads and partners.
+
+## Deployment
+
+This repository deploys automatically to GitHub Pages through GitHub Actions on every push to `main`.
