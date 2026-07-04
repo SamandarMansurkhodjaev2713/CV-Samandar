@@ -130,22 +130,23 @@
 
 /* ── Hero → Signal cover transition ──────────────────────────────────
    Handled by the shared .pin-host/--pin-p mechanism (motion.js bindPins +
-   the generic rules in features.css) — the same proven depth-handoff already
-   used for Services→CV and Trust→Contact. Hero+Signal are wrapped in
-   .pin-host.pin-host--hero in app.jsx; the generic rules there recede Hero
-   (:first-child: scale + dim) and rise Signal (:last-child: translateY +
-   sheen). sticky/pin-position are unusable here (body overflow-x makes them
-   a scroll-container hazard — verified), which is exactly why that mechanism
-   is transform/opacity-only and JS-measured via a single batched rAF loop.
-   Two Hero-specific tunings, via --pin-scale-amt/--pin-fade-amt/--pin-lift-amt
-   (features.css "Pinned-overlap"):
+   the "Hero pair" rules in features.css "Pinned-overlap") — now runs on
+   EVERY viewport width, not just desktop (previously mobile got a static
+   shadow+line instead of the real animation, which is exactly why "the
+   animation doesn't work" kept being reported: on a phone there was no
+   animation at all, by design, and no amount of tuning the desktop-only
+   effect could ever show up there). --pin-p is already computed for every
+   [data-pin] host on every device regardless of width (motion.js doesn't
+   gate on viewport), so this adds no new per-frame cost on mobile — it
+   only lets an already-computed number drive a transform.
+   sticky/pin-position are unusable here (body overflow-x makes them a
+   scroll-container hazard — verified), hence transform/opacity-only.
+   Two Hero-specific tunings, via --pin-scale-amt/--pin-fade-amt/--pin-lift-amt:
    1. GENTLER recede — the generic 10%-scale/55%-fade/48px-lift was tuned for
-      plain content sections (Services, Trust) and was NEVER actually retuned
-      for Hero despite the intent (this comment used to claim it without the
-      override existing — a real gap, not a design choice). A detailed photo
-      shrinking+dimming that hard reads as the photo breaking apart, not
-      sinking into depth. Barely scales/dims here instead — Hero stays
-      present and photographic throughout, only drifting back and softening.
+      plain content sections (Services, Trust). A detailed photo shrinking/
+      dimming that hard reads as the photo breaking apart, not sinking into
+      depth. Barely scales/dims here instead — Hero stays present and
+      photographic throughout, only drifting back and softening.
    2. Signal needs an OPAQUE backing (unlike Services→CV/Trust→Contact, which
       float on the shared transparent WebGL bg) because Hero carries its own
       distinct opaque photo backdrop that must be visually covered by the
@@ -153,43 +154,27 @@
       as a dead slab rising over a rich photo, though — a soft warm glow
       (echoing Hero's own warm cockpit tone) gives the panel some atmosphere
       of its own instead of feeling like the interesting thing got replaced
-      by a blank one. */
-@media (min-width: 901px) {
-  .pin-host--hero {
-    --pin-scale-amt: 0.035;
-    --pin-fade-amt: 0.22;
-    --pin-lift-amt: -22px;
-  }
-  .pin-host--hero > section[data-section]:last-child {
-    background:
-      radial-gradient(ellipse 70% 55% at 15% 0%, rgba(var(--accent-rgb) / 0.07), transparent 62%),
-      radial-gradient(ellipse 50% 40% at 100% 100%, rgba(var(--accent-2-rgb) / 0.05), transparent 65%),
-      var(--bg-0);
-  }
+      by a blank one. A permanent grounding shadow underneath (not tied to
+      --pin-p) reinforces "physically resting on top" at any scroll position. */
+.pin-host--hero {
+  --pin-scale-amt: 0.035;
+  --pin-fade-amt: 0.22;
+  --pin-lift-amt: -22px;
 }
-/* Mobile gets no scroll-linked pin effect at all (100vh/URL-bar fragility +
-   not worth a continuous scroll listener on weak connections/CPUs) — but a
-   flat, motionless stack read as a dead seam, not an intentional handoff.
-   A static leading edge (shadow + thin horizon line, zero JS/animation cost)
-   gives Signal the same "resting panel docked over Hero" identity the
-   desktop pin effect earns through motion. Deliberately NOT a translateY
-   entrance here — that was tried for Signal's own scroll-in animation
-   (data-enter="emerge" below) and rejected: it fought the hero photo's own
-   dissolve mask right at this exact seam and read as the seam itself
-   shifting. A static line has no such conflict. */
+.pin-host--hero > section[data-section]:last-child {
+  position: relative;
+  background:
+    radial-gradient(ellipse 70% 55% at 15% 0%, rgba(var(--accent-rgb) / 0.07), transparent 62%),
+    radial-gradient(ellipse 50% 40% at 100% 100%, rgba(var(--accent-2-rgb) / 0.05), transparent 65%),
+    var(--bg-0);
+  box-shadow: 0 -20px 40px -18px rgba(0, 0, 0, 0.55);
+}
 @media (max-width: 900px) {
-  .pin-host--hero > section[data-section]:last-child {
-    position: relative;
-    box-shadow: 0 -20px 40px -18px rgba(0, 0, 0, 0.55);
-  }
-  .pin-host--hero > section[data-section]:last-child::before {
-    content: "";
-    position: absolute;
-    left: 0; right: 0; top: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(var(--accent-rgb) / 0.45), transparent);
-    pointer-events: none;
-  }
+  /* Mobile's version of the same pair rises over a shorter combined height
+     (single-column Hero is much taller relative to viewport than desktop's
+     two-column layout), so the fixed 96px rise distance would look like it
+     travels a smaller fraction of the effect — pulled in a bit tighter. */
+  .pin-host--hero > section[data-section]:last-child { --pin-rise-amt: 64px; }
 }
 
 .hero-grid {

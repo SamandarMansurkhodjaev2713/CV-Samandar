@@ -1153,21 +1153,56 @@ html[data-theme="claude"] body {
  * to the original tuning (10% scale, 55% fade, 48px lift) for hosts that
  * don't set them (Services→CV, Trust→Contact). */
 .pin-host { position: relative; }
+
+/* .pin-host--hero (Hero→Signal) runs on EVERY viewport width, not just
+ * desktop. The other two pairs (Services→CV, Trust→Contact — plain content,
+ * no unique backdrop to cover) stay desktop-only below. Why the split: the
+ * motion.js JS side (bindPins/updatePins) already computes --pin-p for every
+ * [data-pin] host unconditionally, on every device, regardless of width —
+ * the old `@media (min-width:901px)` gate never saved that work, it only
+ * decided whether CSS used the number once computed. So enabling this for
+ * Hero on mobile adds no new per-frame cost; it only lets an already-computed
+ * value drive a transform. (data-motion-lite — low-tier or reduced-motion —
+ * still fully disables it, same as before.) */
+html:not([data-motion-lite]) .pin-host--hero > section[data-section]:first-child {
+  transform: scale(calc(1 - var(--pin-p, 0) * var(--pin-scale-amt, 0.10)))
+             translateY(calc(var(--pin-p, 0) * var(--pin-lift-amt, -48px)));
+  transform-origin: 50% 26%;
+  opacity: calc(1 - var(--pin-p, 0) * var(--pin-fade-amt, 0.55));
+}
+html:not([data-motion-lite]) .pin-host--hero > section[data-section]:last-child {
+  position: relative;
+  z-index: 2;
+  transform: translateY(calc((1 - var(--pin-p, 0)) * var(--pin-rise-amt, 96px)));
+}
+/* Soft top-edge sheen on the rising section hints a layered panel. */
+html:not([data-motion-lite]) .pin-host--hero > section[data-section]:last-child::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: -1px;
+  height: 80px;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    rgba(var(--accent-rgb) / calc(var(--pin-p, 0) * 0.06)) 0%,
+    transparent 100%);
+  opacity: calc(1 - var(--pin-p, 0));
+}
+
 @media (min-width: 901px) {
-  html:not([data-motion-lite]) .pin-host > section[data-section]:first-child {
+  html:not([data-motion-lite]) .pin-host:not(.pin-host--hero) > section[data-section]:first-child {
     transform: scale(calc(1 - var(--pin-p, 0) * var(--pin-scale-amt, 0.10)))
                translateY(calc(var(--pin-p, 0) * var(--pin-lift-amt, -48px)));
     transform-origin: 50% 26%;
     opacity: calc(1 - var(--pin-p, 0) * var(--pin-fade-amt, 0.55));
   }
-  html:not([data-motion-lite]) .pin-host > section[data-section]:last-child {
+  html:not([data-motion-lite]) .pin-host:not(.pin-host--hero) > section[data-section]:last-child {
     position: relative;
     z-index: 2;
     transform: translateY(calc((1 - var(--pin-p, 0)) * 96px));
   }
   /* Soft top-edge sheen on the rising section hints a layered panel without
      an opaque fill (which would hide the WebGL background). */
-  html:not([data-motion-lite]) .pin-host > section[data-section]:last-child::before {
+  html:not([data-motion-lite]) .pin-host:not(.pin-host--hero) > section[data-section]:last-child::before {
     content: "";
     position: absolute;
     left: 0; right: 0; top: -1px;

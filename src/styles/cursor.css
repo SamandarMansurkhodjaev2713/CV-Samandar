@@ -346,8 +346,17 @@ section[data-enter].sec-bound:not(.sec-in) { opacity: 0; }
    at the hero→signal seam; a translateY lift there moved the section's top
    edge against the (also-animating) hero photo dissolve underneath, reading
    as the seam itself shifting. De-blur-in-place reads as "proximity focus"
-   instead, and the seam edge never moves. */
-section[data-enter="emerge"].sec-in { animation: secEmerge var(--sec-dur) var(--sec-ease) both; }
+   instead, and the seam edge never moves.
+   PINNED → animate .shell, not the section (same rule as every other pinned
+   entrance below). This was the actual reason the hero→signal pin transform
+   never visibly moved: `animation: … both` permanently overrides an
+   element's `transform` for as long as the animation is attached (that's
+   what `both` fill-mode means) — with this rule targeting the bare
+   `<section>`, secEmerge's `to { transform: none }` was silently and
+   permanently winning over the pin-host's own `transform: translateY(...)`
+   on that exact element, the instant the entrance finished. --pin-p was
+   computing correctly the entire time; the number just had nowhere to go. */
+.pin-host > section[data-enter="emerge"].sec-in > .shell { animation: secEmerge var(--sec-dur) var(--sec-ease) both; }
 @keyframes secEmerge {
   from { opacity: 0; filter: blur(7px); transform: scale(.99); }
   60%  { filter: blur(1.2px); }
