@@ -1164,28 +1164,29 @@ html[data-theme="claude"] body {
  * Hero on mobile adds no new per-frame cost; it only lets an already-computed
  * value drive a transform. (data-motion-lite — low-tier or reduced-motion —
  * still fully disables it, same as before.) */
+/* Hero → Signal is a CURTAIN-OVER-A-FIXED-BACKDROP, not a recede/rise (that
+ * was my earlier framing, rejected by the client). The client's exact ask:
+ * Hero does not move at all; Signal slides up over it, gradually covering it.
+ *
+ * Mechanism (counter-scroll, since sticky is unusable — body overflow-x:hidden
+ * makes body a scroll container, which breaks position:sticky; verified in
+ * computed styles): Hero is translated DOWN by exactly how far the host has
+ * scrolled (--pin-py, px, written by motion.js), so it stays VISUALLY FIXED in
+ * the viewport for the whole cover. Signal sits in normal flow directly below
+ * Hero with NO transform, so ordinary scrolling carries it up over the fixed
+ * Hero — a real curtain, and crucially with NO GAP (the old approach slid
+ * Signal down 88vh so it LAGGED behind Hero, opening a strip of bare bg-fx
+ * between them — that grey/warm band was the "ugly transition").
+ * translateY is capped at 100vh (≈ Hero's own height) via min() so once Signal
+ * has fully covered Hero, Hero stops counter-scrolling and scrolls away
+ * underneath (hidden), instead of pinning past the section end. */
 html:not([data-motion-lite]) .pin-host--hero > section[data-section]:first-child {
-  transform: scale(calc(1 - var(--pin-p, 0) * var(--pin-scale-amt, 0.10)))
-             translateY(calc(var(--pin-p, 0) * var(--pin-lift-amt, -48px)));
-  transform-origin: 50% 26%;
-  opacity: calc(1 - var(--pin-p, 0) * var(--pin-fade-amt, 0.55));
+  transform: translateY(var(--pin-py, 0px));
+  will-change: transform;
 }
 html:not([data-motion-lite]) .pin-host--hero > section[data-section]:last-child {
   position: relative;
   z-index: 2;
-  transform: translateY(calc((1 - var(--pin-p, 0)) * var(--pin-rise-amt, 96px)));
-}
-/* Soft top-edge sheen on the rising section hints a layered panel. */
-html:not([data-motion-lite]) .pin-host--hero > section[data-section]:last-child::before {
-  content: "";
-  position: absolute;
-  left: 0; right: 0; top: -1px;
-  height: 80px;
-  pointer-events: none;
-  background: linear-gradient(180deg,
-    rgba(var(--accent-rgb) / calc(var(--pin-p, 0) * 0.06)) 0%,
-    transparent 100%);
-  opacity: calc(1 - var(--pin-p, 0));
 }
 
 @media (min-width: 901px) {

@@ -129,45 +129,56 @@
 }
 
 /* ── Hero → Signal cover transition ──────────────────────────────────
-   Explicit direction from the client: Hero does NOT move at all during the
-   scroll — it just sits there — and Signal rides up over it like a curtain,
-   gradually covering more of it the further you scroll, until it fully
-   covers Hero. Not a depth/recede illusion (that was my own earlier framing,
-   rejected) — a literal fixed backdrop with an opaque curtain sliding up
-   over it.
-   Still handled by the shared .pin-host/--pin-p mechanism (motion.js
-   bindPins + the "Hero pair" rules in features.css "Pinned-overlap"), on
-   every viewport width — --pin-p is already computed for every [data-pin]
-   host on every device regardless of width (motion.js doesn't gate on
-   viewport), so this adds no new per-frame cost on mobile.
-   position:sticky/fixed would be the "native" way to hold Hero visually
-   still while Signal scrolls over it, but sticky is unusable here (body
-   overflow-x:hidden turns overflow-y into a scroll-container context that
-   breaks it — verified empirically earlier this session). Instead: Hero's
-   own recede is fully zeroed out (--pin-scale-amt/--pin-fade-amt/--pin-lift-amt
-   all 0 — no transform, no opacity change, genuinely inert), and Signal's
-   rise distance is a large viewport-relative amount (not the original 96px
-   polish-detail nudge) so the curtain actually travels far enough across the
-   scroll range to read as "gradually covering", not a quick slide into place.
-   Signal still needs an OPAQUE backing (unlike Services→CV/Trust→Contact,
-   which float on the shared transparent WebGL bg) to actually cover Hero's
-   photo — flat --bg-0 alone read as a dead slab, so a soft warm glow
-   (echoing Hero's own cockpit tone) gives the curtain some atmosphere of its
-   own, plus a permanent grounding shadow along its leading edge. */
-.pin-host--hero {
-  --pin-scale-amt: 0;
-  --pin-fade-amt: 0;
-  --pin-lift-amt: 0px;
-}
+   Client's exact ask: Hero does NOT move at all during scroll — it just sits
+   there — and Signal rides UP over it like a curtain, gradually covering more
+   of it the further you scroll, until Hero is fully covered.
+   Motion lives in features.css (.pin-host--hero rules) via the counter-scroll
+   trick: motion.js writes --pin-py (px scrolled), Hero is translated DOWN by
+   that exact amount so it stays visually fixed, and Signal — in normal flow
+   directly below, NO transform — is carried up over it by ordinary scrolling.
+   Here we only style Signal as the CURTAIN itself: it must be fully opaque (it
+   literally paints over the fixed Hero) and read as a distinct lifted panel at
+   its leading edge. Flat --bg-0 alone looked like a dead slab, so a soft warm
+   glow (echoing Hero's cockpit tone) gives it atmosphere; the upward box-shadow
+   + a 1px warm hairline on the very top edge make the top read as a physical
+   panel sliding up, not a tonal jump. Opaque + these edge cues are what kill
+   the "ugly seam" — there is no bare-background gap anymore because Signal no
+   longer lags behind Hero (the old bug). */
 .pin-host--hero > section[data-section]:last-child {
   position: relative;
-  --pin-rise-amt: 88vh;
+  /* At least viewport-tall so the pin scroll range (heroH + signalH − vh) is
+     always ≥ heroH — that's the exact condition for Hero to stay perfectly
+     fixed through the WHOLE cover (the counter-scroll cap = min(range, heroH)
+     only reaches heroH when the range does). Without this, a short Signal (its
+     natural mobile height was < vh) shrank the range below heroH, so Hero
+     drifted up in the last stretch of the cover instead of holding still.
+     Desktop Signal is already taller than the viewport, so this is a no-op
+     there; it only pads the mobile curtain, which reads fine. */
+  min-height: 100vh;
   background:
     radial-gradient(ellipse 70% 55% at 15% 0%, rgba(var(--accent-rgb) / 0.07), transparent 62%),
     radial-gradient(ellipse 50% 40% at 100% 100%, rgba(var(--accent-2-rgb) / 0.05), transparent 65%),
     var(--bg-0);
-  box-shadow: 0 -20px 40px -18px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 -22px 50px -22px rgba(0, 0, 0, 0.6);
 }
+.pin-host--hero > section[data-section]:last-child::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 1px;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(var(--accent-rgb) / 0.5), transparent);
+}
+/* The curtain (Signal's SECTION background) must stay fully opaque even before
+   its own entrance fires. The section-enter hidden pose (cursor.css:
+   `section[data-enter].sec-bound:not(.sec-in){opacity:0}`) would otherwise make
+   the whole section transparent until its IntersectionObserver trips (~12%vh
+   into the rise), so the curtain's leading edge would show Hero through it for
+   the first stretch of the cover. The shell content still fades/de-blurs in via
+   its OWN hidden pose + secEmerge — only the section-level opacity is overridden
+   here, higher-specificity than the generic hidden pose so it wins. */
+.pin-host--hero > section[data-enter].sec-bound:not(.sec-in) { opacity: 1; }
 
 .hero-grid {
   display: grid;
