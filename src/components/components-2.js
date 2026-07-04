@@ -10,356 +10,150 @@ const {
 } = React;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SERVICES — unique cards, no terminal commands.
+// SERVICES 2.0 — panel switcher.
+//   Desktop: WAI-ARIA tablist (left) + tabpanel (right), roving tabindex,
+//            ↑/↓/Home/End, content crossfade on selection.
+//   Mobile (≤900px): the SAME data as an accordion (button + aria-expanded +
+//            region), one open at a time.
+// One component, one DOM — the layout mode (panel vs accordion) is a CSS
+// concern; only the ARIA wiring differs, gated by a matchMedia flag so screen
+// readers always get the pattern that matches what's on screen.
 //
-// Each card has:
-//   • A distinctive SVG glyph that visually telegraphs the service category
-//   • A varied "hover animation kind" cycled per index so the grid doesn't
-//     read as a uniform copy-paste — every card has its own micro-personality
-//   • A clean io-pill at the bottom showing the value transform
-//
-// Glyphs are pure inline SVG (no external icons) so they always inherit the
-// current accent color via `currentColor`. They're index-keyed: card N gets
-// glyph N. If the content array changes length, glyphs cycle from the start.
+// `io` ("spec → prod app") is the signature detail — rendered as a real
+// input→output flow, not a pill. Related project is a HARD index→project map
+// (never fuzzy) so we never invent a connection: services without a real
+// match (Internal Tools, Tech Consulting) simply omit the block.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SERVICE_HOVER_KINDS = ["lift", "tilt-l", "tilt-r", "glow", "scale", "shift", "edge", "ripple"];
+// Hard map: service index → projects[].name that genuinely delivers it.
+// null = no honest 1:1 match → the related block is not rendered.
+const SERVICE_RELATED = ["Business Automation Engine",
+// 0 Web Apps        → full product build
+"Railway Infrastructure Site",
+// 1 Landing & Sites → premium landing
+"Task Orchestrator Bot",
+// 2 Telegram Bots   → team bot
+"Business Automation Engine",
+// 3 AI Automation   → LLM workflow pipeline
+"Biogas Operations Panel",
+// 4 Dashboards      → ops dashboard
+"Group Voice Task Bot",
+// 5 MVP / Prototype → "MVP in 11 days"
+null,
+// 6 Internal Tools  → no honest 1:1 case
+null // 7 Tech Consulting → advisory, no shippable case
+];
 
-// Inline SVG glyphs — return ReactElement keyed by index. Eight distinct
-// concepts mapped to the eight content slots in order.
-const SERVICE_GLYPHS = [
-// 0 · Web Apps — stacked layers
-function GlyphLayers() {
-  return /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 40 40",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: "1.5",
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("rect", {
-    x: "6",
-    y: "8",
-    width: "28",
-    height: "6",
-    rx: "1"
-  }), /*#__PURE__*/React.createElement("rect", {
-    x: "6",
-    y: "17",
-    width: "28",
-    height: "6",
-    rx: "1"
-  }), /*#__PURE__*/React.createElement("rect", {
-    x: "6",
-    y: "26",
-    width: "28",
-    height: "6",
-    rx: "1"
-  }), /*#__PURE__*/React.createElement("line", {
-    x1: "11",
-    y1: "11",
-    x2: "11",
-    y2: "11"
-  }), /*#__PURE__*/React.createElement("line", {
-    x1: "11",
-    y1: "20",
-    x2: "11",
-    y2: "20"
-  }), /*#__PURE__*/React.createElement("line", {
-    x1: "11",
-    y1: "29",
-    x2: "11",
-    y2: "29"
-  }));
-},
-// 1 · Landing & Sites — page outline + accent block
-function GlyphPage() {
-  return /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 40 40",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: "1.5",
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("rect", {
-    x: "8",
-    y: "6",
-    width: "24",
-    height: "28",
-    rx: "1"
-  }), /*#__PURE__*/React.createElement("line", {
-    x1: "13",
-    y1: "13",
-    x2: "27",
-    y2: "13"
-  }), /*#__PURE__*/React.createElement("line", {
-    x1: "13",
-    y1: "18",
-    x2: "22",
-    y2: "18"
-  }), /*#__PURE__*/React.createElement("rect", {
-    x: "13",
-    y: "22",
-    width: "14",
-    height: "6",
-    fill: "currentColor",
-    opacity: "0.25",
-    stroke: "none"
-  }));
-},
-// 2 · Telegram Bots — speech bubble with dots
-function GlyphBubble() {
-  return /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 40 40",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: "1.5",
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("path", {
-    d: "M8 10 h24 a2 2 0 0 1 2 2 v14 a2 2 0 0 1 -2 2 H18 l-6 5 v-5 H8 a2 2 0 0 1 -2 -2 V12 a2 2 0 0 1 2 -2 z"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "14",
-    cy: "19",
-    r: "1.5",
-    fill: "currentColor",
-    stroke: "none"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "20",
-    cy: "19",
-    r: "1.5",
-    fill: "currentColor",
-    stroke: "none"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "26",
-    cy: "19",
-    r: "1.5",
-    fill: "currentColor",
-    stroke: "none"
-  }));
-},
-// 3 · AI Automation — node graph
-function GlyphNodes() {
-  return /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 40 40",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: "1.5",
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("circle", {
-    cx: "10",
-    cy: "10",
-    r: "3",
-    fill: "currentColor",
-    stroke: "none"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "30",
-    cy: "10",
-    r: "3",
-    fill: "currentColor",
-    stroke: "none"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "20",
-    cy: "22",
-    r: "3",
-    fill: "currentColor",
-    stroke: "none"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "10",
-    cy: "32",
-    r: "3",
-    fill: "currentColor",
-    stroke: "none"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "30",
-    cy: "32",
-    r: "3",
-    fill: "currentColor",
-    stroke: "none"
-  }), /*#__PURE__*/React.createElement("line", {
-    x1: "10",
-    y1: "10",
-    x2: "20",
-    y2: "22"
-  }), /*#__PURE__*/React.createElement("line", {
-    x1: "30",
-    y1: "10",
-    x2: "20",
-    y2: "22"
-  }), /*#__PURE__*/React.createElement("line", {
-    x1: "20",
-    y1: "22",
-    x2: "10",
-    y2: "32"
-  }), /*#__PURE__*/React.createElement("line", {
-    x1: "20",
-    y1: "22",
-    x2: "30",
-    y2: "32"
-  }));
-},
-// 4 · Dashboards — bar chart
-function GlyphChart() {
-  return /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 40 40",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: "1.5",
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("line", {
-    x1: "6",
-    y1: "34",
-    x2: "34",
-    y2: "34"
-  }), /*#__PURE__*/React.createElement("rect", {
-    x: "9",
-    y: "22",
-    width: "4",
-    height: "12",
-    fill: "currentColor",
-    opacity: "0.4",
-    stroke: "none"
-  }), /*#__PURE__*/React.createElement("rect", {
-    x: "17",
-    y: "14",
-    width: "4",
-    height: "20",
-    fill: "currentColor",
-    opacity: "0.7",
-    stroke: "none"
-  }), /*#__PURE__*/React.createElement("rect", {
-    x: "25",
-    y: "18",
-    width: "4",
-    height: "16",
-    fill: "currentColor",
-    opacity: "0.55",
-    stroke: "none"
-  }));
-},
-// 5 · MVP / Prototype — arrow zig-zag (idea → prototype)
-function GlyphArrow() {
-  return /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 40 40",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: "1.5",
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("path", {
-    d: "M6 28 L14 20 L20 26 L28 14 L34 18"
-  }), /*#__PURE__*/React.createElement("path", {
-    d: "M28 10 L34 14 L30 20"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "6",
-    cy: "28",
-    r: "2",
-    fill: "currentColor",
-    stroke: "none"
-  }));
-},
-// 6 · Internal Tools — wrench / spanner
-function GlyphTool() {
-  return /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 40 40",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: "1.5",
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("path", {
-    d: "M27 10 a6 6 0 0 0 -3 11 L9 36 l4 -1 L28 20 a6 6 0 0 0 4 -10 l-3 3 -3 0 0 -3 z"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "13",
-    cy: "32",
-    r: "1",
-    fill: "currentColor",
-    stroke: "none"
-  }));
-},
-// 7 · Tech Consulting — question / dialog
-function GlyphChat() {
-  return /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 40 40",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: "1.5",
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("path", {
-    d: "M14 10 c-3 0 -6 2 -6 5 c0 2 1 4 3 5 v3 l3 -2 c2 1 4 1 6 0"
-  }), /*#__PURE__*/React.createElement("path", {
-    d: "M20 17 c0 -3 3 -5 7 -5 c4 0 7 2 7 5 c0 3 -2 5 -5 5 l-4 3 v-3 c-3 -1 -5 -3 -5 -5 z"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "27",
-    cy: "17",
-    r: "1",
-    fill: "currentColor",
-    stroke: "none"
-  }));
-}];
-function ServiceCard({
-  item,
-  index
+// Split "spec → prod app" into [input, output] on the arrow.
+function splitIo(io) {
+  const parts = String(io || "").split("→");
+  if (parts.length < 2) return {
+    in: "",
+    out: String(io || "").trim()
+  };
+  return {
+    in: parts[0].trim(),
+    out: parts.slice(1).join("→").trim()
+  };
+}
+
+// The io flow: INPUT ─token→ OUTPUT. Pure CSS motion; decorative (aria-hidden
+// on the rail/token), the words themselves are real, readable text.
+function ServiceIoFlow({
+  io
 }) {
-  const cardRef = useRef2(null);
-  const hoverKind = SERVICE_HOVER_KINDS[index % SERVICE_HOVER_KINDS.length];
-  const Glyph = SERVICE_GLYPHS[index % SERVICE_GLYPHS.length];
-  function onMouseMove(e) {
-    const el = cardRef.current;
-    if (!el || hoverKind !== "tilt-l" && hoverKind !== "tilt-r") return;
-    const r = el.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width - 0.5;
-    const y = (e.clientY - r.top) / r.height - 0.5;
-    const sign = hoverKind === "tilt-l" ? 1 : -1;
-    el.style.setProperty("--rx", `${(-y * 5 * sign).toFixed(2)}deg`);
-    el.style.setProperty("--ry", `${(x * 5 * sign).toFixed(2)}deg`);
-  }
-  function onMouseLeave() {
-    const el = cardRef.current;
-    if (!el) return;
-    el.style.setProperty("--rx", "0deg");
-    el.style.setProperty("--ry", "0deg");
-  }
-  return /*#__PURE__*/React.createElement("article", {
-    ref: cardRef,
-    className: `service-card card service-card--hover-${hoverKind}`,
-    "data-reveal": true,
-    "data-reveal-delay": (index * 0.04).toFixed(2),
-    onMouseMove: onMouseMove,
-    onMouseLeave: onMouseLeave
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "service-card-head"
+  const io2 = splitIo(io);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "svc-io",
+    "aria-label": `${io2.in} to ${io2.out}`
   }, /*#__PURE__*/React.createElement("span", {
-    className: "service-card-num mono"
-  }, "/", String(index + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("span", {
-    className: "service-card-badge mono"
-  }, item.io)), /*#__PURE__*/React.createElement("div", {
-    className: "service-card-glyph",
+    className: "svc-io-node svc-io-in"
+  }, io2.in), /*#__PURE__*/React.createElement("span", {
+    className: "svc-io-rail",
     "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement(Glyph, null)), /*#__PURE__*/React.createElement("h3", {
-    className: "service-card-k"
-  }, item.k), /*#__PURE__*/React.createElement("p", {
-    className: "service-card-v"
-  }, item.v));
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "svc-io-tok"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "svc-io-node svc-io-out"
+  }, io2.out));
 }
 function Services({
   t
 }) {
   const ref = useRevealRoot([t]);
+  const items = t.services && Array.isArray(t.services.items) ? t.services.items : [];
+  const projects = t.projects && Array.isArray(t.projects.items) ? t.projects.items : [];
+
+  // Desktop: selected tab. Mobile: which accordion row is open (-1 = none).
+  const [activeIdx, setActiveIdx] = useState2(0);
+  const [openIdx, setOpenIdx] = useState2(0);
+  const [isMobile, setIsMobile] = useState2(false);
+  const tabRefs = useRef2([]);
+  useEffect2(function watchLayout() {
+    if (typeof window.matchMedia !== "function") return undefined;
+    const mq = window.matchMedia("(max-width: 900px)");
+    const apply = function () {
+      setIsMobile(mq.matches);
+    };
+    apply();
+    if (mq.addEventListener) mq.addEventListener("change", apply);else if (mq.addListener) mq.addListener(apply);
+    return function () {
+      if (mq.removeEventListener) mq.removeEventListener("change", apply);else if (mq.removeListener) mq.removeListener(apply);
+    };
+  }, []);
+  function relatedFor(index) {
+    const name = SERVICE_RELATED[index];
+    if (!name) return null;
+    for (let i = 0; i < projects.length; i++) {
+      if (projects[i].name === name) return projects[i];
+    }
+    return null;
+  }
+
+  // Roving-tabindex keyboard nav for the desktop tablist.
+  function onTabKey(e, i) {
+    const last = items.length - 1;
+    let next = -1;
+    if (e.key === "ArrowDown" || e.key === "ArrowRight") next = i >= last ? 0 : i + 1;else if (e.key === "ArrowUp" || e.key === "ArrowLeft") next = i <= 0 ? last : i - 1;else if (e.key === "Home") next = 0;else if (e.key === "End") next = last;else return;
+    e.preventDefault();
+    setActiveIdx(next);
+    const el = tabRefs.current[next];
+    if (el && el.focus) el.focus();
+  }
+
+  // Shared details renderer (desktop panel + mobile accordion body).
+  function renderDetails(s, i) {
+    const rel = relatedFor(i);
+    return /*#__PURE__*/React.createElement("div", {
+      className: "svc-detail-inner"
+    }, /*#__PURE__*/React.createElement("p", {
+      className: "svc-detail-v"
+    }, s.v), /*#__PURE__*/React.createElement(ServiceIoFlow, {
+      io: s.io
+    }), rel ? /*#__PURE__*/React.createElement("a", {
+      className: "svc-related",
+      href: "#projects",
+      "data-cursor": "link",
+      "data-cursor-label": "open case"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "svc-related-eyebrow mono"
+    }, t.services.related_label || "related case"), /*#__PURE__*/React.createElement("span", {
+      className: "svc-related-name"
+    }, rel.name), /*#__PURE__*/React.createElement("span", {
+      className: "svc-related-meta mono"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "svc-related-tag"
+    }, rel.tag), rel.outcome ? /*#__PURE__*/React.createElement("span", {
+      className: "svc-related-out"
+    }, rel.outcome) : null), /*#__PURE__*/React.createElement("span", {
+      className: "svc-related-arrow",
+      "aria-hidden": "true"
+    }, "\u2197")) : null);
+  }
   return /*#__PURE__*/React.createElement("section", {
     "data-section": "services",
     id: "services",
+    "data-enter": "slide-left",
     ref: ref
   }, /*#__PURE__*/React.createElement("div", {
     className: "shell"
@@ -367,16 +161,107 @@ function Services({
     num: "05",
     eyebrow: t.services.eyebrow,
     title: t.services.title,
-    meta: `${t.services.items.length} services`
+    meta: `${items.length} services`
   }), /*#__PURE__*/React.createElement("div", {
-    className: "services-grid"
-  }, t.services.items.map(function renderService(s, i) {
-    return /*#__PURE__*/React.createElement(ServiceCard, {
+    className: `svc ${isMobile ? "is-acc" : "is-panel"}`,
+    "data-reveal": true
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "svc-list",
+    role: isMobile ? undefined : "tablist",
+    "aria-label": isMobile ? undefined : t.services.title,
+    "aria-orientation": isMobile ? undefined : "vertical"
+  }, items.map(function renderRow(s, i) {
+    const isActive = activeIdx === i;
+    const isOpen = openIdx === i;
+    if (isMobile) {
+      return /*#__PURE__*/React.createElement("div", {
+        key: i,
+        className: `svc-acc-row ${isOpen ? "is-open" : ""}`
+      }, /*#__PURE__*/React.createElement("h3", {
+        className: "svc-acc-h"
+      }, /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        className: "svc-acc-head",
+        "data-code": String(i + 1).padStart(2, "0"),
+        style: {
+          "--row-i": i,
+          "--row-total": Math.max(1, items.length - 1)
+        },
+        "aria-expanded": isOpen,
+        "aria-controls": `svc-acc-body-${i}`,
+        id: `svc-acc-head-${i}`,
+        onClick: () => setOpenIdx(isOpen ? -1 : i)
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "row-ghost",
+        "aria-hidden": "true"
+      }, String(i + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("span", {
+        className: "svc-num mono"
+      }, "/", String(i + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("span", {
+        className: "svc-k"
+      }, s.k), /*#__PURE__*/React.createElement("span", {
+        className: "svc-acc-chev",
+        "aria-hidden": "true"
+      }, isOpen ? "−" : "+"))), /*#__PURE__*/React.createElement("div", {
+        className: "svc-acc-body",
+        id: `svc-acc-body-${i}`,
+        role: "region",
+        "aria-labelledby": `svc-acc-head-${i}`,
+        hidden: !isOpen
+      }, renderDetails(s, i)));
+    }
+    return /*#__PURE__*/React.createElement("button", {
       key: i,
-      item: s,
-      index: i
-    });
-  }))));
+      type: "button",
+      role: "tab",
+      id: `svc-tab-${i}`,
+      "aria-selected": isActive,
+      "aria-controls": `svc-panel-${i}`,
+      tabIndex: isActive ? 0 : -1,
+      ref: el => {
+        tabRefs.current[i] = el;
+      },
+      className: `svc-tab ${isActive ? "is-active" : ""}`,
+      "data-code": String(i + 1).padStart(2, "0"),
+      style: {
+        "--row-i": i,
+        "--row-total": Math.max(1, items.length - 1)
+      },
+      onClick: () => setActiveIdx(i),
+      onKeyDown: e => onTabKey(e, i),
+      "data-cursor": "read"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "row-ghost",
+      "aria-hidden": "true"
+    }, String(i + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("span", {
+      className: "svc-num mono"
+    }, "/", String(i + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("span", {
+      className: "svc-k"
+    }, s.k), /*#__PURE__*/React.createElement("span", {
+      className: "svc-tab-io mono",
+      "aria-hidden": "true"
+    }, s.io), /*#__PURE__*/React.createElement("span", {
+      className: "svc-tab-mark",
+      "aria-hidden": "true"
+    }));
+  })), !isMobile ? /*#__PURE__*/React.createElement("div", {
+    className: "svc-panel-wrap"
+  }, items.map(function renderPanel(s, i) {
+    if (i !== activeIdx) return null;
+    return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      className: "svc-panel",
+      role: "tabpanel",
+      id: `svc-panel-${i}`,
+      "aria-labelledby": `svc-tab-${i}`,
+      tabIndex: 0
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "svc-panel-head"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "svc-panel-num mono"
+    }, "/", String(i + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("h3", {
+      className: "svc-panel-k"
+    }, s.k)), renderDetails(s, i));
+  })) : null)));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -427,6 +312,7 @@ function CV({
   return /*#__PURE__*/React.createElement("section", {
     "data-section": "cv",
     id: "cv",
+    "data-enter": "curtain",
     ref: ref
   }, /*#__PURE__*/React.createElement("div", {
     className: "shell"
@@ -473,7 +359,7 @@ function CV({
     className: "cv-id-l"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "cv-id-name",
-    "data-reveal-words": true
+    "data-reveal": true
   }, t.cv.id?.name || "Samandar"), /*#__PURE__*/React.createElement("p", {
     className: "cv-id-role"
   }, t.cv.id?.role || t.cv.lead), /*#__PURE__*/React.createElement("div", {
@@ -720,7 +606,7 @@ function ProcStage({
   return /*#__PURE__*/React.createElement("li", {
     ref: combinedRef,
     className: `proc-stage proc-stage--${state}`,
-    "data-reveal-delay": (index * 0.03).toFixed(2)
+    "data-reveal-delay": (index * 0.06).toFixed(2)
   }, /*#__PURE__*/React.createElement("span", {
     className: "proc-stage-gutter mono"
   }, String(index + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("div", {
@@ -806,15 +692,17 @@ function Process({
     };
   }, [t]);
 
-  // v52: replaced ProjectEstimator (felt commercial) with CursorConstellation
-  // — non-commercial, "залипательный" interactive canvas. Pure delight,
-  // no funnel. Visitor's cursor leaves a trail of glowing particles that
-  // gravitate + connect.
+  // v61: Stack Radar — the constellation now carries SIGNAL, not noise. Nodes
+  // are the real stack technologies grouped by the six real domains; clicking a
+  // node surfaces the actual projects that use it (matched against each
+  // project's declared stack — no invented links). Data flows in from content.
   useEffect2(function mountConstellation() {
     if (!pgRef.current || !window.CursorConstellation) return undefined;
     const langGuess = typeof t === "object" && t && t.lang ? t.lang : "ru";
     pgCtrlRef.current = window.CursorConstellation.create(pgRef.current, {
-      lang: langGuess
+      lang: langGuess,
+      groups: t.skills && Array.isArray(t.skills.groups) ? t.skills.groups : null,
+      projects: t.projects && Array.isArray(t.projects.items) ? t.projects.items : null
     });
     return function () {
       if (pgCtrlRef.current && pgCtrlRef.current.dispose) pgCtrlRef.current.dispose();
@@ -829,6 +717,7 @@ function Process({
   return /*#__PURE__*/React.createElement("section", {
     "data-section": "process",
     id: "process",
+    "data-enter": "line-stagger",
     ref: ref
   }, /*#__PURE__*/React.createElement("div", {
     className: "shell"
@@ -896,11 +785,13 @@ function Process({
 // ─────────────────────────────────────────────────────────────────────────────
 // TRUST — testimonials
 // ─────────────────────────────────────────────────────────────────────────────
-// Trust signals — aggregate stats shown above the testimonial wall. We don't
-// fabricate ratings; the numbers are derived from the testimonial dataset so
-// they always match what the visitor can actually read on the cards.
-const TRUST_STAR_GLYPH = "★";
-const TRUST_STAR_COUNT = 5;
+// Honesty rule: every number in this section must be traceable to the actual
+// dataset below, or explicitly labeled as illustrative. No star ratings, no
+// "verified" badges, no on-time percentages — none of that is measured yet.
+// When real client quotes replace the placeholders, this same strip keeps
+// working (totalQuotes/uniqueRoles recompute) and the "illustrative" note
+// can be deleted in one place (t.trust.note).
+
 function Trust({
   t
 }) {
@@ -916,9 +807,19 @@ function Trust({
     }
     return seen.size;
   }();
+  const years = function spanYears() {
+    const seen = new Set();
+    for (let i = 0; i < items.length; i++) {
+      const m = (items[i].role || "").match(/(20\d\d)/);
+      if (m) seen.add(m[1]);
+    }
+    return Array.from(seen).sort();
+  }();
+  const yearLabel = years.length >= 2 ? `${years[0]}–${years[years.length - 1]}` : years[0] || "";
   return /*#__PURE__*/React.createElement("section", {
     "data-section": "trust",
     id: "trust",
+    "data-enter": "slide-right",
     ref: ref
   }, /*#__PURE__*/React.createElement("div", {
     className: "shell"
@@ -935,61 +836,36 @@ function Trust({
     "data-reveal": true
   }, /*#__PURE__*/React.createElement("div", {
     className: "trust-strip-cell"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "trust-strip-stars",
-    "aria-label": "rating 5 out of 5"
-  }, Array.from({
-    length: TRUST_STAR_COUNT
-  }).map((_, i) => /*#__PURE__*/React.createElement("span", {
-    key: i,
-    className: "trust-strip-star"
-  }, TRUST_STAR_GLYPH))), /*#__PURE__*/React.createElement("span", {
-    className: "trust-strip-val"
-  }, "5.0 / 5")), /*#__PURE__*/React.createElement("div", {
-    className: "trust-strip-cell"
   }, /*#__PURE__*/React.createElement("span", {
     className: "trust-strip-val"
   }, totalQuotes), /*#__PURE__*/React.createElement("span", {
     className: "trust-strip-k mono"
-  }, "quotes")), /*#__PURE__*/React.createElement("div", {
+  }, t.trust.kQuotes || "quotes")), /*#__PURE__*/React.createElement("div", {
     className: "trust-strip-cell"
   }, /*#__PURE__*/React.createElement("span", {
     className: "trust-strip-val"
   }, uniqueRoles), /*#__PURE__*/React.createElement("span", {
     className: "trust-strip-k mono"
-  }, "roles")), /*#__PURE__*/React.createElement("div", {
+  }, t.trust.kRoles || "roles")), yearLabel ? /*#__PURE__*/React.createElement("div", {
     className: "trust-strip-cell"
   }, /*#__PURE__*/React.createElement("span", {
     className: "trust-strip-val"
-  }, "100%"), /*#__PURE__*/React.createElement("span", {
+  }, yearLabel), /*#__PURE__*/React.createElement("span", {
     className: "trust-strip-k mono"
-  }, "on-time"))), /*#__PURE__*/React.createElement("div", {
+  }, t.trust.kSpan || "span")) : null, t.trust.note ? /*#__PURE__*/React.createElement("div", {
+    className: "trust-strip-cell trust-strip-note"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "trust-strip-flag mono"
+  }, t.trust.note)) : null), /*#__PURE__*/React.createElement("div", {
     className: "trust-grid"
   }, items.map(function renderTrust(it, i) {
     return /*#__PURE__*/React.createElement("figure", {
       key: i,
       className: "trust-card",
       "data-reveal": true,
+      "data-reveal-from": "translateY(20px) scale(.98)",
       "data-reveal-delay": (i * 0.08).toFixed(2)
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "trust-verified",
-      "aria-label": "verified",
-      title: "verified"
-    }, /*#__PURE__*/React.createElement("svg", {
-      viewBox: "0 0 16 16",
-      width: "14",
-      height: "14",
-      fill: "none",
-      stroke: "currentColor",
-      strokeWidth: "2",
-      strokeLinecap: "round",
-      strokeLinejoin: "round",
-      "aria-hidden": "true"
-    }, /*#__PURE__*/React.createElement("path", {
-      d: "M2 9 L6 13 L14 4"
-    })), /*#__PURE__*/React.createElement("span", {
-      className: "mono"
-    }, "verified")), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       className: "trust-quote-mark",
       "aria-hidden": "true"
     }, "\""), /*#__PURE__*/React.createElement("blockquote", {
@@ -1007,29 +883,28 @@ function Trust({
       className: "trust-who"
     }, it.who), /*#__PURE__*/React.createElement("div", {
       className: "trust-role mono"
-    }, it.role)), /*#__PURE__*/React.createElement("div", {
-      className: "trust-stars",
-      "aria-label": "5 stars"
-    }, Array.from({
-      length: TRUST_STAR_COUNT
-    }).map(function (_, k) {
-      return /*#__PURE__*/React.createElement("span", {
-        key: k,
-        className: "trust-star"
-      }, TRUST_STAR_GLYPH);
-    }))));
+    }, it.role))));
   }))));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONTACT
 // ─────────────────────────────────────────────────────────────────────────────
+// Contact form delivery endpoint. Create a free form at https://formspree.io
+// and replace YOUR_FORM_ID with the real id (e.g. "xeozabcd"). Until then the
+// form runs in "demo" mode — it shows an optimistic success WITHOUT actually
+// sending, so the UI is never broken while the endpoint is unconfigured.
+const CONTACT_FORM_ENDPOINT = "https://formspree.io/f/YOUR_FORM_ID";
+const FORM_ENDPOINT_CONFIGURED = CONTACT_FORM_ENDPOINT.indexOf("YOUR_FORM_ID") === -1;
+const CONTACT_FETCH_TIMEOUT_MS = 12000;
 function Contact({
   t,
   links
 }) {
   const ref = useRevealRoot([t]);
   const [sent, setSent] = useState2(false);
+  const [sending, setSending] = useState2(false);
+  const [errorMsg, setErrorMsg] = useState2("");
   // Multi-select chips for project scope — a single dropdown was hiding the
   // breadth of services. Chips let the visitor click as many as apply, which
   // also reveals the available service categories at a glance.
@@ -1057,22 +932,21 @@ function Contact({
   // looked broken — the success message overlay didn't visually consume
   // the form below it.
   const SENT_HIDE_DELAY_MS = 4500;
-  function onSubmit(e) {
-    e.preventDefault();
-    const formEl = e.currentTarget;
+  const FORM_ERROR_FALLBACK = t.contact.form && t.contact.form.error || "Не удалось отправить — напишите в Telegram.";
+
+  // Mark sent + wipe the form (native fields + React-controlled chips/slider).
+  function finishSent(formEl) {
     setSent(true);
     if (typeof navigator !== "undefined" && navigator.vibrate) {
       try {
         navigator.vibrate(14);
       } catch (err) {/* opportunistic */}
     }
-    // Native fields — name/email/textarea.
     try {
       formEl.reset();
     } catch (err) {
       console.warn("[Contact] form.reset failed:", err && err.message);
     }
-    // React-controlled state — chips, slider, timeline.
     setScopeSet(new Set());
     setBudgetIdx(1);
     setTimelineIdx(3);
@@ -1080,9 +954,62 @@ function Contact({
       setSent(false);
     }, SENT_HIDE_DELAY_MS);
   }
+  function onSubmit(e) {
+    e.preventDefault();
+    const formEl = e.currentTarget;
+    setErrorMsg("");
+
+    // Collect native fields (name/email/message via their `name=` attrs) plus
+    // the React-controlled selections that aren't native inputs.
+    const fd = new FormData(formEl);
+    fd.append("scope", Array.from(scopeSet).join(", "));
+    fd.append("budget", BUDGET_BUCKETS[budgetIdx]);
+    fd.append("timeline", TIMELINE_OPTS[timelineIdx]);
+
+    // Demo mode (endpoint not configured) — optimistic success, no network.
+    if (!FORM_ENDPOINT_CONFIGURED) {
+      finishSent(formEl);
+      return;
+    }
+
+    // Real delivery via Formspree — with a hard timeout so a hung network
+    // can't leave the button stuck in "sending" forever (R-02).
+    setSending(true);
+    const controller = "AbortController" in window ? new AbortController() : null;
+    const timeoutId = window.setTimeout(function () {
+      if (controller) controller.abort();
+    }, CONTACT_FETCH_TIMEOUT_MS);
+    const opts = {
+      method: "POST",
+      body: fd,
+      headers: {
+        "Accept": "application/json"
+      }
+    };
+    if (controller) opts.signal = controller.signal;
+    fetch(CONTACT_FORM_ENDPOINT, opts).then(function (res) {
+      window.clearTimeout(timeoutId);
+      setSending(false);
+      if (res.ok) {
+        finishSent(formEl);
+        return undefined;
+      }
+      return res.json().catch(function () {
+        return null;
+      }).then(function (data) {
+        setErrorMsg(data && data.error || FORM_ERROR_FALLBACK);
+      });
+    }).catch(function (err) {
+      window.clearTimeout(timeoutId);
+      setSending(false);
+      console.warn("[Contact] submit failed:", err && err.message);
+      setErrorMsg(FORM_ERROR_FALLBACK);
+    });
+  }
   return /*#__PURE__*/React.createElement("section", {
     "data-section": "contact",
     id: "contact",
+    "data-enter": "rise-bright",
     ref: ref
   }, /*#__PURE__*/React.createElement("div", {
     className: "shell"
@@ -1109,6 +1036,7 @@ function Contact({
     className: "ff-k mono"
   }, t.contact.form.name), /*#__PURE__*/React.createElement("input", {
     type: "text",
+    name: "name",
     required: true,
     className: "ff-input",
     autoComplete: "name"
@@ -1118,6 +1046,7 @@ function Contact({
     className: "ff-k mono"
   }, t.contact.form.email), /*#__PURE__*/React.createElement("input", {
     type: "text",
+    name: "email",
     required: true,
     className: "ff-input",
     autoComplete: "email"
@@ -1196,15 +1125,19 @@ function Contact({
   }, /*#__PURE__*/React.createElement("span", {
     className: "ff-k mono"
   }, t.contact.form.msg), /*#__PURE__*/React.createElement("textarea", {
+    name: "message",
     required: true,
     rows: "4",
     className: "ff-input ff-textarea",
     placeholder: t.contact.form.msg_placeholder || ""
-  })), /*#__PURE__*/React.createElement("button", {
+  })), errorMsg ? /*#__PURE__*/React.createElement("div", {
+    className: "contact-form-error mono",
+    role: "alert"
+  }, errorMsg) : null, /*#__PURE__*/React.createElement("button", {
     type: "submit",
     className: `btn btn-primary contact-submit ${sent ? "is-sent" : ""}`,
-    disabled: sent
-  }, /*#__PURE__*/React.createElement("span", null, sent ? t.contact.form.sent : t.contact.form.submit), /*#__PURE__*/React.createElement("span", {
+    disabled: sent || sending
+  }, /*#__PURE__*/React.createElement("span", null, sending ? t.contact.form.sending || "Отправка…" : sent ? t.contact.form.sent : t.contact.form.submit), /*#__PURE__*/React.createElement("span", {
     className: "arrow"
   }, sent ? "✓" : "→"))), /*#__PURE__*/React.createElement("aside", {
     className: "contact-side",

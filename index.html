@@ -4,8 +4,70 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#1F1E1B" />
-  <title>Samandar — Executive AI Code Lab</title>
-  <meta name="description" content="Full-stack Developer · AI Automation · Product Engineer. Production-grade web apps, AI workflows, Telegram bots, and admin systems." />
+
+  <!-- Intro curtain: paint a solid panel over the page on frame 0 so there is
+       no flash of hero before the "Полёт к станции" intro. The heavy canvas
+       timeline is run later by src/engine/intro.js — LCP text (h1/CTA) still
+       renders underneath (occluded, not delayed: the element IS painted, the
+       LCP timestamp is unaffected by being visually covered for ~2.4s). -->
+  <script>
+  (function () {
+    try {
+      var seen = sessionStorage.getItem("sm_intro_seen");
+      if (seen) return; // repeat nav in this session → no intro
+      var mm = window.matchMedia;
+      var reduced = mm && mm("(prefers-reduced-motion: reduce)").matches;
+      // Inline tier heuristic — themes.js (getDeviceTier) hasn't loaded yet at
+      // this point, so this duplicates its thresholds (cores<=4 || mem<=4).
+      // Keep in sync with src/engine/themes.js DEVICE_TIER_*_THRESHOLD.
+      var cores = (navigator.hardwareConcurrency | 0) || 8;
+      var mem = (typeof navigator.deviceMemory === "number") ? navigator.deviceMemory : 8;
+      var lowTier = cores <= 4 || mem <= 4;
+      sessionStorage.setItem("sm_intro_seen", "1");
+      var panel = document.createElement("div");
+      panel.id = "sm-intro";
+      panel.setAttribute("aria-hidden", "true");
+      panel.style.cssText =
+        "position:fixed;inset:0;z-index:2147483000;background:#1F1E1B;pointer-events:auto;contain:strict;";
+      window.__SM_INTRO = { mode: (reduced || lowTier) ? "fade" : "full", panel: panel };
+      document.documentElement.appendChild(panel);
+      // Safety net: if intro.js never runs (blocked/slow script), self-clear
+      // after 3.2s so the page is never permanently curtained.
+      window.__SM_INTRO.safety = setTimeout(function () {
+        if (panel && panel.parentNode) {
+          panel.style.transition = "opacity .4s";
+          panel.style.opacity = "0";
+          setTimeout(function () { panel.remove(); }, 420);
+        }
+      }, 3200);
+    } catch (e) { /* sessionStorage blocked → just skip the intro entirely */ }
+  })();
+  </script>
+
+  <title>Samandar — Full-Stack &amp; AI Automation Engineer</title>
+  <meta name="description" content="Senior full-cycle developer: production web apps, AI automation, Telegram bots, and admin systems — design, code, and deploy, end to end." />
+  <meta name="author" content="Samandar" />
+
+  <!-- Favicon (SVG, scales crisply at any size) -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="apple-touch-icon" href="favicon.svg" />
+
+  <!-- Open Graph — controls the link preview on Telegram / LinkedIn / etc.
+       NOTE: og:image should be a real 1200×630 PNG. favicon.svg is a stopgap;
+       replace `og-image.png` with a branded share card for best results. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Samandar — Executive AI Code Lab" />
+  <meta property="og:title" content="Samandar — Full-Stack &amp; AI Automation Engineer" />
+  <meta property="og:description" content="Production web apps, AI automation, Telegram bots, and admin systems — design, code, and deploy, end to end." />
+  <meta property="og:image" content="og-image.png" />
+  <meta property="og:locale" content="ru_RU" />
+  <meta property="og:locale:alternate" content="en_US" />
+
+  <!-- Twitter / X card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Samandar — Full-Stack &amp; AI Automation Engineer" />
+  <meta name="twitter:description" content="Production web apps, AI automation, Telegram bots — design, code, deploy." />
+  <meta name="twitter:image" content="og-image.png" />
 
   <!-- Fonts: Geist (display) + Inter (body) + JetBrains Mono (code) + Instrument Serif (em accents) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -15,6 +77,11 @@
   <!-- Pre-warm the Spline runtime + scene CDN so the robot pops in faster -->
   <link rel="preconnect" href="https://unpkg.com" crossorigin />
   <link rel="preconnect" href="https://prod.spline.design" crossorigin />
+
+  <!-- The intro's iris opens onto the hero photo — preload it so the porthole
+       reveals a decoded image, not a late-arriving blank. Desktop only; mobile
+       uses orbital-station.webp (much smaller, arrives well within 2.4s). -->
+  <link rel="preload" as="image" href="assets/hero-cockpit.webp" fetchpriority="high" media="(min-width: 901px)" />
 
   <!-- ════════════════════════════════════════════════════════════════════
        v51 — restructured paths. All app code lives under src/:
@@ -28,11 +95,11 @@
        ═══════════════════════════════════════════════════════════════════ -->
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="src/styles/styles.css?v=55" />
-  <link rel="stylesheet" href="src/styles/sections.css?v=55" />
-  <link rel="stylesheet" href="src/styles/cursor.css?v=55" />
-  <link rel="stylesheet" href="src/styles/cv-doc.css?v=55" />
-  <link rel="stylesheet" href="src/styles/features.css?v=55" />
+  <link rel="stylesheet" href="src/styles/styles.css?v=88" />
+  <link rel="stylesheet" href="src/styles/sections.css?v=88" />
+  <link rel="stylesheet" href="src/styles/cursor.css?v=88" />
+  <link rel="stylesheet" href="src/styles/cv-doc.css?v=88" />
+  <link rel="stylesheet" href="src/styles/features.css?v=88" />
 
   <!-- Three.js r128 -->
   <script src="vendor/three.min.js"></script>
@@ -47,30 +114,34 @@
   <div id="root"></div>
 
   <!-- Content + i18n -->
-  <script src="src/content/content.js?v=55"></script>
+  <script src="src/content/content.js?v=88"></script>
 
-  <!-- Engine: theming, theme transition, motion observers, background WebGL,
-       view transitions. (scene-engine.js removed in v55 — it was never
-       instantiated, ~48 KB of dead weight.) -->
-  <script src="src/engine/themes.js?v=55"></script>
-  <script src="src/engine/theme-transition.js?v=55"></script>
-  <script src="src/engine/motion.js?v=55"></script>
-  <script src="src/engine/bg-fx.js?v=55"></script>
-  <script src="src/engine/scene-cinema.js?v=55"></script>
+  <!-- Intro timeline — consumes window.__SM_INTRO stashed by the head-boot
+       script above. Loads before the other engine scripts so it can start
+       its rAF loop as early as possible; it needs no content/theme state. -->
+  <script src="src/engine/intro.js?v=88"></script>
+
+  <!-- Engine: theming, motion observers, background WebGL, view transitions.
+       (v56 — single Ember theme; theme-transition.js + the multi-theme
+       switcher removed.) -->
+  <script src="src/engine/themes.js?v=88"></script>
+  <script src="src/engine/motion.js?v=88"></script>
+  <script src="src/engine/bg-fx.js?v=88"></script>
+  <script src="src/engine/scene-cinema.js?v=88"></script>
 
   <!-- Robot: Spline runtime + hand-built fallback -->
-  <script src="src/robot/robot.js?v=55"></script>
-  <script src="src/robot/robot-spline.js?v=55"></script>
+  <script src="src/robot/robot.js?v=88"></script>
+  <script src="src/robot/robot-spline.js?v=88"></script>
 
   <!-- Interactive widgets: cursor constellation playground + system.live CLI cinema -->
-  <script src="src/widgets/cursor-constellation.js?v=55"></script>
-  <script src="src/widgets/cli-cinema.js?v=55"></script>
+  <script src="src/widgets/cursor-constellation.js?v=88"></script>
+  <script src="src/widgets/cli-cinema.js?v=88"></script>
 
   <!-- Components + app — PRE-COMPILED plain JS (generated by build.js from
        the .jsx sources). After editing any .jsx, run `node build.js`. -->
-  <script src="src/components/tweaks-panel.js?v=55"></script>
-  <script src="src/components/components-1.js?v=55"></script>
-  <script src="src/components/components-2.js?v=55"></script>
-  <script src="src/components/app.js?v=55"></script>
+  <script src="src/components/tweaks-panel.js?v=88"></script>
+  <script src="src/components/components-1.js?v=88"></script>
+  <script src="src/components/components-2.js?v=88"></script>
+  <script src="src/components/app.js?v=88"></script>
 </body>
 </html>

@@ -27,6 +27,22 @@
     padding: 0 !important;
   }
 
+  /* content-visibility:auto on sections (features.css) can drop an off-screen
+     section from the print snapshot → a blank/partial CV PDF when the user
+     prints with the CV scrolled out of view. Force EVERY section to fully lay
+     out + paint for print, and neutralise any pinned-overlap sticky/transform
+     so the CV prints in normal document flow. */
+  section[data-section] {
+    content-visibility: visible !important;
+    contain-intrinsic-size: auto !important;
+    contain: none !important;
+  }
+  .pin-host, .pin-inner, .pin-over, .pin-under {
+    position: static !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
   body * {
     visibility: hidden !important;
   }
@@ -173,7 +189,10 @@
     opacity: 1 !important;
     padding: 4px 0 10px 100px !important;
     animation: none !important;
+    transition: none !important;
+    transform: none !important;
     height: auto !important;
+    max-height: none !important;   /* defends against the Phase-5 accordion max-height animation clipping print */
     overflow: visible !important;
   }
   .cv-role-chev { display: none !important; }
@@ -243,17 +262,55 @@
     display: flex !important;
     justify-content: space-between !important;
   }
+
+  /* Decorative timeline rail — omit from the printed resume. */
+  .cv-roles::before { display: none !important; }
+
+  /* Verifiable links as footnotes — a paper/PDF resume must expose URLs.
+     Print the href after external links; suppress for in-page + mailto. */
+  .cv-doc a[href^="http"]::after {
+    content: " (" attr(href) ")" !important;
+    font-size: 8.5px !important;
+    color: #777 !important;
+    word-break: break-all !important;
+  }
+  .cv-doc a[href^="#"]::after,
+  .cv-doc a[href^="mailto:"]::after { content: "" !important; }
+
+  /* Deterministic monospace for code chips in the PDF. */
+  .cv-chip {
+    font-family: "SFMono-Regular", Consolas, "JetBrains Mono", monospace !important;
+  }
+
+  /* Page numbers, bottom-right (progressive enhancement — engines that
+     don't support @page margin boxes simply omit it). */
+  @page {
+    @bottom-right { content: "Page " counter(page) " / " counter(pages); }
+  }
 }
 
 /* ════════════════════════════════════════════════════════════
    CV — Real resume document
    ════════════════════════════════════════════════════════════ */
 .cv-doc {
+  position: relative;
   margin-top: 32px;
   background: linear-gradient(180deg, rgba(15,18,22,0.7), rgba(11,14,17,0.85));
   border: 1px solid var(--line-strong, rgba(244,241,234,0.12));
   border-radius: 14px;
   overflow: hidden;
+  box-shadow: 0 30px 80px -40px rgba(0,0,0,0.6);
+}
+/* Thin warm accent line framing the very top of the document — reads as a
+   premium letterhead edge. */
+.cv-doc::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(var(--accent-rgb) / 0.55), transparent);
+  pointer-events: none;
+  z-index: 3;
 }
 
 .cv-doc-head {
@@ -276,7 +333,8 @@
 }
 .cv-doc-tab.is-active {
   color: var(--text, #f4f1ea);
-  border-bottom-color: var(--accent, #B8FF3D);
+  font-weight: 500;
+  border-bottom-color: var(--accent, #D97757);
   background: rgba(244,241,234,0.03);
 }
 .cv-doc-actions { display: flex; gap: 6px; }
@@ -293,7 +351,7 @@
   cursor: pointer;
   transition: color .2s, border-color .2s, background .2s;
 }
-.cv-action:hover { color: var(--accent, #B8FF3D); border-color: rgba(184,255,61,0.35); }
+.cv-action:hover { color: var(--accent, #D97757); border-color: rgba(var(--accent-rgb) / 0.4); background: rgba(var(--accent-rgb) / 0.04); }
 .cv-action-ico { color: rgba(244,241,234,0.4); font-size: 10px; }
 
 /* Identity strip */
@@ -315,11 +373,11 @@
   font-weight: 400;
 }
 .cv-id-role {
-  font-size: 15px;
-  color: rgba(244,241,234,0.7);
-  margin: 0 0 14px;
-  max-width: 48ch;
-  line-height: 1.5;
+  font-size: 15.5px;
+  color: rgba(244,241,234,0.78);
+  margin: 0 0 16px;
+  max-width: 50ch;
+  line-height: 1.55;
 }
 .cv-id-meta {
   display: flex; gap: 8px;
@@ -351,7 +409,7 @@
   font-family: var(--f-display, "Instrument Serif", serif);
   font-size: 22px;
   letter-spacing: -0.015em;
-  color: var(--accent, #B8FF3D);
+  color: var(--accent, #D97757);
   margin: 0;
   line-height: 1;
 }
@@ -377,7 +435,7 @@
 }
 .cv-block-h::before {
   content: ""; width: 6px; height: 6px;
-  background: var(--accent, #B8FF3D); border-radius: 1px;
+  background: var(--accent, #D97757); border-radius: 1px;
 }
 
 /* Roles list */
@@ -386,6 +444,30 @@
   padding: 0; margin: 0;
   display: flex; flex-direction: column;
   gap: 4px;
+  position: relative;
+}
+/* Timeline rail — a thin accent line down the year gutter that "draws in"
+   (scaleY 0→1) the first time the section renders. Because the CV section is
+   content-visibility:auto, first render happens when it scrolls into view, so
+   this animation doubles as a scroll-reveal with zero JS. */
+.cv-roles::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: linear-gradient(180deg,
+    var(--accent, #D97757) 0%,
+    rgba(var(--accent-rgb) / 0.15) 100%);
+  transform: scaleY(0);
+  transform-origin: top;
+  animation: cvRailDraw 1.1s var(--e-entrance, cubic-bezier(.2,.6,.18,1)) .15s both;
+  pointer-events: none;
+}
+@keyframes cvRailDraw { to { transform: scaleY(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .cv-roles::before { animation: none; transform: scaleY(1); }
 }
 .cv-role {
   border-bottom: 1px solid var(--line, rgba(244,241,234,0.07));
@@ -406,14 +488,14 @@
   transition: background .25s ease, padding .25s ease;
 }
 .cv-role-head:hover { background: rgba(244,241,234,0.025); }
-.cv-role.is-open .cv-role-head { background: rgba(184,255,61,0.04); }
+.cv-role.is-open .cv-role-head { background: rgba(var(--accent-rgb) / 0.045); }
 
 .cv-role-y {
   font-size: 11px;
   letter-spacing: 0.06em;
   color: rgba(244,241,234,0.45);
 }
-.cv-role.is-open .cv-role-y { color: var(--accent, #B8FF3D); }
+.cv-role.is-open .cv-role-y { color: var(--accent, #D97757); }
 .cv-role-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .cv-role-title {
   font-family: var(--f-display, "Instrument Serif", serif);
@@ -436,14 +518,14 @@
   color: rgba(244,241,234,0.55);
   align-self: center;
 }
-.cv-role.is-open .cv-role-tag { border-color: rgba(184,255,61,0.3); color: var(--accent, #B8FF3D); }
+.cv-role.is-open .cv-role-tag { border-color: rgba(var(--accent-rgb) / 0.3); color: var(--accent, #D97757); background: rgba(var(--accent-rgb) / 0.04); }
 .cv-role-chev {
   font-family: var(--f-mono, monospace);
   font-size: 16px;
   color: rgba(244,241,234,0.4);
   width: 18px; text-align: center;
 }
-.cv-role.is-open .cv-role-chev { color: var(--accent, #B8FF3D); }
+.cv-role.is-open .cv-role-chev { color: var(--accent, #D97757); }
 
 .cv-role-body {
   padding: 4px 4px 24px 126px;
@@ -467,7 +549,7 @@
   content: "›";
   position: absolute;
   left: 0; top: 0;
-  color: var(--accent, #B8FF3D);
+  color: var(--accent, #D97757);
   font-family: var(--f-mono, monospace);
 }
 
@@ -507,7 +589,7 @@
 }
 .cv-strengths li:last-child { border-bottom: 0; }
 .cv-bullet-mark {
-  color: var(--accent, #B8FF3D);
+  color: var(--accent, #D97757);
   font-family: var(--f-mono, monospace);
   flex-shrink: 0;
 }
@@ -532,7 +614,7 @@
 .cv-lang-bar-fill {
   display: block;
   height: 100%;
-  background: var(--accent, #B8FF3D);
+  background: var(--accent, #D97757);
   border-radius: 2px;
   transform-origin: left;
   animation: barIn 1.2s cubic-bezier(.2,.7,.2,1) both;
@@ -561,6 +643,14 @@
   .cv-role-head { grid-template-columns: 1fr auto; gap: 10px; padding: 16px 0; }
   .cv-role-y { grid-column: 1 / -1; }
   .cv-role-tag { display: none; }
+  /* The timeline rail (.cv-roles::before) is drawn at left:4px, sized for the
+     desktop 110px year-gutter column (padding:18px 4px keeps text clear of
+     it). On mobile the head's left padding drops to 0 and the year becomes a
+     full-width row starting at x:0, so the rail was drawn straight through
+     the year's first character(s) — a real visual bug, not just a nitpick. It
+     only made sense as a gutter marker for the desktop column layout, so it's
+     simplest to just not draw it once the year stops being a slim gutter. */
+  .cv-roles::before { display: none; }
   .cv-role-body { padding: 4px 0 18px; }
   .cv-doc-foot { flex-direction: column; gap: 4px; padding: 12px 18px; }
 }

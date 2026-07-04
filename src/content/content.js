@@ -294,6 +294,14 @@ const CONTENT = {
       eyebrow: "Trust",
       title: "Отзывы команд",
       lead: "Что говорят те, с кем я уже работал.",
+      // Placeholder phase: quotes below are illustrative (see note), not yet
+      // real client testimonials. kQuotes/kRoles/kSpan label the strip's
+      // genuinely-derived counts; note is the honest flag shown alongside
+      // them. Delete `note` once real quotes replace the placeholders.
+      kQuotes: "цитаты",
+      kRoles: "роли",
+      kSpan: "период",
+      note: "иллюстративно — реальные отзывы скоро",
       items: [
         {
           q: "Принёс архитектурный черновик к первой встрече. Через месяц у нас работала первая версия — без скоупа, который раздулся бы у любого подрядчика.",
@@ -325,7 +333,9 @@ const CONTENT = {
         msg: "Что важно знать",
         msg_placeholder: "Цель, контекст, ограничения. Можно как угодно кратко.",
         submit: "Отправить запрос",
+        sending: "Отправляю…",
         sent: "Запрос принят. На связи в течение 24 часов.",
+        error: "Не удалось отправить. Напишите в Telegram — отвечу быстрее.",
       },
       scope_opts: ["Web App / MVP", "AI Automation", "Telegram Bot", "Dashboard / CRM", "Landing", "Consulting"],
       timeline_opts: ["ASAP", "1–2 недели", "1–2 месяца", "гибко"],
@@ -623,6 +633,10 @@ const CONTENT = {
       eyebrow: "Trust",
       title: "What teams say",
       lead: "From people I've worked with.",
+      kQuotes: "quotes",
+      kRoles: "roles",
+      kSpan: "span",
+      note: "illustrative — real quotes coming soon",
       items: [
         {
           q: "Brought an architecture draft to our first call. A month later we had a working version — no scope creep, which any other vendor would have given us.",
@@ -654,7 +668,9 @@ const CONTENT = {
         msg: "What I should know",
         msg_placeholder: "Goal, context, constraints. As short as you like.",
         submit: "Send request",
+        sending: "Sending…",
         sent: "Request received. I'll reply within 24 hours.",
+        error: "Couldn't send. Message me on Telegram — I reply faster there.",
       },
       scope_opts: ["Web App / MVP", "AI Automation", "Telegram Bot", "Dashboard / CRM", "Landing", "Consulting"],
       timeline_opts: ["ASAP", "1–2 weeks", "1–2 months", "flexible"],
@@ -949,6 +965,10 @@ const CONTENT = {
       eyebrow: "Trust",
       title: "Jamoalar nima deydi",
       lead: "Birga ishlagan odamlardan.",
+      kQuotes: "iqtiboslar",
+      kRoles: "rollar",
+      kSpan: "davr",
+      note: "illyustrativ — haqiqiy fikrlar tez orada",
       items: [
         {
           q: "Birinchi uchrashuvga arxitektura qoralamasini olib keldi. Bir oydan keyin birinchi versiya ishlay boshladi — boshqa pudratchi shishirib yuborgan qamrovsiz.",
@@ -980,7 +1000,9 @@ const CONTENT = {
         msg: "Nima muhim",
         msg_placeholder: "Maqsad, kontekst, cheklovlar. Iloji boricha qisqa.",
         submit: "So'rovni yuborish",
+        sending: "Yuborilmoqda…",
         sent: "So'rov qabul qilindi. 24 soat ichida bog'lanaman.",
+        error: "Yuborib bo'lmadi. Telegram'ga yozing — tezroq javob beraman.",
       },
       scope_opts: ["Web App / MVP", "AI Avtomatlashtirish", "Telegram Bot", "Dashboard / CRM", "Landing", "Konsalting"],
       timeline_opts: ["ASAP", "1–2 hafta", "1–2 oy", "moslashuvchan"],

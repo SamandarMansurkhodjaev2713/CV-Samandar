@@ -61,6 +61,15 @@ function Hero({ t, links }) {
   //      resolves), assume the load is wedged and force the legacy robot.
   //      This MUST be generous enough that a normal load on slow 3G still
   //      wins — Spline's .splinecode bundles are 1–3 MB.
+  //   4. A decisive failure (`__splineRobotFailed`, e.g. a blocked/erroring
+  //      request) gets ONE fast retry — cheap insurance against a transient
+  //      network blip. An ambiguous silent-hang (the watchdog firing with
+  //      neither flag set) does NOT retry, since doubling a 12s wait for a
+  //      case that's already ambiguous is a worse trade than just showing
+  //      the legacy robot. If Spline is blocked outright (e.g. an ad-blocker
+  //      extension blocking unpkg.com/prod.spline.design), retrying the same
+  //      URL fails the same way — no client-side logic can force that
+  //      through; this only helps genuinely transient failures.
   // The split keeps the page robust against blocked CDNs / offline / 4xx
   // WITHOUT killing a successful-but-slow Spline load.
   useEffect(() => {
@@ -71,18 +80,25 @@ function Hero({ t, links }) {
     const a2 = rootStyles.getPropertyValue("--accent-2").trim() || "#C89B5E";
     // 12s watchdog: covers slow 3G + first-paint blocking on cold caches.
     // The previous 3.5s value was too aggressive and was killing successful
-    // loads on mid-range mobile.
+    // loads on mid-range mobile. The retry attempt gets a shorter watchdog
+    // (8s) since a second cold 3G load is unlikely — this caps the worst-case
+    // total wait instead of doubling it.
     const ROBOT_FALLBACK_MS = 12000;
+    const ROBOT_RETRY_FALLBACK_MS = 8000;
     const ROBOT_POLL_MS = 400;
+    const ROBOT_RETRY_DELAY_MS = 600;
 
     let active = null;
     let fallbackTimer = 0;
     let pollTimer = 0;
+    let retryTimer = 0;
     let swapped = false;
+    let retriesLeft = 1;
 
     function clearTimers() {
       if (pollTimer) { window.clearInterval(pollTimer); pollTimer = 0; }
       if (fallbackTimer) { window.clearTimeout(fallbackTimer); fallbackTimer = 0; }
+      if (retryTimer) { window.clearTimeout(retryTimer); retryTimer = 0; }
     }
 
     function swapToLegacy() {
@@ -102,6 +118,67 @@ function Hero({ t, links }) {
       robotRef.current = active;
     }
 
+    // Kicks off (or re-kicks off, for a retry) one Spline load attempt with
+    // its own poll + watchdog pair.
+    function trySpline(watchdogMs) {
+      // Reset success/failure flags BEFORE creating the controller so a
+      // stale value from a hot-reload or prior attempt doesn't trick us.
+      window.__splineRobotLoaded = false;
+      window.__splineRobotFailed = null;
+
+      active = window.RobotSpline.create(canvas, {
+        accent: a1, accent2: a2, motion: 1,
+        onExpressionChange: function (n) { setRobotMood(n); },
+      });
+      robotRef.current = active;
+
+      // Poll for either outcome. Success → stop everything and keep Spline.
+      // Decisive failure → retry once (if budget remains), else legacy.
+      pollTimer = window.setInterval(function poll() {
+        if (swapped) { clearTimers(); return; }
+        if (window.__splineRobotLoaded) {
+          // Spline succeeded — we're done. Cancel the watchdog so it can't
+          // fire later and clobber a working scene.
+          clearTimers();
+          return;
+        }
+        if (window.__splineRobotFailed) {
+          if (pollTimer) { window.clearInterval(pollTimer); pollTimer = 0; }
+          if (fallbackTimer) { window.clearTimeout(fallbackTimer); fallbackTimer = 0; }
+          retryOrSwap();
+        }
+      }, ROBOT_POLL_MS);
+
+      // Watchdog — ONLY swap if neither flag was set by the deadline,
+      // meaning the load is silently wedged (no success, no error). A normal
+      // success path will have cleared this timer via the poll() above.
+      // Ambiguous hangs go straight to legacy — no retry (see comment above).
+      fallbackTimer = window.setTimeout(function watchdog() {
+        fallbackTimer = 0;
+        if (swapped) return;
+        if (window.__splineRobotLoaded) return; // success raced the timer
+        if (pollTimer) { window.clearInterval(pollTimer); pollTimer = 0; }
+        swapToLegacy();
+      }, watchdogMs);
+    }
+
+    function retryOrSwap() {
+      if (swapped) return;
+      if (retriesLeft > 0 && window.RobotSpline && window.RobotSpline.create) {
+        retriesLeft -= 1;
+        if (active && active.dispose) {
+          try { active.dispose(); } catch (e) { /* opportunistic */ }
+        }
+        retryTimer = window.setTimeout(function () {
+          retryTimer = 0;
+          if (swapped) return;
+          trySpline(ROBOT_RETRY_FALLBACK_MS);
+        }, ROBOT_RETRY_DELAY_MS);
+      } else {
+        swapToLegacy();
+      }
+    }
+
     // Device tier — weak hardware skips Spline entirely. Spline pulls a
     // multi-MB runtime from a CDN and runs a full second WebGL scene
     // alongside bg-fx; on a low-end device that is the single biggest
@@ -113,41 +190,7 @@ function Hero({ t, links }) {
 
     // First attempt — Spline runtime (skipped on low-tier devices).
     if (!deviceTierLow && window.RobotSpline && window.RobotSpline.create) {
-      // Reset success/failure flags BEFORE creating the controller so a
-      // stale value from a hot-reload or prior mount doesn't trick us.
-      window.__splineRobotLoaded = false;
-      window.__splineRobotFailed = null;
-
-      active = window.RobotSpline.create(canvas, {
-        accent: a1, accent2: a2, motion: 1,
-        onExpressionChange: function (n) { setRobotMood(n); },
-      });
-      robotRef.current = active;
-
-      // Poll for either outcome. Success → stop everything and keep Spline.
-      // Failure → swap to legacy immediately (don't wait for the watchdog).
-      pollTimer = window.setInterval(function poll() {
-        if (swapped) { clearTimers(); return; }
-        if (window.__splineRobotLoaded) {
-          // Spline succeeded — we're done. Cancel the watchdog so it can't
-          // fire later and clobber a working scene.
-          clearTimers();
-          return;
-        }
-        if (window.__splineRobotFailed) {
-          swapToLegacy();
-        }
-      }, ROBOT_POLL_MS);
-
-      // Final watchdog — ONLY swap if neither flag was set by the deadline,
-      // meaning the load is silently wedged (no success, no error). A normal
-      // success path will have cleared this timer via the poll() above.
-      fallbackTimer = window.setTimeout(function watchdog() {
-        fallbackTimer = 0;
-        if (swapped) return;
-        if (window.__splineRobotLoaded) return; // success raced the timer
-        swapToLegacy();
-      }, ROBOT_FALLBACK_MS);
+      trySpline(ROBOT_FALLBACK_MS);
     } else {
       // Either the robot-spline.js bundle never registered, or this is a
       // low-tier device — go straight to the lightweight legacy robot.
@@ -162,21 +205,69 @@ function Hero({ t, links }) {
     };
   }, []);
 
-  // v53: retint the robot when the theme swaps so it matches the new
-  // accent without a page reload. The robot.setAccent() method tints
-  // emissive materials on the Spline scene + accent dots on the legacy
-  // fallback robot. Listener cleans up on unmount.
+  // Pause the robot's render loop when the hero scrolls out of view. The
+  // robot (Spline 3D scene, or the canvas fallback) is the single heaviest
+  // animation on the page; rendering it off-screen wastes GPU/CPU and is a
+  // major source of scroll jank. Resume the moment the hero returns.
   useEffect(() => {
-    function onThemeChanged(ev) {
-      const ctrl = robotRef.current;
-      if (!ctrl || typeof ctrl.setAccent !== "function") return;
-      const detail = ev && ev.detail ? ev.detail : null;
-      if (!detail) return;
-      try { ctrl.setAccent(detail.accent, detail.accent2); }
-      catch (err) { console.warn("[Hero] robot setAccent on theme-changed failed:", err && err.message); }
+    const heroEl = document.getElementById("hero");
+    if (!heroEl || !("IntersectionObserver" in window)) return undefined;
+    const io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        const ctrl = robotRef.current;
+        if (ctrl && typeof ctrl.setActive === "function") {
+          ctrl.setActive(e.isIntersecting);
+        }
+      });
+    }, { threshold: 0.01 });
+    io.observe(heroEl);
+    return function () { io.disconnect(); };
+  }, []);
+
+  // Hero photo parallax — depth from a slow scroll drift + a subtle cursor lean.
+  // Desktop + full-motion only (skipped on reduced-motion, low tier, and mobile,
+  // where the static backdrop + entrance zoom is enough). GPU-only: writes the
+  // `translate` property so it composes with the CSS entrance `scale`.
+  // Target is `.hero-photo-inner` — the mask lives on the non-transformed
+  // `.hero-photo-wrap` parent so the dissolve edge never drifts with parallax.
+  useEffect(() => {
+    const photo = document.querySelector(".hero-photo-inner");
+    const heroEl = document.getElementById("hero");
+    if (!photo || !heroEl) return undefined;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const low = (typeof window.getDeviceTier === "function") && window.getDeviceTier() === "low";
+    const desktop = window.matchMedia("(min-width: 901px)").matches;
+    if (reduce || low || !desktop) return undefined;
+
+    let raf = 0, mx = 0, my = 0, inView = true, io = null;
+    if ("IntersectionObserver" in window) {
+      io = new IntersectionObserver(function (es) { es.forEach(function (e) { inView = e.isIntersecting; }); }, { threshold: 0 });
+      io.observe(heroEl);
     }
-    window.addEventListener("theme-changed", onThemeChanged);
-    return () => window.removeEventListener("theme-changed", onThemeChanged);
+    function apply() {
+      raf = 0;
+      if (!inView) return;
+      const r = heroEl.getBoundingClientRect();
+      const prog = Math.max(0, Math.min(1, -r.top / Math.max(1, r.height)));
+      const ty = prog * 90 + my * 9;   // slow downward drift + cursor lean
+      const tx = mx * 9;
+      photo.style.translate = tx.toFixed(1) + "px " + ty.toFixed(1) + "px";
+    }
+    function onScroll() { if (!raf) raf = requestAnimationFrame(apply); }
+    function onMove(e) {
+      mx = (e.clientX / window.innerWidth - 0.5) * 2;
+      my = (e.clientY / window.innerHeight - 0.5) * 2;
+      if (!raf) raf = requestAnimationFrame(apply);
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("mousemove", onMove, { passive: true });
+    apply();
+    return function () {
+      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("mousemove", onMove);
+      if (io) io.disconnect();
+    };
   }, []);
 
   function onRobotClick() {
@@ -194,6 +285,16 @@ function Hero({ t, links }) {
 
   return (
     <section data-section="hero" id="hero" className="hero" ref={ref}>
+      {/* Cockpit-view photo backdrop (desktop) / orbital (mobile). Opaque, so it
+          covers the WebGL canvas in the hero; the canvas returns below. The mask
+          lives on the static `-wrap` so the dissolve edge never moves; parallax
+          `translate` + entrance scale are applied to the `-inner` image layer.
+          `.hero-seam` bridges the bottom edge into the page background color so
+          there's no tonal jump into the next section. */}
+      <div className="hero-photo-wrap" aria-hidden="true">
+        <div className="hero-photo-inner" />
+      </div>
+      <div className="hero-seam" aria-hidden="true" />
       <div className="shell hero-grid">
         <div className="hero-left">
           <div className="eyebrow" data-reveal>{t.hero.eyebrow}</div>
@@ -213,7 +314,7 @@ function Hero({ t, links }) {
 
           <p className="hero-tagline" data-reveal-words data-reveal-delay="0.2">{t.hero.tagline}</p>
 
-          <div className="hero-ctas" data-reveal data-reveal-delay="0.35">
+          <div className="hero-ctas" data-reveal data-reveal-from="translateY(22px)" data-reveal-delay="0.35">
             <a href="#contact" className="btn btn-primary" data-magnetic data-cursor="send" data-cursor-label="send → contact">
               {t.hero.cta_primary}
               <span className="arrow">→</span>
@@ -240,11 +341,16 @@ function Hero({ t, links }) {
         <aside className="hero-right" data-reveal data-reveal-delay="0.15">
           <div className="hero-robot" onClick={onRobotClick}>
             <canvas ref={robotCanvasRef} className="hero-robot-canvas" data-cursor="link" data-cursor-label="follow · interact" />
-            {/* Watermark cover — Spline's free-tier "Built with Spline" badge
+            {/* Instrument plate — Spline's free-tier "Built with Spline" badge
                 renders into the WebGL frame (not the DOM), so CSS-hiding the
-                element doesn't work. We mask the bottom-right corner with a
-                gradient that fades to transparent toward the canvas center. */}
-            <div className="hero-robot-wm-cover" aria-hidden="true" />
+                element doesn't work. The corner is cut out of the (static)
+                `.hero-robot` wrapper via mask, and this opaque, non-interactive
+                plate sits on top — reads as a cockpit ID tag, not a patch. */}
+            <div className="hero-robot-plate mono" aria-hidden="true">
+              <span className="hero-robot-plate-l"><span className="hero-robot-plate-dot" />CORE.AI · ONLINE</span>
+              <span className="hero-robot-plate-rail" />
+              <span className="hero-robot-plate-r">UNIT-01</span>
+            </div>
             <div className="hero-robot-meta mono">
               <span>core.ai</span>
               <span className="hero-robot-state">
@@ -289,478 +395,116 @@ function Hero({ t, links }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SIGNAL — 6 status modules with live animated metric sparklines + tilt.
-// Each card carries a randomized but deterministic data series so it always
-// looks "alive" without a backend, and a per-card live counter that ticks up.
+// SIGNAL — 6 editorial rows, full-width, that expand in place to reveal their
+// description. Replaces the old bento grid of 6 tilting mini-schema cards: the
+// schemas read as decoration without real meaning, and the constant per-card
+// tilt/shine had no purpose beyond motion. One row open at a time; desktop
+// opens on hover/focus, mobile is a tap-accordion.
 // ─────────────────────────────────────────────────────────────────────────────
-function generateSparkline(seed, points) {
-  // Cheap seeded pseudo-noise — same module always gets the same curve so the
-  // graphs feel stable across re-renders. Math.random() would re-roll on every
-  // mount which looks twitchy.
-  const result = [];
-  let s = seed;
-  for (let i = 0; i < points; i++) {
-    s = (s * 9301 + 49297) % 233280;
-    const noise = s / 233280;
-    const t = i / (points - 1);
-    const base = 0.4 + 0.35 * Math.sin(t * Math.PI * 2 + seed * 0.5);
-    const v = Math.max(0.05, Math.min(0.95, base + noise * 0.35));
-    result.push(v);
-  }
-  return result;
-}
 
-// 6 different SVG visualizations, one per Signal card. Same deterministic
-// `sparkData` array drives all of them — only the rendering changes — so
-// each card feels purposeful, not random.
-// v49 — Six THEMATIC visualisations. Each viz is shape-matched to the
-// service it represents, not just a generic sparkline-style chart:
-//
-//   layers     → Full-stack    : 3 stacked area curves (UI / API / data)
-//   network    → AI Automation : 6 nodes + edges, pulse travels along them
-//   stream     → Telegram bots : scrolling message bubbles (right-to-left)
-//   grid       → Dashboards    : tile grid with per-cell brightness
-//   wireframe  → Landing & Web : webpage skeleton outline with sweep
-//   milestones → Product MVP   : 5-step roadmap with active pulse
-//
-// Order matches SIGNAL_VIZ_KINDS index → card index. Each viz takes the
-// same `data` array (length N≈28, values 0..1) but renders a domain-aware
-// shape. Pure SVG, no JS animation libs.
-const SIGNAL_VIZ_KINDS = ["layers", "network", "stream", "grid", "wireframe", "milestones"];
-const SIGNAL_UNITS = ["ops", "req/s", "msg", "tiles", "vis", "milestone"];
-
-// Shared viewBox geometry. All viz scale to the same hosting box via the
-// non-preserve aspect; per-viz code uses fractions of W/H.
-const SIG_W = 100;
-const SIG_H = 36;
-const SIG_PAD = 1.5;
-
-// Helper: extract `count` evenly-spaced samples from the live data array.
-function sampleData(data, count) {
-  const n = data.length;
-  const out = new Array(count);
-  for (let i = 0; i < count; i++) {
-    out[i] = data[Math.min(n - 1, Math.floor((i / Math.max(1, count - 1)) * (n - 1)))];
-  }
-  return out;
-}
-
-// ── 1. Layers — three stacked area curves (Full-stack). ─────────────────
-// Top layer = UI, mid = API, bottom = data. Each is the same shape but
-// offset vertically + dim. Reads as "the stack is alive across all tiers".
-function renderLayers(data, index) {
-  const N = data.length;
-  const layerOffsets = [0.0, 0.18, 0.36]; // vertical Y-offset per layer (fraction of H)
-  const layerOpacities = [0.85, 0.55, 0.32];
-  const layerStrokes = [1.6, 1.2, 0.9];
-
-  function buildPath(yOffset) {
-    let d = "";
-    for (let i = 0; i < N; i++) {
-      const x = (i / (N - 1)) * (SIG_W - SIG_PAD * 2) + SIG_PAD;
-      // Smoothed value via 3-point moving average so layers feel organic.
-      const v0 = data[Math.max(0, i - 1)];
-      const v1 = data[i];
-      const v2 = data[Math.min(N - 1, i + 1)];
-      const smoothed = (v0 + v1 + v2) / 3;
-      const ySpan = SIG_H * 0.46;
-      const y = SIG_H - SIG_PAD - yOffset * SIG_H - smoothed * ySpan;
-      d += (i === 0 ? "M" : "L") + " " + x.toFixed(2) + " " + y.toFixed(2) + " ";
-    }
-    return d;
-  }
-  const gradId = `sig-layers-grad-${index}`;
-  return (
-    <svg viewBox={`0 0 ${SIG_W} ${SIG_H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
-      <defs>
-        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="currentColor" stopOpacity="0.45" />
-          <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      {layerOffsets.map(function renderLayer(off, i) {
-        const path = buildPath(off);
-        const area = path + `L ${(SIG_W - SIG_PAD).toFixed(2)} ${(SIG_H - SIG_PAD).toFixed(2)} L ${SIG_PAD} ${(SIG_H - SIG_PAD).toFixed(2)} Z`;
-        return (
-          <g key={i}>
-            <path d={area} fill={`url(#${gradId})`} opacity={layerOpacities[i] * 0.45} />
-            <path d={path} fill="none" stroke="currentColor"
-              strokeOpacity={layerOpacities[i]} strokeWidth={layerStrokes[i]}
-              strokeLinecap="round" strokeLinejoin="round"
-              className="signal-spark-stroke" />
-          </g>
-        );
-      })}
-    </svg>
-  );
-}
-
-// ── 2. Network — 6 nodes + edges, with traveling pulses (AI Automation).
-// v51 fix: viewBox is now WIDER (200×64, aspect ~3.1:1) so circle nodes
-// render closer to round. We also use `preserveAspectRatio="xMidYMid meet"`
-// so the SVG scales uniformly — no horizontal stretch turning circles
-// into ellipses. Coordinates use the new wider canvas.
-const NETWORK_VIEWBOX_W = 200;
-const NETWORK_VIEWBOX_H = 64;
-const NETWORK_NODES = [
-  // [x_frac, y_frac] — fractions of viewBox
-  [0.10, 0.22], [0.10, 0.50], [0.10, 0.78],   // 3 inputs
-  [0.50, 0.50],                                // hub
-  [0.90, 0.32], [0.90, 0.70],                  // 2 outputs
+// Short right-hand descriptor per row — a compression of the row's own `v`
+// text from content.js into 1-2 words, not invented content.
+const SIGNAL_TAILS = [
+  "web · MVP · системы",
+  "агенты · данные",
+  "боты · задачи",
+  "CRM · дашборды",
+  "premium-сайты",
+  "идея → прод",
 ];
-const NETWORK_EDGES = [
-  [0, 3], [1, 3], [2, 3], [3, 4], [3, 5],
-];
-function renderNetwork(data, index) {
-  const x = function (p) { return (4 + p * (NETWORK_VIEWBOX_W - 8)).toFixed(2); };
-  const y = function (p) { return (4 + p * (NETWORK_VIEWBOX_H - 8)).toFixed(2); };
-  const last = data[data.length - 1];
-  const activeInputIdx = Math.min(2, Math.floor(last * 3));
-  const activeOutputIdx = (Math.floor(last * 7)) % 2;
+
+function SignalRow({ card, index, total, open, onToggle, hasHover }) {
+  const tail = SIGNAL_TAILS[index] || "";
+  // On hover-capable desktops, mouseenter always fires before click (the
+  // cursor has to enter the row before it can be clicked) — if click always
+  // toggled, it would immediately re-close whatever hover just opened. So on
+  // those devices click behaves like hover (ensures open, never closes);
+  // only touch (no real hover) gets a true open/close toggle on tap.
+  const hoverHandlers = hasHover
+    ? { onMouseEnter: () => onToggle(index, true), onFocus: () => onToggle(index, true) }
+    : {};
   return (
-    <svg viewBox={`0 0 ${NETWORK_VIEWBOX_W} ${NETWORK_VIEWBOX_H}`}
-         preserveAspectRatio="xMidYMid meet" className="signal-spark-svg" aria-hidden="true">
-      {NETWORK_EDGES.map(function renderEdge(e, i) {
-        const a = NETWORK_NODES[e[0]];
-        const b = NETWORK_NODES[e[1]];
-        const isActive =
-          (e[0] === activeInputIdx && e[1] === 3) ||
-          (e[0] === 3 && e[1] === 4 + activeOutputIdx);
-        return (
-          <line key={i}
-            x1={x(a[0])} y1={y(a[1])} x2={x(b[0])} y2={y(b[1])}
-            stroke="currentColor"
-            strokeOpacity={isActive ? "0.85" : "0.22"}
-            strokeWidth={isActive ? "1.6" : "0.8"} />
-        );
-      })}
-      {(function renderActivePulse() {
-        const a = NETWORK_NODES[activeInputIdx];
-        const b = NETWORK_NODES[3];
-        return (
-          <circle r="2.4" fill="currentColor">
-            <animate attributeName="cx" from={x(a[0])} to={x(b[0])} dur="1.1s" repeatCount="indefinite" />
-            <animate attributeName="cy" from={y(a[1])} to={y(b[1])} dur="1.1s" repeatCount="indefinite" />
-          </circle>
-        );
-      })()}
-      {NETWORK_NODES.map(function renderNode(p, i) {
-        const isHub = i === 3;
-        const isLit =
-          i === activeInputIdx || i === 3 || i === 4 + activeOutputIdx;
-        return (
-          <g key={i}>
-            <circle cx={x(p[0])} cy={y(p[1])}
-              r={isHub ? "4.5" : "3"}
-              fill="currentColor"
-              opacity={isLit ? "1" : "0.45"} />
-            {isHub && (
-              <circle cx={x(p[0])} cy={y(p[1])}
-                r="6.5" fill="none" stroke="currentColor"
-                strokeOpacity="0.5" strokeWidth="0.8" />
-            )}
-          </g>
-        );
-      })}
-    </svg>
-  );
-}
-
-// ── 3. Stream — scrolling chat bubbles right-to-left (Telegram bots).
-// 5 bubbles of varying widths. Position shifts each render based on the
-// trailing index of `data` (so it appears to flow on the same clock as
-// the live tick). Bubbles re-enter at the right.
-function renderStream(data, index) {
-  const bubbleCount = 5;
-  const samples = sampleData(data, bubbleCount);
-  const speed = 14;            // logical X units per data-index step
-  // Use a stable "shift" derived from data length so all bubbles step
-  // together on each live tick.
-  const shift = (data.length % bubbleCount) * 4;
-  const bubbles = [];
-  for (let i = 0; i < bubbleCount; i++) {
-    const widthFactor = 0.5 + samples[i] * 0.5;
-    const w = (SIG_W - SIG_PAD * 2) * 0.22 * widthFactor;
-    const x = (i / bubbleCount) * (SIG_W + 20) - shift;
-    const y = SIG_PAD + 4 + ((i * 7) % 12);
-    const h = 5;
-    // Fade bubbles near the left edge so they "leave" gracefully.
-    const fade = x < 8 ? Math.max(0.2, x / 8) : (x > SIG_W - w ? Math.max(0.2, (SIG_W - x) / w) : 1);
-    bubbles.push(
-      <g key={i} opacity={fade.toFixed(2)}>
-        <rect x={x.toFixed(2)} y={y.toFixed(2)}
-          width={w.toFixed(2)} height={h.toFixed(2)} rx="2.5"
-          fill="currentColor" opacity={(0.4 + samples[i] * 0.5).toFixed(2)} />
-        {/* "Tail" pointer on the right side of each bubble */}
-        <path
-          d={`M ${(x + w).toFixed(2)} ${(y + h - 1).toFixed(2)} L ${(x + w + 2).toFixed(2)} ${(y + h - 0.5).toFixed(2)} L ${(x + w - 0.5).toFixed(2)} ${(y + h).toFixed(2)} Z`}
-          fill="currentColor" opacity="0.55" />
-      </g>
-    );
-  }
-  return (
-    <svg viewBox={`0 0 ${SIG_W} ${SIG_H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
-      {bubbles}
-      {/* Subtle baseline line, suggests "feed" track */}
-      <line x1={SIG_PAD} y1={(SIG_H - 3).toFixed(2)}
-            x2={(SIG_W - SIG_PAD).toFixed(2)} y2={(SIG_H - 3).toFixed(2)}
-            stroke="currentColor" strokeOpacity="0.12" strokeWidth="0.4" strokeDasharray="1.5 2" />
-    </svg>
-  );
-}
-
-// ── 4. Grid — tile dashboard (Dashboards).
-// 18 cells (6×3). Brightness per cell = corresponding data value.
-function renderGrid(data, index) {
-  const cols = 6;
-  const rows = 3;
-  const samples = sampleData(data, cols * rows);
-  const cellW = (SIG_W - SIG_PAD * 2) / cols * 0.86;
-  const cellH = (SIG_H - SIG_PAD * 2) / rows * 0.82;
-  const slotW = (SIG_W - SIG_PAD * 2) / cols;
-  const slotH = (SIG_H - SIG_PAD * 2) / rows;
-  const cells = [];
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const i = r * cols + c;
-      const v = samples[i];
-      const x = SIG_PAD + c * slotW + (slotW - cellW) / 2;
-      const y = SIG_PAD + r * slotH + (slotH - cellH) / 2;
-      cells.push(
-        <rect key={i}
-          x={x.toFixed(2)} y={y.toFixed(2)}
-          width={cellW.toFixed(2)} height={cellH.toFixed(2)} rx="0.8"
-          fill="currentColor"
-          opacity={(0.12 + v * 0.78).toFixed(2)} />
-      );
-    }
-  }
-  return (
-    <svg viewBox={`0 0 ${SIG_W} ${SIG_H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
-      {cells}
-    </svg>
-  );
-}
-
-// ── 5. Wireframe — webpage outline (Landing & Web).
-// Static skeleton: header bar, hero block, 3-column row. A draw-in
-// animation runs on stroke-dashoffset via CSS so the wireframe "builds"
-// itself when the card enters view.
-function renderWireframe(data, index) {
-  const avg = data.reduce(function sum(s, v) { return s + v; }, 0) / data.length;
-  const accent = 0.5 + avg * 0.5;
-  return (
-    <svg viewBox={`0 0 ${SIG_W} ${SIG_H}`} preserveAspectRatio="none" className="signal-spark-svg" aria-hidden="true">
-      {/* Outer page frame */}
-      <rect x="3" y="3" width={SIG_W - 6} height={SIG_H - 6} rx="1.5"
-        fill="none" stroke="currentColor" strokeOpacity="0.7" strokeWidth="0.8"
-        className="signal-wire-draw" />
-      {/* Top nav bar */}
-      <rect x="5" y="5" width={SIG_W - 10} height="3.5" rx="0.5"
-        fill="currentColor" opacity="0.32" />
-      <rect x="6" y="6" width="3" height="1.5" rx="0.3" fill="currentColor" opacity="0.6" />
-      <rect x="11" y="6" width="3" height="1.5" rx="0.3" fill="currentColor" opacity="0.6" />
-      <rect x="16" y="6" width="3" height="1.5" rx="0.3" fill="currentColor" opacity="0.6" />
-      {/* Hero block */}
-      <rect x="5" y="11" width={(SIG_W - 10) * 0.62} height="10" rx="0.8"
-        fill="currentColor" opacity={(0.18 + accent * 0.25).toFixed(2)} />
-      <rect x={6} y={13} width="22" height="1.5" rx="0.3" fill="currentColor" opacity="0.78" />
-      <rect x={6} y={16} width="16" height="1.2" rx="0.3" fill="currentColor" opacity="0.5" />
-      <rect x={6} y={18.5} width="8"  height="1.5" rx="0.3" fill="currentColor" opacity={accent.toFixed(2)} />
-      {/* Side block */}
-      <rect x={5 + (SIG_W - 10) * 0.64} y="11" width={(SIG_W - 10) * 0.32} height="10" rx="0.8"
-        fill="none" stroke="currentColor" strokeOpacity="0.4" strokeWidth="0.6"
-        className="signal-wire-draw" />
-      {/* 3 column row */}
-      <rect x="5"  y="24" width="9" height="6" rx="0.6" fill="currentColor" opacity="0.30" />
-      <rect x="16" y="24" width="9" height="6" rx="0.6" fill="currentColor" opacity="0.30" />
-      <rect x="27" y="24" width="9" height="6" rx="0.6" fill="currentColor" opacity="0.30" />
-    </svg>
-  );
-}
-
-// ── 6. Milestones — 5-step roadmap with active pulse (Product MVP).
-// v51 fix: wider viewBox + meet aspect so milestone dots stay round
-// (previously got horizontally stretched into ovals).
-const MILESTONES_VIEWBOX_W = 200;
-const MILESTONES_VIEWBOX_H = 56;
-function renderMilestones(data, index) {
-  const count = 5;
-  const avg = data.reduce(function sum(s, v) { return s + v; }, 0) / data.length;
-  const progress = Math.max(0, Math.min(count - 1, avg * (count - 1)));
-  const currentIdx = Math.min(count - 1, Math.floor(progress));
-  const cy = MILESTONES_VIEWBOX_H / 2;
-  const xLeft = 12;
-  const xRight = MILESTONES_VIEWBOX_W - 12;
-  const dotX = function (i) { return xLeft + (xRight - xLeft) * (i / (count - 1)); };
-  return (
-    <svg viewBox={`0 0 ${MILESTONES_VIEWBOX_W} ${MILESTONES_VIEWBOX_H}`}
-         preserveAspectRatio="xMidYMid meet" className="signal-spark-svg" aria-hidden="true">
-      <line x1={xLeft} y1={cy.toFixed(2)} x2={xRight} y2={cy.toFixed(2)}
-        stroke="currentColor" strokeOpacity="0.22" strokeWidth="1.2" />
-      <line x1={xLeft} y1={cy.toFixed(2)}
-        x2={(xLeft + (xRight - xLeft) * (progress / (count - 1))).toFixed(2)} y2={cy.toFixed(2)}
-        stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-      {Array.from({ length: count }).map(function renderDot(_, i) {
-        const cx = dotX(i);
-        const isPassed = i < currentIdx;
-        const isCurrent = i === currentIdx;
-        return (
-          <g key={i}>
-            {isCurrent && (
-              <circle cx={cx.toFixed(2)} cy={cy.toFixed(2)} r="9" fill="none" stroke="currentColor">
-                <animate attributeName="r" values="5;11;5" dur="1.4s" repeatCount="indefinite" />
-                <animate attributeName="stroke-opacity" values="0.55;0;0.55" dur="1.4s" repeatCount="indefinite" />
-              </circle>
-            )}
-            <circle cx={cx.toFixed(2)} cy={cy.toFixed(2)}
-              r={isCurrent ? "5" : "3.5"}
-              fill={isPassed || isCurrent ? "currentColor" : "rgba(0,0,0,0.4)"}
-              stroke="currentColor"
-              strokeOpacity={isPassed || isCurrent ? "1" : "0.4"}
-              strokeWidth={isPassed || isCurrent ? "0" : "1.2"} />
-          </g>
-        );
-      })}
-    </svg>
-  );
-}
-
-// SignalViz — dispatches to the kind-specific renderer.
-function SignalViz({ kind, data, index }) {
-  if (kind === "layers")     return renderLayers(data, index);
-  if (kind === "network")    return renderNetwork(data, index);
-  if (kind === "stream")     return renderStream(data, index);
-  if (kind === "grid")       return renderGrid(data, index);
-  if (kind === "wireframe")  return renderWireframe(data, index);
-  if (kind === "milestones") return renderMilestones(data, index);
-  return null;
-}
-
-// Per-card live data shift interval. Each card ticks on its own clock so the
-// grid feels like 6 independent monitors. Visible only when card is in
-// viewport (IO-paused below) and tab is foregrounded.
-const SIGNAL_SPARK_POINTS = 28;
-const SIGNAL_TICK_BASE_MS = 950;
-const SIGNAL_TICK_JITTER_MS = 480;
-
-function SignalCard({ card, index }) {
-  const cardRef = useRef(null);
-  const vizKind = SIGNAL_VIZ_KINDS[index % SIGNAL_VIZ_KINDS.length];
-  const vizUnit = SIGNAL_UNITS[index % SIGNAL_UNITS.length];
-
-  // Live data — each tick we drop the leftmost point and append a new one
-  // generated from a per-card seeded PRNG. The viz re-renders with the new
-  // array, making the chart appear to scroll right-to-left.
-  const [liveData, setLiveData] = useState(function initData() {
-    return generateSparkline(7 + index * 13, SIGNAL_SPARK_POINTS);
-  });
-  const seedRef = useRef(7 + index * 13 + SIGNAL_SPARK_POINTS);
-
-  // Live counter — increments at a measured cadence so the card feels alive.
-  const counterStart = 100 + index * 47;
-  const [counter, setCounter] = useState(counterStart);
-
-  // Viewport-paused tick. Combines data shift + counter bump in ONE timer
-  // per card (was 2 in v47) — half the timers, same visual outcome.
-  useEffect(function tickLiveData() {
-    if (!cardRef.current) return undefined;
-    let intervalId = 0;
-    let inView = true;
-    const interval = SIGNAL_TICK_BASE_MS + (index % 3) * (SIGNAL_TICK_JITTER_MS / 3);
-
-    function bump() {
-      if (!inView || document.hidden) return;
-      // Advance PRNG, normalise to 0..1, push, shift left to keep length.
-      seedRef.current = (seedRef.current * 9301 + 49297) % 233280;
-      const noise = seedRef.current / 233280;
-      // Smooth random walk: base on a sin envelope so values don't look
-      // like white noise — they breathe up and down over time.
-      const phase = Date.now() / 1000 * 0.3 + index;
-      const base = 0.42 + 0.32 * Math.sin(phase);
-      const v = Math.max(0.05, Math.min(0.95, base + (noise - 0.5) * 0.55));
-      setLiveData(function (prev) {
-        const next = prev.slice(1);
-        next.push(v);
-        return next;
-      });
-      setCounter(function (prev) { return prev + 1; });
-    }
-
-    intervalId = window.setInterval(bump, interval);
-
-    // Pause when card scrolls out of view — saves render cycles.
-    let io = null;
-    if ("IntersectionObserver" in window) {
-      io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-          if (e.target === cardRef.current) inView = e.isIntersecting;
-        });
-      }, { threshold: [0, 0.1] });
-      io.observe(cardRef.current);
-    }
-
-    return function () {
-      window.clearInterval(intervalId);
-      if (io) io.disconnect();
-    };
-  }, [index]);
-
-  const sparkData = liveData;
-
-  function onMouseMove(e) {
-    const el = cardRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width - 0.5;
-    const y = (e.clientY - r.top) / r.height - 0.5;
-    el.style.setProperty("--rx", `${(-y * 5).toFixed(2)}deg`);
-    el.style.setProperty("--ry", `${(x * 5).toFixed(2)}deg`);
-  }
-  function onMouseLeave() {
-    const el = cardRef.current;
-    if (!el) return;
-    el.style.setProperty("--rx", "0deg");
-    el.style.setProperty("--ry", "0deg");
-  }
-
-  return (
-    <div
-      ref={cardRef}
-      className={`card signal-card signal-card--${vizKind}`}
+    <button
+      type="button"
+      className={`signal-row${open ? " is-open" : ""}`}
+      data-code={card.code}
+      style={{ "--row-i": index, "--row-total": Math.max(1, total - 1) }}
       data-reveal
-      data-reveal-delay={(index * 0.04).toFixed(2)}
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
+      data-reveal-from="translateY(28px)"
+      data-reveal-delay={(index * 0.06).toFixed(2)}
+      aria-expanded={open}
+      {...hoverHandlers}
+      onClick={() => onToggle(index, hasHover)}
     >
-      <div className="signal-top">
-        <span className="mono signal-code">/{card.code}</span>
-        <span className="chip"><span className="chip-dot" />active</span>
-      </div>
-      <h3 className="signal-k">{card.k}</h3>
-      <p className="signal-v">{card.v}</p>
-      <div className="signal-spark">
-        <SignalViz kind={vizKind} data={sparkData} index={index} />
-        <div className="signal-spark-meta mono">
-          <span className="signal-spark-dot" />
-          <span>{counter.toString().padStart(4, "0")}</span>
-          <span className="signal-spark-unit">{vizUnit}</span>
-        </div>
-      </div>
-    </div>
+      {/* Oversized background numeral + procedural accent glow — driven only
+          by this row's own real index/total (--row-i/--row-total), never an
+          invented per-category treatment. See .row-ghost / ::after in
+          features.css. */}
+      <span className="row-ghost" aria-hidden="true">{card.code}</span>
+
+      <span className="signal-row-num mono">/{card.code}</span>
+
+      <span className="signal-row-main">
+        <span className="signal-row-k">{card.k}</span>
+        <span className="signal-row-detail" aria-hidden={!open}>
+          <span className="signal-row-detail-inner">
+            <span className="signal-row-v">{card.v}</span>
+          </span>
+        </span>
+      </span>
+
+      <span className="signal-row-tail mono" aria-hidden="true">
+        <span className="signal-row-tail-text">{tail}</span>
+        <svg className="signal-row-arrow" viewBox="0 0 24 24" width="18" height="18"
+          fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"
+          strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+      </span>
+    </button>
   );
 }
 
 function Signal({ t }) {
   const ref = useRevealRoot([t]);
+  // -1 = nothing open. Hover/focus opens the hovered row and "sticks" (doesn't
+  // reset on mouse-leave) until another row is hovered or the open one is
+  // clicked. Click/tap toggles (accordion behavior on touch — see SignalRow's
+  // hasHover branching for why desktop click doesn't use the toggle path).
+  const [openIndex, setOpenIndex] = useState(-1);
+  const hasHoverRef = useRef(null);
+  if (hasHoverRef.current === null) {
+    hasHoverRef.current = typeof window.matchMedia === "function"
+      && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  }
+
+  const handleToggle = (i, isHover) => {
+    setOpenIndex((prev) => {
+      if (isHover) return i;
+      return prev === i ? -1 : i;
+    });
+  };
+
   return (
-    <section data-section="signal" id="signal" ref={ref}>
+    <section data-section="signal" id="signal" data-enter="emerge" ref={ref}>
       <div className="shell">
-        <SecHead num="01" eyebrow={t.signal.eyebrow} title={t.signal.title} em={t.signal.title.split(" ").pop()} meta={`${t.signal.cards.length} modules · live`} />
-        <div className="signal-grid">
-          {t.signal.cards.map(function renderSignal(c, i) {
-            return <SignalCard key={i} card={c} index={i} />;
-          })}
+        <SecHead
+          num="01"
+          eyebrow={t.signal.eyebrow}
+          title={t.signal.title}
+          em={t.signal.title.split(" ").pop()}
+          meta={`${t.signal.cards.length} каналов · сигнал`}
+        />
+        <div className="signal-rows">
+          {t.signal.cards.map((c, i) => (
+            <SignalRow
+              key={i}
+              card={c}
+              index={i}
+              total={t.signal.cards.length}
+              open={openIndex === i}
+              onToggle={handleToggle}
+              hasHover={hasHoverRef.current}
+            />
+          ))}
         </div>
       </div>
     </section>
@@ -975,7 +719,7 @@ function About({ t }) {
   const ghStats = t.about.gh_stats || "";
 
   return (
-    <section data-section="about" id="about" ref={ref}>
+    <section data-section="about" id="about" data-enter="develop" ref={ref}>
       <div className="shell">
         <SecHead num="02" eyebrow={t.about.eyebrow} title={t.about.title} meta="readme.md" />
 
@@ -1126,8 +870,21 @@ function ProjectCard({ p, i, cta }) {
     el.style.setProperty("--ry", `0deg`);
   }
 
+  // No per-card scroll-reveal here: these cards live in a desktop collapse
+  // (display:none until expanded) and a mobile peek-carousel (off-screen
+  // siblings), where the reveal system's `opacity:0 !important` hidden pose
+  // would strand them invisible (inline !important beats any override). The
+  // section-level `data-enter="rise"` handles the entrance; a light CSS stagger
+  // (tied to .sec-in) adds life without a per-card hidden state. Expanded
+  // cards get their own projExpandIn animation.
   return (
-    <article ref={cardRef} className="proj-card card" data-reveal onMouseMove={onMove} onMouseLeave={onLeave}>
+    <article
+      ref={cardRef}
+      className="proj-card card"
+      style={{ "--proj-i": i }}
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+    >
       <div className="proj-glow" />
       <div className="proj-head">
         <span className="mono proj-tag">{p.tag}</span>
@@ -1202,7 +959,9 @@ function ProjectChapterDots({ items, gridRef }) {
 
   function onDot(i) {
     const el = cardRefs.current[i];
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    // Horizontal peek-carousel: scroll the carousel sideways to center the
+    // card (inline), never scroll the page vertically (block: nearest).
+    if (el) el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   }
 
   return (
@@ -1228,17 +987,49 @@ function ProjectChapterDots({ items, gridRef }) {
   );
 }
 
+// Russian plural for "проект": 1 проект, 2-4 проекта, 5+ проектов.
+function pluralProjects(n) {
+  const mod10 = n % 10, mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return "проект";
+  if (mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) return "проекта";
+  return "проектов";
+}
+
 function Projects({ t }) {
   const ref = useRevealRoot([t]);
   const gridRef = useRef(null);
+  // Desktop shows the first 2 cases; the rest expand on request (keeps the
+  // section short + signals there's more). Mobile ignores this and shows all
+  // via a horizontal peek-carousel (CSS), paged by the dots below.
+  const [expanded, setExpanded] = useState(false);
+  const items = t.projects.items;
+  const hiddenCount = Math.max(0, items.length - 2);
   return (
-    <section data-section="projects" id="projects" ref={ref}>
+    <section data-section="projects" id="projects" data-enter="rise" ref={ref}>
       <div className="shell">
-        <SecHead num="03" eyebrow={t.projects.eyebrow} title={t.projects.title} meta={`${t.projects.items.length} cases · 2024–26`} />
-        <ProjectChapterDots items={t.projects.items} gridRef={gridRef} />
-        <div className="proj-grid" ref={gridRef}>
-          {t.projects.items.map((p, i) => <ProjectCard key={i} p={p} i={i} cta={t.projects.cta} />)}
+        <SecHead num="03" eyebrow={t.projects.eyebrow} title={t.projects.title} meta={`${items.length} cases · 2024–26`} />
+        <div className={`proj-grid ${expanded ? "is-expanded" : "is-collapsed"}`} ref={gridRef}>
+          {items.map((p, i) => <ProjectCard key={i} p={p} i={i} cta={t.projects.cta} />)}
         </div>
+
+        {hiddenCount > 0 ? (
+          <button
+            type="button"
+            className="proj-expand mono"
+            aria-expanded={expanded}
+            onClick={() => setExpanded((v) => !v)}
+            data-cursor="link"
+            data-cursor-label={expanded ? "collapse" : "show all"}
+          >
+            <span className="proj-expand-txt">
+              {expanded ? "Свернуть" : `Ещё ${hiddenCount} ${pluralProjects(hiddenCount)}`}
+            </span>
+            <span className="proj-expand-ico" aria-hidden="true">{expanded ? "↑" : "↓"}</span>
+          </button>
+        ) : null}
+
+        {/* Mobile-only carousel pager (CSS hides it on desktop). */}
+        <ProjectChapterDots items={items} gridRef={gridRef} />
       </div>
     </section>
   );
@@ -1368,6 +1159,20 @@ function SkillsRadar({ groups, active, onActivate }) {
       <line x1="-160" y1="0" x2="160" y2="0" stroke="currentColor" strokeOpacity=".06" />
       <line x1="0" y1="-160" x2="0" y2="160" stroke="currentColor" strokeOpacity=".06" />
 
+      {/* Coverage polygon — links every group's endpoint into one shape, so
+          the radar reads as an actual stack "footprint" at a glance instead
+          of a single pointer on an otherwise-empty dial. Static + dim; the
+          active spoke below still carries all the emphasis. */}
+      <polygon
+        points={endpoints.map(function toPt(e) { return `${e.x.toFixed(1)},${e.y.toFixed(1)}`; }).join(" ")}
+        fill="currentColor"
+        fillOpacity="0.045"
+        stroke="currentColor"
+        strokeOpacity="0.16"
+        strokeWidth="1"
+        strokeLinejoin="round"
+      />
+
       {/* Rotating scan triangle. */}
       <g transform={`rotate(${scanAngle.toFixed(2)})`}>
         <polygon points="0,0 160,-22 160,22" fill="url(#skills-scan-grad)" />
@@ -1427,10 +1232,28 @@ function SkillsRadar({ groups, active, onActivate }) {
 
 function Skills({ t }) {
   const ref = useRevealRoot([t]);
+  // Desktop: which tab is active (always a valid index, tabs don't "close").
+  // Mobile: which accordion row is open (-1 = none) — tapping a group should
+  // expand its tools inline instead of routing through a separate panel the
+  // user has to scroll to find, which was the actual mobile complaint.
   const [active, setActive] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
   const stageRef = useRef(null);
   const parallaxRef = useRef({ targetX: 0, targetY: 0, currentX: 0, currentY: 0 });
   const rafRef = useRef(0);
+
+  useEffect(function watchLayout() {
+    if (typeof window.matchMedia !== "function") return undefined;
+    const mq = window.matchMedia("(max-width: 900px)");
+    const apply = function () { setIsMobile(mq.matches); };
+    apply();
+    if (mq.addEventListener) mq.addEventListener("change", apply);
+    else if (mq.addListener) mq.addListener(apply);
+    return function () {
+      if (mq.removeEventListener) mq.removeEventListener("change", apply);
+      else if (mq.removeListener) mq.removeListener(apply);
+    };
+  }, []);
 
   // 2D parallax — translates the SVG by up to SKILLS_PARALLAX_MAX_PX along
   // each axis as the cursor moves. No CSS perspective, no translateZ — so the
@@ -1467,59 +1290,116 @@ function Skills({ t }) {
   }
 
   return (
-    <section data-section="skills" id="skills" ref={ref}>
+    <section data-section="skills" id="skills" data-enter="converge" ref={ref}>
       <div className="shell">
         <SecHead num="04" eyebrow={t.skills.eyebrow} title={t.skills.title} meta="stack.radar.v3" />
         <p className="lead-line" data-reveal>{t.skills.lead}</p>
 
-        <div className="skills-layout">
-          <div className="skills-tabs" role="tablist" aria-label="stack">
-            {t.skills.groups.map(function renderTab(g, i) {
+        {isMobile ? (
+          /* Mobile: tapping a group expands its tools INLINE, right under
+             that row — the old layout put tabs above and the tools panel
+             below, both scrolled far apart, which is what read as
+             inconvenient. One shared radar sits below, highlighting
+             whichever group is currently open (falls back to the first). */
+          <div className="skills-acc">
+            {t.skills.groups.map(function renderAccRow(g, i) {
+              const isOpen = active === i;
               return (
-                <button
-                  key={i}
-                  role="tab"
-                  aria-selected={active === i}
-                  className={`skills-tab ${active === i ? "is-active" : ""}`}
-                  onMouseEnter={function () { setActive(i); }}
-                  onFocus={function () { setActive(i); }}
-                  onClick={function () { setActive(i); }}
-                >
-                  <span className="mono skills-num">/{String(i + 1).padStart(2, "0")}</span>
-                  <span className="skills-k">{g.k}</span>
-                  <span className="mono skills-count">{g.items.length}</span>
-                </button>
+                <div key={i} className={`skills-acc-row ${isOpen ? "is-open" : ""}`}>
+                  <h3 className="skills-acc-h">
+                    <button
+                      type="button"
+                      className="skills-acc-head"
+                      aria-expanded={isOpen}
+                      aria-controls={`skills-acc-body-${i}`}
+                      id={`skills-acc-head-${i}`}
+                      onClick={function () { setActive(isOpen ? -1 : i); }}
+                    >
+                      <span className="mono skills-num">/{String(i + 1).padStart(2, "0")}</span>
+                      <span className="skills-k">{g.k}</span>
+                      <span className="mono skills-count">{g.items.length}</span>
+                      <span className="skills-acc-chev" aria-hidden="true">{isOpen ? "−" : "+"}</span>
+                    </button>
+                  </h3>
+                  <div
+                    className="skills-acc-body"
+                    id={`skills-acc-body-${i}`}
+                    role="region"
+                    aria-labelledby={`skills-acc-head-${i}`}
+                    hidden={!isOpen}
+                  >
+                    <div className="skills-items">
+                      {g.items.map(function renderItem(it, k) {
+                        return (
+                          <span key={k} className="skill-item" style={{ animationDelay: `${k * 50}ms` }}>{it}</span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
               );
             })}
-          </div>
-          <div className="skills-panel card" data-reveal>
-            <div className="skills-panel-head">
-              <span className="mono">{`/stack/${t.skills.groups[active].k.toLowerCase().replace(/\W+/g, "-")}`}</span>
-              <span className="chip"><span className="chip-dot" />ready</span>
-            </div>
-            <div className="skills-items">
-              {t.skills.groups[active].items.map(function renderItem(it, i) {
-                return (
-                  <span key={i} className="skill-item" style={{ animationDelay: `${i * 50}ms` }}>{it}</span>
-                );
-              })}
-            </div>
 
-            {/* Contained radar stage — clip-path-safe (overflow: hidden in CSS)
-                so the SVG can never spill into the page grid. Cursor moves the
-                SVG by a few pixels in 2D — gives a tactile feel without
-                introducing 3D transforms that would project content downward. */}
             <div
               ref={stageRef}
               className="skills-radar-stage"
               onMouseMove={onPointerMove}
               onMouseLeave={onPointerLeave}
             >
-              <SkillsRadar groups={t.skills.groups} active={active} onActivate={setActive} />
-              <div className="skills-radar-hint mono" aria-hidden="true">hover · radar</div>
+              <SkillsRadar groups={t.skills.groups} active={Math.max(0, active)} onActivate={setActive} />
+              <div className="skills-radar-hint mono" aria-hidden="true">tap a group above</div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="skills-layout">
+            <div className="skills-tabs" role="tablist" aria-label="stack">
+              {t.skills.groups.map(function renderTab(g, i) {
+                return (
+                  <button
+                    key={i}
+                    role="tab"
+                    aria-selected={active === i}
+                    className={`skills-tab ${active === i ? "is-active" : ""}`}
+                    onMouseEnter={function () { setActive(i); }}
+                    onFocus={function () { setActive(i); }}
+                    onClick={function () { setActive(i); }}
+                  >
+                    <span className="mono skills-num">/{String(i + 1).padStart(2, "0")}</span>
+                    <span className="skills-k">{g.k}</span>
+                    <span className="mono skills-count">{g.items.length}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="skills-panel card" data-reveal>
+              <div className="skills-panel-head">
+                <span className="mono">{`/stack/${t.skills.groups[Math.max(0, active)].k.toLowerCase().replace(/\W+/g, "-")}`}</span>
+                <span className="chip"><span className="chip-dot" />ready</span>
+              </div>
+              <div className="skills-items">
+                {t.skills.groups[Math.max(0, active)].items.map(function renderItem(it, i) {
+                  return (
+                    <span key={i} className="skill-item" style={{ animationDelay: `${i * 50}ms` }}>{it}</span>
+                  );
+                })}
+              </div>
+
+              {/* Contained radar stage — clip-path-safe (overflow: hidden in CSS)
+                  so the SVG can never spill into the page grid. Cursor moves the
+                  SVG by a few pixels in 2D — gives a tactile feel without
+                  introducing 3D transforms that would project content downward. */}
+              <div
+                ref={stageRef}
+                className="skills-radar-stage"
+                onMouseMove={onPointerMove}
+                onMouseLeave={onPointerLeave}
+              >
+                <SkillsRadar groups={t.skills.groups} active={Math.max(0, active)} onActivate={setActive} />
+                <div className="skills-radar-hint mono" aria-hidden="true">hover · radar</div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );

@@ -252,7 +252,7 @@
 
   function noOpController() {
     return {
-      setAccent() {}, setMotion() {}, setExpression() {}, getExpression() { return "idle"; }, dispose() {},
+      setAccent() {}, setMotion() {}, setActive() {}, setExpression() {}, getExpression() { return "idle"; }, dispose() {},
     };
   }
   function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
@@ -796,6 +796,9 @@
 
     // ── Visibility ───────────────────────────────────────────────────────
     let isVisible = !document.hidden;
+    // `active` is toggled by Hero via setActive() — false when the hero is
+    // scrolled off-screen, so the fallback robot stops its rAF work too.
+    let active = true;
     function onVisibilityChange() { isVisible = !document.hidden; lastFrame = performance.now(); }
     document.addEventListener("visibilitychange", onVisibilityChange);
     function onMotionPrefChange(e) { prefersReducedMotion = e.matches; }
@@ -808,7 +811,7 @@
 
     function tick(now) {
       rafHandle = requestAnimationFrame(tick);
-      if (!isVisible) { lastFrame = now; return; }
+      if (!isVisible || !active) { lastFrame = now; return; }
 
       const elapsed = Math.min(0.05, (now - lastFrame) / 1000);
       lastFrame = now;
@@ -979,6 +982,7 @@
         if (hex2) accent2Color.set(hex2);
       },
       setMotion(m) { motion = clamp(m, 0, 2); },
+      setActive(v) { active = !!v; if (active) lastFrame = performance.now(); },
       setExpression(name) {
         if (!EXPRESSION_TARGETS[name]) return;
         if (name === expressionCurrent) return;

@@ -1,4 +1,4 @@
-// app.jsx — Main app with scene-engine, themes, fonts, scroll-driven 3D
+// app.jsx — Main app: single Ember theme, fonts, scroll-driven 3D background
 
 const { useEffect: useE, useRef: useR, useState: useS } = React;
 
@@ -80,45 +80,8 @@ function useScrollEngine(bgFxRef, setActiveSection) {
   }, []);
 }
 
-// v54 — three showcased themes selected by the navbar segmented switcher.
-// Order is meaningful (left → right): Ember (warm), Cortex (cool),
-// Sage (calm). Keys match window.THEMES; "claude" is the internal key for
-// the Ember theme (kept for localStorage backward compat).
-const NAV_THEME_KEYS = ["claude", "cortex", "sage"];
-
-function Nav({ t, lang, setLang, active, theme, setTheme }) {
+function Nav({ t, lang, setLang, active }) {
   const [open, setOpen] = useS(false);
-
-  // Pick a theme via the choreographed wave transition. The wave starts
-  // from the centre of the clicked segment; the actual theme swap runs
-  // hidden under the wave's full-coverage frame. Falls back to an instant
-  // setTheme if the ThemeTransition module didn't load (graceful degrade).
-  function onThemePick(key, ev) {
-    if (key === theme) return;            // already active — no-op
-    if (!NAV_THEME_KEYS.includes(key)) return;
-    haptic("toggle");
-    const nextDef = (window.THEMES && window.THEMES[key]) ? window.THEMES[key] : null;
-    const applyFn = function applyThemeChoice() { setTheme(key); };
-    if (window.ThemeTransition && typeof window.ThemeTransition.run === "function") {
-      let originX;
-      let originY;
-      if (ev && ev.currentTarget && ev.currentTarget.getBoundingClientRect) {
-        const r = ev.currentTarget.getBoundingClientRect();
-        originX = r.left + r.width / 2;
-        originY = r.top + r.height / 2;
-      }
-      window.ThemeTransition.run({
-        originX: originX,
-        originY: originY,
-        waveColor: nextDef ? nextDef.bg0 : undefined,
-        glowColor: nextDef ? nextDef.accent : undefined,
-        onApply: applyFn,
-      });
-    } else {
-      applyFn();
-    }
-  }
-  const activeThemeIdx = Math.max(0, NAV_THEME_KEYS.indexOf(theme));
 
   // Lock scroll while drawer open, restore on close/unmount.
   useE(() => {
@@ -149,35 +112,6 @@ function Nav({ t, lang, setLang, active, theme, setTheme }) {
           ))}
         </ul>
         <div className="nav-right">
-          {/* Theme switcher — 3-segment: Ember / Cortex / Sage. Each segment
-              is a dot tinted with that theme's accent; the sliding thumb
-              marks the active one. Clicking a segment triggers the wave
-              transition. */}
-          <div
-            className="theme-switch"
-            role="group"
-            aria-label="theme"
-            style={{ "--theme-idx": activeThemeIdx }}
-          >
-            <span className="theme-switch-thumb" aria-hidden="true" />
-            {NAV_THEME_KEYS.map((key) => {
-              const def = (window.THEMES && window.THEMES[key]) ? window.THEMES[key] : null;
-              const label = def ? def.name : key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  className={`theme-switch-seg theme-switch-seg--${key} ${theme === key ? "is-active" : ""}`}
-                  aria-pressed={theme === key}
-                  aria-label={`theme: ${label}`}
-                  title={label}
-                  onClick={(ev) => onThemePick(key, ev)}
-                >
-                  <span className="theme-switch-dot" aria-hidden="true" />
-                </button>
-              );
-            })}
-          </div>
           <div className="lang" role="group" aria-label="language">
             {["ru", "en", "uz"].map((L) => (
               <button key={L} onClick={() => setLang(L)} className={lang === L ? "active" : ""} aria-pressed={lang === L}>{L.toUpperCase()}</button>
@@ -318,15 +252,13 @@ function MobileStickyCta({ t, visible }) {
 }
 
 function PortfolioTweaks({ t, setTweak }) {
-  const themeOptions = Object.keys(window.THEMES);
   const fontOptions = Object.keys(window.FONT_STACKS);
   return (
     <TweaksPanel>
       <TweakSection label="Language" />
       <TweakRadio label="Lang" value={t.lang} options={["ru","en","uz"]} onChange={(v) => setTweak("lang", v)} />
 
-      <TweakSection label="Theme" />
-      <TweakSelect label="Theme" value={t.theme} options={themeOptions} onChange={(v) => setTweak("theme", v)} />
+      <TweakSection label="Font" />
       <TweakSelect label="Font" value={t.font} options={fontOptions} onChange={(v) => setTweak("font", v)} />
 
       <TweakSection label="Layout" />
@@ -385,19 +317,13 @@ function App() {
     });
   }, []);
 
-  // Apply theme/font/density. On a theme change we update three things:
-  //   1. CSS variables (applyTheme)
-  //   2. accent colours on the scene-engine + bg-fx renderers
-  //   3. the bg-fx ANIMATION profile (Ember / Cortex / Sage) so the
-  //      background's character — spin speed, grid frequency, constellation
-  //      density — morphs to match the theme.
+  // Apply the (single) theme: set CSS variables + push accent to the bg-fx
+  // renderer. Kept dependency-driven so a future re-introduction of theming
+  // would just work.
   useE(() => {
     const theme = window.applyTheme(tweaks.theme);
     if (bgFxRef.current && theme) {
       bgFxRef.current.setAccent(theme.accent, theme.accent2);
-      if (typeof bgFxRef.current.setThemeProfile === "function") {
-        bgFxRef.current.setThemeProfile(theme.bgProfile || "ember");
-      }
     }
   }, [tweaks.theme]);
   useE(() => { window.applyFontStack(tweaks.font); }, [tweaks.font]);
@@ -419,12 +345,8 @@ function App() {
       const rootStyles = getComputedStyle(document.documentElement);
       const a1 = rootStyles.getPropertyValue("--accent").trim() || "#D97757";
       const a2 = rootStyles.getPropertyValue("--accent-2").trim() || "#C89B5E";
-      // Seed the bg-fx animation profile from the initial theme so the
-      // first paint already has the right character (no Ember→X flash).
-      const initialTheme = (window.THEMES && window.THEMES[tweaks.theme]) ? window.THEMES[tweaks.theme] : null;
       bgFxRef.current = window.BgFx.create(bgFxCanvasRef.current, {
         accent: a1, accent2: a2, motion: tweaks.motion,
-        themeProfile: initialTheme ? (initialTheme.bgProfile || "ember") : "ember",
       });
     }
     return () => {
@@ -439,6 +361,24 @@ function App() {
   // isInViewport check in motion.js handles the "no-flash" problem for visible elements.
   useE(() => {
     document.body.classList.add("page-loaded");
+    // Motion-lite flag: set on <html> when the device is weak OR the user
+    // prefers reduced motion. CSS keys the heaviest scroll effects (pinned
+    // overlap, scale reveals) off this so they degrade automatically.
+    var tierLow = (typeof window.getDeviceTier === "function") && window.getDeviceTier() === "low";
+    var prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (tierLow || prefersReduced) {
+      document.documentElement.setAttribute("data-motion-lite", "");
+    }
+    // On low-tier devices strip the pinned-overlap hosts entirely — the
+    // sticky/scroll-linked overlap is the heaviest scroll effect and not
+    // worth its cost on weak hardware. (CSS handles reduced-motion via the
+    // data-motion-lite attribute + @media query.)
+    if (tierLow) {
+      document.querySelectorAll("[data-pin]").forEach(function (p) {
+        p.removeAttribute("data-pin");
+        p.removeAttribute("data-pinned");
+      });
+    }
     if (window.Motion) window.Motion.init();
     // Wire the View Transitions API navigator. It binds a global click handler
     // on anchor[href^="#"] and replaces the default scroll with a cinematic
@@ -473,21 +413,35 @@ function App() {
         lang={lang}
         setLang={(v) => setTweak("lang", v)}
         active={activeSection}
-        theme={tweaks.theme}
-        setTheme={(v) => setTweak("theme", v)}
       />
 
       <main>
-        <Hero t={t} links={LINKS} />
-        <Signal t={t} />
+        {/* Pinned-overlap #0 — Signal recedes-covers Hero, same proven --pin-p
+            mechanism as the two pairs below (motion.js bindPins, transform/
+            opacity only, no sticky — sticky doesn't work here, body has
+            overflow-x:hidden which breaks it, verified empirically). Modifier
+            class carries Hero-specific tuning (its photo backdrop needs a
+            gentler recede than a plain content section). */}
+        <div className="pin-host pin-host--hero" data-pin>
+          <Hero t={t} links={LINKS} />
+          <Signal t={t} />
+        </div>
         <About t={t} />
         <Projects t={t} />
         <Skills t={t} />
-        <Services t={t} />
-        <CV t={t} links={LINKS} />
+        {/* Pinned-overlap #1 — Services recedes as CV (the centerpiece) rises.
+            Depth handoff via --pin-p (motion.js bindPins); transform/opacity
+            only, no sticky. The two sections are DOM-adjacent (required). */}
+        <div className="pin-host" data-pin>
+          <Services t={t} />
+          <CV t={t} links={LINKS} />
+        </div>
         <Process t={t} />
-        <Trust t={t} />
-        <Contact t={t} links={LINKS} />
+        {/* Pinned-overlap #2 — Trust recedes as Contact (the closing CTA) rises. */}
+        <div className="pin-host" data-pin>
+          <Trust t={t} />
+          <Contact t={t} links={LINKS} />
+        </div>
       </main>
 
       <Footer t={t} links={LINKS} />

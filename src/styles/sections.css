@@ -4,6 +4,149 @@
    ═══════════════════════════════════════════════════════════ */
 
 /* ── HERO ───────────────────────────────────────────────────── */
+/* Cockpit-view photo backdrop (v70). Opaque photo covers the fixed WebGL canvas
+   inside the hero; below the hero the canvas returns. Left-weighted veil keeps
+   the (left) text readable while the window+Earth glows in the centre gap between
+   text and robot. `isolation:isolate` gives a clean local stacking context so the
+   photo sits above the fixed canvas and the content sits above the photo. */
+.hero { position: relative; isolation: isolate; overflow: hidden; }
+.hero > .shell,
+.hero > .hero-scroll-hint,
+.hero > .hero-marquee { position: relative; z-index: 1; }
+/* Split into a static -wrap (carries the mask + overflow) and an -inner layer
+   (carries the image, entrance scale, and the parallax `translate` written by
+   the effect in Hero()). Previously both lived on one element, so the mask's
+   bottom edge drifted with the parallax translate — this keeps it pinned. */
+.hero-photo-wrap {
+  position: absolute;
+  left: 0; right: 0; top: -15%;
+  height: 130%;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  /* Fade stops are chosen so full transparency is reached BEFORE this wrap's
+     own bottom edge is clipped by .hero's overflow:hidden — the wrap is
+     taller than .hero (top:-15%/height:130%, to give the parallax translate
+     room to move without exposing an edge), so .hero's clip line falls at
+     (1 - (-0.15)) / 1.30 ≈ 88.5% of the WRAP's own height, not at 100%. The
+     previous stops (62%/94%) finished fading past that line, so the photo
+     was hard-clipped mid-fade — a real edge, not a color mismatch. 80% has
+     ~8% of margin below the 88.5% clip line. */
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 50%, transparent 80%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 50%, transparent 80%);
+}
+.hero-photo-inner {
+  position: absolute;
+  inset: 0;
+  background-image: url("/assets/hero-cockpit.webp");
+  background-size: cover;
+  background-position: center 42%;
+  will-change: transform;
+  scale: 1;
+  animation: heroPhotoIn 1.7s cubic-bezier(.2, .6, .18, 1) both;
+}
+@keyframes heroPhotoIn {
+  from { opacity: 0; scale: 1.09; }
+  to   { opacity: 1; scale: 1; }
+}
+/* Readability veil: dark on the left (text), lighter mid-right (window/Earth
+   behind the robot), and a bottom fade into the page bg for a seamless handoff
+   to the next section. All bases mix from var(--bg-0) (the theme's actual warm
+   #1F1E1B) instead of a hardcoded cold near-black — that mismatch was the root
+   cause of the visible seam between the photo and the section below it. */
+.hero-photo-inner::after {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(90deg, rgb(from var(--bg-0, #1F1E1B) r g b / .94) 0%, rgb(from var(--bg-0, #1F1E1B) r g b / .66) 40%, rgb(from var(--bg-0, #1F1E1B) r g b / .34) 70%, rgb(from var(--bg-0, #1F1E1B) r g b / .55) 100%),
+    linear-gradient(180deg, rgb(from var(--bg-0, #1F1E1B) r g b / .55) 0%, transparent 32%);
+}
+/* Fallback for engines without relative-color syntax (pre-2024 WebKit/Blink) —
+   without this the gradient above is dropped entirely and the veil vanishes. */
+@supports not (color: rgb(from red r g b)) {
+  .hero-photo-inner::after {
+    background:
+      linear-gradient(90deg, rgba(31,30,27,.94) 0%, rgba(31,30,27,.66) 40%, rgba(31,30,27,.34) 70%, rgba(31,30,27,.55) 100%),
+      linear-gradient(180deg, rgba(31,30,27,.55) 0%, transparent 32%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-photo-inner { animation: none; scale: 1; opacity: 1; }
+}
+/* Bridge: dissolves the exact bottom edge into the page background color, with
+   a thin warm glow right at the seam. Lives on its own static layer (not the
+   masked/parallaxed photo), so the handoff never re-opens a hard edge on scroll. */
+.hero-seam {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  /* Tall enough to reach up past the tech-stack marquee — measured live, the
+     marquee sits ~80-118px above the hero's bottom edge. A 180px seam left a
+     ~60px band above the marquee with zero blend (photo already faded out,
+     nothing darkening the grid yet), which is exactly the "raw grid, no
+     transition" gap that read as ugly. 260px starts the fade well above the
+     marquee so the whole marquee+scroll-hint zone sits on a continuously
+     darkening backdrop instead of jumping straight from photo to bare grid. */
+  height: 260px;
+  z-index: 0;
+  pointer-events: none;
+  /* Plain fade to the page background — no accent glow. An earlier attempt
+     added a warm radial-gradient highlight here and it read as a smudge/blob
+     sitting on top of the photo rather than a clean handoff; keep this the
+     simplest thing that works. */
+  background: linear-gradient(180deg, transparent 0%, var(--bg-0, #1F1E1B) 78%);
+}
+/* Mobile: vertical orbital shot, bottom-weighted veil (stacked text sits low). */
+@media (max-width: 900px) {
+  .hero-photo-wrap {
+    top: -6%; height: 112%;
+    /* Gentler dissolve on mobile: keep the upper photo solid (stacked text needs
+       its dark backing), soften only the lower portion. Clip line here is
+       (1-(-0.06))/1.12 ≈ 94.6% of this wrap's height — 88% finishes the fade
+       with ~6.6% margin before that, so it's never hard-clipped mid-fade. */
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 62%, transparent 88%);
+    mask-image: linear-gradient(180deg, #000 0%, #000 62%, transparent 88%);
+  }
+  .hero-photo-inner {
+    background-image: url("/assets/orbital-station.webp");
+    background-position: center top;
+  }
+  .hero-photo-inner::after {
+    background:
+      linear-gradient(180deg, rgb(from var(--bg-0, #1F1E1B) r g b / .28) 0%, rgb(from var(--bg-0, #1F1E1B) r g b / .52) 42%, rgb(from var(--bg-0, #1F1E1B) r g b / .9) 100%),
+      linear-gradient(180deg, transparent 74%, var(--bg-0, #1F1E1B) 100%);
+  }
+  @supports not (color: rgb(from red r g b)) {
+    .hero-photo-inner::after {
+      background:
+        linear-gradient(180deg, rgba(31,30,27,.28) 0%, rgba(31,30,27,.52) 42%, rgba(31,30,27,.9) 100%),
+        linear-gradient(180deg, transparent 74%, var(--bg-0, #1F1E1B) 100%);
+    }
+  }
+  /* Measured live at 390px: marquee sits 80-118px above hero's bottom edge —
+     230px starts the fade comfortably above it so marquee+scroll-hint sit on
+     a darkening backdrop instead of bare grid (see desktop comment above). */
+  .hero-seam { height: 230px; }
+}
+
+/* ── Hero → Signal cover transition ──────────────────────────────────
+   Handled by the shared .pin-host/--pin-p mechanism (motion.js bindPins +
+   the generic rules in features.css) — the same proven depth-handoff already
+   used for Services→CV and Trust→Contact. Hero+Signal are wrapped in
+   .pin-host.pin-host--hero in app.jsx; the generic rules there recede Hero
+   (:first-child: scale + dim) and rise Signal (:last-child: translateY +
+   sheen). sticky/pin-position are unusable here (body overflow-x makes them
+   a scroll-container hazard — verified), which is exactly why that mechanism
+   is transform/opacity-only and JS-measured via a single batched rAF loop.
+   The one Hero-specific addition: unlike the other two pairs (which float on
+   the shared transparent WebGL bg), Signal needs an OPAQUE backing here,
+   because Hero carries its own distinct opaque photo backdrop that must be
+   visually covered by the rising panel, not just receded past underneath. */
+@media (min-width: 901px) {
+  .pin-host--hero > section[data-section]:last-child {
+    background: var(--bg-0);
+  }
+}
+
 .hero-grid {
   display: grid;
   grid-template-columns: 1.15fr 1fr;
@@ -94,10 +237,17 @@
   border: 0;
   box-shadow: none;
   overflow: hidden;
+  /* No mask/cut-out here anymore — the old radial "darkening" cut read as an
+     ugly transparent notch. The Spline free-tier badge (baked into the WebGL
+     frame, pixel-measured at x 18-84% / y 87-94% of the canvas) is instead
+     covered by an OPAQUE telemetry bar (.hero-robot-plate) docked along the
+     bottom, which reads as an intentional instrument readout. */
 }
-/* Scale the Spline canvas slightly larger than its hosting box so the robot
-   feels physically present. Desktop only — mobile keeps 1:1 to avoid
-   clipping the antenna against the watermark cover. */
+/* Scale the Spline canvas slightly larger than its hosting box + shift it
+   right so the robot FIGURE (which the scene places in the left ~40% of the
+   canvas) reads centered in the frame. `translate` composes with `transform`
+   and moves the baked badge along with it — the bar below is sized wide enough
+   to still cover the badge after the shift (verified by pixel measurement). */
 @media (hover: hover) and (min-width: 901px) {
   .hero-robot-canvas {
     transform: scale(1.08);
@@ -110,8 +260,9 @@
   width: 100%;
   height: 100%;
   display: block;
+  translate: 13% 0;
   /* Spline renders to a transparent buffer — leave the background to the
-     parent .hero-robot div (radial gradient + corner ticks). */
+     parent .hero-robot div. Not masked. */
   background: transparent;
 }
 
@@ -153,7 +304,8 @@
 @keyframes heroRobotDot { 50% { opacity: 0.45; transform: scale(0.7); } }
 .hero-robot-hint {
   position: absolute;
-  bottom: 14px; left: 16px;
+  /* Lifted above the telemetry bar so it isn't covered by it. */
+  bottom: 17%; left: 16px;
   font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -161,87 +313,61 @@
   opacity: 0.55;
   pointer-events: none;
 }
-/* ── Spline watermark kill ───────────────────────────────────────────
+/* ── Spline watermark — instrument plate ─────────────────────────────
    "Built with Spline" renders directly into the WebGL frame buffer (it's
-   pixels on a texture, NOT a DOM element), so CSS selectors can't reach
-   it. We layer two covers:
-     1. Outer cover: full backdrop-filter blur + bg-0 fill, sized big
-        enough that the watermark is GUARANTEED to be inside it, with
-        a smooth radial fade so it blends into the surrounding canvas.
-     2. Inner cover: small extra-opaque dot exactly where the watermark
-        sits, so even at edge of the gradient there's no leak.
-   Result: bottom-right corner reads as part of the page background,
-   the rest of the canvas is untouched. */
-/* ── Spline watermark kill v2 ────────────────────────────────────────
-   The "Built with Spline" badge sits at the bottom-right of the canvas
-   roughly 110×30px (logo + text). We OVER-COVER:
-     • Inner solid patch (250×56px) is BIG, fully opaque bg-0, no mask.
-     • Outer feather (360×100px) fades the edges of the patch back into
-       the canvas so the cover blends. Heavy blur dissolves anything
-       leaking through.
-   No transparency near the badge — guaranteed kill. */
-.hero-robot-wm-cover {
+   pixels on a texture, NOT a DOM element), so CSS can't hide it directly.
+   The corner is cut out of the (static, untransformed) .hero-robot wrapper
+   above, and this opaque, non-interactive plate sits on top of that cut —
+   it reads as a cockpit ID tag, not a patch, and its position/size don't
+   depend on the canvas's own transform/scale/DPR. */
+/* Telemetry bar — an OPAQUE instrument readout docked along the bottom of the
+   robot frame. Sized to fully cover the baked "Built with Spline" badge (pixel-
+   measured at x 18-84% / y 87-94% of the frame, shifted right ~13% with the
+   canvas), on every device. Reads as the robot's status HUD, not a patch. */
+.hero-robot-plate {
   position: absolute;
-  right: -2px;
-  bottom: -2px;
-  width: 360px;
-  height: 100px;
+  /* Spans to the frame's right edge (right:0) where the shifted badge is
+     clipped, with a wide left reach — pixel-verified to fully cover the badge
+     on desktop (badge lands x 18-84% / y 90-94% after the 13% canvas shift). */
+  left: 6%; right: 0;
+  bottom: 1.5%;
+  height: 13%;
+  min-height: 46px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  background: linear-gradient(180deg, var(--bg-1, #28251F), var(--bg-0, #1F1E1B));
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  box-shadow: 0 6px 20px -6px rgba(0,0,0,.65), 0 0 0 1px rgba(var(--accent-rgb) / 0.08) inset;
   pointer-events: none;
-  z-index: 3;
-  /* Heavy blur dissolves any glyphs the solid patch doesn't directly cover. */
-  -webkit-backdrop-filter: blur(30px) saturate(0.5) brightness(0.5);
-  backdrop-filter: blur(30px) saturate(0.5) brightness(0.5);
-  background:
-    radial-gradient(
-      ellipse 100% 100% at 100% 100%,
-      var(--bg-0) 0%,
-      var(--bg-0) 55%,
-      rgba(31, 30, 27, 0.95) 72%,
-      rgba(31, 30, 27, 0.55) 88%,
-      transparent 100%
-    );
-  -webkit-mask-image: radial-gradient(
-    ellipse 100% 100% at 100% 100%,
-    black 0%,
-    black 70%,
-    rgba(0, 0, 0, 0.55) 87%,
-    transparent 100%
-  );
-  mask-image: radial-gradient(
-    ellipse 100% 100% at 100% 100%,
-    black 0%,
-    black 70%,
-    rgba(0, 0, 0, 0.55) 87%,
-    transparent 100%
-  );
 }
-.hero-robot-wm-cover::after {
-  /* Inner solid patch — large, fully opaque, anchored to bottom-right.
-     Sized so even with margin variance the watermark CANNOT poke out. */
-  content: "";
-  position: absolute;
-  right: 6px;
-  bottom: 4px;
-  width: 250px;
-  height: 56px;
-  background: var(--bg-0);
-  border-radius: 10px;
-  opacity: 1;
+.hero-robot-plate-l { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.hero-robot-plate-r { margin-left: auto; color: var(--accent); white-space: nowrap; }
+/* Dashed telemetry divider filling the middle so the wide bar reads as an
+   instrument panel, not an empty box. */
+.hero-robot-plate-rail {
+  flex: 1;
+  height: 1px;
+  min-width: 12px;
+  background: repeating-linear-gradient(90deg, var(--line-strong) 0 6px, transparent 6px 12px);
+  opacity: 0.6;
 }
-/* On smaller viewports the Spline canvas is narrower but the watermark itself
-   stays the same pixel size (it's not proportional). So percentage-wise the
-   cover needs to be BIGGER on mobile relative to canvas. */
+.hero-robot-plate-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+  flex: none;
+}
 @media (max-width: 900px) {
-  .hero-robot-wm-cover { width: 340px; height: 100px; }
-  .hero-robot-wm-cover::after { width: 240px; height: 60px; }
-}
-@media (max-width: 600px) {
-  .hero-robot-wm-cover { width: 310px; height: 96px; }
-  .hero-robot-wm-cover::after { width: 220px; height: 56px; }
-}
-@media (max-width: 380px) {
-  .hero-robot-wm-cover { width: 280px; height: 86px; }
-  .hero-robot-wm-cover::after { width: 200px; height: 52px; }
+  /* Pixel-verified cover on mobile (no canvas scale, same 13% shift). */
+  .hero-robot-plate { left: 4%; right: 0; bottom: 2%; height: 14%; min-height: 42px; font-size: 9.5px; gap: 10px; padding: 0 13px; }
 }
 .hero-terminal {
   background: linear-gradient(180deg, rgba(20,24,28,.72), rgba(11,14,17,.9));
@@ -382,6 +508,10 @@
     width: 100%;
     min-height: 0; /* let the grid size to content, not stretch */
   }
+  /* Robot first, text below — the robot is the "wow" focal point of the
+     first screen on mobile; the DOM order stays text-then-robot for a11y
+     (title is still what a screen reader hits first), order:-1 only moves
+     it visually. */
   .hero-right { order: -1; display: grid; gap: 14px; }
   .hero-marquee { margin: 30px calc(-1 * var(--gutter)) 0; }
   .hero-meta { flex-direction: column; align-items: flex-start; gap: 16px; }
@@ -402,107 +532,13 @@
   .hero-ctas .btn { flex: 1; justify-content: center; min-height: 50px; }
   .hero-line { font-size: clamp(36px, 10vw, 52px); }
   .hero-tagline { font-size: 14.5px; line-height: 1.5; }
-  .signal-spark-svg { height: 28px; }
-  .signal-k { font-size: 22px; }
-  .signal-v { font-size: 12.5px; }
 }
 @media (pointer: coarse) {
   /* Disable parallax tilt on touch — it just looks broken without hover. */
-  .signal-card, .service-card, .proj-card { transform: none !important; }
+  .proj-card { transform: none !important; }
 }
 
-/* ── SIGNAL ─────────────────────────────────────────────────── */
-.signal-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-.signal-card {
-  display: flex; flex-direction: column;
-  min-height: 200px;
-  --rx: 0deg; --ry: 0deg;
-  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry));
-  transition: transform .3s var(--ease-out), border-color var(--d-mid), box-shadow var(--d-mid);
-}
-.signal-top {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 18px;
-}
-.signal-code { color: var(--text-mute); }
-.signal-k {
-  font-size: 26px;
-  margin-bottom: 8px;
-  letter-spacing: -0.02em;
-}
-.signal-v {
-  color: var(--text-dim);
-  font-size: 13.5px;
-  margin-bottom: 16px;
-  line-height: 1.5;
-}
-.signal-spark {
-  margin-top: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.signal-spark-svg {
-  height: 36px;
-  width: 100%;
-  color: var(--accent);
-  display: block;
-}
-.signal-spark-stroke {
-  stroke-dasharray: 280;
-  stroke-dashoffset: 280;
-  animation: signalDraw 1.6s var(--ease-out) forwards;
-}
-@keyframes signalDraw { to { stroke-dashoffset: 0; } }
-
-/* Pulse-tip ring expansion for `signal-card--pulse` cards — heartbeat feel. */
-.signal-pulse-ring {
-  transform-origin: center;
-  animation: signalPulseRing 1.5s ease-out infinite;
-}
-@keyframes signalPulseRing {
-  0%   { transform: scale(0.6); stroke-opacity: 0.8; }
-  100% { transform: scale(2.2); stroke-opacity: 0; }
-}
-.signal-pulse-tip {
-  animation: signalPulseDot 1.5s ease-out infinite;
-}
-@keyframes signalPulseDot {
-  0%, 100% { transform: scale(1);   fill-opacity: 1; }
-  50%      { transform: scale(1.4); fill-opacity: 0.7; }
-}
-
-/* Each viz has a slightly different feel — color the visualization area
-   subtly per type to make the grid read as "6 unique modules". */
-.signal-card--bars   .signal-spark-svg { opacity: 0.92; }
-.signal-card--dots   .signal-spark-svg { opacity: 0.95; }
-.signal-card--histo  .signal-spark-svg { opacity: 0.88; }
-.signal-card--radial .signal-spark-svg { height: 42px; }
-.signal-spark-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 10.5px;
-  letter-spacing: 0.12em;
-  color: var(--text-mute);
-  text-transform: uppercase;
-}
-.signal-spark-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 8px var(--accent);
-  animation: signalPulse 1.8s ease-in-out infinite;
-}
-@keyframes signalPulse { 50% { opacity: 0.4; transform: scale(0.7); } }
-.signal-spark-unit { color: var(--text-mute); opacity: 0.7; margin-left: auto; }
-@media (min-width: 601px) and (max-width: 900px) { .signal-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 901px) and (max-width: 1200px) { .signal-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 600px) { .signal-grid { grid-template-columns: 1fr; gap: 12px; } }
+/* Signal 2.0 (editorial rows) CSS lives in features.css — see "Signal 2.0". */
 
 /* ── ABOUT — README.md card ──────────────────────────────────── */
 .about-readme {
@@ -1060,8 +1096,81 @@
   align-self: flex-start;
 }
 .proj-cta:hover .arrow { transform: translateX(4px); }
-@media (min-width: 640px) and (max-width: 900px) { .proj-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 639px) { .proj-grid { grid-template-columns: 1fr; gap: 16px; } }
+
+/* ── DESKTOP: collapse to the first 2 cases + "show more" ─────────────── */
+@media (min-width: 901px) {
+  .proj-grid.is-collapsed > .proj-card:nth-child(n+3) { display: none; }
+  /* Newly-shown cards fade+rise in. fill:backwards (not both) so it fills the
+     hidden pose only DURING the run and then hands the card back to its base
+     styles — critical because the card's base `transform` carries the live
+     hover-tilt (rotateX/rotateY var); a `both` fill would freeze transform:none
+     and permanently kill the tilt. */
+  .proj-grid.is-expanded > .proj-card:nth-child(n+3) {
+    animation: projExpandIn .5s var(--e-entrance, cubic-bezier(.2,.6,.18,1)) backwards;
+  }
+}
+/* Transform-only (no opacity) so a paused/throttled animation can never leave
+   a card invisible — worst case it rests 18px lower, still fully readable. */
+@keyframes projExpandIn {
+  from { transform: translateY(18px); }
+  to   { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .proj-grid.is-expanded > .proj-card:nth-child(n+3) { animation: none; }
+}
+html[data-motion-lite] .proj-grid.is-expanded > .proj-card:nth-child(n+3) { animation: none; }
+.proj-expand {
+  margin: 24px auto 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 26px;
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--text-dim);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color var(--d-mid), color var(--d-mid), background var(--d-mid);
+}
+.proj-expand:hover {
+  border-color: rgba(var(--accent-rgb) / 0.5);
+  color: var(--accent);
+  background: rgba(var(--accent-rgb) / 0.04);
+}
+.proj-expand-ico { font-size: 13px; transition: transform var(--d-mid); }
+.proj-expand[aria-expanded="true"] .proj-expand-ico { color: var(--accent); }
+.proj-expand:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* ── MOBILE (≤900px): horizontal peek-carousel + dots pager ──────────── */
+@media (max-width: 900px) {
+  /* Flex overrides the desktop grid; grid-template-columns is ignored. All
+     cards shown (swipe through them) — the desktop collapse does nothing here. */
+  .proj-grid {
+    display: flex;
+    grid-template-columns: none;
+    gap: 14px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    /* Bleed to the screen edges so the peek of the next card reaches the edge. */
+    margin: 0 calc(-1 * var(--gutter));
+    padding: 4px var(--gutter) 8px;
+    scroll-padding: 0 var(--gutter);
+  }
+  .proj-grid::-webkit-scrollbar { display: none; }
+  .proj-grid > .proj-card {
+    flex: 0 0 84%;          /* < 100% so the next card peeks in */
+    scroll-snap-align: center;
+    perspective: none;       /* no 3D tilt on touch */
+    transform: none !important;
+    opacity: 1 !important;   /* carousel cards are always visible (override reveal) */
+  }
+  .proj-expand { display: none; }  /* mobile pages via swipe + dots, not a button */
+}
 
 /* ── SKILLS ────────────────────────────────────────────────── */
 .skills-layout {
@@ -1163,162 +1272,392 @@
   .skills-radar { height: 160px; }
 }
 
-/* ── SERVICES ──────────────────────────────────────────────── */
-.services-grid {
+/* ── SKILLS — mobile accordion (≤900px) ──────────────────────────────
+   Tapping a group expands its tools directly under that row, instead of
+   routing to a separate tabs-then-panel layout that requires scrolling
+   back and forth to see what you just tapped. Same visual family as the
+   Services accordion (.svc-acc-*) for consistency. */
+.skills-acc { margin-top: 8px; }
+.skills-acc-row { border-top: 1px solid var(--line); }
+.skills-acc-row:last-child { border-bottom: 1px solid var(--line); }
+.skills-acc-h { margin: 0; }
+.skills-acc-head {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
   gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 18px 4px;
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  cursor: pointer;
 }
-.service {
-  min-height: 220px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.skills-acc-head .skills-k { font-size: 21px; }
+.skills-acc-head .skills-count { justify-self: end; }
+.skills-acc-chev {
+  font-size: 20px;
+  color: var(--text-mute);
+  transition: color var(--d-mid);
+  min-width: 22px; text-align: center;
 }
-.service-num { color: var(--text-mute); font-size: 10px; letter-spacing: .14em; }
-.service-k {
-  font-size: 22px;
-  margin: 4px 0;
+.skills-acc-row.is-open .skills-acc-head .skills-k,
+.skills-acc-row.is-open .skills-acc-head .skills-num,
+.skills-acc-row.is-open .skills-acc-chev { color: var(--accent); }
+.skills-acc-head:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 6px; }
+.skills-acc-body { padding: 2px 4px 22px; }
+.skills-acc-body[hidden] { display: none; }
+.skills-acc-row.is-open .skills-items {
+  animation: skillsAccIn 320ms var(--e-entrance, cubic-bezier(.2,.6,.18,1)) both;
 }
-.service-v {
-  color: var(--text-dim);
-  font-size: 13.5px;
-  line-height: 1.55;
-  margin-bottom: auto;
+@keyframes skillsAccIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
 }
-.service-io {
-  display: flex; align-items: center; gap: 10px;
-  padding-top: 14px;
-  border-top: 1px solid var(--line);
-  color: var(--accent);
+@media (prefers-reduced-motion: reduce) {
+  .skills-acc-row.is-open .skills-items { animation: none; }
 }
-.service-io-pill {
-  font-size: 10px;
-  padding: 4px 8px;
-  border: 1px solid rgba(var(--accent-rgb) / 0.4);
-  border-radius: 4px;
-  letter-spacing: .04em;
-}
-.service-io-line {
-  flex: 1;
-  width: auto;
-  height: 8px;
-  color: var(--accent);
-  opacity: .6;
-}
-@media (max-width: 1200px) { .services-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 600px) { .services-grid { grid-template-columns: 1fr; } }
+html[data-motion-lite] .skills-acc-row.is-open .skills-items { animation: none; }
 
-/* ── SERVICES — varied cards with inline glyphs ─────────────── */
-.service-card {
-  position: relative;
-  min-height: 230px;
+/* ── SERVICES 2.0 — panel switcher / accordion ──────────────────────── */
+.svc {
+  --svc-crossfade: 340ms;
+  margin-top: 8px;
+}
+
+/* DESKTOP: two columns. Left list is intrinsic, right panel takes the rest. */
+.svc.is-panel {
   display: grid;
-  grid-template-rows: auto auto 1fr;
+  grid-template-columns: minmax(300px, 0.9fr) 1.35fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.svc-list { display: flex; flex-direction: column; }
+
+.svc-tab {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
   gap: 14px;
-  --rx: 0deg; --ry: 0deg;
-  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry));
-  transition:
-    transform .35s var(--ease-out),
-    border-color var(--d-mid),
-    box-shadow var(--d-mid),
-    background var(--d-mid);
+  width: 100%;
+  text-align: left;
+  padding: 18px 18px 18px 22px;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: color var(--d-mid), background var(--d-mid);
+}
+.svc-list .svc-tab:last-child { border-bottom: 1px solid var(--line); }
+
+.svc-num {
+  position: relative; z-index: 1;
+  font-size: 11px;
+  letter-spacing: .12em;
+  color: var(--text-mute);
+  transition: color var(--d-mid);
+}
+.svc-k {
+  position: relative; z-index: 1;
+  font-size: 23px;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--text);
+  transition: color var(--d-mid);
+}
+.svc-tab-io {
+  position: relative; z-index: 1;
+  justify-self: end;
+  font-size: 10.5px;
+  letter-spacing: .04em;
+  color: var(--text-mute);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity var(--d-mid), transform var(--d-mid), color var(--d-mid);
+  white-space: nowrap;
+}
+/* Accent mark — drawn as a clip-path wipe (was height 0→62%; same visible
+   band, "drawn" not "grown"). Full-height bar, mask reveals the centered
+   62%-tall band so the result looks identical, just a different mechanic. */
+.svc-tab-mark {
+  position: absolute;
+  left: 0; top: 50%;
+  width: 2px; height: 100%;
+  background: var(--accent);
+  transform: translateY(-50%);
+  clip-path: inset(100% 0 0 0);
+  transition: clip-path .38s var(--e-entrance, cubic-bezier(.2,.6,.18,1));
+}
+
+.svc-tab:hover .svc-k { color: var(--accent); }
+.svc-tab:hover .svc-tab-io { opacity: .7; transform: none; }
+
+.svc-tab.is-active { background: rgba(var(--accent-rgb) / 0.045); }
+.svc-tab.is-active .svc-num { color: var(--accent); }
+.svc-tab.is-active .svc-k { color: var(--accent); }
+.svc-tab.is-active .svc-tab-io { opacity: 1; transform: none; color: var(--accent); }
+.svc-tab.is-active .svc-tab-mark { clip-path: inset(19% 0 19% 0); }
+
+/* Ghost numeral + glow (shared engine defined in features.css, alongside
+   Signal's — same --row-i/--row-total/--hue-shift formula). Sized much
+   smaller than Signal's and tucked low so it never collides with the
+   right-aligned .svc-tab-io mono string sharing this same corner. */
+.svc-tab .row-ghost {
+  top: auto; bottom: -0.08em; transform: none;
+  font-size: clamp(34px, 3vw, 52px);
+  opacity: 0.03;
+}
+.svc-tab.is-active .row-ghost { opacity: 0.08; transform: none; }
+.svc-tab.is-active::after { opacity: 0.24; transform: translateX(0); }
+@media (hover: hover) and (pointer: fine) {
+  .svc-tab:hover:not(.is-active)::after { opacity: 0.10; transform: translateX(0); }
+  .svc-tab:hover:not(.is-active) .row-ghost { opacity: 0.05; }
+}
+
+.svc-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+
+/* ── RIGHT PANEL ── */
+.svc-panel-wrap {
+  position: relative;
+  min-height: 340px;          /* reserve height → no CLS on crossfade */
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(244,241,234,.025), rgba(244,241,234,.005));
+  padding: 34px 34px 30px;
   overflow: hidden;
 }
-.service-card-head {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+.svc-panel-wrap::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 100% 0%, rgba(var(--accent-rgb) / 0.06), transparent 65%);
+  pointer-events: none;
 }
-.service-card-num {
-  font-size: 10.5px;
-  letter-spacing: .14em;
-  color: var(--text-mute);
+.svc-panel { position: relative; }
+
+.svc.is-panel .svc-panel {
+  animation: svcPanelIn var(--svc-crossfade) var(--e-entrance, cubic-bezier(.2,.6,.18,1)) both;
 }
-.service-card-badge {
-  font-size: 9.5px;
-  padding: 3px 9px;
-  border: 1px solid rgba(var(--accent-rgb) / 0.3);
-  color: var(--accent);
-  border-radius: 999px;
-  letter-spacing: .1em;
-  background: rgba(var(--accent-rgb) / 0.04);
-  text-transform: lowercase;
+@keyframes svcPanelIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
 }
-.service-card-glyph {
-  width: 48px;
-  height: 48px;
-  color: var(--accent);
+
+.svc-panel-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px; }
+.svc-panel-num { font-size: 12px; letter-spacing: .14em; color: var(--accent); }
+.svc-panel-k { font-size: 32px; letter-spacing: -0.02em; margin: 0; color: var(--text); }
+
+/* Rises into view via a clip-path wipe — layered on top of (not replacing)
+   the parent .svc-panel's existing opacity/translateY mount animation, and
+   the mobile accordion's existing svcAccIn (edited further below, near its
+   @keyframes, to add this as a second simultaneous animation — different
+   properties, no conflict). */
+.svc-detail-inner { display: flex; flex-direction: column; gap: 22px; }
+.svc-panel .svc-detail-inner {
+  clip-path: inset(0 0 100% 0);
+  animation: svcDetailRise .5s var(--e-entrance, cubic-bezier(.2,.6,.18,1)) .1s both;
+}
+@keyframes svcDetailRise {
+  from { clip-path: inset(0 0 100% 0); }
+  to   { clip-path: inset(0 0 0% 0); }
+}
+.svc-detail-v {
+  font-size: 16.5px;
+  line-height: 1.6;
+  color: var(--text-dim);
+  max-width: 46ch;
+  margin: 0;
+}
+
+/* ── io flow (input → output) — the signature detail ── */
+.svc-io {
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: transform .45s var(--ease-emphasized), color var(--d-mid);
+  gap: 14px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
-.service-card-glyph svg { width: 100%; height: 100%; display: block; }
-.service-card-k {
-  font-size: 21px;
-  margin: 0;
-  letter-spacing: -0.02em;
+.svc-io-node {
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  letter-spacing: .03em;
+  padding: 6px 12px;
+  border-radius: 6px;
+  white-space: nowrap;
 }
-.service-card-v {
+.svc-io-in {
   color: var(--text-dim);
-  font-size: 13.5px;
-  line-height: 1.55;
-  align-self: start;
+  border: 1px solid var(--line-strong);
+  background: rgba(244,241,234,.02);
 }
-
-/* ── Per-card hover behaviors — one of 8 variants assigned by index.
-   Goal: grid never reads as a uniform copy-paste. Each card has its own
-   micro-personality on hover, glyph reacts independently. */
-.service-card-hover-lift:hover    { transform: translateY(-6px); }
-.service-card-hover-lift:hover .service-card-glyph { transform: translateY(-3px) scale(1.1); }
-
-.service-card-hover-tilt-l, .service-card-hover-tilt-r {
-  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry));
+.svc-io-out {
+  color: var(--accent);
+  border: 1px solid rgba(var(--accent-rgb) / 0.4);
+  background: rgba(var(--accent-rgb) / 0.06);
 }
-.service-card-hover-tilt-l:hover .service-card-glyph { transform: rotate(-8deg) scale(1.1); }
-.service-card-hover-tilt-r:hover .service-card-glyph { transform: rotate(8deg)  scale(1.1); }
-
-.service-card-hover-glow:hover {
-  border-color: rgba(var(--accent-rgb) / 0.55);
-  box-shadow:
-    0 14px 36px -8px rgba(0,0,0,.55),
-    0 0 0 1px rgba(var(--accent-rgb) / 0.35),
-    0 0 32px -4px rgba(var(--accent-rgb) / 0.4);
-}
-.service-card-hover-glow:hover .service-card-glyph { filter: drop-shadow(0 0 10px rgba(var(--accent-rgb) / 0.6)); }
-
-.service-card-hover-scale:hover { transform: scale(1.025); }
-.service-card-hover-scale:hover .service-card-glyph { transform: scale(1.2) rotate(-3deg); }
-
-.service-card-hover-shift:hover .service-card-glyph { transform: translateX(8px); }
-.service-card-hover-shift:hover { background: linear-gradient(180deg, rgba(var(--accent-rgb) / 0.06), rgba(var(--accent-rgb) / 0.01)); }
-
-.service-card-hover-edge { position: relative; }
-.service-card-hover-edge::after {
-  content: "";
-  position: absolute;
-  left: 0; right: 0; top: 0;
+.svc-io-rail {
+  position: relative;
+  flex: 1;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  transform: scaleX(0);
-  transform-origin: center;
-  transition: transform .45s var(--ease-out);
+  min-width: 40px;
+  background: linear-gradient(90deg, var(--line-strong), rgba(var(--accent-rgb) / 0.5));
+  border-radius: 2px;
+  overflow: hidden;
 }
-.service-card-hover-edge:hover::after { transform: scaleX(1); }
-.service-card-hover-edge:hover .service-card-glyph { color: var(--accent-2); }
-
-.service-card-hover-ripple { position: relative; isolation: isolate; }
-.service-card-hover-ripple::before {
-  content: "";
+.svc-io-tok {
   position: absolute;
-  inset: 0;
-  background: radial-gradient(circle 220px at 50% 50%, rgba(var(--accent-rgb) / 0.16), transparent 70%);
-  opacity: 0;
-  transition: opacity .45s var(--ease-out);
-  pointer-events: none;
-  z-index: -1;
+  top: 50%; left: 0;
+  width: 6px; height: 6px;
+  margin-top: -3px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
 }
-.service-card-hover-ripple:hover::before { opacity: 1; }
-.service-card-hover-ripple:hover .service-card-glyph { transform: scale(1.15); }
+/* Token travels once when the block reveals, then loops slowly. */
+.svc .rv-in .svc-io-tok,
+.svc-panel .svc-io-tok,
+.svc-acc-row.is-open .svc-io-tok {
+  animation: svcTok 2.4s var(--ease-out) infinite;
+}
+@keyframes svcTok {
+  0%   { left: 0;    opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+
+/* ── related project ── */
+.svc-related {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "eyebrow arrow" "name arrow" "meta arrow";
+  gap: 4px 12px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(244,241,234,.015);
+  text-decoration: none;
+  transition: border-color var(--d-mid), background var(--d-mid), transform var(--d-mid);
+}
+.svc-related:hover {
+  border-color: rgba(var(--accent-rgb) / 0.4);
+  background: rgba(var(--accent-rgb) / 0.04);
+  transform: translateY(-2px);
+}
+.svc-related-eyebrow { grid-area: eyebrow; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--text-mute); }
+.svc-related-name { grid-area: name; font-size: 17px; color: var(--text); letter-spacing: -0.01em; }
+.svc-related-meta { grid-area: meta; display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; margin-top: 2px; }
+.svc-related-tag { color: var(--accent); letter-spacing: .06em; }
+.svc-related-out { color: var(--text-mute); }
+.svc-related-arrow { grid-area: arrow; align-self: center; color: var(--accent); font-size: 16px; transition: transform var(--d-mid); }
+.svc-related:hover .svc-related-arrow { transform: translate(2px, -2px); }
+.svc-related:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* ── MOBILE ACCORDION (≤900px) ── */
+.svc.is-acc { display: block; }
+.svc-acc-row { border-top: 1px solid var(--line); }
+.svc-acc-row:last-child { border-bottom: 1px solid var(--line); }
+.svc-acc-h { margin: 0; }
+.svc-acc-head {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  padding: 18px 4px;
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  cursor: pointer;
+  transition: background-color .5s var(--e-entrance, cubic-bezier(.2,.6,.18,1));
+}
+.svc-acc-head .svc-k { font-size: 21px; }
+.svc-acc-chev {
+  position: relative; z-index: 1;
+  font-size: 20px;
+  color: var(--text-mute);
+  transition: color var(--d-mid);
+  min-width: 24px; text-align: center;
+}
+.svc-acc-row.is-open .svc-acc-head .svc-k,
+.svc-acc-row.is-open .svc-acc-head .svc-num,
+.svc-acc-row.is-open .svc-acc-chev { color: var(--accent); }
+.svc-acc-row.is-open .svc-acc-head { background: rgba(var(--accent-rgb) / 0.045); }
+.svc-acc-head:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 6px; }
+
+/* Ghost numeral for the mobile accordion head — small and clipped low so it
+   never collides with the +/− chevron sharing the same right-aligned corner
+   (a real collision risk at typical phone widths, flagged in review). */
+.svc-acc-head .row-ghost {
+  top: auto; bottom: -0.05em; right: 26px; transform: none;
+  font-size: clamp(30px, 11vw, 46px);
+  opacity: 0.03;
+}
+.svc-acc-row.is-open .svc-acc-head .row-ghost { opacity: 0.08; }
+.svc-acc-row.is-open .svc-acc-head::after { opacity: 0.24; transform: translateX(0); }
+
+.svc-acc-body { padding: 4px 4px 24px; }
+.svc-acc-body[hidden] { display: none; }
+.svc-acc-row.is-open .svc-detail-inner {
+  animation:
+    svcAccIn 320ms var(--e-entrance, cubic-bezier(.2,.6,.18,1)) both,
+    svcDetailRise .5s var(--e-entrance, cubic-bezier(.2,.6,.18,1)) .05s both;
+}
+@keyframes svcAccIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.svc.is-acc .svc-panel-k { font-size: 24px; }
+
+/* ── REDUCED MOTION + motion-lite: no travel/crossfade, instant swap ── */
+@media (prefers-reduced-motion: reduce) {
+  .svc.is-panel .svc-panel,
+  .svc-panel .svc-detail-inner,
+  .svc-acc-row.is-open .svc-detail-inner { animation: none !important; clip-path: inset(0 0 0% 0) !important; }
+  .svc .svc-io-tok,
+  .svc-panel .svc-io-tok,
+  .svc-acc-row.is-open .svc-io-tok { animation: none !important; left: 100% !important; opacity: 1 !important; }
+  .svc-tab, .svc-tab-io, .svc-tab-mark, .svc-related, .svc-related-arrow, .svc-acc-head { transition: none !important; }
+  .svc-related:hover { transform: none; }
+  /* Ghost numeral / glow — decoration, shown statically at open-state values. */
+  .svc-tab .row-ghost, .svc-acc-head .row-ghost,
+  .svc-tab::after, .svc-acc-head::after { transition: none !important; }
+  .svc-tab.is-active .row-ghost, .svc-acc-row.is-open .svc-acc-head .row-ghost { opacity: 0.08; }
+  .svc-tab.is-active::after, .svc-acc-row.is-open .svc-acc-head::after { opacity: 0.24; transform: translateX(0); }
+  .svc-tab.is-active .svc-tab-mark { clip-path: inset(19% 0 19% 0) !important; }
+}
+html[data-motion-lite] .svc.is-panel .svc-panel,
+html[data-motion-lite] .svc-panel .svc-detail-inner,
+html[data-motion-lite] .svc-acc-row.is-open .svc-detail-inner { animation: none !important; clip-path: inset(0 0 0% 0) !important; }
+html[data-motion-lite] .svc .svc-io-tok,
+html[data-motion-lite] .svc-panel .svc-io-tok,
+html[data-motion-lite] .svc-acc-row.is-open .svc-io-tok { animation: none !important; left: 100% !important; opacity: 1 !important; }
+html[data-motion-lite] .svc-tab, html[data-motion-lite] .svc-related, html[data-motion-lite] .svc-acc-head { transition: none !important; }
+html[data-motion-lite] .svc-tab .row-ghost, html[data-motion-lite] .svc-acc-head .row-ghost,
+html[data-motion-lite] .svc-tab::after, html[data-motion-lite] .svc-acc-head::after { transition: none !important; }
+html[data-motion-lite] .svc-tab.is-active .row-ghost, html[data-motion-lite] .svc-acc-row.is-open .svc-acc-head .row-ghost { opacity: 0.08; }
+html[data-motion-lite] .svc-tab.is-active::after, html[data-motion-lite] .svc-acc-row.is-open .svc-acc-head::after { opacity: 0.24; transform: translateX(0); }
+html[data-motion-lite] .svc-tab.is-active .svc-tab-mark { clip-path: inset(19% 0 19% 0) !important; }
+
+/* Tablet: narrower left column before the 900px accordion switch. */
+@media (max-width: 1100px) and (min-width: 901px) {
+  .svc.is-panel { grid-template-columns: minmax(240px, 0.85fr) 1.3fr; gap: 20px; }
+  .svc-k { font-size: 20px; }
+  .svc-tab-io { display: none; }
+}
 
 /* ── CV TIMELINE ───────────────────────────────────────────── */
 .cv-timeline {
@@ -1678,7 +2017,70 @@
 /* ── TRUST — editorial-style staggered testimonials ────────────────────
    No more 3 identical cards in a row. Instead: large serif quotes that
    stagger vertically (offset middle card), big italic display, accent
-   left-rule. Each card has its own subtle vertical drift on hover. */
+   left-rule. Each card has its own subtle vertical drift on hover.
+
+   Honesty note: no star ratings / "verified" badges / on-time % anywhere
+   in this section — see components-2.jsx Trust() comment. The strip below
+   only renders counts derived from the live dataset, plus an optional
+   plainly-labeled "illustrative" flag while quotes are placeholders. */
+.trust-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0;
+  margin-bottom: 40px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(244,241,234,.02), rgba(244,241,234,.005));
+}
+.trust-strip-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 26px;
+  border-right: 1px solid var(--line);
+  min-width: 108px;
+}
+.trust-strip-cell:last-child { border-right: 0; }
+.trust-strip-val {
+  font-family: var(--f-display);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  line-height: 1.1;
+}
+.trust-strip-k {
+  font-size: 10.5px;
+  color: var(--text-mute);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+/* The illustrative-data flag: same grid rhythm as the stat cells, but reads
+   as a note, not a metric — no big numeral, amber-tinted so it draws the
+   eye without pretending to be a stat. This is the honesty reframe made
+   visible rather than hidden: it's the most attention-grabbing cell in the
+   strip on purpose, because "here's exactly what this is" earns more trust
+   from a technical buyer than a silently-omitted rating would. */
+.trust-strip-note {
+  flex: 1 1 auto;
+  justify-content: center;
+  background: rgba(var(--accent-rgb) / 0.06);
+}
+.trust-strip-flag {
+  font-size: 11px;
+  color: var(--accent-2);
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+}
+@media (max-width: 639px) {
+  .trust-strip { border-radius: 12px; }
+  .trust-strip-cell { padding: 14px 16px; min-width: 84px; }
+  .trust-strip-val { font-size: 21px; }
+  .trust-strip-note { flex-basis: 100%; border-top: 1px solid var(--line); }
+}
+
 .trust-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1718,8 +2120,8 @@
 .trust-q {
   font-family: var(--f-serif);
   font-style: italic;
-  font-size: 21px;
-  line-height: 1.4;
+  font-size: 22.5px;
+  line-height: 1.44;
   letter-spacing: -0.01em;
   color: var(--text);
   flex: 1;
@@ -1781,6 +2183,8 @@
   border: 1px solid var(--line-strong);
   border-radius: 6px;
   padding: 12px 14px;
+  min-height: 44px;          /* comfortable tap target (WCAG 2.5.5 / HIG) */
+  box-sizing: border-box;
   color: var(--text);
   font-family: var(--f-body);
   font-size: 14px;
@@ -1814,12 +2218,17 @@
 }
 .ff-chip {
   appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;          /* comfortable tap target (WCAG 2.5.5 / HIG) */
+  box-sizing: border-box;
   border: 1px solid var(--line-strong);
   background: rgba(7,9,11,.35);
   color: var(--text-dim);
   font-family: var(--f-body);
   font-size: 13px;
-  padding: 9px 14px;
+  padding: 9px 16px;
   border-radius: 999px;
   cursor: pointer;
   transition:
@@ -2227,4 +2636,24 @@
 }
 @media (max-width: 900px) {
   .hero-scroll-hint { display: flex; }
+}
+
+/* ── INTRO CURTAIN ("Полёт к станции") ───────────────────────────────
+   Most styling is set inline by JS (src/engine/intro.js) for frame-0 safety
+   (it has to paint before this stylesheet is guaranteed to have loaded).
+   These rules are belt-and-suspenders + the reduced-motion hardening. */
+#sm-intro {
+  position: fixed; inset: 0;
+  z-index: 2147483000; /* above nav + everything */
+  background: var(--bg-0, #1F1E1B);
+  pointer-events: auto;
+  overflow: hidden;
+  isolation: isolate;
+}
+#sm-intro canvas { position: absolute; inset: 0; }
+@media (prefers-reduced-motion: reduce) {
+  /* Primary path is the head-boot's 'fade' mode (no canvas is ever created
+     when reduced-motion is set) — this just hardens against any edge case. */
+  #sm-intro canvas { display: none !important; }
+  #sm-intro { transition: opacity .4s cubic-bezier(.2,.6,.18,1); }
 }

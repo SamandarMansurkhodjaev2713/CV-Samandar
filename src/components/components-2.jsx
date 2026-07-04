@@ -3,173 +3,234 @@
 const { useEffect: useEffect2, useRef: useRef2, useState: useState2, useMemo: useMemoFromComponents1 } = React;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SERVICES — unique cards, no terminal commands.
+// SERVICES 2.0 — panel switcher.
+//   Desktop: WAI-ARIA tablist (left) + tabpanel (right), roving tabindex,
+//            ↑/↓/Home/End, content crossfade on selection.
+//   Mobile (≤900px): the SAME data as an accordion (button + aria-expanded +
+//            region), one open at a time.
+// One component, one DOM — the layout mode (panel vs accordion) is a CSS
+// concern; only the ARIA wiring differs, gated by a matchMedia flag so screen
+// readers always get the pattern that matches what's on screen.
 //
-// Each card has:
-//   • A distinctive SVG glyph that visually telegraphs the service category
-//   • A varied "hover animation kind" cycled per index so the grid doesn't
-//     read as a uniform copy-paste — every card has its own micro-personality
-//   • A clean io-pill at the bottom showing the value transform
-//
-// Glyphs are pure inline SVG (no external icons) so they always inherit the
-// current accent color via `currentColor`. They're index-keyed: card N gets
-// glyph N. If the content array changes length, glyphs cycle from the start.
+// `io` ("spec → prod app") is the signature detail — rendered as a real
+// input→output flow, not a pill. Related project is a HARD index→project map
+// (never fuzzy) so we never invent a connection: services without a real
+// match (Internal Tools, Tech Consulting) simply omit the block.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SERVICE_HOVER_KINDS = ["lift", "tilt-l", "tilt-r", "glow", "scale", "shift", "edge", "ripple"];
-
-// Inline SVG glyphs — return ReactElement keyed by index. Eight distinct
-// concepts mapped to the eight content slots in order.
-const SERVICE_GLYPHS = [
-  // 0 · Web Apps — stacked layers
-  function GlyphLayers() {
-    return (
-      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <rect x="6"  y="8"  width="28" height="6" rx="1" />
-        <rect x="6"  y="17" width="28" height="6" rx="1" />
-        <rect x="6"  y="26" width="28" height="6" rx="1" />
-        <line x1="11" y1="11" x2="11" y2="11" />
-        <line x1="11" y1="20" x2="11" y2="20" />
-        <line x1="11" y1="29" x2="11" y2="29" />
-      </svg>
-    );
-  },
-  // 1 · Landing & Sites — page outline + accent block
-  function GlyphPage() {
-    return (
-      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <rect x="8" y="6" width="24" height="28" rx="1" />
-        <line x1="13" y1="13" x2="27" y2="13" />
-        <line x1="13" y1="18" x2="22" y2="18" />
-        <rect x="13" y="22" width="14" height="6" fill="currentColor" opacity="0.25" stroke="none" />
-      </svg>
-    );
-  },
-  // 2 · Telegram Bots — speech bubble with dots
-  function GlyphBubble() {
-    return (
-      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M8 10 h24 a2 2 0 0 1 2 2 v14 a2 2 0 0 1 -2 2 H18 l-6 5 v-5 H8 a2 2 0 0 1 -2 -2 V12 a2 2 0 0 1 2 -2 z" />
-        <circle cx="14" cy="19" r="1.5" fill="currentColor" stroke="none" />
-        <circle cx="20" cy="19" r="1.5" fill="currentColor" stroke="none" />
-        <circle cx="26" cy="19" r="1.5" fill="currentColor" stroke="none" />
-      </svg>
-    );
-  },
-  // 3 · AI Automation — node graph
-  function GlyphNodes() {
-    return (
-      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <circle cx="10" cy="10" r="3" fill="currentColor" stroke="none" />
-        <circle cx="30" cy="10" r="3" fill="currentColor" stroke="none" />
-        <circle cx="20" cy="22" r="3" fill="currentColor" stroke="none" />
-        <circle cx="10" cy="32" r="3" fill="currentColor" stroke="none" />
-        <circle cx="30" cy="32" r="3" fill="currentColor" stroke="none" />
-        <line x1="10" y1="10" x2="20" y2="22" />
-        <line x1="30" y1="10" x2="20" y2="22" />
-        <line x1="20" y1="22" x2="10" y2="32" />
-        <line x1="20" y1="22" x2="30" y2="32" />
-      </svg>
-    );
-  },
-  // 4 · Dashboards — bar chart
-  function GlyphChart() {
-    return (
-      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <line x1="6" y1="34" x2="34" y2="34" />
-        <rect x="9"  y="22" width="4" height="12" fill="currentColor" opacity="0.4" stroke="none" />
-        <rect x="17" y="14" width="4" height="20" fill="currentColor" opacity="0.7" stroke="none" />
-        <rect x="25" y="18" width="4" height="16" fill="currentColor" opacity="0.55" stroke="none" />
-      </svg>
-    );
-  },
-  // 5 · MVP / Prototype — arrow zig-zag (idea → prototype)
-  function GlyphArrow() {
-    return (
-      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M6 28 L14 20 L20 26 L28 14 L34 18" />
-        <path d="M28 10 L34 14 L30 20" />
-        <circle cx="6"  cy="28" r="2" fill="currentColor" stroke="none" />
-      </svg>
-    );
-  },
-  // 6 · Internal Tools — wrench / spanner
-  function GlyphTool() {
-    return (
-      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M27 10 a6 6 0 0 0 -3 11 L9 36 l4 -1 L28 20 a6 6 0 0 0 4 -10 l-3 3 -3 0 0 -3 z" />
-        <circle cx="13" cy="32" r="1" fill="currentColor" stroke="none" />
-      </svg>
-    );
-  },
-  // 7 · Tech Consulting — question / dialog
-  function GlyphChat() {
-    return (
-      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M14 10 c-3 0 -6 2 -6 5 c0 2 1 4 3 5 v3 l3 -2 c2 1 4 1 6 0" />
-        <path d="M20 17 c0 -3 3 -5 7 -5 c4 0 7 2 7 5 c0 3 -2 5 -5 5 l-4 3 v-3 c-3 -1 -5 -3 -5 -5 z" />
-        <circle cx="27" cy="17" r="1" fill="currentColor" stroke="none" />
-      </svg>
-    );
-  },
+// Hard map: service index → projects[].name that genuinely delivers it.
+// null = no honest 1:1 match → the related block is not rendered.
+const SERVICE_RELATED = [
+  "Business Automation Engine", // 0 Web Apps        → full product build
+  "Railway Infrastructure Site",// 1 Landing & Sites → premium landing
+  "Task Orchestrator Bot",      // 2 Telegram Bots   → team bot
+  "Business Automation Engine", // 3 AI Automation   → LLM workflow pipeline
+  "Biogas Operations Panel",    // 4 Dashboards      → ops dashboard
+  "Group Voice Task Bot",       // 5 MVP / Prototype → "MVP in 11 days"
+  null,                         // 6 Internal Tools  → no honest 1:1 case
+  null,                         // 7 Tech Consulting → advisory, no shippable case
 ];
 
-function ServiceCard({ item, index }) {
-  const cardRef = useRef2(null);
-  const hoverKind = SERVICE_HOVER_KINDS[index % SERVICE_HOVER_KINDS.length];
-  const Glyph = SERVICE_GLYPHS[index % SERVICE_GLYPHS.length];
+// Split "spec → prod app" into [input, output] on the arrow.
+function splitIo(io) {
+  const parts = String(io || "").split("→");
+  if (parts.length < 2) return { in: "", out: String(io || "").trim() };
+  return { in: parts[0].trim(), out: parts.slice(1).join("→").trim() };
+}
 
-  function onMouseMove(e) {
-    const el = cardRef.current;
-    if (!el || hoverKind !== "tilt-l" && hoverKind !== "tilt-r") return;
-    const r = el.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width - 0.5;
-    const y = (e.clientY - r.top) / r.height - 0.5;
-    const sign = hoverKind === "tilt-l" ? 1 : -1;
-    el.style.setProperty("--rx", `${(-y * 5 * sign).toFixed(2)}deg`);
-    el.style.setProperty("--ry", `${(x * 5 * sign).toFixed(2)}deg`);
-  }
-  function onMouseLeave() {
-    const el = cardRef.current;
-    if (!el) return;
-    el.style.setProperty("--rx", "0deg");
-    el.style.setProperty("--ry", "0deg");
-  }
-
+// The io flow: INPUT ─token→ OUTPUT. Pure CSS motion; decorative (aria-hidden
+// on the rail/token), the words themselves are real, readable text.
+function ServiceIoFlow({ io }) {
+  const io2 = splitIo(io);
   return (
-    <article
-      ref={cardRef}
-      className={`service-card card service-card--hover-${hoverKind}`}
-      data-reveal
-      data-reveal-delay={(index * 0.04).toFixed(2)}
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
-    >
-      <div className="service-card-head">
-        <span className="service-card-num mono">/{String(index + 1).padStart(2, "0")}</span>
-        <span className="service-card-badge mono">{item.io}</span>
-      </div>
-
-      <div className="service-card-glyph" aria-hidden="true">
-        <Glyph />
-      </div>
-
-      <h3 className="service-card-k">{item.k}</h3>
-      <p className="service-card-v">{item.v}</p>
-    </article>
+    <div className="svc-io" aria-label={`${io2.in} to ${io2.out}`}>
+      <span className="svc-io-node svc-io-in">{io2.in}</span>
+      <span className="svc-io-rail" aria-hidden="true">
+        <span className="svc-io-tok" />
+      </span>
+      <span className="svc-io-node svc-io-out">{io2.out}</span>
+    </div>
   );
 }
 
 function Services({ t }) {
   const ref = useRevealRoot([t]);
+  const items = (t.services && Array.isArray(t.services.items)) ? t.services.items : [];
+  const projects = (t.projects && Array.isArray(t.projects.items)) ? t.projects.items : [];
+
+  // Desktop: selected tab. Mobile: which accordion row is open (-1 = none).
+  const [activeIdx, setActiveIdx] = useState2(0);
+  const [openIdx, setOpenIdx] = useState2(0);
+  const [isMobile, setIsMobile] = useState2(false);
+  const tabRefs = useRef2([]);
+
+  useEffect2(function watchLayout() {
+    if (typeof window.matchMedia !== "function") return undefined;
+    const mq = window.matchMedia("(max-width: 900px)");
+    const apply = function () { setIsMobile(mq.matches); };
+    apply();
+    if (mq.addEventListener) mq.addEventListener("change", apply);
+    else if (mq.addListener) mq.addListener(apply);
+    return function () {
+      if (mq.removeEventListener) mq.removeEventListener("change", apply);
+      else if (mq.removeListener) mq.removeListener(apply);
+    };
+  }, []);
+
+  function relatedFor(index) {
+    const name = SERVICE_RELATED[index];
+    if (!name) return null;
+    for (let i = 0; i < projects.length; i++) {
+      if (projects[i].name === name) return projects[i];
+    }
+    return null;
+  }
+
+  // Roving-tabindex keyboard nav for the desktop tablist.
+  function onTabKey(e, i) {
+    const last = items.length - 1;
+    let next = -1;
+    if (e.key === "ArrowDown" || e.key === "ArrowRight") next = i >= last ? 0 : i + 1;
+    else if (e.key === "ArrowUp" || e.key === "ArrowLeft") next = i <= 0 ? last : i - 1;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = last;
+    else return;
+    e.preventDefault();
+    setActiveIdx(next);
+    const el = tabRefs.current[next];
+    if (el && el.focus) el.focus();
+  }
+
+  // Shared details renderer (desktop panel + mobile accordion body).
+  function renderDetails(s, i) {
+    const rel = relatedFor(i);
+    return (
+      <div className="svc-detail-inner">
+        <p className="svc-detail-v">{s.v}</p>
+        <ServiceIoFlow io={s.io} />
+        {rel ? (
+          <a
+            className="svc-related"
+            href="#projects"
+            data-cursor="link"
+            data-cursor-label="open case"
+          >
+            <span className="svc-related-eyebrow mono">
+              {t.services.related_label || "related case"}
+            </span>
+            <span className="svc-related-name">{rel.name}</span>
+            <span className="svc-related-meta mono">
+              <span className="svc-related-tag">{rel.tag}</span>
+              {rel.outcome ? <span className="svc-related-out">{rel.outcome}</span> : null}
+            </span>
+            <span className="svc-related-arrow" aria-hidden="true">↗</span>
+          </a>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
-    <section data-section="services" id="services" ref={ref}>
+    <section data-section="services" id="services" data-enter="slide-left" ref={ref}>
       <div className="shell">
-        <SecHead num="05" eyebrow={t.services.eyebrow} title={t.services.title} meta={`${t.services.items.length} services`} />
-        <div className="services-grid">
-          {t.services.items.map(function renderService(s, i) {
-            return <ServiceCard key={i} item={s} index={i} />;
-          })}
+        <SecHead num="05" eyebrow={t.services.eyebrow} title={t.services.title} meta={`${items.length} services`} />
+
+        <div className={`svc ${isMobile ? "is-acc" : "is-panel"}`} data-reveal>
+          {/* ── LEFT: tablist (desktop) ─────────────────────────────── */}
+          <div
+            className="svc-list"
+            role={isMobile ? undefined : "tablist"}
+            aria-label={isMobile ? undefined : t.services.title}
+            aria-orientation={isMobile ? undefined : "vertical"}
+          >
+            {items.map(function renderRow(s, i) {
+              const isActive = activeIdx === i;
+              const isOpen = openIdx === i;
+
+              if (isMobile) {
+                return (
+                  <div key={i} className={`svc-acc-row ${isOpen ? "is-open" : ""}`}>
+                    <h3 className="svc-acc-h">
+                      <button
+                        type="button"
+                        className="svc-acc-head"
+                        data-code={String(i + 1).padStart(2, "0")}
+                        style={{ "--row-i": i, "--row-total": Math.max(1, items.length - 1) }}
+                        aria-expanded={isOpen}
+                        aria-controls={`svc-acc-body-${i}`}
+                        id={`svc-acc-head-${i}`}
+                        onClick={() => setOpenIdx(isOpen ? -1 : i)}
+                      >
+                        <span className="row-ghost" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+                        <span className="svc-num mono">/{String(i + 1).padStart(2, "0")}</span>
+                        <span className="svc-k">{s.k}</span>
+                        <span className="svc-acc-chev" aria-hidden="true">{isOpen ? "−" : "+"}</span>
+                      </button>
+                    </h3>
+                    <div
+                      className="svc-acc-body"
+                      id={`svc-acc-body-${i}`}
+                      role="region"
+                      aria-labelledby={`svc-acc-head-${i}`}
+                      hidden={!isOpen}
+                    >
+                      {renderDetails(s, i)}
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  role="tab"
+                  id={`svc-tab-${i}`}
+                  aria-selected={isActive}
+                  aria-controls={`svc-panel-${i}`}
+                  tabIndex={isActive ? 0 : -1}
+                  ref={(el) => { tabRefs.current[i] = el; }}
+                  className={`svc-tab ${isActive ? "is-active" : ""}`}
+                  data-code={String(i + 1).padStart(2, "0")}
+                  style={{ "--row-i": i, "--row-total": Math.max(1, items.length - 1) }}
+                  onClick={() => setActiveIdx(i)}
+                  onKeyDown={(e) => onTabKey(e, i)}
+                  data-cursor="read"
+                >
+                  <span className="row-ghost" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="svc-num mono">/{String(i + 1).padStart(2, "0")}</span>
+                  <span className="svc-k">{s.k}</span>
+                  <span className="svc-tab-io mono" aria-hidden="true">{s.io}</span>
+                  <span className="svc-tab-mark" aria-hidden="true" />
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ── RIGHT: single tabpanel (desktop only) ───────────────── */}
+          {!isMobile ? (
+            <div className="svc-panel-wrap">
+              {items.map(function renderPanel(s, i) {
+                if (i !== activeIdx) return null;
+                return (
+                  <div
+                    key={i}
+                    className="svc-panel"
+                    role="tabpanel"
+                    id={`svc-panel-${i}`}
+                    aria-labelledby={`svc-tab-${i}`}
+                    tabIndex={0}
+                  >
+                    <div className="svc-panel-head">
+                      <span className="svc-panel-num mono">/{String(i + 1).padStart(2, "0")}</span>
+                      <h3 className="svc-panel-k">{s.k}</h3>
+                    </div>
+                    {renderDetails(s, i)}
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
         </div>
       </div>
     </section>
@@ -219,7 +280,7 @@ function CV({ t, links }) {
   })();
 
   return (
-    <section data-section="cv" id="cv" ref={ref}>
+    <section data-section="cv" id="cv" data-enter="curtain" ref={ref}>
       <div className="shell">
         <SecHead num="06" eyebrow={t.cv.eyebrow} title={t.cv.title} em={t.cv.title.split(" ").pop()} meta={`v.2026 · ${years || "active"}`} />
 
@@ -245,7 +306,10 @@ function CV({ t, links }) {
           {/* Identity strip */}
           <div className="cv-id">
             <div className="cv-id-l">
-              <h3 className="cv-id-name" data-reveal-words>{t.cv.id?.name || "Samandar"}</h3>
+              {/* Whole-element reveal (NOT data-reveal-words): word-splitting
+                  fragments the PDF/ATS text layer into per-word spans, hurting
+                  copy-paste and resume parsing. */}
+              <h3 className="cv-id-name" data-reveal>{t.cv.id?.name || "Samandar"}</h3>
               <p className="cv-id-role">{t.cv.id?.role || t.cv.lead}</p>
               <div className="cv-id-meta mono">
                 {(t.cv.id?.meta || []).map((m, i) => (
@@ -490,7 +554,7 @@ function ProcStage({ step, index, refSetter }) {
     <li
       ref={combinedRef}
       className={`proc-stage proc-stage--${state}`}
-      data-reveal-delay={(index * 0.03).toFixed(2)}
+      data-reveal-delay={(index * 0.06).toFixed(2)}
     >
       <span className="proc-stage-gutter mono">{String(index + 1).padStart(2, "0")}</span>
       <div className="proc-stage-main">
@@ -574,14 +638,18 @@ function Process({ t }) {
     };
   }, [t]);
 
-  // v52: replaced ProjectEstimator (felt commercial) with CursorConstellation
-  // — non-commercial, "залипательный" interactive canvas. Pure delight,
-  // no funnel. Visitor's cursor leaves a trail of glowing particles that
-  // gravitate + connect.
+  // v61: Stack Radar — the constellation now carries SIGNAL, not noise. Nodes
+  // are the real stack technologies grouped by the six real domains; clicking a
+  // node surfaces the actual projects that use it (matched against each
+  // project's declared stack — no invented links). Data flows in from content.
   useEffect2(function mountConstellation() {
     if (!pgRef.current || !window.CursorConstellation) return undefined;
     const langGuess = (typeof t === "object" && t && t.lang) ? t.lang : "ru";
-    pgCtrlRef.current = window.CursorConstellation.create(pgRef.current, { lang: langGuess });
+    pgCtrlRef.current = window.CursorConstellation.create(pgRef.current, {
+      lang: langGuess,
+      groups: (t.skills && Array.isArray(t.skills.groups)) ? t.skills.groups : null,
+      projects: (t.projects && Array.isArray(t.projects.items)) ? t.projects.items : null,
+    });
     return function () {
       if (pgCtrlRef.current && pgCtrlRef.current.dispose) pgCtrlRef.current.dispose();
       pgCtrlRef.current = null;
@@ -594,7 +662,7 @@ function Process({ t }) {
   const cliLead = (t.process && t.process.cli_lead) || "";
 
   return (
-    <section data-section="process" id="process" ref={ref}>
+    <section data-section="process" id="process" data-enter="line-stagger" ref={ref}>
       <div className="shell">
         <SecHead num="07" eyebrow={t.process.eyebrow} title={t.process.title} meta="pipeline.run()" />
         <p className="lead-line" data-reveal>{t.process.lead}</p>
@@ -648,11 +716,12 @@ function Process({ t }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // TRUST — testimonials
 // ─────────────────────────────────────────────────────────────────────────────
-// Trust signals — aggregate stats shown above the testimonial wall. We don't
-// fabricate ratings; the numbers are derived from the testimonial dataset so
-// they always match what the visitor can actually read on the cards.
-const TRUST_STAR_GLYPH = "★";
-const TRUST_STAR_COUNT = 5;
+// Honesty rule: every number in this section must be traceable to the actual
+// dataset below, or explicitly labeled as illustrative. No star ratings, no
+// "verified" badges, no on-time percentages — none of that is measured yet.
+// When real client quotes replace the placeholders, this same strip keeps
+// working (totalQuotes/uniqueRoles recompute) and the "illustrative" note
+// can be deleted in one place (t.trust.note).
 
 function Trust({ t }) {
   const ref = useRevealRoot([t]);
@@ -667,46 +736,53 @@ function Trust({ t }) {
     }
     return seen.size;
   })();
+  const years = (function spanYears() {
+    const seen = new Set();
+    for (let i = 0; i < items.length; i++) {
+      const m = (items[i].role || "").match(/(20\d\d)/);
+      if (m) seen.add(m[1]);
+    }
+    return Array.from(seen).sort();
+  })();
+  const yearLabel = years.length >= 2 ? `${years[0]}–${years[years.length - 1]}` : (years[0] || "");
+
   return (
-    <section data-section="trust" id="trust" ref={ref}>
+    <section data-section="trust" id="trust" data-enter="slide-right" ref={ref}>
       <div className="shell">
         <SecHead num="08" eyebrow={t.trust.eyebrow} title={t.trust.title} meta={`${totalQuotes} · signed`} />
         <p className="lead-line" data-reveal>{t.trust.lead}</p>
 
-        {/* Aggregate trust strip — three pills with derived metrics. */}
+        {/* Aggregate trust strip — ONLY genuinely-derived counts. No stars,
+            no fabricated percentages. If t.trust.note is set (placeholder
+            phase), it renders as a plainly-labeled illustrative flag rather
+            than being hidden — visible honesty reads as more credible than
+            silence, and it doubles as an editorial/attention-grabbing beat. */}
         <div className="trust-strip" data-reveal>
           <div className="trust-strip-cell">
-            <div className="trust-strip-stars" aria-label="rating 5 out of 5">
-              {Array.from({ length: TRUST_STAR_COUNT }).map((_, i) => (
-                <span key={i} className="trust-strip-star">{TRUST_STAR_GLYPH}</span>
-              ))}
-            </div>
-            <span className="trust-strip-val">5.0 / 5</span>
-          </div>
-          <div className="trust-strip-cell">
             <span className="trust-strip-val">{totalQuotes}</span>
-            <span className="trust-strip-k mono">quotes</span>
+            <span className="trust-strip-k mono">{t.trust.kQuotes || "quotes"}</span>
           </div>
           <div className="trust-strip-cell">
             <span className="trust-strip-val">{uniqueRoles}</span>
-            <span className="trust-strip-k mono">roles</span>
+            <span className="trust-strip-k mono">{t.trust.kRoles || "roles"}</span>
           </div>
-          <div className="trust-strip-cell">
-            <span className="trust-strip-val">100%</span>
-            <span className="trust-strip-k mono">on-time</span>
-          </div>
+          {yearLabel ? (
+            <div className="trust-strip-cell">
+              <span className="trust-strip-val">{yearLabel}</span>
+              <span className="trust-strip-k mono">{t.trust.kSpan || "span"}</span>
+            </div>
+          ) : null}
+          {t.trust.note ? (
+            <div className="trust-strip-cell trust-strip-note">
+              <span className="trust-strip-flag mono">{t.trust.note}</span>
+            </div>
+          ) : null}
         </div>
 
         <div className="trust-grid">
           {items.map(function renderTrust(it, i) {
             return (
-              <figure key={i} className="trust-card" data-reveal data-reveal-delay={(i * 0.08).toFixed(2)}>
-                <span className="trust-verified" aria-label="verified" title="verified">
-                  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M2 9 L6 13 L14 4" />
-                  </svg>
-                  <span className="mono">verified</span>
-                </span>
+              <figure key={i} className="trust-card" data-reveal data-reveal-from="translateY(20px) scale(.98)" data-reveal-delay={(i * 0.08).toFixed(2)}>
                 <div className="trust-quote-mark" aria-hidden="true">"</div>
                 <blockquote className="trust-q">{it.q}</blockquote>
                 <figcaption className="trust-cap">
@@ -716,11 +792,6 @@ function Trust({ t }) {
                   <div className="trust-cap-text">
                     <div className="trust-who">{it.who}</div>
                     <div className="trust-role mono">{it.role}</div>
-                  </div>
-                  <div className="trust-stars" aria-label="5 stars">
-                    {Array.from({ length: TRUST_STAR_COUNT }).map(function (_, k) {
-                      return <span key={k} className="trust-star">{TRUST_STAR_GLYPH}</span>;
-                    })}
                   </div>
                 </figcaption>
               </figure>
@@ -735,9 +806,19 @@ function Trust({ t }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // CONTACT
 // ─────────────────────────────────────────────────────────────────────────────
+// Contact form delivery endpoint. Create a free form at https://formspree.io
+// and replace YOUR_FORM_ID with the real id (e.g. "xeozabcd"). Until then the
+// form runs in "demo" mode — it shows an optimistic success WITHOUT actually
+// sending, so the UI is never broken while the endpoint is unconfigured.
+const CONTACT_FORM_ENDPOINT = "https://formspree.io/f/YOUR_FORM_ID";
+const FORM_ENDPOINT_CONFIGURED = CONTACT_FORM_ENDPOINT.indexOf("YOUR_FORM_ID") === -1;
+const CONTACT_FETCH_TIMEOUT_MS = 12000;
+
 function Contact({ t, links }) {
   const ref = useRevealRoot([t]);
   const [sent, setSent] = useState2(false);
+  const [sending, setSending] = useState2(false);
+  const [errorMsg, setErrorMsg] = useState2("");
   // Multi-select chips for project scope — a single dropdown was hiding the
   // breadth of services. Chips let the visitor click as many as apply, which
   // also reveals the available service categories at a glance.
@@ -767,24 +848,67 @@ function Contact({ t, links }) {
   // looked broken — the success message overlay didn't visually consume
   // the form below it.
   const SENT_HIDE_DELAY_MS = 4500;
-  function onSubmit(e) {
-    e.preventDefault();
-    const formEl = e.currentTarget;
+  const FORM_ERROR_FALLBACK = (t.contact.form && t.contact.form.error) ||
+    "Не удалось отправить — напишите в Telegram.";
+
+  // Mark sent + wipe the form (native fields + React-controlled chips/slider).
+  function finishSent(formEl) {
     setSent(true);
     if (typeof navigator !== "undefined" && navigator.vibrate) {
       try { navigator.vibrate(14); } catch (err) { /* opportunistic */ }
     }
-    // Native fields — name/email/textarea.
     try { formEl.reset(); }
     catch (err) { console.warn("[Contact] form.reset failed:", err && err.message); }
-    // React-controlled state — chips, slider, timeline.
     setScopeSet(new Set());
     setBudgetIdx(1);
     setTimelineIdx(3);
     window.setTimeout(function hideSentBanner() { setSent(false); }, SENT_HIDE_DELAY_MS);
   }
+
+  function onSubmit(e) {
+    e.preventDefault();
+    const formEl = e.currentTarget;
+    setErrorMsg("");
+
+    // Collect native fields (name/email/message via their `name=` attrs) plus
+    // the React-controlled selections that aren't native inputs.
+    const fd = new FormData(formEl);
+    fd.append("scope", Array.from(scopeSet).join(", "));
+    fd.append("budget", BUDGET_BUCKETS[budgetIdx]);
+    fd.append("timeline", TIMELINE_OPTS[timelineIdx]);
+
+    // Demo mode (endpoint not configured) — optimistic success, no network.
+    if (!FORM_ENDPOINT_CONFIGURED) {
+      finishSent(formEl);
+      return;
+    }
+
+    // Real delivery via Formspree — with a hard timeout so a hung network
+    // can't leave the button stuck in "sending" forever (R-02).
+    setSending(true);
+    const controller = ("AbortController" in window) ? new AbortController() : null;
+    const timeoutId = window.setTimeout(function () { if (controller) controller.abort(); }, CONTACT_FETCH_TIMEOUT_MS);
+    const opts = { method: "POST", body: fd, headers: { "Accept": "application/json" } };
+    if (controller) opts.signal = controller.signal;
+
+    fetch(CONTACT_FORM_ENDPOINT, opts)
+      .then(function (res) {
+        window.clearTimeout(timeoutId);
+        setSending(false);
+        if (res.ok) { finishSent(formEl); return undefined; }
+        return res.json().catch(function () { return null; }).then(function (data) {
+          setErrorMsg((data && data.error) || FORM_ERROR_FALLBACK);
+        });
+      })
+      .catch(function (err) {
+        window.clearTimeout(timeoutId);
+        setSending(false);
+        console.warn("[Contact] submit failed:", err && err.message);
+        setErrorMsg(FORM_ERROR_FALLBACK);
+      });
+  }
   return (
-    <section data-section="contact" id="contact" ref={ref}>
+    <section data-section="contact" id="contact" data-enter="rise-bright" ref={ref}>
       <div className="shell">
         <SecHead num="09" eyebrow={t.contact.eyebrow} title={t.contact.title} em={t.contact.title.split(" ").pop()} meta="status: receiving" />
         <p className="lead-line" data-reveal>{t.contact.lead}</p>
@@ -794,11 +918,11 @@ function Contact({ t, links }) {
             <div className="contact-form-row">
               <label className="ff">
                 <span className="ff-k mono">{t.contact.form.name}</span>
-                <input type="text" required className="ff-input" autoComplete="name" />
+                <input type="text" name="name" required className="ff-input" autoComplete="name" />
               </label>
               <label className="ff">
                 <span className="ff-k mono">{t.contact.form.email}</span>
-                <input type="text" required className="ff-input" autoComplete="email" />
+                <input type="text" name="email" required className="ff-input" autoComplete="email" />
               </label>
             </div>
 
@@ -882,10 +1006,13 @@ function Contact({ t, links }) {
 
             <label className="ff">
               <span className="ff-k mono">{t.contact.form.msg}</span>
-              <textarea required rows="4" className="ff-input ff-textarea" placeholder={t.contact.form.msg_placeholder || ""} />
+              <textarea name="message" required rows="4" className="ff-input ff-textarea" placeholder={t.contact.form.msg_placeholder || ""} />
             </label>
-            <button type="submit" className={`btn btn-primary contact-submit ${sent ? "is-sent" : ""}`} disabled={sent}>
-              <span>{sent ? t.contact.form.sent : t.contact.form.submit}</span>
+            {errorMsg ? (
+              <div className="contact-form-error mono" role="alert">{errorMsg}</div>
+            ) : null}
+            <button type="submit" className={`btn btn-primary contact-submit ${sent ? "is-sent" : ""}`} disabled={sent || sending}>
+              <span>{sending ? (t.contact.form.sending || "Отправка…") : sent ? t.contact.form.sent : t.contact.form.submit}</span>
               <span className="arrow">{sent ? "✓" : "→"}</span>
             </button>
           </form>

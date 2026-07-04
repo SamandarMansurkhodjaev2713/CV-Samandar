@@ -516,17 +516,57 @@
     // change, otherwise it batches both and the animation is skipped.
     void el.offsetWidth;
     el.style.setProperty("opacity", "1", "important");
-    el.style.setProperty("transform", "translateY(0)", "important");
+    // Final pose is always the natural rest position (transform: none) — this
+    // is where any directional/scaled `data-reveal-from` start pose resolves to.
+    el.style.setProperty("transform", "none", "important");
     el.classList.add("rv-in");
+    // Once the reveal transition finishes, hand styling control back to CSS:
+    // strip the inline opacity/transform/transition/will-change so elements
+    // that ALSO use the `transform` property for interaction (card tilt,
+    // spotlight hover, the CV role hover) work again. We only do this AFTER
+    // the reveal completes, so there's no mid-reveal flicker. transitionend
+    // fires per-property; a timeout fallback covers interrupted/zero-duration
+    // transitions and detached nodes.
+    let cleaned = false;
+    const cleanup = function () {
+      if (cleaned) return;
+      cleaned = true;
+      el.removeEventListener("transitionend", onEnd);
+      el.style.removeProperty("transition");
+      el.style.removeProperty("transition-delay");
+      el.style.removeProperty("opacity");
+      el.style.removeProperty("transform");
+      el.style.willChange = "auto";
+    };
+    function onEnd(e) {
+      if (e.target === el && (e.propertyName === "transform" || e.propertyName === "opacity")) cleanup();
+    }
+    el.addEventListener("transitionend", onEnd);
+    window.setTimeout(cleanup, 1200 + delay * 1000);
+  }
+
+  // Reveal an element that has entered view. Idempotent: whichever trigger
+  // fires first (IntersectionObserver OR the scroll/poll fallback) wins, and
+  // the other is a no-op. Word/char staggers animate purely through CSS
+  // (`[data-reveal-words].rv-in .rv-w`), so for those we ONLY add `.rv-in` and
+  // leave the per-word transition delays intact. Block reveals go through
+  // revealTarget so each keeps its own `data-reveal-from` direction. Always
+  // detaches the element from BOTH trackers so it never reveals twice.
+  function triggerReveal(el) {
+    if (el.classList.contains("rv-in")) { pendingReveals.delete(el); return; }
+    if (el.hasAttribute("data-reveal-words") || el.hasAttribute("data-reveal-chars")) {
+      el.classList.add("rv-in");
+    } else {
+      revealTarget(el);
+    }
+    pendingReveals.delete(el);
+    if (revealIO) revealIO.unobserve(el);
   }
 
   function checkPending() {
     pendingRaf = 0;
     pendingReveals.forEach((el) => {
-      if (isInViewport(el, REVEAL_OFFSET_PX)) {
-        revealTarget(el);
-        pendingReveals.delete(el);
-      }
+      if (isInViewport(el, REVEAL_OFFSET_PX)) triggerReveal(el);
     });
   }
 
@@ -544,39 +584,73 @@
     window.__sc_reveal_wired = true;
     window.addEventListener("scroll", scheduleCheck, { passive: true });
     window.addEventListener("resize", scheduleCheck, { passive: true });
-    setInterval(() => { if (pendingReveals.size) scheduleCheck(); }, 250);
+    // Poll calls checkPending DIRECTLY (not via scheduleCheck/rAF): in a
+    // backgrounded or non-presented tab rAF can be throttled to ~0, which would
+    // strand the rAF path — but setInterval still fires (clamped to ~1s). This
+    // is the last-resort net under IntersectionObserver + the scroll listener.
+    setInterval(() => { if (pendingReveals.size) checkPending(); }, 250);
   }
 
+  // Reveal trigger — IntersectionObserver (primary) + scroll/poll (fallback).
+  //
+  // IO fires reliably on EVERY browser and its effect is plainly inspectable
+  // (the `.rv-in` class + the inline transition revealTarget sets). It replaces
+  // the native `animation-timeline: view()` approach, which is elegant but
+  // silently no-ops if the engine never samples it — a failure mode that's
+  // invisible to test tooling and bit us repeatedly. When IO is unavailable we
+  // fall back to the rAF-throttled scroll listener + 250ms poll wired above.
+  const revealIO = ("IntersectionObserver" in window)
+    ? new IntersectionObserver(function (entries, obs) {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          triggerReveal(e.target);
+          pendingReveals.delete(e.target);
+          obs.unobserve(e.target);
+        }
+      }, { rootMargin: "0px 0px -8% 0px", threshold: 0.01 })
+    : null;
+
   function bindReveals() {
-    const reveal = (el) => {
+    // Arm an element to reveal on enter. `isStagger` elements (words/chars)
+    // hide via their own .rv-w/.rv-c CSS, so we DON'T add an inline block-hide
+    // for them — only [data-reveal] blocks get the inline `data-reveal-from`
+    // start pose (which is what gives each its own direction).
+    const bind = (el, isStagger) => {
       el.classList.add("rv-bound");
-      if (isInViewport(el, 0)) {
-        // Already on-screen — show statically (no flash, no transition).
+      // Reduced-motion OR already on-screen at bind → show immediately. Keeps
+      // LCP text instant and never leaves the hero stuck hidden. (Reduced-motion
+      // must not leave an off-screen !important transform inline — CSS can't
+      // override inline !important.)
+      if (reduceMotion || isInViewport(el, 0)) {
         el.classList.add("rv-in");
         return;
       }
-      // Apply hidden state with NO transition so it commits instantly.
-      el.style.transition = "none";
-      el.style.setProperty("opacity", "0", "important");
-      el.style.setProperty("transform", "translateY(14px)", "important");
-      el.style.willChange = "opacity, transform";
+      if (!isStagger) {
+        // Hidden start pose, committed with NO transition so it paints instantly.
+        el.style.transition = "none";
+        el.style.setProperty("opacity", "0", "important");
+        el.style.setProperty("transform", el.dataset.revealFrom || "translateY(48px) scale(.965)", "important");
+        el.style.willChange = "opacity, transform";
+      }
+      // Register with BOTH triggers — IntersectionObserver (primary, precise)
+      // and the scroll/poll set (fallback). triggerReveal is idempotent, so the
+      // first to fire reveals and detaches from the other.
+      if (revealIO) revealIO.observe(el);
       pendingReveals.add(el);
     };
 
-    document.querySelectorAll("[data-reveal]:not(.rv-bound)").forEach((el) => reveal(el));
+    document.querySelectorAll("[data-reveal]:not(.rv-bound)").forEach((el) => bind(el, false));
     document.querySelectorAll("[data-reveal-words]:not(.rv-split)").forEach((el) => {
-      splitWords(el);
-      el.classList.add("rv-split");
-      reveal(el);
+      if (!reduceMotion) { splitWords(el); el.classList.add("rv-split"); }
+      bind(el, true);
     });
     document.querySelectorAll("[data-reveal-chars]:not(.rv-split)").forEach((el) => {
-      splitChars(el);
-      el.classList.add("rv-split");
-      reveal(el);
+      if (!reduceMotion) { splitChars(el); el.classList.add("rv-split"); }
+      bind(el, true);
     });
 
-    // Fire one check after binding so anything that became visible during binding
-    // (e.g. layout shifts from font loading) gets revealed promptly.
+    // Fire one check so anything already in view via the scroll/poll fallback
+    // (no-IO browsers) reveals promptly.
     scheduleCheck();
   }
 
@@ -622,24 +696,89 @@
     }
   }
 
-  // ── Sticky pin (one section stays in place until scroll past)
+  // ── Scroll-progress pins — depth-handoff between two stacked sections.
+  // Each [data-pin] host exposes `--pin-p` (0→1) as it scrolls through the
+  // viewport; CSS uses it to recede the outgoing section and raise the
+  // incoming one (transform/opacity only — NO sticky, so it's immune to the
+  // `body{overflow-x:hidden}` scroll-container hazard).
+  //
+  // Perf-critical: ONE rAF-throttled global listener for ALL hosts, batched
+  // read-then-write (all getBoundingClientRect reads first, then all style
+  // writes) so we never interleave layout reads/writes per scroll event.
+  // This is the guard against re-introducing the scroll jank fixed in v57.
+  const pinHosts = [];
+  let pinRaf = 0;
+  function updatePins() {
+    pinRaf = 0;
+    const vh = window.innerHeight || 1;
+    const progress = [];
+    // Read phase — gather every rect before touching styles.
+    for (let i = 0; i < pinHosts.length; i++) {
+      const r = pinHosts[i].getBoundingClientRect();
+      const range = r.height - vh;
+      progress[i] = range > 0 ? Math.max(0, Math.min(1, (0 - r.top) / range)) : 0;
+    }
+    // Write phase.
+    for (let i = 0; i < pinHosts.length; i++) {
+      pinHosts[i].style.setProperty("--pin-p", progress[i].toFixed(4));
+    }
+  }
+  function schedulePins() {
+    if (!pinRaf && pinHosts.length) pinRaf = requestAnimationFrame(updatePins);
+  }
   function bindPins() {
     document.querySelectorAll("[data-pin]:not(.pin-bound)").forEach((el) => {
       el.classList.add("pin-bound");
-      // Pin behaviour is pure CSS (position: sticky on inner container);
-      // We also expose progress as --pin-p so children can animate.
-      const inner = el.querySelector(".pin-inner");
-      if (!inner) return;
-      const update = () => {
-        const r = el.getBoundingClientRect();
-        const range = r.height - innerHeight;
-        if (range <= 0) return;
-        const p = Math.max(0, Math.min(1, (0 - r.top) / range));
-        el.style.setProperty("--pin-p", p.toFixed(4));
-      };
-      window.addEventListener("scroll", update, { passive: true });
-      update();
+      pinHosts.push(el);
     });
+    if (pinHosts.length && !window.__sc_pins_wired) {
+      window.__sc_pins_wired = true;
+      window.addEventListener("scroll", schedulePins, { passive: true });
+      window.addEventListener("resize", schedulePins, { passive: true });
+    }
+    schedulePins();
+  }
+
+  // ── Section entrance choreography ("каждая по-своему").
+  // Each <section data-enter="..."> gets a one-shot signature envelope when it
+  // first scrolls into view. A SEPARATE IntersectionObserver (sibling of the
+  // reveal IO — never touches the reveal/pin pipelines) adds `.sec-in`; CSS
+  // (cursor.css) maps the data-enter value → a GPU-only keyframe. Reduced-motion
+  // OR already-on-screen at bind → reveal instantly (LCP-safe, no flash).
+  // A direct-call scroll/poll fallback mirrors the reveal net so a headless tab
+  // (innerHeight 0 + IO suspended) can't strand a section hidden. Verifiable:
+  // correctness == presence of `.sec-in` (a synchronous DOM read).
+  const pendingSectionEnters = new Set();
+  function enterSection(el) {
+    if (el.classList.contains("sec-in")) { pendingSectionEnters.delete(el); return; }
+    el.classList.add("sec-in");
+    pendingSectionEnters.delete(el);
+    if (sectionEnterIO) sectionEnterIO.unobserve(el);
+  }
+  const sectionEnterIO = ("IntersectionObserver" in window)
+    ? new IntersectionObserver(function (entries) {
+        for (const e of entries) { if (e.isIntersecting) enterSection(e.target); }
+      }, { rootMargin: "0px 0px -12% 0px", threshold: 0.01 })
+    : null;
+  function checkPendingSections() {
+    pendingSectionEnters.forEach(function (el) {
+      if (isInViewport(el, REVEAL_OFFSET_PX)) enterSection(el);
+    });
+  }
+  function bindSectionEnters() {
+    document.querySelectorAll("section[data-enter]:not(.sec-bound)").forEach(function (el) {
+      el.classList.add("sec-bound");
+      if (reduceMotion || isInViewport(el, 0)) { el.classList.add("sec-in"); return; }
+      if (sectionEnterIO) sectionEnterIO.observe(el);
+      pendingSectionEnters.add(el);   // poll fallback
+    });
+    if (pendingSectionEnters.size && !window.__sc_secenter_wired) {
+      window.__sc_secenter_wired = true;
+      window.addEventListener("scroll", checkPendingSections, { passive: true });
+      window.addEventListener("resize", checkPendingSections, { passive: true });
+      // Direct call (not rAF) so a throttled/hidden tab still resolves sections.
+      setInterval(function () { if (pendingSectionEnters.size) checkPendingSections(); }, 250);
+    }
   }
 
   // ── Public API
@@ -649,12 +788,14 @@
       bindHoverDelegation();
       rebuildMagnets();
       bindReveals();
+      bindSectionEnters();
       bindPins();
       bindSpotlight();
     },
     refresh() {
       rebuildMagnets();
       bindReveals();
+      bindSectionEnters();
       bindPins();
     },
     // Force-check any pending reveal — useful for tests and odd webview environments.

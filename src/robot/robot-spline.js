@@ -101,6 +101,7 @@
       isFallback: true,
       setAccent: function () {},
       setMotion: function () {},
+      setActive: function () {},
       setExpression: function () {},
       getExpression: function () { return "idle"; },
       cycleExpression: function () {},
@@ -225,6 +226,26 @@
       setMotion: function () {
         // Spline drives its own animation loop. We deliberately don't tamper
         // with it — undocumented internals make speed scaling fragile.
+      },
+      /**
+       * Pause / resume the Spline render loop. The runtime keeps rendering
+       * the full 3D scene at 60fps even when the hero is scrolled far
+       * off-screen — pure waste. The runtime exposes `stop()`/`play()` in
+       * recent versions; we call them defensively (no-op if absent, so
+       * older runtimes simply keep running — graceful degradation).
+       * @param {boolean} active
+       */
+      setActive: function (active) {
+        if (!app) return;
+        try {
+          if (active) {
+            if (typeof app.play === "function") app.play();
+          } else {
+            if (typeof app.stop === "function") app.stop();
+          }
+        } catch (actErr) {
+          console.warn("[RobotSpline] setActive failed:", actErr && actErr.message);
+        }
       },
       setExpression: function (name) {
         if (EXPRESSION_CYCLE.indexOf(name) === -1) return;

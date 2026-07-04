@@ -27,6 +27,18 @@
   // ── Camera / scene geometry ─────────────────────────────────────────────
   const CAMERA_FOV = 50;
   const CAMERA_Z = 9;
+  // ── Camera flight on scroll (v64). The camera was fixed; now it travels
+  // along Z as scroll 0→1 (near→far) and dollies IN when scrolling fast.
+  const CAMERA_Z_NEAR = 5.4;        // scroll=0 → close (immersive hero)
+  const CAMERA_Z_FAR  = 13.2;       // scroll=1 → pulled far back (bigger, clearer flight)
+  const CAMERA_RAIL_LERP = 0.05;    // critically-damped travel (no lurch)
+  const CAMERA_LOOK_LERP = 0.05;
+  const CAMERA_ENERGY_PUSH  = 2.2;  // fast scroll dollies the camera IN (more dynamic)
+  const CAMERA_ENERGY_SHAKE = 0.05; // max world-units of energetic micro-drift
+  // Scroll-SPEED → one energy scalar (calm at rest, hot when flicking fast).
+  const SCROLL_ENERGY_GAIN = 0.9;
+  const SCROLL_ENERGY_MAX  = 1.0;
+  const SCROLL_ENERGY_LERP = 0.06;
 
   // ── Layer 1: morphing wireframe gallery (far) ───────────────────────────
   // FOUR shape meshes coexist at the scene origin: icosahedron, cube,
@@ -86,65 +98,15 @@
   const CONSTELLATION_MOUSE_RADIUS = 3.5;     // world-units — pairs inside this around mouse glow brighter
   const CONSTELLATION_DISABLE_BELOW_WIDTH = 720;  // disable on small screens (mobile perf)
 
-  // ── Theme animation profiles (v54) ──────────────────────────────────────
-  // Each theme drives a different "feel" for the background by swapping a
-  // bounded set of TUNING NUMBERS — never structure, never new geometry.
-  // This keeps the change zero-risk: the render path is identical, only
-  // the magnitudes differ.
-  //
-  //   ember  — the original Claude background. Values are byte-for-byte the
-  //            module constants above, so the Ember theme animation is
-  //            provably unchanged.
-  //   cortex — crystalline + neural: faster shape spin, higher-frequency
-  //            grid (oscilloscope feel), denser + brighter constellation.
-  //   sage   — organic + calm: slow shape drift, low-frequency long grid
-  //            swells, sparse + dim constellation, wider lazy particle drift.
-  //
-  // `currentProfile` lerps toward `targetProfile` each frame so a theme
-  // swap eases in smoothly (BG_PROFILE_LERP) rather than snapping.
-  const BG_PROFILE_LERP = 0.045;
-  const BG_PROFILES = {
-    ember: {
-      shapeRotationPerS: SHAPE_ROTATION_Y_PER_S,
-      gridWaveSpeed: GRID_WAVE_SPEED,
-      gridAmpA: GRID_WAVE_AMP_PRIMARY,
-      gridAmpB: GRID_WAVE_AMP_SECONDARY,
-      gridFreqA: GRID_WAVE_FREQ_PRIMARY,
-      gridFreqB: GRID_WAVE_FREQ_SECONDARY,
-      particleDriftAmpX: PARTICLE_DRIFT_AMP_X,
-      particleDriftAmpY: PARTICLE_DRIFT_AMP_Y,
-      particleDriftAmpZ: PARTICLE_DRIFT_AMP_Z,
-      constellationDistance: CONSTELLATION_DISTANCE,
-      constellationOpacity: CONSTELLATION_OPACITY_MAX,
-    },
-    cortex: {
-      shapeRotationPerS: 0.085,
-      gridWaveSpeed: 0.72,
-      gridAmpA: 0.18,
-      gridAmpB: 0.12,
-      gridFreqA: 1.05,
-      gridFreqB: 1.50,
-      particleDriftAmpX: 0.42,
-      particleDriftAmpY: 0.34,
-      particleDriftAmpZ: 0.30,
-      constellationDistance: 1.70,
-      constellationOpacity: 0.46,
-    },
-    sage: {
-      shapeRotationPerS: 0.022,
-      gridWaveSpeed: 0.26,
-      gridAmpA: 0.30,
-      gridAmpB: 0.20,
-      gridFreqA: 0.40,
-      gridFreqB: 0.60,
-      particleDriftAmpX: 0.66,
-      particleDriftAmpY: 0.50,
-      particleDriftAmpZ: 0.42,
-      constellationDistance: 0.95,
-      constellationOpacity: 0.22,
-    },
-  };
-  const BG_PROFILE_DEFAULT = "ember";
+  // ── Performance budget ──────────────────────────────────────────────────
+  // This is a slow AMBIENT background. Rendering it at the display's full
+  // 60–120 Hz is wasted work — capping to a steady ~40 fps frees a large,
+  // constant slice of GPU/CPU with no perceptible change to the slow motion.
+  // The O(N²) constellation pair-scan (the single priciest CPU step) runs at
+  // half that rate again — its subtle lines don't need per-frame accuracy.
+  const BG_TARGET_FPS = 40;
+  const BG_MIN_FRAME_MS = 1000 / BG_TARGET_FPS;
+  const CONSTELLATION_EVERY_N_FRAMES = 2;
 
   // ── Section → background shape mapping ──────────────────────────────────
   const SHAPE_BY_SECTION = {
@@ -178,6 +140,26 @@
     contact:  { tiltZ:  0.05, dollyY:  0.0,  offsetX:  0.2 },
   };
   const CAMERA_POSE_LERP = 0.045;       // faster — actually noticeable transitions
+  // ── Dominant FORM per section (v64). Each section foregrounds ONE semantic
+  // form by re-weighting the EXISTING channels (grid / particles / constellation)
+  // — no new meshes. SHAPE_BY_SECTION already picks the silhouette; FORM only
+  // sets emphasis. network=graph (AI), waves=flowing (full-stack), grid=ordered
+  // (dashboards/offerings), starfield=dense (signal out).
+  const FORM_BY_SECTION = {
+    hero: "waves", about: "waves",
+    signal: "network", skills: "network",
+    projects: "grid", services: "grid", cv: "grid", process: "grid",
+    trust: "starfield", contact: "starfield",
+  };
+  // Wider contrast so the per-section form change actually READS (not just a
+  // whisper of opacity). Still bounded so the bg never overpowers text.
+  const FORM_WEIGHTS = {
+    waves:     { grid: 1.5,  particles: 0.75, constellation: 0.4  },
+    network:   { grid: 0.4,  particles: 1.5,  constellation: 1.7  },
+    grid:      { grid: 1.35, particles: 0.5,  constellation: 0.35 },
+    starfield: { grid: 0.3,  particles: 1.7,  constellation: 1.0  },
+  };
+  const FORM_LERP = 0.035;              // slow crossfade between forms (cinematic)
   // Brief scale-pulse on every shape change. Adds drama to morphs.
   const SHAPE_PULSE_DURATION_MS = 900;
   const SHAPE_PULSE_OVERSHOOT = 0.25;   // 1.0 → 1.25 → 1.0
@@ -203,8 +185,7 @@
 
   function noOpController() {
     return {
-      setAccent() {}, setMotion() {}, setScroll() {}, setSection() {},
-      setThemeProfile() {}, dispose() {},
+      setAccent() {}, setMotion() {}, setScroll() {}, setSection() {}, dispose() {},
     };
   }
 
@@ -273,6 +254,13 @@
     // smoothly lerped in tick() so the page never "lurches".
     const camPoseTarget = { tiltZ: 0, dollyY: 0, offsetX: 0 };
     const camPoseCurrent = { tiltZ: 0, dollyY: 0, offsetX: 0 };
+    // Camera-flight rail + scroll-energy + dominant-form crossfade (v64).
+    let scrollEnergy = 0;                          // smoothed scroll-speed scalar
+    let camZ = CAMERA_Z,  camZTarget = CAMERA_Z;   // real camera dolly rail
+    let camY = 0,         camYTarget = 0;
+    let camLookY = 0,     camLookYTarget = 0;
+    const formCurrent = { grid: 1, particles: 1, constellation: 1 };
+    const formTarget  = { grid: 1, particles: 1, constellation: 1 };
     // Per-shape pulse state — when a shape becomes active, its pulse jumps to
     // 1 and decays. The pulse contributes an extra scale bump on top of the
     // base opacity-derived scale.
@@ -284,38 +272,6 @@
     let parallaxYTarget = 0;
     let mouseClientX = -9999;
     let mouseClientY = -9999;
-
-    // ── Theme animation profile state ────────────────────────────────────
-    // `targetProfile` is one of BG_PROFILES (read-only reference — never
-    // mutated). `currentProfile` is a private mutable copy whose fields lerp
-    // toward the target each frame. tick() reads ONLY currentProfile.
-    function resolveProfile(key) {
-      return BG_PROFILES[key] || BG_PROFILES[BG_PROFILE_DEFAULT];
-    }
-    const initialProfileKey =
-      (typeof options.themeProfile === "string" && BG_PROFILES[options.themeProfile])
-        ? options.themeProfile
-        : BG_PROFILE_DEFAULT;
-    let targetProfile = resolveProfile(initialProfileKey);
-    // Shallow copy so we never mutate the shared profile definition (C-08).
-    const currentProfile = {
-      shapeRotationPerS: targetProfile.shapeRotationPerS,
-      gridWaveSpeed: targetProfile.gridWaveSpeed,
-      gridAmpA: targetProfile.gridAmpA,
-      gridAmpB: targetProfile.gridAmpB,
-      gridFreqA: targetProfile.gridFreqA,
-      gridFreqB: targetProfile.gridFreqB,
-      particleDriftAmpX: targetProfile.particleDriftAmpX,
-      particleDriftAmpY: targetProfile.particleDriftAmpY,
-      particleDriftAmpZ: targetProfile.particleDriftAmpZ,
-      constellationDistance: targetProfile.constellationDistance,
-      constellationOpacity: targetProfile.constellationOpacity,
-    };
-    const BG_PROFILE_FIELDS = [
-      "shapeRotationPerS", "gridWaveSpeed", "gridAmpA", "gridAmpB",
-      "gridFreqA", "gridFreqB", "particleDriftAmpX", "particleDriftAmpY",
-      "particleDriftAmpZ", "constellationDistance", "constellationOpacity",
-    ];
 
     const sceneGroup = new THREE.Group();
     scene.add(sceneGroup);
@@ -545,6 +501,20 @@
     }
     document.addEventListener("visibilitychange", onVisibilityChange);
 
+    // ── Intro gate — while the "Полёт к станции" curtain (src/engine/intro.js)
+    // is on screen, this WebGL loop stays paused so it doesn't contend with
+    // the intro's own canvas + rAF + React hydration during the first ~2.4s.
+    // window.__SM_INTRO is only ever set by index.html's head-boot script
+    // when the intro is actually about to run (not on repeat navigations in
+    // the same session) — if it's absent, introActive starts false and this
+    // is a no-op, matching pre-intro behavior exactly.
+    let introActive = !!(window.__SM_INTRO && window.__SM_INTRO.panel && window.__SM_INTRO.panel.parentNode);
+    function onIntroDone() {
+      introActive = false;
+      lastFrame = performance.now();
+    }
+    if (introActive) window.addEventListener("sm:intro-done", onIntroDone);
+
     function onMotionPrefChange(e) { prefersReducedMotion = e.matches; }
     if (motionMedia.addEventListener) motionMedia.addEventListener("change", onMotionPrefChange);
     else if (motionMedia.addListener) motionMedia.addListener(onMotionPrefChange);
@@ -552,6 +522,8 @@
     // ── Animation loop ───────────────────────────────────────────────────
     let rafHandle = 0;
     let lastFrame = performance.now();
+    let lastRenderAt = 0;   // timestamp of last NON-skipped frame (fps cap)
+    let frameIndex = 0;     // counts rendered frames (constellation half-rate)
     const tmpColor = new THREE.Color();
 
     function applyAccentToMaterials() {
@@ -571,7 +543,13 @@
 
     function tick(now) {
       rafHandle = requestAnimationFrame(tick);
-      if (!isVisible) { lastFrame = now; return; }
+      if (!isVisible || introActive) { lastFrame = now; return; }
+      // Frame-rate cap — skip this frame if we rendered too recently.
+      // `elapsed` below is measured from the last RENDERED frame, so the
+      // motion stays time-correct regardless of how many frames we skip.
+      if (now - lastRenderAt < BG_MIN_FRAME_MS) return;
+      lastRenderAt = now;
+      frameIndex++;
 
       const elapsed = Math.min(0.06, (now - lastFrame) / 1000);
       lastFrame = now;
@@ -591,16 +569,46 @@
       camPoseCurrent.tiltZ   = lerp(camPoseCurrent.tiltZ,   camPoseTarget.tiltZ,   CAMERA_POSE_LERP);
       camPoseCurrent.dollyY  = lerp(camPoseCurrent.dollyY,  camPoseTarget.dollyY,  CAMERA_POSE_LERP);
       camPoseCurrent.offsetX = lerp(camPoseCurrent.offsetX, camPoseTarget.offsetX, CAMERA_POSE_LERP);
+
+      // ── Scroll-SPEED → one energy scalar (reuses the already-smoothed
+      // scrollVelocity, so no new tremor). Forced to 0 under reduced-motion.
+      const energyRaw = prefersReducedMotion ? 0
+        : Math.min(SCROLL_ENERGY_MAX, scrollVelocity * SCROLL_ENERGY_GAIN);
+      scrollEnergy = lerp(scrollEnergy, energyRaw, SCROLL_ENERGY_LERP);
+
+      // ── Camera flight on scroll — REAL camera travel. Low-tier & reduced-
+      // motion keep the camera fixed (group-only transforms = today's cheap
+      // path on weak phones). railActive also reconciles the dollyY below.
+      const railActive = !deviceTierLow && !prefersReducedMotion;
+      if (railActive) {
+        camZTarget = lerp(CAMERA_Z_NEAR, CAMERA_Z_FAR, scrollProgress) - scrollEnergy * CAMERA_ENERGY_PUSH;
+        camYTarget     = camPoseCurrent.dollyY * 0.6;   // per-section dolly → real camera Y
+        camLookYTarget = camPoseCurrent.dollyY * 0.25;
+        camZ     = lerp(camZ,     camZTarget,     CAMERA_RAIL_LERP);
+        camY     = lerp(camY,     camYTarget,     CAMERA_RAIL_LERP);
+        camLookY = lerp(camLookY, camLookYTarget, CAMERA_LOOK_LERP);
+        // Deterministic micro-drift (sin, NOT random → no twitch), scaled by energy.
+        const shakeAmt = scrollEnergy * CAMERA_ENERGY_SHAKE;
+        camera.position.set(Math.sin(now * 0.0021) * shakeAmt, camY + Math.cos(now * 0.0017) * shakeAmt, camZ);
+        camera.lookAt(0, camLookY, 0);
+      } else if (prefersReducedMotion && camera.position.z !== CAMERA_Z) {
+        camera.position.set(0, 0, CAMERA_Z);   // settle once if reduced-motion toggles on
+        camera.lookAt(0, 0, 0);
+      }
+
+      // ── Dominant-form crossfade (skip the 3 lerps once settled — keeps idle
+      // sections free of per-frame work).
+      if (Math.abs(formCurrent.grid - formTarget.grid) > 0.001 ||
+          Math.abs(formCurrent.particles - formTarget.particles) > 0.001 ||
+          Math.abs(formCurrent.constellation - formTarget.constellation) > 0.001) {
+        formCurrent.grid          = lerp(formCurrent.grid,          formTarget.grid,          FORM_LERP);
+        formCurrent.particles     = lerp(formCurrent.particles,     formTarget.particles,     FORM_LERP);
+        formCurrent.constellation = lerp(formCurrent.constellation, formTarget.constellation, FORM_LERP);
+      }
+
       currentAccentShift.r = lerp(currentAccentShift.r, targetAccentShift.r, HUE_LERP);
       currentAccentShift.g = lerp(currentAccentShift.g, targetAccentShift.g, HUE_LERP);
       currentAccentShift.b = lerp(currentAccentShift.b, targetAccentShift.b, HUE_LERP);
-
-      // Theme profile lerp — eases every tunable toward the active theme's
-      // target so a theme swap glides in over ~1s rather than snapping.
-      for (let pf = 0; pf < BG_PROFILE_FIELDS.length; pf++) {
-        const field = BG_PROFILE_FIELDS[pf];
-        currentProfile[field] = lerp(currentProfile[field], targetProfile[field], BG_PROFILE_LERP);
-      }
 
       // Scene rotation — accumulates real-time spin + scroll-driven extra.
       const scrollSpin = scrollProgress * Math.PI * 2 * SCROLL_ROTATION_TURNS;
@@ -620,7 +628,7 @@
       SHAPE_KEYS.forEach((k) => {
         const s = shapes[k];
         if (!s) return;
-        s.mesh.rotation.y = tSec * currentProfile.shapeRotationPerS * motion + scrollSpin;
+        s.mesh.rotation.y = tSec * SHAPE_ROTATION_Y_PER_S * motion + scrollSpin;
         s.mesh.rotation.x = Math.sin(tSec * 0.05) * 0.15;
         s.opacity = lerp(s.opacity, s.target, SHAPE_FADE_LERP);
         // Base scale 0.55..1.0 from opacity + extra pulse on the active shape.
@@ -630,18 +638,14 @@
         s.mesh.scale.set(scale, scale, scale);
       });
       // Energy grid update — wave time advances, scroll-velocity boosts amp.
-      // Amp/freq uniforms are written from the lerped theme profile each
-      // frame so a theme swap morphs the grid character (oscilloscope ↔
-      // soft swell) rather than jumping.
-      gridMaterial.uniforms.uTime.value = tSec * currentProfile.gridWaveSpeed * (prefersReducedMotion ? 0.1 : motion);
-      gridMaterial.uniforms.uScrollBoost.value = scrollVelocity * GRID_SCROLL_AMP_BOOST;
-      gridMaterial.uniforms.uAmpA.value = currentProfile.gridAmpA;
-      gridMaterial.uniforms.uAmpB.value = currentProfile.gridAmpB;
-      gridMaterial.uniforms.uFreqA.value = currentProfile.gridFreqA;
-      gridMaterial.uniforms.uFreqB.value = currentProfile.gridFreqB;
+      // Amp/freq uniforms keep their creation-time constants (set when the
+      // ShaderMaterial was built).
+      gridMaterial.uniforms.uTime.value = tSec * GRID_WAVE_SPEED * (prefersReducedMotion ? 0.1 : motion);
+      gridMaterial.uniforms.uScrollBoost.value = scrollVelocity * GRID_SCROLL_AMP_BOOST + scrollEnergy * 0.5;
 
       // Particle update — base + sin (smooth, no teleport).
       // Optionally pull near-cursor particles toward projected ray (subtle).
+      const driftBoost = 1 + scrollEnergy * 0.4;   // livelier field when scrolling fast
       for (let i = 0; i < PARTICLE_COUNT; i++) {
         const bx = particleBasePositions[i * 3 + 0];
         const by = particleBasePositions[i * 3 + 1];
@@ -654,9 +658,9 @@
         const py = particlePhases[i * 3 + 1];
         const pz = particlePhases[i * 3 + 2];
 
-        let dx = Math.sin(tSec * fx + px) * currentProfile.particleDriftAmpX;
-        let dy = Math.cos(tSec * fy + py) * currentProfile.particleDriftAmpY;
-        let dz = Math.sin(tSec * fz + pz) * currentProfile.particleDriftAmpZ;
+        let dx = Math.sin(tSec * fx + px) * PARTICLE_DRIFT_AMP_X * driftBoost;
+        let dy = Math.cos(tSec * fy + py) * PARTICLE_DRIFT_AMP_Y * driftBoost;
+        let dz = Math.sin(tSec * fz + pz) * PARTICLE_DRIFT_AMP_Z * driftBoost;
 
         // Mouse attraction (screen-space approximation — bounded force).
         // Skip when cursor is off-screen (initial -9999 sentinel).
@@ -685,11 +689,12 @@
       particleGeometry.attributes.position.needsUpdate = true;
 
       // ── Constellation update — O(N²) pair-scan filling the line buffer.
-      if (!constellationDisabled) {
+      // Runs at half the (already capped) render rate; on skipped frames the
+      // last-computed lines keep rendering — imperceptible for subtle links.
+      if (!constellationDisabled && (frameIndex % CONSTELLATION_EVERY_N_FRAMES === 0)) {
         let writeIdx = 0;
         const maxSegments = CONSTELLATION_MAX_SEGMENTS;
-        // Theme-driven link distance: cortex denser, sage sparser.
-        const distMax = currentProfile.constellationDistance;
+        const distMax = CONSTELLATION_DISTANCE;
         const distMaxSq = distMax * distMax;
         // Project mouse to world-XY plane for proximity bonus.
         const w = window.innerWidth || 1;
@@ -749,7 +754,10 @@
       // Parallax: shift scene-group by mouse (camera stays put).
       // Scene transform = parallax (mouse) + camera pose (per-section composition)
       sceneGroup.position.x = parallaxX + camPoseCurrent.offsetX;
-      sceneGroup.position.y = parallaxY + camPoseCurrent.dollyY;
+      // When the camera rail is active the per-section vertical move lives on the
+      // CAMERA (camY), so drop dollyY here to avoid applying it twice. On low-tier/
+      // reduced-motion the camera is fixed, so the group keeps dollyY (as before).
+      sceneGroup.position.y = parallaxY + (railActive ? 0 : camPoseCurrent.dollyY);
       sceneGroup.rotation.z = camPoseCurrent.tiltZ;
 
       // Apply accent shift (cheap — only when changed enough).
@@ -763,10 +771,12 @@
         if (!s) return;
         s.material.opacity = SHAPE_OPACITY * s.opacity * opacityMul * brightnessBoost;
       });
-      gridMaterial.uniforms.uOpacity.value = GRID_OPACITY * opacityMul * brightnessBoost;
-      particleMaterial.uniforms.uOpacity.value = PARTICLE_OPACITY * opacityMul * brightnessBoost;
+      // Form weights foreground the right channel per section (grid for
+      // dashboards, particles+constellation for network, particles for starfield).
+      gridMaterial.uniforms.uOpacity.value = GRID_OPACITY * opacityMul * brightnessBoost * formCurrent.grid;
+      particleMaterial.uniforms.uOpacity.value = PARTICLE_OPACITY * opacityMul * brightnessBoost * formCurrent.particles;
       if (!constellationDisabled) {
-        constellationMaterial.opacity = currentProfile.constellationOpacity * opacityMul * brightnessBoost;
+        constellationMaterial.opacity = CONSTELLATION_OPACITY_MAX * opacityMul * brightnessBoost * formCurrent.constellation;
       }
 
       // Apply dt to advance time-based effects we already incorporated — kept
@@ -799,6 +809,13 @@
         camPoseTarget.tiltZ = pose.tiltZ;
         camPoseTarget.dollyY = pose.dollyY;
         camPoseTarget.offsetX = pose.offsetX;
+        // Dominant-form emphasis for this section — set ALWAYS (before the
+        // shape early-return below), lerped in tick() for a cinematic crossfade.
+        const formKey = FORM_BY_SECTION[sectionId] || "waves";
+        const fw = FORM_WEIGHTS[formKey] || FORM_WEIGHTS.waves;
+        formTarget.grid = fw.grid;
+        formTarget.particles = fw.particles;
+        formTarget.constellation = fw.constellation;
         // Shape morph for this section + pulse animation on the new shape.
         const shape = SHAPE_BY_SECTION[sectionId];
         if (!shape || !shapes[shape] || shape === currentShapeKey) return;
@@ -811,22 +828,13 @@
         shapePulseStartedAt = performance.now();
         shapePulseTargetKey = shape;
       },
-      /**
-       * Swap the background animation profile to match a theme. The change
-       * is not instant — `currentProfile` lerps toward the new target each
-       * frame (BG_PROFILE_LERP) so the swap glides in. Unknown keys fall
-       * back to the default "ember" profile.
-       * @param {string} profileKey  one of "ember" | "cortex" | "sage"
-       */
-      setThemeProfile(profileKey) {
-        targetProfile = resolveProfile(profileKey);
-      },
       dispose() {
         cancelAnimationFrame(rafHandle);
         if (resizeObserver) resizeObserver.disconnect();
         else window.removeEventListener("resize", resize);
         window.removeEventListener("mousemove", onPointerMove);
         document.removeEventListener("visibilitychange", onVisibilityChange);
+        window.removeEventListener("sm:intro-done", onIntroDone);
         if (motionMedia.removeEventListener) motionMedia.removeEventListener("change", onMotionPrefChange);
         else if (motionMedia.removeListener) motionMedia.removeListener(onMotionPrefChange);
         SHAPE_KEYS.forEach((k) => {

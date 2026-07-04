@@ -188,7 +188,7 @@
 .rv-w {
   display: inline-block;
   opacity: 0;
-  transform: translateY(0.5em);
+  transform: translateY(0.95em);
   transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1);
   transition-delay: calc(var(--rv-i, 0) * 36ms);
   will-change: opacity, transform;
@@ -315,3 +315,137 @@
   .sc-cursor { display: none; }
   [data-magnetic] { transform: none !important; }
 }
+
+
+/* ════════════════════════════════════════════════════════════
+   SECTION ENTRANCE CHOREOGRAPHY — "каждая по-своему" (v64, AREA 1)
+   Each section has its own signature envelope, toggled by motion.js
+   adding `.sec-in`. Hidden start pose lives on `.sec-bound:not(.sec-in)`,
+   committed instantly (no flash). The entrance is a finite
+   `animation ... both` so it self-resolves to rest then composites cheaply.
+
+   Pinned sections (services/cv/trust/contact) animate their INNER `.shell`
+   so the live `--pin-p` transform on the <section> is never clobbered.
+   Non-pinned sections animate the <section> directly.
+   NOTE: `converge` is a section-level fade+lift ONLY — it deliberately does
+   NOT animate child .sec-head/.skills-panel, which are already reveal-bound
+   ([data-reveal]) and would fight motion.js's inline styles.
+   ════════════════════════════════════════════════════════════ */
+:root {
+  --sec-dur: 0.9s;
+  --sec-ease: cubic-bezier(.2, .6, .18, 1);
+}
+
+/* ---- Hidden start poses (instant paint, no transition) ---------------- */
+section[data-enter].sec-bound:not(.sec-in) { opacity: 0; }
+.pin-host > section[data-enter].sec-bound:not(.sec-in) > .shell { opacity: 0; }
+
+/* ---- Triggered entrances (run once, settle to rest) ------------------- */
+
+/* 01 signal — emerge: de-blur only, NO vertical translate. Signal sits right
+   at the hero→signal seam; a translateY lift there moved the section's top
+   edge against the (also-animating) hero photo dissolve underneath, reading
+   as the seam itself shifting. De-blur-in-place reads as "proximity focus"
+   instead, and the seam edge never moves. */
+section[data-enter="emerge"].sec-in { animation: secEmerge var(--sec-dur) var(--sec-ease) both; }
+@keyframes secEmerge {
+  from { opacity: 0; filter: blur(7px); transform: scale(.99); }
+  60%  { filter: blur(1.2px); }
+  to   { opacity: 1; filter: blur(0); transform: none; }
+}
+
+/* 02 about — develop-like-film: blur + darken → sharp focus. */
+section[data-enter="develop"].sec-in { animation: secDevelop 1.05s var(--sec-ease) both; }
+@keyframes secDevelop {
+  from { opacity: 0; transform: translateY(30px) scale(.985); filter: blur(12px) brightness(.55); }
+  55%  { filter: blur(2.5px) brightness(.84); }
+  to   { opacity: 1; transform: none; filter: blur(0) brightness(1); }
+}
+
+/* 03 projects — rise-from-depth: scale up + lift. (Cards keep their own L/R slide.) */
+section[data-enter="rise"].sec-in { animation: secRise var(--sec-dur) var(--sec-ease) both; transform-origin: 50% 70%; }
+@keyframes secRise {
+  from { opacity: 0; transform: translateY(70px) scale(.94); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* 04 skills — converge: section-level lift + fade (no child halves; the
+   header + radar panel keep their own reveal stagger). */
+section[data-enter="converge"].sec-in { animation: secConverge var(--sec-dur) var(--sec-ease) both; }
+@keyframes secConverge {
+  from { opacity: 0; transform: translateY(44px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* 05 services — slide-from-left (pinned → animate .shell). */
+.pin-host > section[data-enter="slide-left"].sec-in > .shell { animation: secSlideLeft var(--sec-dur) var(--sec-ease) both; }
+@keyframes secSlideLeft {
+  from { opacity: 0; transform: translateX(-95px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* 06 cv — curtain/mask wipe top→bottom (clip-path is compositable, not layout). */
+.pin-host > section[data-enter="curtain"].sec-bound:not(.sec-in) > .shell {
+  clip-path: inset(0 0 100% 0);
+  transform: translateY(14px);
+}
+.pin-host > section[data-enter="curtain"].sec-in > .shell { animation: secCurtain 1.0s var(--sec-ease) both; }
+@keyframes secCurtain {
+  from { opacity: 0; clip-path: inset(0 0 100% 0); transform: translateY(28px); }
+  to   { opacity: 1; clip-path: inset(0 0 0 0);    transform: none; }
+}
+
+/* 07 process — quiet line lift (terminal rows self-animate). */
+section[data-enter="line-stagger"].sec-in { animation: secLineLift var(--sec-dur) var(--sec-ease) both; }
+@keyframes secLineLift {
+  from { opacity: 0; transform: translateY(54px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* 08 trust — slide-from-right (mirror of services; pinned → .shell). */
+.pin-host > section[data-enter="slide-right"].sec-in > .shell { animation: secSlideRight var(--sec-dur) var(--sec-ease) both; }
+@keyframes secSlideRight {
+  from { opacity: 0; transform: translateX(95px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* 09 contact — rise + brighten arrival (pinned → .shell). */
+.pin-host > section[data-enter="rise-bright"].sec-in > .shell {
+  animation: secRiseBright 1.0s var(--sec-ease) both;
+  transform-origin: 50% 80%;
+}
+@keyframes secRiseBright {
+  from { opacity: 0; transform: translateY(60px) scale(.965); filter: brightness(.68); }
+  to   { opacity: 1; transform: none; filter: brightness(1); }
+}
+
+/* ---- FALLBACKS: reduced-motion → plain opacity fade, never stuck hidden -- */
+@media (prefers-reduced-motion: reduce) {
+  section[data-enter] { animation: none !important; }
+  .pin-host > section[data-enter] > .shell {
+    animation: none !important;
+    clip-path: none !important;
+    filter: none !important;
+    transform: none !important;
+  }
+  section[data-enter].sec-bound:not(.sec-in),
+  .pin-host > section[data-enter].sec-bound:not(.sec-in) > .shell {
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+  }
+}
+
+/* Low-tier (data-motion-lite on <html>): collapse every signature to a plain
+   fade — same policy the pin overlap uses. Keeps ONE cheap effect. */
+html[data-motion-lite] section[data-enter].sec-in,
+html[data-motion-lite] .pin-host > section[data-enter].sec-in > .shell {
+  animation: secFlatFade .5s linear both !important;
+  filter: none !important;
+  clip-path: none !important;
+}
+html[data-motion-lite] .pin-host > section[data-enter].sec-bound:not(.sec-in) > .shell {
+  clip-path: none !important;
+  transform: none !important;
+}
+@keyframes secFlatFade { from { opacity: 0; } to { opacity: 1; } }
