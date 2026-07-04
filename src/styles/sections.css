@@ -146,6 +146,30 @@
     background: var(--bg-0);
   }
 }
+/* Mobile gets no scroll-linked pin effect at all (100vh/URL-bar fragility +
+   not worth a continuous scroll listener on weak connections/CPUs) — but a
+   flat, motionless stack read as a dead seam, not an intentional handoff.
+   A static leading edge (shadow + thin horizon line, zero JS/animation cost)
+   gives Signal the same "resting panel docked over Hero" identity the
+   desktop pin effect earns through motion. Deliberately NOT a translateY
+   entrance here — that was tried for Signal's own scroll-in animation
+   (data-enter="emerge" below) and rejected: it fought the hero photo's own
+   dissolve mask right at this exact seam and read as the seam itself
+   shifting. A static line has no such conflict. */
+@media (max-width: 900px) {
+  .pin-host--hero > section[data-section]:last-child {
+    position: relative;
+    box-shadow: 0 -20px 40px -18px rgba(0, 0, 0, 0.55);
+  }
+  .pin-host--hero > section[data-section]:last-child::before {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(var(--accent-rgb) / 0.45), transparent);
+    pointer-events: none;
+  }
+}
 
 .hero-grid {
   display: grid;
@@ -977,8 +1001,12 @@
 }
 .proj-status-prod { color: var(--accent); border-color: rgba(var(--accent-rgb) / 0.5); }
 .proj-status-live { color: var(--accent); border-color: rgba(var(--accent-rgb) / 0.5); }
-.proj-status-beta { color: var(--bronze); border-color: rgba(200, 155, 94, .4); }
+.proj-status-beta { color: var(--accent-2); border-color: rgba(200, 155, 94, .4); }
 .proj-status-proto { color: var(--text-dim); }
+/* Confidential/NDA work — deliberately the most understated treatment (no
+   accent color), reading as "quiet, handled discreetly" rather than muted
+   because it's less important. */
+.proj-status-nda { color: var(--text-mute); border-color: var(--line-strong); }
 .proj-name {
   font-size: clamp(24px, 2vw, 32px);
   margin: 4px 0 8px;

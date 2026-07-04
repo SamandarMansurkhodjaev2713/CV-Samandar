@@ -16,7 +16,7 @@
   "use strict";
 
   var CFG = {
-    STAR_COUNT: 180,
+    STAR_COUNT: 130,
     // Phase windows (ms from start). Overlaps are intentional (no dead beats).
     P1_END: 1000,     // warp
     P2_START: 900,    // earth approach (overlaps warp tail)
@@ -47,9 +47,22 @@
     if (!intent || !intent.panel || !intent.panel.parentNode) return;
     if (intent.__started) return;
     intent.__started = true;
-    if (intent.safety) { clearTimeout(intent.safety); intent.safety = 0; }
 
     var panel = intent.panel;
+
+    // Absolute last-resort net, armed before ANY fallible work below and
+    // before the head-boot's own safety timer is cleared. If canvas setup
+    // throws (getContext("2d") returning null is the one real-world case —
+    // rare, but the curtain blocks the entire page, so it must never get
+    // stuck no matter what), this still fires and removes it.
+    var forcedTimer = setTimeout(forceRemove, 4200);
+    function forceRemove() {
+      forcedTimer = 0;
+      if (panel && panel.parentNode) panel.remove();
+      try { window.dispatchEvent(new CustomEvent("sm:intro-done")); } catch (e) { /* opportunistic */ }
+    }
+
+    if (intent.safety) { clearTimeout(intent.safety); intent.safety = 0; }
 
     // ── Fade mode (reduced-motion / low-tier): cheap 400ms opacity fade. ──
     if (intent.mode === "fade") {
@@ -57,6 +70,7 @@
       requestAnimationFrame(function () {
         panel.style.opacity = "0";
         setTimeout(function () {
+          if (forcedTimer) { clearTimeout(forcedTimer); forcedTimer = 0; }
           if (panel.parentNode) panel.remove();
           try { window.dispatchEvent(new CustomEvent("sm:intro-done")); } catch (e) { /* opportunistic */ }
         }, 440);
@@ -65,47 +79,60 @@
     }
 
     // ── Full mode: canvas timeline. ──────────────────────────────────────
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    var cv = document.createElement("canvas");
-    cv.style.cssText = "position:absolute;inset:0;width:100%;height:100%;display:block;";
-    panel.appendChild(cv);
-    var ctx = cv.getContext("2d");
-    var W = 0, H = 0;
-    function size() {
-      W = window.innerWidth; H = window.innerHeight;
-      cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-    size();
-    window.addEventListener("resize", size, { passive: true });
-
-    var accent = readAccentRGB();
-    function cx() { return W * 0.5; }
-    function cy() { return H * CFG.IRIS_CENTER_Y; }
-
-    // Deterministic star field: fixed angle + base-radius per star, no random
-    // reposition mid-flight (no twitch). Streaming = radius grows with phase.
-    var stars = new Array(CFG.STAR_COUNT);
-    for (var i = 0; i < CFG.STAR_COUNT; i++) {
-      var ang = i * 2.399963; // golden-angle spread
-      var seed = ((i * 53) % 100) / 100; // deterministic 0..1
-      stars[i] = {
-        ang: ang,
-        base: 0.02 + seed * 0.14,
-        len: 0.4 + ((i * 17) % 100) / 100 * 0.9,
-        hot: (i % 7 === 0),
-        z: 0.3 + ((i * 31) % 100) / 100 * 0.7,
+    // Setup wrapped in try/catch: if canvas/context creation fails for any
+    // reason, fall back to forceRemove() immediately instead of throwing
+    // mid-way and leaving the curtain up with nothing left to clear it
+    // (the forcedTimer above is the last line of defense either way).
+    var dpr, cv, ctx, W, H, size, accent, cx, cy, stars, start, exitFrom, raf, finished;
+    try {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      cv = document.createElement("canvas");
+      cv.style.cssText = "position:absolute;inset:0;width:100%;height:100%;display:block;";
+      panel.appendChild(cv);
+      ctx = cv.getContext("2d");
+      if (!ctx) throw new Error("2d context unavailable");
+      W = 0; H = 0;
+      size = function () {
+        W = window.innerWidth; H = window.innerHeight;
+        cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       };
-    }
+      size();
+      window.addEventListener("resize", size, { passive: true });
 
-    var start = performance.now();
-    var exitFrom = 0;
-    var raf = 0;
-    var finished = false;
+      accent = readAccentRGB();
+      cx = function () { return W * 0.5; };
+      cy = function () { return H * CFG.IRIS_CENTER_Y; };
+
+      // Deterministic star field: fixed angle + base-radius per star, no
+      // random reposition mid-flight (no twitch). Streaming = radius grows
+      // with phase.
+      stars = new Array(CFG.STAR_COUNT);
+      for (var i = 0; i < CFG.STAR_COUNT; i++) {
+        var ang = i * 2.399963; // golden-angle spread
+        var seed = ((i * 53) % 100) / 100; // deterministic 0..1
+        stars[i] = {
+          ang: ang,
+          base: 0.02 + seed * 0.14,
+          len: 0.4 + ((i * 17) % 100) / 100 * 0.9,
+          hot: (i % 7 === 0),
+          z: 0.3 + ((i * 31) % 100) / 100 * 0.7,
+        };
+      }
+
+      start = performance.now();
+      exitFrom = 0;
+      raf = 0;
+      finished = false;
+    } catch (setupErr) {
+      forceRemove();
+      return;
+    }
 
     function teardown() {
       if (finished) return;
       finished = true;
+      if (forcedTimer) { clearTimeout(forcedTimer); forcedTimer = 0; }
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", size);
       window.removeEventListener("keydown", onKey, true);

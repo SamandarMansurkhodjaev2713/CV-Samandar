@@ -64,8 +64,14 @@ function Hero({
   const [robotMood, setRobotMood] = useState("idle");
 
   // Robot loading strategy:
-  //   1. Prefer the Spline runtime (community asset "GENKUB - Greeting robot").
-  //      It's an async dynamic import + scene download, so it takes time.
+  //   1. ALWAYS try the Spline runtime (community asset "GENKUB - Greeting
+  //      robot") first, on every device — no device-tier skip. Device tier
+  //      used to gate this out on anything reporting <=4 cores/GB, but
+  //      `navigator.deviceMemory` is bucketed/approximated by Chrome (a huge
+  //      share of real, perfectly capable Android phones report 4 or less),
+  //      so that check was quietly showing the legacy robot on ordinary
+  //      hardware, not just genuinely weak devices. It's an async dynamic
+  //      import + scene download, so it takes time regardless.
   //   2. We poll every ROBOT_POLL_MS for TWO global flags that robot-spline.js
   //      sets when the load resolves:
   //        - `window.__splineRobotLoaded = true`  → success, KEEP Spline,
@@ -85,7 +91,15 @@ function Hero({
   //      the legacy robot. If Spline is blocked outright (e.g. an ad-blocker
   //      extension blocking unpkg.com/prod.spline.design), retrying the same
   //      URL fails the same way — no client-side logic can force that
-  //      through; this only helps genuinely transient failures.
+  //      through; this only helps genuinely transient failures. Now that
+  //      Spline always runs, this legacy path is a true last resort, not a
+  //      routine occurrence on any particular class of device.
+  //   5. Loading is held until the intro curtain finishes (mirrors bg-fx's
+  //      own `sm:intro-done` gate) — the robot is hidden behind the curtain
+  //      anyway until the iris opens, so deferring costs nothing visually,
+  //      and it keeps Spline's dynamic import + WebGL scene from competing
+  //      with the intro's own canvas rAF loop for main-thread time, which is
+  //      what was making the intro stutter on real phones.
   // The split keeps the page robust against blocked CDNs / offline / 4xx
   // WITHOUT killing a successful-but-slow Spline load.
   useEffect(() => {
@@ -223,23 +237,35 @@ function Hero({
       }
     }
 
-    // Device tier — weak hardware skips Spline entirely. Spline pulls a
-    // multi-MB runtime from a CDN and runs a full second WebGL scene
-    // alongside bg-fx; on a low-end device that is the single biggest
-    // cause of the page "freezing". Low-tier devices go straight to the
-    // lightweight hand-built fallback robot (no extra download — robot.js
-    // reuses the already-loaded THREE global).
-    const deviceTierLow = typeof window.getDeviceTier === "function" && window.getDeviceTier() === "low";
-
-    // First attempt — Spline runtime (skipped on low-tier devices).
-    if (!deviceTierLow && window.RobotSpline && window.RobotSpline.create) {
-      trySpline(ROBOT_FALLBACK_MS);
+    // Kick off the first attempt — but hold it until the intro curtain (if
+    // one is playing this load) has finished. Mirrors bg-fx.js's own
+    // `sm:intro-done` gate exactly: if __SM_INTRO was never set (repeat nav
+    // within the session skips the intro entirely), start immediately.
+    let introWait = false;
+    function startFirstAttempt() {
+      if (window.RobotSpline && window.RobotSpline.create) {
+        trySpline(ROBOT_FALLBACK_MS);
+      } else {
+        // The robot-spline.js bundle never registered (blocked/failed to
+        // load outright) — go straight to the lightweight legacy robot.
+        swapToLegacy();
+      }
+    }
+    function onIntroDone() {
+      introWait = false;
+      startFirstAttempt();
+    }
+    const introActive = !!(window.__SM_INTRO && window.__SM_INTRO.panel && window.__SM_INTRO.panel.parentNode);
+    if (introActive) {
+      introWait = true;
+      window.addEventListener("sm:intro-done", onIntroDone, {
+        once: true
+      });
     } else {
-      // Either the robot-spline.js bundle never registered, or this is a
-      // low-tier device — go straight to the lightweight legacy robot.
-      swapToLegacy();
+      startFirstAttempt();
     }
     return function disposeRobot() {
+      if (introWait) window.removeEventListener("sm:intro-done", onIntroDone);
       clearTimers();
       if (active && active.dispose) {
         try {
@@ -1088,9 +1114,11 @@ function ProjectCard({
     key: k,
     className: "proj-chip mono"
   }, s))), /*#__PURE__*/React.createElement("a", {
-    href: "#",
+    href: p.url || "#",
     className: "proj-cta mono",
-    onClick: e => e.preventDefault()
+    target: p.url && p.url.indexOf("http") === 0 ? "_blank" : undefined,
+    rel: p.url && p.url.indexOf("http") === 0 ? "noopener noreferrer" : undefined,
+    onClick: p.url ? undefined : e => e.preventDefault()
   }, cta, " ", /*#__PURE__*/React.createElement("span", {
     className: "arrow"
   }, "\u2192")));
