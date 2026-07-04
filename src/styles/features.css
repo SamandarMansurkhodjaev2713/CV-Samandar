@@ -500,6 +500,24 @@
   display: flex;
   flex-direction: column;
   border-top: 1px solid var(--line);
+  position: relative;
+  isolation: isolate;
+}
+/* Ambient wash — every row's own glow (.signal-row::after) is hover/open-only,
+   so at rest (the default state almost all visitors see) the whole block was
+   just a flat, empty rectangle with a border. This gives the panel a
+   consistent atmosphere of its own instead of depending entirely on
+   interaction for any color at all. Two soft corners, not one centered glow,
+   so it reads as ambient light rather than a single spotlight. */
+.signal-rows::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 45% at 90% 0%, rgba(var(--accent-2-rgb) / 0.06), transparent 65%),
+    radial-gradient(ellipse 45% 40% at 0% 100%, rgba(var(--accent-rgb) / 0.045), transparent 65%);
 }
 
 .signal-row {
@@ -565,7 +583,7 @@
   line-height: 1;
   letter-spacing: -0.04em;
   color: var(--text);
-  opacity: 0.045;
+  opacity: 0.07;
   pointer-events: none;
   user-select: none;
   white-space: nowrap;
@@ -1128,13 +1146,19 @@ html[data-theme="claude"] body {
  * Desktop only (≥901px): on mobile the sections stack normally — the
  * overlap adds nothing on a narrow single column and risks 100vh/URL-bar
  * fragility. data-motion-lite (low-tier or reduced-motion) flattens it. */
+/* --pin-scale-amt/--pin-fade-amt/--pin-lift-amt let a specific .pin-host
+ * (e.g. .pin-host--hero below) dial the outgoing section's recede intensity
+ * without a specificity fight — set once on the host, inherited down into
+ * the :first-child rule via normal custom-property inheritance. Falls back
+ * to the original tuning (10% scale, 55% fade, 48px lift) for hosts that
+ * don't set them (Services→CV, Trust→Contact). */
 .pin-host { position: relative; }
 @media (min-width: 901px) {
   html:not([data-motion-lite]) .pin-host > section[data-section]:first-child {
-    transform: scale(calc(1 - var(--pin-p, 0) * 0.10))
-               translateY(calc(var(--pin-p, 0) * -48px));
+    transform: scale(calc(1 - var(--pin-p, 0) * var(--pin-scale-amt, 0.10)))
+               translateY(calc(var(--pin-p, 0) * var(--pin-lift-amt, -48px)));
     transform-origin: 50% 26%;
-    opacity: calc(1 - var(--pin-p, 0) * 0.55);
+    opacity: calc(1 - var(--pin-p, 0) * var(--pin-fade-amt, 0.55));
   }
   html:not([data-motion-lite]) .pin-host > section[data-section]:last-child {
     position: relative;

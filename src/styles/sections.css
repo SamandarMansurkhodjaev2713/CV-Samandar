@@ -137,13 +137,34 @@
    sheen). sticky/pin-position are unusable here (body overflow-x makes them
    a scroll-container hazard — verified), which is exactly why that mechanism
    is transform/opacity-only and JS-measured via a single batched rAF loop.
-   The one Hero-specific addition: unlike the other two pairs (which float on
-   the shared transparent WebGL bg), Signal needs an OPAQUE backing here,
-   because Hero carries its own distinct opaque photo backdrop that must be
-   visually covered by the rising panel, not just receded past underneath. */
+   Two Hero-specific tunings, via --pin-scale-amt/--pin-fade-amt/--pin-lift-amt
+   (features.css "Pinned-overlap"):
+   1. GENTLER recede — the generic 10%-scale/55%-fade/48px-lift was tuned for
+      plain content sections (Services, Trust) and was NEVER actually retuned
+      for Hero despite the intent (this comment used to claim it without the
+      override existing — a real gap, not a design choice). A detailed photo
+      shrinking+dimming that hard reads as the photo breaking apart, not
+      sinking into depth. Barely scales/dims here instead — Hero stays
+      present and photographic throughout, only drifting back and softening.
+   2. Signal needs an OPAQUE backing (unlike Services→CV/Trust→Contact, which
+      float on the shared transparent WebGL bg) because Hero carries its own
+      distinct opaque photo backdrop that must be visually covered by the
+      rising panel, not just receded past underneath. A FLAT --bg-0 fill read
+      as a dead slab rising over a rich photo, though — a soft warm glow
+      (echoing Hero's own warm cockpit tone) gives the panel some atmosphere
+      of its own instead of feeling like the interesting thing got replaced
+      by a blank one. */
 @media (min-width: 901px) {
+  .pin-host--hero {
+    --pin-scale-amt: 0.035;
+    --pin-fade-amt: 0.22;
+    --pin-lift-amt: -22px;
+  }
   .pin-host--hero > section[data-section]:last-child {
-    background: var(--bg-0);
+    background:
+      radial-gradient(ellipse 70% 55% at 15% 0%, rgba(var(--accent-rgb) / 0.07), transparent 62%),
+      radial-gradient(ellipse 50% 40% at 100% 100%, rgba(var(--accent-2-rgb) / 0.05), transparent 65%),
+      var(--bg-0);
   }
 }
 /* Mobile gets no scroll-linked pin effect at all (100vh/URL-bar fragility +
@@ -526,9 +547,9 @@
   }
   .hero-grid {
     grid-template-columns: 1fr;
-    gap: 24px;
-    padding-top: calc(var(--nav-h) + 18px);
-    padding-bottom: 84px; /* room for the scroll-hint chevron */
+    gap: 20px;
+    padding-top: calc(var(--nav-h) + 14px);
+    padding-bottom: 56px; /* room for the scroll-hint chevron */
     width: 100%;
     min-height: 0; /* let the grid size to content, not stretch */
   }
@@ -538,8 +559,16 @@
      it visually. */
   .hero-right { order: -1; display: grid; gap: 14px; }
   .hero-marquee { margin: 30px calc(-1 * var(--gutter)) 0; }
-  .hero-meta { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .hero-meta { flex-direction: column; align-items: flex-start; gap: 12px; padding-top: 16px; }
   .hero-links { margin-left: 0; }
+  /* The first mobile screen has to fit eyebrow + 3-line headline + tagline +
+     2 CTAs + meta + a ~400px robot — desktop's spacing (28/40/56px margins)
+     was inherited as-is and pushed the meta row + scroll-hint well below the
+     fold, with the CTAs sitting right at the fold's edge. Tightened here;
+     the 480px block below trims further for the smallest phones. */
+  .hero-h1 { margin: 14px 0 16px; }
+  .hero-tagline { margin-bottom: 22px; }
+  .hero-ctas { margin-bottom: 28px; }
   /* v48 mobile robot — bigger (440px) than v47's 380px; centred horizontally
      with explicit max-width so the robot doesn't get cropped by the
      watermark cover on narrow phones. */
@@ -551,7 +580,7 @@
   /* Compact mobile (<480px): height 380px (was 340px) so the robot's head
      fits comfortably even after the watermark patch. */
   .hero-robot { height: 380px; max-width: 100%; }
-  .hero-grid { padding-top: clamp(28px, 4vh, 52px); gap: 20px; padding-bottom: 96px; }
+  .hero-grid { padding-top: clamp(18px, 3vh, 36px); gap: 16px; padding-bottom: 64px; }
   .hero-ctas { width: 100%; gap: 10px; }
   .hero-ctas .btn { flex: 1; justify-content: center; min-height: 50px; }
   .hero-line { font-size: clamp(36px, 10vw, 52px); }
