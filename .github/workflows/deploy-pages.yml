@@ -37,8 +37,8 @@ jobs:
       - name: Prepare static artifact
         run: |
           mkdir _site
-          cp index.html 404.html .nojekyll _site/
-          cp -R docs screenshots src uploads vendor _site/
+          cp index.html 404.html .nojekyll favicon.svg og-image.png _site/
+          cp -R assets docs screenshots src uploads vendor _site/
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
