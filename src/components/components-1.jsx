@@ -193,34 +193,22 @@ function Hero({ t, links }) {
       }
     }
 
-    // Kick off the first attempt — but hold it until the intro curtain (if
-    // one is playing this load) has finished. Mirrors bg-fx.js's own
-    // `sm:intro-done` gate exactly: if __SM_INTRO was never set (repeat nav
-    // within the session skips the intro entirely), start immediately.
-    let introWait = false;
-    function startFirstAttempt() {
-      if (window.RobotSpline && window.RobotSpline.create) {
-        trySpline(ROBOT_FALLBACK_MS);
-      } else {
-        // The robot-spline.js bundle never registered (blocked/failed to
-        // load outright) — go straight to the lightweight legacy robot.
-        swapToLegacy();
-      }
-    }
-    function onIntroDone() {
-      introWait = false;
-      startFirstAttempt();
-    }
-    const introActive = !!(window.__SM_INTRO && window.__SM_INTRO.panel && window.__SM_INTRO.panel.parentNode);
-    if (introActive) {
-      introWait = true;
-      window.addEventListener("sm:intro-done", onIntroDone, { once: true });
+    // Kick off IMMEDIATELY — the robot must be loaded (or well on its way) by
+    // the time the ~3s intro finishes, so the hero is already alive the moment
+    // the iris opens onto it. That's a core point of the intro: it buys the
+    // heavy Spline runtime + scene download time to arrive behind the opaque
+    // curtain. (An earlier version deferred this until `sm:intro-done`; that
+    // guaranteed the robot only STARTED loading as the intro ended, i.e. popped
+    // in late — the opposite of what we want here.)
+    if (window.RobotSpline && window.RobotSpline.create) {
+      trySpline(ROBOT_FALLBACK_MS);
     } else {
-      startFirstAttempt();
+      // The robot-spline.js bundle never registered (blocked/failed to load
+      // outright) — go straight to the lightweight legacy robot.
+      swapToLegacy();
     }
 
     return function disposeRobot() {
-      if (introWait) window.removeEventListener("sm:intro-done", onIntroDone);
       clearTimers();
       if (active && active.dispose) {
         try { active.dispose(); } catch (e) { /* opportunistic */ }
