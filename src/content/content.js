@@ -346,9 +346,9 @@ const CONTENT = {
       scope_opts: ["Web App / MVP", "AI Automation", "Telegram Bot", "Dashboard / CRM", "Landing", "Consulting"],
       timeline_opts: ["ASAP", "1–2 недели", "1–2 месяца", "гибко"],
       links: [
-        { k: "Telegram", v: "t.me/your-username" },
-        { k: "GitHub", v: "github.com/your-username" },
-        { k: "Email", v: "hello@example.com" },
+        { k: "Telegram", v: "t.me/killallofthem13" },
+        { k: "GitHub", v: "github.com/SamandarMansurkhodjaev2713" },
+        { k: "Email", v: "sam4k27@gmail.com" },
       ],
     },
     footer: {
@@ -687,9 +687,9 @@ const CONTENT = {
       scope_opts: ["Web App / MVP", "AI Automation", "Telegram Bot", "Dashboard / CRM", "Landing", "Consulting"],
       timeline_opts: ["ASAP", "1–2 weeks", "1–2 months", "flexible"],
       links: [
-        { k: "Telegram", v: "t.me/your-username" },
-        { k: "GitHub", v: "github.com/your-username" },
-        { k: "Email", v: "hello@example.com" },
+        { k: "Telegram", v: "t.me/killallofthem13" },
+        { k: "GitHub", v: "github.com/SamandarMansurkhodjaev2713" },
+        { k: "Email", v: "sam4k27@gmail.com" },
       ],
     },
     footer: { copy: "© 2026 — Executive AI Code Lab", built: "built on TypeScript, Three.js, React" },
@@ -1025,9 +1025,9 @@ const CONTENT = {
       scope_opts: ["Web App / MVP", "AI Avtomatlashtirish", "Telegram Bot", "Dashboard / CRM", "Landing", "Konsalting"],
       timeline_opts: ["ASAP", "1–2 hafta", "1–2 oy", "moslashuvchan"],
       links: [
-        { k: "Telegram", v: "t.me/your-username" },
-        { k: "GitHub", v: "github.com/your-username" },
-        { k: "Email", v: "hello@example.com" },
+        { k: "Telegram", v: "t.me/killallofthem13" },
+        { k: "GitHub", v: "github.com/SamandarMansurkhodjaev2713" },
+        { k: "Email", v: "sam4k27@gmail.com" },
       ],
     },
     footer: { copy: "© 2026 — Executive AI Code Lab", built: "TypeScript, Three.js, React asosida" },

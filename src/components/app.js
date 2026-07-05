@@ -45,9 +45,9 @@ class ErrorBoundary extends React.Component {
   }
 }
 const LINKS = {
-  github: "github.com/your-username",
-  telegram: "t.me/your-username",
-  email: "hello@example.com"
+  github: "github.com/SamandarMansurkhodjaev2713",
+  telegram: "t.me/killallofthem13",
+  email: "sam4k27@gmail.com"
 };
 const NAV_SECTIONS = ["about", "projects", "skills", "services", "cv", "contact"];
 

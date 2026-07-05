@@ -36,6 +36,12 @@
     IRIS_START: 2450,       // iris hole opens onto the hero
     TOTAL: 3000,            // full duration
     SKIP_DISSOLVE_MS: 300,
+    // A skip is IGNORED for the first SKIP_GRACE_MS. Without this, a stray early
+    // event (the tap/click that opened the page, trackpad inertia, a synthetic
+    // pointerdown) fired onSkip on frame ~0 and the intro dissolved before it
+    // was ever visible — the likely reason it "never showed". After the grace
+    // window it's freely skippable (click / scroll / touch / Esc-Enter-Space).
+    SKIP_GRACE_MS: 600,
     CORE_Y: 0.42,           // vertical focus (matches hero photo focus)
   };
 
@@ -154,6 +160,8 @@
 
     function requestSkip() {
       if (exitFrom) return;
+      // Ignore skips fired during the grace window — see CFG.SKIP_GRACE_MS.
+      if (performance.now() - start < CFG.SKIP_GRACE_MS) return;
       exitFrom = performance.now();
       window.removeEventListener("wheel", onSkip);
       window.removeEventListener("touchstart", onSkip);
@@ -223,6 +231,13 @@
       var coreR = MD * (0.006 + easeHouse(ignite) * 0.05);
       var corePulse = 1 + Math.sin(t * 0.011) * 0.12;
       var iris = seg(t, CFG.IRIS_START, CFG.TOTAL);
+
+      // Immediate warm ambient — a soft glow that's already visible on the very
+      // first frames (before the core has grown), so the screen never reads as
+      // a plain dark/loading rectangle. Ramps in over the first ~350ms, fades
+      // as the iris opens. Cheap: one radial gradient, additive.
+      var ambient = seg(t, 60, 400) * (1 - iris);
+      if (ambient > 0.01) bloom(CX, CY, MD * 0.5, 0.28 * ambient);
 
       // Embers — additive, warm, rising from the core.
       ctx.globalCompositeOperation = "lighter";
