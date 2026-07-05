@@ -82,17 +82,36 @@
 
     if (intent.safety) { clearTimeout(intent.safety); intent.safety = 0; }
 
-    // ── Fade mode (reduced-motion / low-tier): cheap 400ms opacity fade. ──
+    // ── Fade mode (reduced-motion / low-tier): cheap, no canvas/rAF. ──
+    // WAS a plain opacity fade of the boot panel, whose background is the
+    // page's own --bg-0 (set inline in index.html so there's no flash before
+    // this file decides a mode) — i.e. it faded a solid color into the exact
+    // same solid color underneath. That is visually a no-op: nothing ever
+    // appeared to change, on every device that takes this path. Given how
+    // many real Android phones land in "low-tier" (Chrome buckets
+    // deviceMemory conservatively — see getDeviceTier), this was very likely
+    // why the intro "never showed" for a lot of real visitors, not a logic
+    // bug. Fix: paint a warm radial glow (on-theme, matches the full mode's
+    // core) so there is an actual visible moment, held briefly, then faded —
+    // still just one CSS background + one opacity transition, no rAF loop.
     if (intent.mode === "fade") {
-      panel.style.transition = "opacity .4s cubic-bezier(.2,.6,.18,1)";
-      requestAnimationFrame(function () {
+      var fa1 = readRGB("--accent-rgb", [217, 119, 87]);
+      var fa2 = readRGB("--accent-2-rgb", [200, 155, 94]);
+      panel.style.background =
+        "radial-gradient(circle at 50% 42%, rgba(" + fa1[0] + "," + fa1[1] + "," + fa1[2] + ",0.95) 0%, " +
+        "rgba(" + fa2[0] + "," + fa2[1] + "," + fa2[2] + ",0.6) 30%, #1F1E1B 70%)";
+      panel.style.transition = "opacity .55s cubic-bezier(.2,.6,.18,1)";
+      // Hold at full opacity briefly so the glow actually registers as a
+      // moment before fading — the previous version began fading on the very
+      // next frame, so at most one rendered frame was ever fully visible.
+      setTimeout(function () {
         panel.style.opacity = "0";
         setTimeout(function () {
           if (forcedTimer) { clearTimeout(forcedTimer); forcedTimer = 0; }
           if (panel.parentNode) panel.remove();
           try { window.dispatchEvent(new CustomEvent("sm:intro-done")); } catch (e) { /* opportunistic */ }
-        }, 440);
-      });
+        }, 570);
+      }, 300);
       return;
     }
 

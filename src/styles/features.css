@@ -1173,14 +1173,28 @@ html[data-theme="claude"] body {
  * frame behind native scroll, so Hero visibly shook. sticky is composited and
  * immune to that. It only works because <body> now uses overflow-x:clip instead
  * of hidden (hidden made body a scroll container that broke sticky) — see
- * styles.css. Runs on every viewport width; data-motion-lite (low-tier /
- * reduced-motion) drops the sticky so the sections just stack. */
-html:not([data-motion-lite]) .pin-host--hero > section[data-section]:first-child {
+ * styles.css.
+ *
+ * Deliberately UNGATED by data-motion-lite (unlike the other two pairs below),
+ * on every viewport width. Reasoning: the low-tier half of data-motion-lite
+ * (cores<=4 || mem<=4) is the same bucket documented elsewhere in this file as
+ * catching a huge share of ordinary Android phones (Chrome's deviceMemory
+ * reporting is conservative) — not just genuinely weak hardware. Gating the
+ * OLD JS-driven recede/dim/counter-scroll behind that check was justified (real
+ * per-frame cost); gating a bare `position: sticky` isn't — it's compositor-
+ * only, the browser's own scroll handling, zero incremental JS/paint cost vs.
+ * a plain static section. Keeping the gate here was very likely why this pair
+ * "had no animation at all" on exactly the phones the robot's own tier-gate
+ * fix (see components-1.jsx) was written to stop misclassifying. Reduced-
+ * motion is still respected — nothing here is an animated property (sticky
+ * itself doesn't transition anything), so there's nothing for a
+ * prefers-reduced-motion user to be bothered by. */
+.pin-host--hero > section[data-section]:first-child {
   position: sticky;
   top: 0;
   z-index: 1;
 }
-html:not([data-motion-lite]) .pin-host--hero > section[data-section]:last-child {
+.pin-host--hero > section[data-section]:last-child {
   position: relative;
   z-index: 2;
 }
