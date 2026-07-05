@@ -78,12 +78,16 @@ function Hero({ t, links }) {
   //      through; this only helps genuinely transient failures. Now that
   //      Spline always runs, this legacy path is a true last resort, not a
   //      routine occurrence on any particular class of device.
-  //   5. Loading is held until the intro curtain finishes (mirrors bg-fx's
-  //      own `sm:intro-done` gate) — the robot is hidden behind the curtain
-  //      anyway until the iris opens, so deferring costs nothing visually,
-  //      and it keeps Spline's dynamic import + WebGL scene from competing
-  //      with the intro's own canvas rAF loop for main-thread time, which is
-  //      what was making the intro stutter on real phones.
+  //   5. The dynamic import starts immediately here (below) so the network
+  //      fetch is well underway before the ~3s intro ends — but robot-spline.js
+  //      itself holds the actual `new Application()` + `app.load()` (the part
+  //      that opens a second WebGL context and GPU-uploads the scene) until
+  //      `sm:intro-done` fires or 3.2s elapses, same reasoning as bg-fx.js's
+  //      own gate: that GPU burst competing with the intro's canvas rAF loop
+  //      is what was making the intro stutter on real phones. Net effect:
+  //      network prewarm happens during the intro (free), the heavy part
+  //      happens right as/after the intro clears (no contention), and the
+  //      robot is still ready essentially immediately once the hero appears.
   // The split keeps the page robust against blocked CDNs / offline / 4xx
   // WITHOUT killing a successful-but-slow Spline load.
   useEffect(() => {
@@ -615,13 +619,18 @@ const CURRENTLY_TYPE_INTERVAL_MS = 30;
 const TECH_CHIPS = ["TypeScript", "React", "Next.js", "Node.js", "Postgres", "OpenAI", "Anthropic", "LangChain", "n8n", "Three.js", "Telegram Bot", "Docker"];
 
 // Currently-rotator — types/erases the active phrase with a soft typewriter.
-function useCurrentlyRotator(phrases) {
+// `active` (default true) pauses the whole loop while false — About passes
+// its own in-view state so this stops re-rendering React state every 30ms
+// while scrolled off-screen; it simply resumes typing where it left off once
+// back in view, rather than restarting the phrase.
+function useCurrentlyRotator(phrases, active) {
   const [text, setText] = useState("");
   const [phase, setPhase] = useState("typing"); // typing | hold | erasing
   const idxRef = useRef(0);
   const cursorRef = useRef(0);
   useEffect(() => {
     if (!phrases || phrases.length === 0) return undefined;
+    if (active === false) return undefined;
     let timer = 0;
     let cancelled = false;
     function step() {
@@ -658,7 +667,7 @@ function useCurrentlyRotator(phrases) {
       cancelled = true;
       if (timer) window.clearTimeout(timer);
     };
-  }, [phrases, phase]);
+  }, [phrases, phase, active]);
   return text;
 }
 
@@ -666,23 +675,27 @@ function About({ t }) {
   const ref = useRevealRoot([t]);
   const cardRef = useRef(null);
   const [runCounters, setRunCounters] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const [clock, setClock] = useState(() => formatTashkentTime(new Date()));
   const [pulseIndex, setPulseIndex] = useState(-1);
   const contribCells = useMemo(() => buildContribCells(CONTRIB_ROWS, CONTRIB_COLS), []);
   const currentlyPhrases = t.about.currently || [];
-  const currentlyText = useCurrentlyRotator(currentlyPhrases);
+  const currentlyText = useCurrentlyRotator(currentlyPhrases, isVisible);
 
-  // Section-in-view trigger to start counters + activate contribution pulses.
+  // Section-in-view: `runCounters` latches once (counters/pulses only ever
+  // animate their first run-in); `isVisible` tracks continuously so the
+  // typewriter above can pause its 30ms setState loop while off-screen
+  // instead of quietly re-rendering React forever in the background.
   useEffect(() => {
     if (!cardRef.current) return undefined;
     const io = new IntersectionObserver((entries) => {
       entries.forEach((e) => {
+        setIsVisible(e.isIntersecting);
         if (e.isIntersecting && e.intersectionRatio > 0.3) {
           setRunCounters(true);
-          io.disconnect();
         }
       });
-    }, { threshold: [0.3, 0.5] });
+    }, { threshold: [0, 0.3, 0.5] });
     io.observe(cardRef.current);
     return () => io.disconnect();
   }, []);

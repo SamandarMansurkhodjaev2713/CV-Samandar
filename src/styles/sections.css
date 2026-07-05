@@ -746,7 +746,22 @@
   font-size: 10px;
   flex-shrink: 0;
 }
-.about-currently-val { color: var(--text); }
+.about-currently-val {
+  color: var(--text);
+  /* The typewriter (useCurrentlyRotator) re-renders this one char longer/
+     shorter every 30ms, forever. Without a hard single-line constraint, the
+     longest RU phrases wrap to 2 lines on narrow phones once typed past the
+     row's width — min-height:44px above is a floor, not a ceiling, so the
+     row visibly grows and shoves every section below it down, then snaps
+     back on erase, every ~5s rotation. min-width:0 is the actual fix (a flex
+     child's default min-width:auto refuses to shrink below its own text's
+     width, which is what let it overflow into a wrap in the first place);
+     nowrap+ellipsis just make the now-possible clipping look intentional. */
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .about-currently-caret {
   display: inline-block;
   width: 7px; height: 13px;

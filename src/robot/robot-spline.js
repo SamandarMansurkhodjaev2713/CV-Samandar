@@ -71,6 +71,41 @@
     return splineModulePromise;
   }
 
+  // ── Intro coordination ──────────────────────────────────────────────────
+  // The dynamic import above is pure network + module-eval — cheap, and safe
+  // to start immediately (it's what lets the robot be ready by the time the
+  // intro's iris opens). `new Application()` + `app.load()` below are NOT
+  // cheap: a second WebGL context + GPU upload of the whole scene, run as
+  // synchronous continuations. On a cold cache the network download alone
+  // exceeds the ~3s intro, so this never matters — but on a warm cache the
+  // import can resolve in tens of ms, landing that entire GPU burst inside
+  // the intro's own canvas rAF loop and stalling it (bg-fx.js gates its own
+  // WebGL loop on the same signal for the identical reason). Resolves the
+  // instant `sm:intro-done` fires, or after `maxMs` regardless (so a delayed/
+  // missing event — e.g. intro.js failing to load — can't wedge the robot
+  // forever; index.html's own head-boot safety also dispatches the event as
+  // a backstop, so in practice this ceiling is rarely hit).
+  function waitForIntroOrTimeout(maxMs) {
+    return new Promise(function (resolve) {
+      const active = !!(window.__SM_INTRO && window.__SM_INTRO.panel && window.__SM_INTRO.panel.parentNode);
+      if (!active) { resolve(); return; }
+      let settled = false;
+      const timer = setTimeout(function () {
+        if (settled) return;
+        settled = true;
+        window.removeEventListener("sm:intro-done", onDone);
+        resolve();
+      }, maxMs);
+      function onDone() {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve();
+      }
+      window.addEventListener("sm:intro-done", onDone, { once: true });
+    });
+  }
+
   // ── Watermark safety-net ───────────────────────────────────────────────
   // The runtime itself doesn't inject branding into the DOM, but we sweep
   // once after load just in case future versions add an attribution element.
@@ -175,6 +210,12 @@
     window.__splineRobotLoaded = false;
     window.__splineRobotFailed = null;
     loadSplineRuntime()
+      .then(function gate(Application) {
+        // Import can resolve mid-intro on a warm cache — hold the actual
+        // WebGL instantiation until the intro signals done (or 3.2s, matching
+        // index.html's own safety-net timing, whichever comes first).
+        return waitForIntroOrTimeout(3200).then(function () { return Application; });
+      })
       .then(function instantiate(Application) {
         if (disposed) return null;
         app = new Application(canvas);
