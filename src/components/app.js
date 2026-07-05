@@ -592,8 +592,7 @@ function App() {
     setLang: v => setTweak("lang", v),
     active: activeSection
   }), /*#__PURE__*/React.createElement("main", null, /*#__PURE__*/React.createElement("div", {
-    className: "pin-host pin-host--hero",
-    "data-pin": true
+    className: "pin-host pin-host--hero"
   }, /*#__PURE__*/React.createElement(Hero, {
     t: t,
     links: LINKS

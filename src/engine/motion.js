@@ -712,35 +712,17 @@
     pinRaf = 0;
     const vh = window.innerHeight || 1;
     const progress = [];
-    const offset = [];
     // Read phase — gather every rect before touching styles.
     for (let i = 0; i < pinHosts.length; i++) {
-      const host = pinHosts[i];
-      const r = host.getBoundingClientRect();
+      const r = pinHosts[i].getBoundingClientRect();
       const range = r.height - vh;
       progress[i] = range > 0 ? Math.max(0, Math.min(1, (0 - r.top) / range)) : 0;
-      // Raw px the host has scrolled up past the viewport top, driving the
-      // Hero→Signal "counter-scroll": Hero is translated DOWN by exactly this
-      // so it stays visually fixed while Signal, in normal flow below with no
-      // transform, scrolls up over it like a curtain (see .pin-host--hero in
-      // features.css). Kept separate from --pin-p (the 0→1 ratio the other two
-      // pairs use). Clamped to the FIRST CHILD's own height, not the full
-      // range: once the outgoing section (Hero) has been fully scrolled past
-      // (= fully covered by the rising curtain), Hero stops counter-scrolling
-      // and freezes translated by exactly its own height, so it sits entirely
-      // within the incoming section's vertical span (always covered) and never
-      // pokes out below it into the next (transparent) section. offsetHeight is
-      // the UNtransformed layout height — correct here (rect height would fold
-      // in the very translate we're computing). Layout is already flushed by
-      // the rect read above, so this adds no extra reflow.
-      const first = host.firstElementChild;
-      const cap = first ? Math.min(range > 0 ? range : 0, first.offsetHeight) : (range > 0 ? range : 0);
-      offset[i] = Math.max(0, Math.min(cap, 0 - r.top));
     }
-    // Write phase.
+    // Write phase. (Only Services→CV / Trust→Contact are driven from here now —
+    // the Hero→Signal pair moved to native position:sticky, so its host no
+    // longer carries data-pin and never reaches this loop.)
     for (let i = 0; i < pinHosts.length; i++) {
       pinHosts[i].style.setProperty("--pin-p", progress[i].toFixed(4));
-      pinHosts[i].style.setProperty("--pin-py", offset[i].toFixed(1) + "px");
     }
   }
   function schedulePins() {

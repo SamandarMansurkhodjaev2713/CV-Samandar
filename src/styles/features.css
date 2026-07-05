@@ -829,8 +829,13 @@ body::before {
 
 /* ── 11. Universal mobile safeguards ─────────────────────────────── */
 @media (max-width: 600px) {
-  html, body { overflow-x: hidden; }
-  section { overflow-x: hidden; }
+  /* MUST be `clip`, not `hidden` (with hidden fallback for old engines).
+     `hidden` here re-promoted <html>/<body> to scroll containers on mobile and
+     re-broke the Hero→Signal sticky cover on phones — the exact "doesn't work
+     on the phone" symptom. `clip` clips horizontal overflow the same but keeps
+     sticky working. Kept in lockstep with the <body> rule in styles.css. */
+  html, body { overflow-x: hidden; overflow-x: clip; }
+  section { overflow-x: hidden; overflow-x: clip; }
   .shell { min-width: 0; }
   .signal-rows, .svc, .trust-grid, .proj-grid,
   .skills-layout, .skills-cluster {
@@ -1154,35 +1159,26 @@ html[data-theme="claude"] body {
  * don't set them (Services→CV, Trust→Contact). */
 .pin-host { position: relative; }
 
-/* .pin-host--hero (Hero→Signal) runs on EVERY viewport width, not just
- * desktop. The other two pairs (Services→CV, Trust→Contact — plain content,
- * no unique backdrop to cover) stay desktop-only below. Why the split: the
- * motion.js JS side (bindPins/updatePins) already computes --pin-p for every
- * [data-pin] host unconditionally, on every device, regardless of width —
- * the old `@media (min-width:901px)` gate never saved that work, it only
- * decided whether CSS used the number once computed. So enabling this for
- * Hero on mobile adds no new per-frame cost; it only lets an already-computed
- * value drive a transform. (data-motion-lite — low-tier or reduced-motion —
- * still fully disables it, same as before.) */
-/* Hero → Signal is a CURTAIN-OVER-A-FIXED-BACKDROP, not a recede/rise (that
- * was my earlier framing, rejected by the client). The client's exact ask:
- * Hero does not move at all; Signal slides up over it, gradually covering it.
+/* Hero → Signal is a CURTAIN-OVER-A-FIXED-BACKDROP (client's exact ask): Hero
+ * does not move at all; Signal slides UP over it, gradually covering it.
  *
- * Mechanism (counter-scroll, since sticky is unusable — body overflow-x:hidden
- * makes body a scroll container, which breaks position:sticky; verified in
- * computed styles): Hero is translated DOWN by exactly how far the host has
- * scrolled (--pin-py, px, written by motion.js), so it stays VISUALLY FIXED in
- * the viewport for the whole cover. Signal sits in normal flow directly below
- * Hero with NO transform, so ordinary scrolling carries it up over the fixed
- * Hero — a real curtain, and crucially with NO GAP (the old approach slid
- * Signal down 88vh so it LAGGED behind Hero, opening a strip of bare bg-fx
- * between them — that grey/warm band was the "ugly transition").
- * translateY is capped at 100vh (≈ Hero's own height) via min() so once Signal
- * has fully covered Hero, Hero stops counter-scrolling and scrolls away
- * underneath (hidden), instead of pinning past the section end. */
+ * Mechanism: NATIVE position:sticky. Hero sticks to the top of the viewport
+ * while the scroll passes through the .pin-host--hero wrapper (which bounds the
+ * sticky), so Hero stays perfectly, compositor-fixed — zero jitter. Signal, in
+ * normal flow directly below with a higher z-index + opaque bg, is carried up
+ * over the sticky Hero by ordinary scrolling. No JS, no scroll listener, no
+ * per-frame transform. This REPLACES an earlier JS counter-scroll (motion.js
+ * wrote --pin-py, Hero was translateY'd to fake being fixed) that worked in
+ * numbers but juddered in real browsers: a scroll-linked JS transform lands one
+ * frame behind native scroll, so Hero visibly shook. sticky is composited and
+ * immune to that. It only works because <body> now uses overflow-x:clip instead
+ * of hidden (hidden made body a scroll container that broke sticky) — see
+ * styles.css. Runs on every viewport width; data-motion-lite (low-tier /
+ * reduced-motion) drops the sticky so the sections just stack. */
 html:not([data-motion-lite]) .pin-host--hero > section[data-section]:first-child {
-  transform: translateY(var(--pin-py, 0px));
-  will-change: transform;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 html:not([data-motion-lite]) .pin-host--hero > section[data-section]:last-child {
   position: relative;

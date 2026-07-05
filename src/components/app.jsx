@@ -416,13 +416,15 @@ function App() {
       />
 
       <main>
-        {/* Pinned-overlap #0 — Signal recedes-covers Hero, same proven --pin-p
-            mechanism as the two pairs below (motion.js bindPins, transform/
-            opacity only, no sticky — sticky doesn't work here, body has
-            overflow-x:hidden which breaks it, verified empirically). Modifier
-            class carries Hero-specific tuning (its photo backdrop needs a
-            gentler recede than a plain content section). */}
-        <div className="pin-host pin-host--hero" data-pin>
+        {/* Hero→Signal cover — NATIVE position:sticky (features.css
+            .pin-host--hero rules). No data-pin here: unlike the two JS-driven
+            pairs below, this pair needs zero JavaScript — Hero sticks to the
+            viewport top (the .pin-host wrapper bounds the sticky) while Signal
+            scrolls up over it. Composited, jitter-free. Works because <body>
+            uses overflow-x:clip (not hidden), which no longer breaks sticky —
+            verified empirically. The wrapper keeps position:relative so it is
+            the sticky containing block. */}
+        <div className="pin-host pin-host--hero">
           <Hero t={t} links={LINKS} />
           <Signal t={t} />
         </div>

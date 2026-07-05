@@ -160,7 +160,19 @@ body {
   font-feature-settings: "ss01", "cv11";
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* overflow-x MUST be `clip`, not `hidden`. `hidden` promotes <body> to a
+     scroll container (its computed overflow-y becomes `auto`), which breaks
+     `position: sticky` on every descendant — sticky then anchors to the
+     never-scrolling body instead of the viewport. `clip` clips horizontal
+     overflow identically but does NOT create a scroll container, so sticky
+     keeps working. VERIFIED empirically: with `hidden`, a sticky hero reads
+     top:-scrollY (scrolls away); with `clip`, top:0 (pins). The `hidden` line
+     first is a fallback for pre-2022 engines without `clip` (there sticky
+     stays broken, same as before — no regression). This is what lets the
+     Hero→Signal cover be native composited sticky instead of a JS
+     counter-scroll transform that lagged the scroll by a frame and juddered. */
   overflow-x: hidden;
+  overflow-x: clip;
   letter-spacing: -0.005em;
 }
 
