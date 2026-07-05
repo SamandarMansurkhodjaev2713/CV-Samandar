@@ -17,7 +17,7 @@
   pointer-events: none;
   z-index: 9999;
   mix-blend-mode: normal;
-  color: var(--accent, #B8FF3D);
+  color: var(--accent, #D97757);
   transition: opacity .2s ease;
 }
 .sc-cursor.is-out { opacity: 0; }

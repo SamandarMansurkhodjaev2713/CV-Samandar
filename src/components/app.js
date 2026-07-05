@@ -30,8 +30,8 @@ class ErrorBoundary extends React.Component {
         style: {
           position: "fixed",
           inset: 0,
-          background: "#07090B",
-          color: "#B8FF3D",
+          background: "#1F1E1B",
+          color: "#D97757",
           fontFamily: "monospace",
           fontSize: "13px",
           padding: "80px 40px",

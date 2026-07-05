@@ -1,9 +1,10 @@
 // intro.js — "Ядро оживает" (Core Ignition) cinematic boot.
-// Runs at most ONCE per session (gating done by the head-boot inline script in
-// index.html, which creates the #sm-intro panel and stashes
-// window.__SM_INTRO = {mode, panel}). This module only RUNS the timeline; it
-// never decides whether to show — that decision already happened before this
-// file loaded, so a slow-loading intro.js can never delay it.
+// Runs on every full page load (the head-boot inline script in index.html
+// creates the #sm-intro panel and stashes window.__SM_INTRO = {mode, panel}
+// unconditionally — no once-per-session gate, so a reload always replays it).
+// This module only RUNS the timeline; it never decides whether to show — that
+// decision already happened before this file loaded, so a slow-loading
+// intro.js can never delay it.
 //
 // Concept: a single warm core ignites in a warm void, a gold aperture opens
 // around it, embers rise (heat convection), the link locks ("CORE ONLINE"),

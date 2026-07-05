@@ -3,31 +3,42 @@
    ═══════════════════════════════════════════════════════════ */
 
 :root {
-  /* — Surfaces — */
-  --bg-0: #07090B;
-  --bg-1: #0B0E11;
+  /* — Surfaces —
+     These MUST match the Ember values themes.js applyTheme() writes at boot
+     (src/engine/themes.js THEMES.claude). themes.js re-sets them via JS after
+     first paint; if the CSS base here differs, the page renders with THESE
+     values for the first frames, then snaps to the JS ones — a visible flash.
+     Previously this block held a stale cold/green palette (bg #07090B, accent
+     #B8FF3D green, accent-2 #4DEBFF cyan) from the old 8-palette design, which
+     is exactly the "green text, then abruptly correct" flash on load. Kept in
+     sync with themes.js = zero flash (base already correct, JS is a no-op
+     re-set). Tokens themes.js does NOT touch (--bg-2, --surf-*, --text-faint,
+     --accent-3) are left as-is so nothing else shifts. */
+  --bg-0: #1F1E1B;
+  --bg-1: #28251F;
+  --bg-panel: #2F2B24;
   --bg-2: #101316;
   --surf-1: #14181C;
   --surf-2: #1B2026;
   --surf-3: #232932;
 
   /* — Text — */
-  --text: #F4F1EA;
-  --text-dim: #B8BCC2;
-  --text-mute: #7A8088;
+  --text: #F5F0E6;
+  --text-dim: #B8AC97;
+  --text-mute: #6B6353;
   --text-faint: #4A5057;
 
-  /* — Default accent (overridden per palette) — */
-  --accent: #B8FF3D;
-  --accent-rgb: 184 255 61;
-  --accent-2: #4DEBFF;
-  --accent-2-rgb: 77 235 255;
+  /* — Accent (Ember — mirrors themes.js) — */
+  --accent: #D97757;
+  --accent-rgb: 217 119 87;
+  --accent-2: #C89B5E;
+  --accent-2-rgb: 200 155 94;
   --accent-3: #C89B5E;
   --accent-3-rgb: 200 155 94;
 
-  /* — Lines — */
-  --line: rgba(244, 241, 234, 0.06);
-  --line-strong: rgba(244, 241, 234, 0.12);
+  /* — Lines (Ember — mirrors themes.js) — */
+  --line: rgba(217, 119, 87, 0.10);
+  --line-strong: rgba(217, 119, 87, 0.22);
   --line-accent: rgba(var(--accent-rgb) / 0.3);
 
   /* — Type — */

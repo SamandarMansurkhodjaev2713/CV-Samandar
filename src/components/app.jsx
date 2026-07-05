@@ -11,7 +11,7 @@ class ErrorBoundary extends React.Component {
     if (this.state.error) {
       return React.createElement("div", {
         style: {
-          position: "fixed", inset: 0, background: "#07090B", color: "#B8FF3D",
+          position: "fixed", inset: 0, background: "#1F1E1B", color: "#D97757",
           fontFamily: "monospace", fontSize: "13px", padding: "80px 40px",
           zIndex: 9999, overflowY: "auto", whiteSpace: "pre-wrap"
         }
