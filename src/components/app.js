@@ -372,13 +372,13 @@ function App() {
         id: {
           name: "Самандар",
           role: "Full-Stack · AI Automation · Product Engineer",
-          meta: ["Ташкент · UTC+5", "Открыт к проектам", "EN · RU · UZ"],
+          meta: ["Ташкент · UTC+5", "Открыт к проектам", "3 курс · Software Engineering"],
           stats: [{
             k: "опыт",
-            v: "5+ лет"
+            v: "11 мес."
           }, {
-            k: "релизов",
-            v: "20+"
+            k: "проектов",
+            v: "10+"
           }, {
             k: "стек",
             v: "TS / Py / SQL"
@@ -390,19 +390,19 @@ function App() {
         exp_title: "опыт",
         langs_title: "языки",
         strengths_title: "сильные стороны",
-        strengths: ["Системное мышление от прод-идеи до прод-деплоя", "AI-интеграции уровня продакшна, не демки", "Тёплая, понятная коммуникация на трёх языках", "Самостоятельный темп, без надзора"],
+        strengths: ["Системное мышление от прод-идеи до прод-деплоя", "AI-интеграции уровня продакшна, не демки", "Тёплая коммуникация с клиентами — проверено на горячей линии", "Самостоятельный темп, без надзора"],
         langs: [{
           k: "Русский",
           lv: 100,
           label: "native"
         }, {
-          k: "English",
-          lv: 85,
-          label: "C1"
-        }, {
           k: "Oʻzbek",
           lv: 95,
           label: "fluent"
+        }, {
+          k: "English",
+          lv: 35,
+          label: "базовый"
         }],
         foot: "сгенерировано 2026 · подписанная версия по запросу"
       },
@@ -410,13 +410,13 @@ function App() {
         id: {
           name: "Samandar",
           role: "Full-Stack · AI Automation · Product Engineer",
-          meta: ["Tashkent · UTC+5", "Open to projects", "EN · RU · UZ"],
+          meta: ["Tashkent · UTC+5", "Open to projects", "3rd-year · Software Engineering"],
           stats: [{
             k: "experience",
-            v: "5+ yrs"
+            v: "11 mo."
           }, {
-            k: "releases",
-            v: "20+"
+            k: "projects",
+            v: "10+"
           }, {
             k: "stack",
             v: "TS / Py / SQL"
@@ -428,19 +428,19 @@ function App() {
         exp_title: "experience",
         langs_title: "languages",
         strengths_title: "strengths",
-        strengths: ["End-to-end ownership from product idea to prod deploy", "Production AI integrations, not demos", "Calm, precise communication across three languages", "Async-first; runs without supervision"],
+        strengths: ["End-to-end ownership from product idea to prod deploy", "Production AI integrations, not demos", "Warm client communication — earned on a support hotline", "Async-first; runs without supervision"],
         langs: [{
           k: "Russian",
           lv: 100,
           label: "native"
         }, {
-          k: "English",
-          lv: 85,
-          label: "C1"
-        }, {
           k: "Uzbek",
           lv: 95,
           label: "fluent"
+        }, {
+          k: "English",
+          lv: 35,
+          label: "basic"
         }],
         foot: "generated 2026 · signed copy on request"
       },
@@ -448,13 +448,13 @@ function App() {
         id: {
           name: "Samandar",
           role: "Full-Stack · AI Automation · Product Engineer",
-          meta: ["Toshkent · UTC+5", "Loyihalarga ochiq", "EN · RU · UZ"],
+          meta: ["Toshkent · UTC+5", "Loyihalarga ochiq", "3-kurs · Software Engineering"],
           stats: [{
             k: "tajriba",
-            v: "5+ yil"
+            v: "11 oy"
           }, {
-            k: "relizlar",
-            v: "20+"
+            k: "loyiha",
+            v: "10+"
           }, {
             k: "stek",
             v: "TS / Py / SQL"
@@ -466,19 +466,19 @@ function App() {
         exp_title: "tajriba",
         langs_title: "tillar",
         strengths_title: "kuchli tomonlar",
-        strengths: ["Mahsulot g'oyasidan prod-deploygacha to'liq egalik", "Production darajadagi AI integratsiyalar", "Uch tilda aniq va xotirjam muloqot", "Mustaqil sur'at, nazoratsiz ishlash"],
+        strengths: ["Mahsulot g'oyasidan prod-deploygacha to'liq egalik", "Production darajadagi AI integratsiyalar", "Mijozlar bilan iliq muloqot — ishonch telefonida sinalgan", "Mustaqil sur'at, nazoratsiz ishlash"],
         langs: [{
           k: "Ruscha",
           lv: 100,
           label: "native"
         }, {
-          k: "English",
-          lv: 85,
-          label: "C1"
-        }, {
           k: "Oʻzbek",
           lv: 100,
           label: "ona tili"
+        }, {
+          k: "English",
+          lv: 35,
+          label: "boshlang'ich"
         }],
         foot: "2026 yil · imzolangan nusxa so'rov asosida"
       }
