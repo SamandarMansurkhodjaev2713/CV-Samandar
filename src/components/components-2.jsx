@@ -682,36 +682,53 @@ const BUILDER_SCALE_META = {
   product: { budgetIdx: 4, budget: "$20k+" },
 };
 
-// Pure function: which layers exist + their tech, given (type, scale).
-function builderModel(typeKey, scaleKey, sub) {
-  const isAI = typeKey === "ai" || typeKey === "automation";
+function builderDedupe(arr) {
+  const seen = {}; const out = [];
+  for (let i = 0; i < arr.length; i++) { if (!seen[arr[i]]) { seen[arr[i]] = 1; out.push(arr[i]); } }
+  return out;
+}
+
+// Pure function: which layers exist + their tech, given (type, scale, priority).
+// priority ("что критично") meaningfully bends the stack — this is the depth the
+// client asked for, not cosmetic: e.g. AI-depth forces the intelligence layer on
+// even for a plain web app; Load adds queues/CDN/cache; Design adds motion libs.
+function builderModel(typeKey, scaleKey, priorityKey, sub) {
+  const isAIType = typeKey === "ai" || typeKey === "automation";
+  const isAI = isAIType || priorityKey === "ai";
   const prod = scaleKey === "prod" || scaleKey === "product";
   const product = scaleKey === "product";
+  const heavyLoad = priorityKey === "scale";
+  const designFirst = priorityKey === "design";
 
   let clientSub, clientTech;
-  if (typeKey === "bot") { clientSub = sub.telegram; clientTech = BUILDER_TECH.telegram; }
-  else if (typeKey === "automation") { clientSub = sub.triggers; clientTech = BUILDER_TECH.triggers; }
-  else { clientSub = sub.frontend; clientTech = BUILDER_TECH.frontend; }
+  if (typeKey === "bot") { clientSub = sub.telegram; clientTech = BUILDER_TECH.telegram.slice(); }
+  else if (typeKey === "automation") { clientSub = sub.triggers; clientTech = BUILDER_TECH.triggers.slice(); }
+  else { clientSub = sub.frontend; clientTech = BUILDER_TECH.frontend.slice(); }
+  if (designFirst && typeKey !== "bot" && typeKey !== "automation") clientTech.push("Framer Motion", "GSAP");
 
   let logicSub, logicTech;
-  if (typeKey === "bot") { logicSub = sub.bot; logicTech = BUILDER_TECH.bot; }
-  else if (typeKey === "automation") { logicSub = sub.pipeline; logicTech = BUILDER_TECH.pipeline; }
-  else { logicSub = sub.api; logicTech = BUILDER_TECH.api; }
+  if (typeKey === "bot") { logicSub = sub.bot; logicTech = BUILDER_TECH.bot.slice(); }
+  else if (typeKey === "automation") { logicSub = sub.pipeline; logicTech = BUILDER_TECH.pipeline.slice(); }
+  else { logicSub = sub.api; logicTech = BUILDER_TECH.api.slice(); }
+
+  const aiTech = BUILDER_TECH.ai.slice();
+  if (priorityKey === "ai") aiTech.push("Evals");
 
   const dataTech = ["Postgres"];
-  if (prod) dataTech.push("Redis");
+  if (prod || heavyLoad) dataTech.push("Redis");
   if (isAI) dataTech.push("pgvector");
 
   const infraTech = ["Docker", "Deploy"];
   if (prod) infraTech.push("Auth · RBAC", "Sentry", "GitHub Actions");
-  if (product) infraTech.push("Analytics", "CDN");
+  if (product) infraTech.push("Analytics");
+  if (heavyLoad) infraTech.push("Queue", "CDN", "Load balancer");
 
   return [
-    { id: "client", sub: clientSub, tech: clientTech, active: true },
-    { id: "logic", sub: logicSub, tech: logicTech, active: true },
-    { id: "ai", sub: sub.ai, tech: BUILDER_TECH.ai, active: isAI },
-    { id: "data", sub: "", tech: dataTech, active: true },
-    { id: "infra", sub: "", tech: infraTech, active: true },
+    { id: "client", sub: clientSub, tech: builderDedupe(clientTech), active: true },
+    { id: "logic", sub: logicSub, tech: builderDedupe(logicTech), active: true },
+    { id: "ai", sub: sub.ai, tech: builderDedupe(aiTech), active: isAI },
+    { id: "data", sub: "", tech: builderDedupe(dataTech), active: true },
+    { id: "infra", sub: "", tech: builderDedupe(infraTech), active: true },
   ];
 }
 
@@ -732,26 +749,42 @@ function ProjectBuilder({ t, links }) {
   const b = t.builder;
   const [typeKey, setTypeKey] = useState2("web");
   const [scaleKey, setScaleKey] = useState2("mvp");
+  const [priorityKey, setPriorityKey] = useState2("speed");
+  // Sequential-assembly driver: `shown` counts how many active layers have
+  // dropped into place. On any choice change we reset to 0 and re-reveal them
+  // top-down on a timer, so the system visibly RE-ASSEMBLES every time.
+  const [shown, setShown] = useState2(0);
 
-  // Defensive: if a content bundle predates the builder block, render nothing
+  // Defensive: if a content bundle predates the builder v2 block, render nothing
   // rather than throwing (keeps older cached content.js from white-screening).
-  if (!b) return null;
+  if (!b || !b.priorities || !b.verdictLead) return null;
 
-  const layers = builderModel(typeKey, scaleKey, b.sub);
+  const layers = builderModel(typeKey, scaleKey, priorityKey, b.sub);
   const scaleMeta = BUILDER_SCALE_META[scaleKey] || BUILDER_SCALE_META.mvp;
   const stackSummary = builderStackSummary(layers);
   const timeText = (b.times && b.times[scaleKey]) || "";
+  const activeCount = layers.reduce(function (n, L) { return n + (L.active ? 1 : 0); }, 0);
+  const moduleCount = layers.reduce(function (n, L) { return n + (L.active ? L.tech.length : 0); }, 0);
+  const verdict = (b.verdictLead[typeKey] || "") + " — " + (b.verdictTail[priorityKey] || "");
 
-  function typeLabel() {
-    const found = b.types.filter(function (x) { return x.k === typeKey; })[0];
-    return found ? found.label : typeKey;
-  }
-  function scaleLabel() {
-    const found = b.scales.filter(function (x) { return x.k === scaleKey; })[0];
-    return found ? found.label : scaleKey;
-  }
+  useEffect2(function runAssembly() {
+    const reduce =
+      (typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) ||
+      document.documentElement.hasAttribute("data-motion-lite");
+    if (reduce) { setShown(activeCount); return undefined; }
+    setShown(0);
+    const timers = [];
+    let i = 0;
+    function step() { i += 1; setShown(i); if (i < activeCount) timers.push(window.setTimeout(step, 130)); }
+    timers.push(window.setTimeout(step, 90));
+    return function () { timers.forEach(function (id) { window.clearTimeout(id); }); };
+    // Re-run on any choice change (activeCount captures type/priority AI toggling).
+  }, [typeKey, scaleKey, priorityKey, activeCount]);
+
+  function pick(list, k) { const f = list.filter(function (x) { return x.k === k; })[0]; return f ? f.label : k; }
   function summaryLine() {
-    return typeLabel() + " · " + scaleLabel() + "\n" +
+    return pick(b.types, typeKey) + " · " + pick(b.scales, scaleKey) + " · " + pick(b.priorities, priorityKey) + "\n" +
+      verdict + "\n" +
       b.readout.stack + ": " + stackSummary + "\n" +
       b.readout.time + ": " + timeText + " · " + b.readout.budget + ": " + scaleMeta.budget;
   }
@@ -769,6 +802,15 @@ function ProjectBuilder({ t, links }) {
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  // Assign each active layer its position among the active set so the cascade
+  // (and the `shown` gate) can reveal them strictly top-down.
+  let activeIdx = -1;
+  const rows = layers.map(function (L) {
+    let ai = -1;
+    if (L.active) { activeIdx += 1; ai = activeIdx; }
+    return { L: L, activeIdx: ai, shown: L.active && ai < shown };
+  });
+
   return (
     <section id="builder" className="builder-sec" data-enter="assemble" ref={ref}>
       <div className="shell">
@@ -776,21 +818,15 @@ function ProjectBuilder({ t, links }) {
         <p className="lead-line" data-reveal>{b.lead}</p>
 
         <div className="builder card" data-reveal>
-          {/* LEFT — choices + crystallizing readout + CTA */}
-          <div className="builder-panel">
+          {/* CHOICES */}
+          <div className="builder-choices">
             <div className="builder-step">
               <div className="builder-step-k mono"><span className="builder-step-n">01</span>{b.step1}</div>
               <div className="builder-opts builder-opts--type">
                 {b.types.map(function renderType(o) {
                   const on = typeKey === o.k;
                   return (
-                    <button
-                      key={o.k}
-                      type="button"
-                      className={`builder-opt ${on ? "is-active" : ""}`}
-                      aria-pressed={on}
-                      onClick={function () { setTypeKey(o.k); }}
-                    >
+                    <button key={o.k} type="button" className={`builder-opt ${on ? "is-active" : ""}`} aria-pressed={on} onClick={function () { setTypeKey(o.k); }}>
                       <span className="builder-opt-label">{o.label}</span>
                       <span className="builder-opt-note mono">{o.note}</span>
                     </button>
@@ -805,13 +841,7 @@ function ProjectBuilder({ t, links }) {
                 {b.scales.map(function renderScale(o) {
                   const on = scaleKey === o.k;
                   return (
-                    <button
-                      key={o.k}
-                      type="button"
-                      className={`builder-opt builder-opt--pill ${on ? "is-active" : ""}`}
-                      aria-pressed={on}
-                      onClick={function () { setScaleKey(o.k); }}
-                    >
+                    <button key={o.k} type="button" className={`builder-opt builder-opt--pill ${on ? "is-active" : ""}`} aria-pressed={on} onClick={function () { setScaleKey(o.k); }}>
                       <span className="builder-opt-label">{o.label}</span>
                       <span className="builder-opt-note mono">{o.note}</span>
                     </button>
@@ -820,46 +850,42 @@ function ProjectBuilder({ t, links }) {
               </div>
             </div>
 
-            <div className="builder-readout" aria-live="polite">
-              <div className="builder-readout-row">
-                <span className="builder-readout-k mono">{b.readout.stack}</span>
-                <span className="builder-readout-v mono">{stackSummary}</span>
-              </div>
-              <div className="builder-readout-row">
-                <span className="builder-readout-k mono">{b.readout.time}</span>
-                <span className="builder-readout-v mono">{timeText}</span>
-              </div>
-              <div className="builder-readout-row">
-                <span className="builder-readout-k mono">{b.readout.budget}</span>
-                <span className="builder-readout-v mono">{scaleMeta.budget}</span>
+            <div className="builder-step">
+              <div className="builder-step-k mono"><span className="builder-step-n">03</span>{b.step3}</div>
+              <div className="builder-opts builder-opts--prio">
+                {b.priorities.map(function renderPrio(o) {
+                  const on = priorityKey === o.k;
+                  return (
+                    <button key={o.k} type="button" className={`builder-opt builder-opt--pill ${on ? "is-active" : ""}`} aria-pressed={on} onClick={function () { setPriorityKey(o.k); }}>
+                      <span className="builder-opt-label">{o.label}</span>
+                      <span className="builder-opt-note mono">{o.note}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
-
-            <div className="builder-cta">
-              <a className="btn btn-primary builder-cta-tg" href={`https://${links.telegram}`} target="_blank" rel="noopener noreferrer">
-                <span>{b.cta_tg}</span>
-                <span className="arrow">→</span>
-              </a>
-              <button type="button" className="builder-cta-alt" onClick={onHandoff}>
-                {b.cta_form} <span className="arrow">→</span>
-              </button>
-            </div>
-            <div className="builder-hint mono">{b.hint}</div>
           </div>
 
-          {/* RIGHT — the assembling blueprint */}
+          {/* STAGE — the assembling blueprint */}
           <div className="builder-stage" aria-hidden="true">
-            <div className="builder-spine"><i className="builder-spine-pulse" /></div>
+            <div className="builder-metric mono">
+              <span className="builder-metric-dot" />
+              {activeCount} {b.metric.layers} · {moduleCount} {b.metric.modules}
+            </div>
             <div className="builder-layers">
-              {layers.map(function renderLayer(L) {
+              <span className="builder-backbone" />
+              <span className="builder-flow" />
+              {rows.map(function renderLayer(r) {
+                const L = r.L;
                 return (
-                  <div key={L.id} className={`builder-layer ${L.active ? "is-active" : ""}`}>
+                  <div key={L.id} className={`builder-layer builder-layer--${L.id} ${r.shown ? "is-active" : ""}`} style={{ "--li": r.activeIdx }}>
                     <div className="builder-layer-inner">
                       <div className="builder-layer-body">
                         <div className="builder-layer-head">
                           <span className="builder-layer-name mono">{b.layers[L.id]}</span>
                           {L.sub ? <span className="builder-layer-sub">{L.sub}</span> : null}
                         </div>
+                        {b.layerNote && b.layerNote[L.id] ? <div className="builder-layer-note">{b.layerNote[L.id]}</div> : null}
                         <div className="builder-layer-tech">
                           {L.tech.map(function renderChip(tch, i) {
                             return <span key={i} className="builder-chip mono" style={{ "--ci": i }}>{tch}</span>;
@@ -871,6 +897,42 @@ function ProjectBuilder({ t, links }) {
                 );
               })}
             </div>
+          </div>
+
+          {/* READOUT — crystallizing stack/timeline/budget + expert verdict */}
+          <div className="builder-readout-block">
+            <div className="builder-readout" aria-live="polite">
+              <div className="builder-readout-row">
+                <span className="builder-readout-k mono">{b.readout.stack}</span>
+                <span className="builder-readout-v mono" key={"s" + stackSummary}>{stackSummary}</span>
+              </div>
+              <div className="builder-readout-row">
+                <span className="builder-readout-k mono">{b.readout.time}</span>
+                <span className="builder-readout-v mono" key={"t" + timeText}>{timeText}</span>
+              </div>
+              <div className="builder-readout-row">
+                <span className="builder-readout-k mono">{b.readout.budget}</span>
+                <span className="builder-readout-v mono" key={"b" + scaleMeta.budget}>{scaleMeta.budget}</span>
+              </div>
+            </div>
+            <div className="builder-verdict" key={verdict}>
+              <span className="builder-verdict-mark" aria-hidden="true">“</span>
+              <p className="builder-verdict-text">{verdict}</p>
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className="builder-cta-block">
+            <div className="builder-cta">
+              <a className="btn btn-primary builder-cta-tg" href={`https://${links.telegram}`} target="_blank" rel="noopener noreferrer">
+                <span>{b.cta_tg}</span>
+                <span className="arrow">→</span>
+              </a>
+              <button type="button" className="builder-cta-alt" onClick={onHandoff}>
+                {b.cta_form} <span className="arrow">→</span>
+              </button>
+            </div>
+            <div className="builder-hint mono">{b.hint}</div>
           </div>
         </div>
       </div>

@@ -756,64 +756,85 @@ const BUILDER_SCALE_META = {
     budget: "$20k+"
   }
 };
+function builderDedupe(arr) {
+  const seen = {};
+  const out = [];
+  for (let i = 0; i < arr.length; i++) {
+    if (!seen[arr[i]]) {
+      seen[arr[i]] = 1;
+      out.push(arr[i]);
+    }
+  }
+  return out;
+}
 
-// Pure function: which layers exist + their tech, given (type, scale).
-function builderModel(typeKey, scaleKey, sub) {
-  const isAI = typeKey === "ai" || typeKey === "automation";
+// Pure function: which layers exist + their tech, given (type, scale, priority).
+// priority ("что критично") meaningfully bends the stack — this is the depth the
+// client asked for, not cosmetic: e.g. AI-depth forces the intelligence layer on
+// even for a plain web app; Load adds queues/CDN/cache; Design adds motion libs.
+function builderModel(typeKey, scaleKey, priorityKey, sub) {
+  const isAIType = typeKey === "ai" || typeKey === "automation";
+  const isAI = isAIType || priorityKey === "ai";
   const prod = scaleKey === "prod" || scaleKey === "product";
   const product = scaleKey === "product";
+  const heavyLoad = priorityKey === "scale";
+  const designFirst = priorityKey === "design";
   let clientSub, clientTech;
   if (typeKey === "bot") {
     clientSub = sub.telegram;
-    clientTech = BUILDER_TECH.telegram;
+    clientTech = BUILDER_TECH.telegram.slice();
   } else if (typeKey === "automation") {
     clientSub = sub.triggers;
-    clientTech = BUILDER_TECH.triggers;
+    clientTech = BUILDER_TECH.triggers.slice();
   } else {
     clientSub = sub.frontend;
-    clientTech = BUILDER_TECH.frontend;
+    clientTech = BUILDER_TECH.frontend.slice();
   }
+  if (designFirst && typeKey !== "bot" && typeKey !== "automation") clientTech.push("Framer Motion", "GSAP");
   let logicSub, logicTech;
   if (typeKey === "bot") {
     logicSub = sub.bot;
-    logicTech = BUILDER_TECH.bot;
+    logicTech = BUILDER_TECH.bot.slice();
   } else if (typeKey === "automation") {
     logicSub = sub.pipeline;
-    logicTech = BUILDER_TECH.pipeline;
+    logicTech = BUILDER_TECH.pipeline.slice();
   } else {
     logicSub = sub.api;
-    logicTech = BUILDER_TECH.api;
+    logicTech = BUILDER_TECH.api.slice();
   }
+  const aiTech = BUILDER_TECH.ai.slice();
+  if (priorityKey === "ai") aiTech.push("Evals");
   const dataTech = ["Postgres"];
-  if (prod) dataTech.push("Redis");
+  if (prod || heavyLoad) dataTech.push("Redis");
   if (isAI) dataTech.push("pgvector");
   const infraTech = ["Docker", "Deploy"];
   if (prod) infraTech.push("Auth · RBAC", "Sentry", "GitHub Actions");
-  if (product) infraTech.push("Analytics", "CDN");
+  if (product) infraTech.push("Analytics");
+  if (heavyLoad) infraTech.push("Queue", "CDN", "Load balancer");
   return [{
     id: "client",
     sub: clientSub,
-    tech: clientTech,
+    tech: builderDedupe(clientTech),
     active: true
   }, {
     id: "logic",
     sub: logicSub,
-    tech: logicTech,
+    tech: builderDedupe(logicTech),
     active: true
   }, {
     id: "ai",
     sub: sub.ai,
-    tech: BUILDER_TECH.ai,
+    tech: builderDedupe(aiTech),
     active: isAI
   }, {
     id: "data",
     sub: "",
-    tech: dataTech,
+    tech: builderDedupe(dataTech),
     active: true
   }, {
     id: "infra",
     sub: "",
-    tech: infraTech,
+    tech: builderDedupe(infraTech),
     active: true
   }];
 }
@@ -842,28 +863,56 @@ function ProjectBuilder({
   const b = t.builder;
   const [typeKey, setTypeKey] = useState2("web");
   const [scaleKey, setScaleKey] = useState2("mvp");
+  const [priorityKey, setPriorityKey] = useState2("speed");
+  // Sequential-assembly driver: `shown` counts how many active layers have
+  // dropped into place. On any choice change we reset to 0 and re-reveal them
+  // top-down on a timer, so the system visibly RE-ASSEMBLES every time.
+  const [shown, setShown] = useState2(0);
 
-  // Defensive: if a content bundle predates the builder block, render nothing
+  // Defensive: if a content bundle predates the builder v2 block, render nothing
   // rather than throwing (keeps older cached content.js from white-screening).
-  if (!b) return null;
-  const layers = builderModel(typeKey, scaleKey, b.sub);
+  if (!b || !b.priorities || !b.verdictLead) return null;
+  const layers = builderModel(typeKey, scaleKey, priorityKey, b.sub);
   const scaleMeta = BUILDER_SCALE_META[scaleKey] || BUILDER_SCALE_META.mvp;
   const stackSummary = builderStackSummary(layers);
   const timeText = b.times && b.times[scaleKey] || "";
-  function typeLabel() {
-    const found = b.types.filter(function (x) {
-      return x.k === typeKey;
+  const activeCount = layers.reduce(function (n, L) {
+    return n + (L.active ? 1 : 0);
+  }, 0);
+  const moduleCount = layers.reduce(function (n, L) {
+    return n + (L.active ? L.tech.length : 0);
+  }, 0);
+  const verdict = (b.verdictLead[typeKey] || "") + " — " + (b.verdictTail[priorityKey] || "");
+  useEffect2(function runAssembly() {
+    const reduce = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.hasAttribute("data-motion-lite");
+    if (reduce) {
+      setShown(activeCount);
+      return undefined;
+    }
+    setShown(0);
+    const timers = [];
+    let i = 0;
+    function step() {
+      i += 1;
+      setShown(i);
+      if (i < activeCount) timers.push(window.setTimeout(step, 130));
+    }
+    timers.push(window.setTimeout(step, 90));
+    return function () {
+      timers.forEach(function (id) {
+        window.clearTimeout(id);
+      });
+    };
+    // Re-run on any choice change (activeCount captures type/priority AI toggling).
+  }, [typeKey, scaleKey, priorityKey, activeCount]);
+  function pick(list, k) {
+    const f = list.filter(function (x) {
+      return x.k === k;
     })[0];
-    return found ? found.label : typeKey;
-  }
-  function scaleLabel() {
-    const found = b.scales.filter(function (x) {
-      return x.k === scaleKey;
-    })[0];
-    return found ? found.label : scaleKey;
+    return f ? f.label : k;
   }
   function summaryLine() {
-    return typeLabel() + " · " + scaleLabel() + "\n" + b.readout.stack + ": " + stackSummary + "\n" + b.readout.time + ": " + timeText + " · " + b.readout.budget + ": " + scaleMeta.budget;
+    return pick(b.types, typeKey) + " · " + pick(b.scales, scaleKey) + " · " + pick(b.priorities, priorityKey) + "\n" + verdict + "\n" + b.readout.stack + ": " + stackSummary + "\n" + b.readout.time + ": " + timeText + " · " + b.readout.budget + ": " + scaleMeta.budget;
   }
   function onHandoff() {
     if (typeof navigator !== "undefined" && navigator.vibrate) {
@@ -886,6 +935,22 @@ function ProjectBuilder({
       block: "start"
     });
   }
+
+  // Assign each active layer its position among the active set so the cascade
+  // (and the `shown` gate) can reveal them strictly top-down.
+  let activeIdx = -1;
+  const rows = layers.map(function (L) {
+    let ai = -1;
+    if (L.active) {
+      activeIdx += 1;
+      ai = activeIdx;
+    }
+    return {
+      L: L,
+      activeIdx: ai,
+      shown: L.active && ai < shown
+    };
+  });
   return /*#__PURE__*/React.createElement("section", {
     id: "builder",
     className: "builder-sec",
@@ -904,7 +969,7 @@ function ProjectBuilder({
     className: "builder card",
     "data-reveal": true
   }, /*#__PURE__*/React.createElement("div", {
-    className: "builder-panel"
+    className: "builder-choices"
   }, /*#__PURE__*/React.createElement("div", {
     className: "builder-step"
   }, /*#__PURE__*/React.createElement("div", {
@@ -952,6 +1017,75 @@ function ProjectBuilder({
       className: "builder-opt-note mono"
     }, o.note));
   }))), /*#__PURE__*/React.createElement("div", {
+    className: "builder-step"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "builder-step-k mono"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "builder-step-n"
+  }, "03"), b.step3), /*#__PURE__*/React.createElement("div", {
+    className: "builder-opts builder-opts--prio"
+  }, b.priorities.map(function renderPrio(o) {
+    const on = priorityKey === o.k;
+    return /*#__PURE__*/React.createElement("button", {
+      key: o.k,
+      type: "button",
+      className: `builder-opt builder-opt--pill ${on ? "is-active" : ""}`,
+      "aria-pressed": on,
+      onClick: function () {
+        setPriorityKey(o.k);
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "builder-opt-label"
+    }, o.label), /*#__PURE__*/React.createElement("span", {
+      className: "builder-opt-note mono"
+    }, o.note));
+  })))), /*#__PURE__*/React.createElement("div", {
+    className: "builder-stage",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "builder-metric mono"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "builder-metric-dot"
+  }), activeCount, " ", b.metric.layers, " \xB7 ", moduleCount, " ", b.metric.modules), /*#__PURE__*/React.createElement("div", {
+    className: "builder-layers"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "builder-backbone"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "builder-flow"
+  }), rows.map(function renderLayer(r) {
+    const L = r.L;
+    return /*#__PURE__*/React.createElement("div", {
+      key: L.id,
+      className: `builder-layer builder-layer--${L.id} ${r.shown ? "is-active" : ""}`,
+      style: {
+        "--li": r.activeIdx
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "builder-layer-inner"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "builder-layer-body"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "builder-layer-head"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "builder-layer-name mono"
+    }, b.layers[L.id]), L.sub ? /*#__PURE__*/React.createElement("span", {
+      className: "builder-layer-sub"
+    }, L.sub) : null), b.layerNote && b.layerNote[L.id] ? /*#__PURE__*/React.createElement("div", {
+      className: "builder-layer-note"
+    }, b.layerNote[L.id]) : null, /*#__PURE__*/React.createElement("div", {
+      className: "builder-layer-tech"
+    }, L.tech.map(function renderChip(tch, i) {
+      return /*#__PURE__*/React.createElement("span", {
+        key: i,
+        className: "builder-chip mono",
+        style: {
+          "--ci": i
+        }
+      }, tch);
+    })))));
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "builder-readout-block"
+  }, /*#__PURE__*/React.createElement("div", {
     className: "builder-readout",
     "aria-live": "polite"
   }, /*#__PURE__*/React.createElement("div", {
@@ -959,20 +1093,33 @@ function ProjectBuilder({
   }, /*#__PURE__*/React.createElement("span", {
     className: "builder-readout-k mono"
   }, b.readout.stack), /*#__PURE__*/React.createElement("span", {
-    className: "builder-readout-v mono"
+    className: "builder-readout-v mono",
+    key: "s" + stackSummary
   }, stackSummary)), /*#__PURE__*/React.createElement("div", {
     className: "builder-readout-row"
   }, /*#__PURE__*/React.createElement("span", {
     className: "builder-readout-k mono"
   }, b.readout.time), /*#__PURE__*/React.createElement("span", {
-    className: "builder-readout-v mono"
+    className: "builder-readout-v mono",
+    key: "t" + timeText
   }, timeText)), /*#__PURE__*/React.createElement("div", {
     className: "builder-readout-row"
   }, /*#__PURE__*/React.createElement("span", {
     className: "builder-readout-k mono"
   }, b.readout.budget), /*#__PURE__*/React.createElement("span", {
-    className: "builder-readout-v mono"
+    className: "builder-readout-v mono",
+    key: "b" + scaleMeta.budget
   }, scaleMeta.budget))), /*#__PURE__*/React.createElement("div", {
+    className: "builder-verdict",
+    key: verdict
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "builder-verdict-mark",
+    "aria-hidden": "true"
+  }, "\u201C"), /*#__PURE__*/React.createElement("p", {
+    className: "builder-verdict-text"
+  }, verdict))), /*#__PURE__*/React.createElement("div", {
+    className: "builder-cta-block"
+  }, /*#__PURE__*/React.createElement("div", {
     className: "builder-cta"
   }, /*#__PURE__*/React.createElement("a", {
     className: "btn btn-primary builder-cta-tg",
@@ -989,41 +1136,7 @@ function ProjectBuilder({
     className: "arrow"
   }, "\u2192"))), /*#__PURE__*/React.createElement("div", {
     className: "builder-hint mono"
-  }, b.hint)), /*#__PURE__*/React.createElement("div", {
-    className: "builder-stage",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "builder-spine"
-  }, /*#__PURE__*/React.createElement("i", {
-    className: "builder-spine-pulse"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "builder-layers"
-  }, layers.map(function renderLayer(L) {
-    return /*#__PURE__*/React.createElement("div", {
-      key: L.id,
-      className: `builder-layer ${L.active ? "is-active" : ""}`
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "builder-layer-inner"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "builder-layer-body"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "builder-layer-head"
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "builder-layer-name mono"
-    }, b.layers[L.id]), L.sub ? /*#__PURE__*/React.createElement("span", {
-      className: "builder-layer-sub"
-    }, L.sub) : null), /*#__PURE__*/React.createElement("div", {
-      className: "builder-layer-tech"
-    }, L.tech.map(function renderChip(tch, i) {
-      return /*#__PURE__*/React.createElement("span", {
-        key: i,
-        className: "builder-chip mono",
-        style: {
-          "--ci": i
-        }
-      }, tch);
-    })))));
-  }))))));
+  }, b.hint)))));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

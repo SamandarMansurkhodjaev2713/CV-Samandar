@@ -2169,26 +2169,39 @@ html[data-motion-lite] .faq-row-detail,
 html[data-motion-lite] .faq-row-icon-h,
 html[data-motion-lite] .faq-row-icon-v { transition: none; }
 
-/* ── PROJECT BUILDER — "Живой конструктор проекта" ──────────────────────
-   Signature interactive: choices on the left, a live-assembling architecture
-   blueprint on the right. Layers toggle visibility via grid-template-rows
-   0fr→1fr (same collapse trick as the FAQ/Signal accordions) so there is no
-   measured-connector math and nothing can misalign on resize. Tokens only. */
+/* ── PROJECT BUILDER — "Живой конструктор проекта" (v2) ─────────────────
+   Signature interactive. Grid-areas layout: choices → stage → readout → cta,
+   so on MOBILE the blueprint sits directly under the choices (you SEE it
+   assemble as you tap). The blueprint is a backbone-and-nodes architecture
+   diagram whose layers drop into place top-down (JS `shown` gate, staggered);
+   inactive layers collapse via grid-template-rows 0fr (no connector math).
+   Backbone geometry is parametric (--bl-gut / --bl-x on .builder-layers) so
+   the nodes + connectors always land on the spine at any width. Tokens only. */
 .builder-sec { padding: var(--gap-section) 0; position: relative; z-index: 2; }
 
 .builder {
   display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
-  gap: 30px;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  grid-template-areas:
+    "choices stage"
+    "readout stage"
+    "cta     stage";
+  gap: 24px 30px;
   padding: 30px;
   align-items: start;
 }
+.builder-choices { grid-area: choices; display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.builder-stage { grid-area: stage; }
+.builder-readout-block { grid-area: readout; min-width: 0; }
+.builder-cta-block { grid-area: cta; min-width: 0; }
 @media (max-width: 900px) {
-  .builder { grid-template-columns: 1fr; gap: 24px; padding: 20px; }
+  .builder {
+    grid-template-columns: 1fr;
+    grid-template-areas: "choices" "stage" "readout" "cta";
+    gap: 22px; padding: 20px;
+  }
 }
 
-/* LEFT — choices + readout + CTA */
-.builder-panel { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
 .builder-step { display: flex; flex-direction: column; gap: 12px; }
 .builder-step-k {
   font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
@@ -2202,9 +2215,11 @@ html[data-motion-lite] .faq-row-icon-v { transition: none; }
 .builder-opts { display: grid; gap: 10px; }
 .builder-opts--type { grid-template-columns: 1fr 1fr; }
 .builder-opts--scale { grid-template-columns: repeat(3, 1fr); }
+.builder-opts--prio { grid-template-columns: 1fr 1fr; }
 @media (max-width: 480px) {
   .builder-opts--type,
-  .builder-opts--scale { grid-template-columns: 1fr; }
+  .builder-opts--scale,
+  .builder-opts--prio { grid-template-columns: 1fr; }
 }
 
 .builder-opt {
@@ -2237,7 +2252,27 @@ html[data-motion-lite] .faq-row-icon-v { transition: none; }
 }
 .builder-readout-row:last-child { border-bottom: 0; }
 .builder-readout-k { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-mute); }
-.builder-readout-v { font-size: 13px; color: var(--text); overflow-wrap: anywhere; transition: color var(--d-fast); }
+.builder-readout-v { font-size: 13px; color: var(--text); overflow-wrap: anywhere; animation: builderValIn .4s var(--ease-out, ease) both; }
+@keyframes builderValIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+
+/* verdict — one line in Samandar's voice, changes with the config */
+.builder-verdict {
+  margin-top: 14px; position: relative;
+  padding: 14px 16px 14px 20px;
+  border-left: 2px solid var(--accent);
+  border-radius: 0 10px 10px 0;
+  background: linear-gradient(90deg, rgba(var(--accent-rgb) / 0.07), transparent 80%);
+  animation: builderValIn .5s var(--ease-out, ease) both;
+}
+.builder-verdict-mark {
+  position: absolute; left: 8px; top: 2px;
+  font-family: var(--f-serif, "Instrument Serif", Georgia, serif);
+  font-size: 34px; line-height: 1; color: rgba(var(--accent-rgb) / 0.4);
+}
+.builder-verdict-text {
+  font-family: var(--f-serif, "Instrument Serif", Georgia, serif);
+  font-style: italic; font-size: 16px; line-height: 1.5; color: var(--text); margin: 0;
+}
 
 /* CTA */
 .builder-cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
@@ -2251,66 +2286,113 @@ html[data-motion-lite] .faq-row-icon-v { transition: none; }
 .builder-cta-alt:hover { border-color: var(--accent); color: var(--accent); }
 .builder-cta-alt .arrow { transition: transform var(--d-fast); }
 .builder-cta-alt:hover .arrow { transform: translateX(3px); }
-.builder-hint { font-size: 10.5px; color: var(--text-mute); letter-spacing: 0.02em; }
+.builder-hint { font-size: 10.5px; color: var(--text-mute); letter-spacing: 0.02em; margin-top: 12px; }
 
-/* RIGHT — the assembling blueprint */
-.builder-stage { position: relative; min-width: 0; padding: 4px 2px 4px 22px; align-self: stretch; }
-/* the data-bus spine down the left gutter (unclipped — direct child of stage) */
-.builder-spine {
-  position: absolute; left: 6px; top: 6px; bottom: 6px; width: 2px;
-  background: linear-gradient(180deg, transparent, rgba(var(--accent-rgb) / 0.3) 10%, rgba(var(--accent-rgb) / 0.3) 90%, transparent);
-  border-radius: 2px; overflow: hidden; pointer-events: none;
+/* STAGE — the assembling blueprint */
+.builder-stage { position: relative; min-width: 0; }
+.builder-metric {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-mute);
 }
-.builder-spine-pulse {
-  position: absolute; left: 0; width: 100%; height: 30%;
+.builder-metric-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+  box-shadow: 0 0 8px var(--accent); animation: builderBlink 2s ease-in-out infinite;
+}
+@keyframes builderBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+/* backbone geometry — change these two on mobile and nodes/connectors follow */
+.builder-layers {
+  --bl-gut: 34px; --bl-x: 16px;
+  position: relative; display: flex; flex-direction: column; padding-left: var(--bl-gut);
+}
+@media (max-width: 480px) { .builder-layers { --bl-gut: 26px; --bl-x: 12px; } }
+
+.builder-backbone {
+  position: absolute; left: var(--bl-x); top: 10px; bottom: 10px; width: 2px;
+  background: linear-gradient(180deg, transparent, rgba(var(--accent-rgb) / 0.32) 8%, rgba(var(--accent-rgb) / 0.32) 92%, transparent);
+  border-radius: 2px; pointer-events: none;
+}
+/* the data pulse travelling down the backbone */
+.builder-flow {
+  position: absolute; left: calc(var(--bl-x) - 3px); width: 8px; height: 24%;
   background: linear-gradient(180deg, transparent, var(--accent), transparent);
-  filter: blur(0.5px);
-  animation: builderPulse 3.4s var(--ease-out, ease) infinite;
+  filter: blur(1px); border-radius: 8px; pointer-events: none;
+  animation: builderFlow 3.4s var(--ease-out, ease) infinite;
 }
-@keyframes builderPulse {
-  0% { top: -35%; opacity: 0; }
-  15% { opacity: 1; }
-  85% { opacity: 1; }
+@keyframes builderFlow {
+  0% { top: -28%; opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
   100% { top: 100%; opacity: 0; }
 }
 
-.builder-layers { display: flex; flex-direction: column; }
-
-/* Fixed slot per layer; inactive collapses to 0fr. */
+/* each layer is a fixed slot; the JS `shown` gate adds is-active top-down */
 .builder-layer {
+  position: relative;
   display: grid; grid-template-rows: 0fr; opacity: 0; margin-bottom: 0;
-  transition: grid-template-rows .55s var(--sec-ease, cubic-bezier(.16, 1, .3, 1)), opacity .45s ease, margin .45s ease;
+  transition: grid-template-rows .5s var(--sec-ease, cubic-bezier(.16, 1, .3, 1)), opacity .4s ease, margin .4s ease;
 }
 .builder-layer.is-active { grid-template-rows: 1fr; opacity: 1; margin-bottom: 12px; }
+/* node on the backbone (on .builder-layer, NOT the overflow-hidden inner) */
+.builder-layer::before {
+  content: ""; position: absolute; top: 22px; z-index: 2; pointer-events: none;
+  left: calc(var(--bl-x) - var(--bl-gut) - 5px);
+  width: 12px; height: 12px; border-radius: 50%; background: var(--accent);
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb) / 0.12), 0 0 12px rgba(var(--accent-rgb) / 0.7);
+  opacity: 0; transform: scale(0);
+  transition: opacity .35s ease, transform .4s var(--sec-ease, cubic-bezier(.16, 1, .3, 1));
+}
+.builder-layer.is-active::before { opacity: 1; transform: scale(1); }
+/* short connector from backbone to the card */
+.builder-layer::after {
+  content: ""; position: absolute; top: 27px; height: 2px; z-index: 1; pointer-events: none;
+  left: calc(var(--bl-x) - var(--bl-gut) + 1px);
+  width: calc(var(--bl-gut) - var(--bl-x) - 1px);
+  background: linear-gradient(90deg, rgba(var(--accent-rgb) / 0.5), transparent);
+  opacity: 0; transition: opacity .35s ease .08s;
+}
+.builder-layer.is-active::after { opacity: 1; }
+
 .builder-layer-inner { overflow: hidden; min-height: 0; }
 .builder-layer-body {
   border: 1px solid var(--line-strong); border-left: 2px solid rgba(var(--accent-rgb) / 0.55);
-  border-radius: 10px; background: rgba(15, 18, 22, 0.6); padding: 14px 16px;
+  border-radius: 10px; background: rgba(15, 18, 22, 0.6); padding: 13px 16px;
 }
 .builder-layer.is-active .builder-layer-body {
-  animation: builderLayerIn .55s var(--sec-ease, cubic-bezier(.16, 1, .3, 1)) both;
+  animation: builderLayerIn .5s var(--sec-ease, cubic-bezier(.16, 1, .3, 1)) both;
 }
 @keyframes builderLayerIn { from { transform: translateX(10px); } to { transform: none; } }
-.builder-layer-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+/* the intelligence + data layers read differently — this is a system, not a list */
+.builder-layer--ai .builder-layer-body {
+  border-left-color: var(--accent);
+  background: linear-gradient(120deg, rgba(var(--accent-rgb) / 0.09), rgba(15, 18, 22, 0.6) 70%);
+}
+.builder-layer--data .builder-layer-body { border-left-color: var(--accent-2); }
+.builder-layer-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
 .builder-layer-name { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); }
 .builder-layer-sub { font-size: 14px; font-weight: 500; color: var(--text); }
+.builder-layer-note { font-size: 11.5px; color: var(--text-dim); line-height: 1.45; margin-bottom: 10px; }
 .builder-layer-tech { display: flex; flex-wrap: wrap; gap: 7px; }
 .builder-chip {
   font-size: 11px; letter-spacing: 0.02em; color: var(--text-dim);
   border: 1px solid var(--line); border-radius: 6px; padding: 4px 9px;
   background: rgba(7, 9, 11, 0.4);
   animation: builderChipIn .4s var(--ease-out, ease) both;
-  animation-delay: calc(var(--ci, 0) * 55ms + 120ms);
+  animation-delay: calc(var(--ci, 0) * 50ms + 140ms);
 }
 @keyframes builderChipIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .builder-spine-pulse { display: none; }
+  .builder-flow, .builder-metric-dot { display: none; }
   .builder-layer,
+  .builder-layer::before,
+  .builder-layer::after,
   .builder-layer.is-active .builder-layer-body,
-  .builder-chip { animation: none; transition: opacity .2s ease; }
+  .builder-chip,
+  .builder-readout-v,
+  .builder-verdict { animation: none; transition: opacity .2s ease; }
 }
-html[data-motion-lite] .builder-spine-pulse { display: none; }
+html[data-motion-lite] .builder-flow { display: none; }
 html[data-motion-lite] .builder-layer.is-active .builder-layer-body,
 html[data-motion-lite] .builder-chip { animation: none; }
 
