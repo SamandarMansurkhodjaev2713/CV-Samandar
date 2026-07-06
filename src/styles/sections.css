@@ -2794,7 +2794,7 @@ html[data-motion-lite] .faq-row-icon-v { transition: none; }
   .hero-scroll-hint { display: flex; }
 }
 
-/* ── INTRO CURTAIN ("Полёт к станции") ───────────────────────────────
+/* ── INTRO CURTAIN — "Boot Sequence" loader ──────────────────────────
    Most styling is set inline by JS (src/engine/intro.js) for frame-0 safety
    (it has to paint before this stylesheet is guaranteed to have loaded).
    These rules are belt-and-suspenders + the reduced-motion hardening. */
@@ -2812,4 +2812,65 @@ html[data-motion-lite] .faq-row-icon-v { transition: none; }
      when reduced-motion is set) — this just hardens against any edge case. */
   #sm-intro canvas { display: none !important; }
   #sm-intro { transition: opacity .4s cubic-bezier(.2,.6,.18,1); }
+}
+
+/* Boot readout — CORE.AI status label, percentage counter, progress line.
+   Positioned around the same focal point the iris opens from (CFG.CORE_Y,
+   set inline as `top`), so the reveal feels continuous rather than a jump. */
+.sm-boot {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: min(88vw, 420px);
+  text-align: center;
+}
+.sm-boot-label {
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+.sm-boot-state {
+  color: rgba(var(--accent-rgb) / 0.85);
+  transition: color .3s ease;
+}
+.sm-boot-pct {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font-family: var(--f-display);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.sm-boot-pct-n { font-size: clamp(48px, 11vw, 88px); }
+.sm-boot-pct-sign {
+  font-size: clamp(18px, 3.2vw, 26px);
+  color: var(--text-dim);
+  transform: translateY(-0.3em);
+}
+.sm-boot-line {
+  width: 100%;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--line-strong);
+  overflow: hidden;
+}
+.sm-boot-line > i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  box-shadow: 0 0 12px rgba(var(--accent-rgb) / 0.6);
+  transition: width .25s linear;
+}
+@media (max-width: 480px) {
+  .sm-boot { gap: 10px; }
+  .sm-boot-label { font-size: 10.5px; }
 }
