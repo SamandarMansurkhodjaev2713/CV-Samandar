@@ -741,19 +741,23 @@ const BUILDER_TECH = {
 };
 
 // Maps scale → the Contact form's budget bucket index
-// (["< $2k","$2-5k","$5-10k","$10-20k","$20k+"]) plus a display range.
+// (["< $1k","$1-3k","$3-7k","$7-15k","$15k+"]) plus a display range.
+// Ranges grounded in solo/early-career freelance rates for a Tashkent-based
+// developer serving UZ/CIS + remote clients (not agency pricing) — see the
+// 2026-07 pricing pass. The old scheme (mvp $2-5k / prod $8-20k / product
+// $20k+) read as agency-inflated for this profile.
 const BUILDER_SCALE_META = {
   mvp: {
     budgetIdx: 1,
-    budget: "$2–5k"
+    budget: "$1–3.5k"
   },
   prod: {
-    budgetIdx: 3,
-    budget: "$8–20k"
+    budgetIdx: 2,
+    budget: "$4–9k"
   },
   product: {
-    budgetIdx: 4,
-    budget: "$20k+"
+    budgetIdx: 3,
+    budget: "$9–16k"
   }
 };
 function builderDedupe(arr) {
@@ -1052,16 +1056,16 @@ function ProjectBuilder({
     className: "builder-backbone"
   }), /*#__PURE__*/React.createElement("span", {
     className: "builder-flow"
-  }), rows.map(function renderLayer(r) {
+  }), rows.filter(function keepShown(r) {
+    return r.shown;
+  }).map(function renderLayer(r) {
     const L = r.L;
     return /*#__PURE__*/React.createElement("div", {
       key: L.id,
-      className: `builder-layer builder-layer--${L.id} ${r.shown ? "is-active" : ""}`,
+      className: `builder-layer builder-layer--${L.id}`,
       style: {
         "--li": r.activeIdx
       }
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "builder-layer-inner"
     }, /*#__PURE__*/React.createElement("div", {
       className: "builder-layer-body"
     }, /*#__PURE__*/React.createElement("div", {
@@ -1082,7 +1086,7 @@ function ProjectBuilder({
           "--ci": i
         }
       }, tch);
-    })))));
+    }))));
   }))), /*#__PURE__*/React.createElement("div", {
     className: "builder-readout-block"
   }, /*#__PURE__*/React.createElement("div", {
@@ -1345,7 +1349,9 @@ function Contact({
   // also reveals the available service categories at a glance.
   const [scopeSet, setScopeSet] = useState2(() => new Set());
   // Budget slider — 5 fixed buckets so we don't ask for awkward exact numbers.
-  const BUDGET_BUCKETS = ["< $2k", "$2-5k", "$5-10k", "$10-20k", "$20k+"];
+  // Grounded in solo/early-career Tashkent-based freelance rates, not agency
+  // pricing (see BUILDER_SCALE_META above for the same 2026-07 pricing pass).
+  const BUDGET_BUCKETS = ["< $1k", "$1-3k", "$3-7k", "$7-15k", "$15k+"];
   const [budgetIdx, setBudgetIdx] = useState2(1);
   // Timeline preference — small chip row for urgency, helps scoping.
   const TIMELINE_LABEL = t.contact.form.timeline || "Сроки";

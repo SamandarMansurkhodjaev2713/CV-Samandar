@@ -2194,10 +2194,17 @@ html[data-motion-lite] .faq-row-icon-v { transition: none; }
 .builder-stage { grid-area: stage; }
 .builder-readout-block { grid-area: readout; min-width: 0; }
 .builder-cta-block { grid-area: cta; min-width: 0; }
+/* Mobile: READOUT comes right after the choices (not after the full stage).
+   The choices alone run to roughly one screen height, so on a phone the
+   reaction to a tap was a full scroll away — by the time you saw the stage,
+   the tap that caused it was long off-screen and the connection was lost.
+   The compact readout + one-line verdict is the fast, always-reachable
+   payoff; the full blueprint stays as the "see the whole picture" detail
+   right after it, not the only feedback. */
 @media (max-width: 900px) {
   .builder {
     grid-template-columns: 1fr;
-    grid-template-areas: "choices" "stage" "readout" "cta";
+    grid-template-areas: "choices" "readout" "stage" "cta";
     gap: 22px; padding: 20px;
   }
 }
@@ -2216,10 +2223,12 @@ html[data-motion-lite] .faq-row-icon-v { transition: none; }
 .builder-opts--type { grid-template-columns: 1fr 1fr; }
 .builder-opts--scale { grid-template-columns: repeat(3, 1fr); }
 .builder-opts--prio { grid-template-columns: 1fr 1fr; }
+/* Was 1 column here (11 stacked full-width buttons ≈ one whole screen of
+   scroll before anything else appeared). Keep 2 columns at every width —
+   the choices are the biggest single cause of "too much scroll before you
+   see anything react." */
 @media (max-width: 480px) {
-  .builder-opts--type,
-  .builder-opts--scale,
-  .builder-opts--prio { grid-template-columns: 1fr; }
+  .builder-opts--scale { grid-template-columns: 1fr 1fr; }
 }
 
 .builder-opt {
@@ -2326,42 +2335,42 @@ html[data-motion-lite] .faq-row-icon-v { transition: none; }
   100% { top: 100%; opacity: 0; }
 }
 
-/* each layer is a fixed slot; the JS `shown` gate adds is-active top-down */
+/* Each layer is only IN THE DOM once the JS `shown` gate reaches it (see
+   ProjectBuilder's `rows.filter(shown)`) — no hidden/collapsed state to
+   maintain, so there is no fragile "0fr auto-height" grid trick to break.
+   (An earlier version toggled an `is-active` class on an always-mounted,
+   grid-rows:0fr→1fr layer instead — that collapsed to a real, unrecoverable
+   0px in at least one browser context whenever an ancestor still carried the
+   reveal system's pre-reveal inline transform/opacity, e.g. before a
+   data-reveal card's IntersectionObserver had fired. Mount-animating instead
+   of height-collapsing removes that whole failure mode.) */
 .builder-layer {
   position: relative;
-  display: grid; grid-template-rows: 0fr; opacity: 0; margin-bottom: 0;
-  transition: grid-template-rows .5s var(--sec-ease, cubic-bezier(.16, 1, .3, 1)), opacity .4s ease, margin .4s ease;
+  margin-bottom: 12px;
+  animation: builderLayerMount .5s var(--sec-ease, cubic-bezier(.16, 1, .3, 1)) both;
 }
-.builder-layer.is-active { grid-template-rows: 1fr; opacity: 1; margin-bottom: 12px; }
-/* node on the backbone (on .builder-layer, NOT the overflow-hidden inner) */
+@keyframes builderLayerMount { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: none; } }
+/* node on the backbone */
 .builder-layer::before {
   content: ""; position: absolute; top: 22px; z-index: 2; pointer-events: none;
   left: calc(var(--bl-x) - var(--bl-gut) - 5px);
   width: 12px; height: 12px; border-radius: 50%; background: var(--accent);
   box-shadow: 0 0 0 4px rgba(var(--accent-rgb) / 0.12), 0 0 12px rgba(var(--accent-rgb) / 0.7);
-  opacity: 0; transform: scale(0);
-  transition: opacity .35s ease, transform .4s var(--sec-ease, cubic-bezier(.16, 1, .3, 1));
+  animation: builderNodeMount .4s var(--sec-ease, cubic-bezier(.16, 1, .3, 1)) both;
 }
-.builder-layer.is-active::before { opacity: 1; transform: scale(1); }
+@keyframes builderNodeMount { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
 /* short connector from backbone to the card */
 .builder-layer::after {
   content: ""; position: absolute; top: 27px; height: 2px; z-index: 1; pointer-events: none;
   left: calc(var(--bl-x) - var(--bl-gut) + 1px);
   width: calc(var(--bl-gut) - var(--bl-x) - 1px);
   background: linear-gradient(90deg, rgba(var(--accent-rgb) / 0.5), transparent);
-  opacity: 0; transition: opacity .35s ease .08s;
+  animation: builderChipIn .35s ease .08s both;
 }
-.builder-layer.is-active::after { opacity: 1; }
-
-.builder-layer-inner { overflow: hidden; min-height: 0; }
 .builder-layer-body {
   border: 1px solid var(--line-strong); border-left: 2px solid rgba(var(--accent-rgb) / 0.55);
   border-radius: 10px; background: rgba(15, 18, 22, 0.6); padding: 13px 16px;
 }
-.builder-layer.is-active .builder-layer-body {
-  animation: builderLayerIn .5s var(--sec-ease, cubic-bezier(.16, 1, .3, 1)) both;
-}
-@keyframes builderLayerIn { from { transform: translateX(10px); } to { transform: none; } }
 /* the intelligence + data layers read differently — this is a system, not a list */
 .builder-layer--ai .builder-layer-body {
   border-left-color: var(--accent);
@@ -2387,13 +2396,14 @@ html[data-motion-lite] .faq-row-icon-v { transition: none; }
   .builder-layer,
   .builder-layer::before,
   .builder-layer::after,
-  .builder-layer.is-active .builder-layer-body,
   .builder-chip,
   .builder-readout-v,
-  .builder-verdict { animation: none; transition: opacity .2s ease; }
+  .builder-verdict { animation: none; }
 }
 html[data-motion-lite] .builder-flow { display: none; }
-html[data-motion-lite] .builder-layer.is-active .builder-layer-body,
+html[data-motion-lite] .builder-layer,
+html[data-motion-lite] .builder-layer::before,
+html[data-motion-lite] .builder-layer::after,
 html[data-motion-lite] .builder-chip { animation: none; }
 
 /* ── TRUST ─────────────────────────────────────────────────── */
