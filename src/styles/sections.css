@@ -2073,6 +2073,102 @@ html[data-motion-lite] .svc-tab.is-active .svc-tab-mark { clip-path: inset(19% 0
   .proc-terminal-head, .proc-terminal-foot { padding: 12px 14px; }
 }
 
+/* ── FAQ — accordion, single-open, click/tap only ──────────────────────
+   Deliberately NOT the Signal row engine (oversized ghost numeral + hover-
+   preview) — that's Signal's own editorial-browsing signature. This is a
+   plain utilitarian Q&A list: small numbered label, a plus→minus icon that
+   rotates, and the same proven grid-template-rows 0fr→1fr expand technique
+   (verified working this session for Signal — real auto-height, no
+   max-height guessing/jumps). */
+.faq-list {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+}
+.faq-row { border-bottom: 1px solid var(--line); }
+.faq-row-head {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  margin: 0;
+  padding: clamp(18px, 2.2vw, 24px) 4px;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  column-gap: clamp(14px, 2vw, 24px);
+}
+.faq-row-num {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--text-mute);
+  transition: color .3s var(--ease-out);
+}
+.faq-row.is-open .faq-row-num { color: var(--accent); }
+.faq-row-q {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: clamp(17px, 2.2vw, 21px);
+  line-height: 1.35;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  transition: color .3s var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .faq-row-head:hover .faq-row-q { color: var(--accent); }
+}
+.faq-row-icon {
+  position: relative;
+  width: 24px; height: 24px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  transition: border-color .3s var(--ease-out), background-color .3s var(--ease-out);
+}
+.faq-row-icon-h, .faq-row-icon-v {
+  position: absolute;
+  top: 50%; left: 50%;
+  background: var(--text-dim);
+  transition: transform .35s var(--e-entrance, cubic-bezier(.2,.6,.18,1)), background-color .3s var(--ease-out);
+}
+.faq-row-icon-h { width: 10px; height: 1.5px; transform: translate(-50%, -50%); }
+.faq-row-icon-v { width: 1.5px; height: 10px; transform: translate(-50%, -50%); }
+.faq-row.is-open .faq-row-icon { border-color: var(--accent); background-color: rgba(var(--accent-rgb) / 0.12); }
+.faq-row.is-open .faq-row-icon-h,
+.faq-row.is-open .faq-row-icon-v { background: var(--accent); }
+.faq-row.is-open .faq-row-icon-v { transform: translate(-50%, -50%) rotate(90deg); }
+
+.faq-row-detail {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows .5s var(--e-entrance, cubic-bezier(.2,.6,.18,1));
+}
+.faq-row.is-open .faq-row-detail { grid-template-rows: 1fr; }
+.faq-row-detail-inner { overflow: hidden; }
+.faq-row-a {
+  padding: 0 4px clamp(18px, 2.2vw, 24px) calc(4px + 1.4em + clamp(14px, 2vw, 24px));
+  max-width: 62ch;
+  color: var(--text-dim);
+  font-size: 15px;
+  line-height: 1.65;
+}
+@media (max-width: 640px) {
+  .faq-row-a { padding-left: 4px; }
+  .faq-row-q { font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .faq-row-detail, .faq-row-icon-h, .faq-row-icon-v, .faq-row-num, .faq-row-q, .faq-row-icon { transition: none; }
+}
+html[data-motion-lite] .faq-row-detail,
+html[data-motion-lite] .faq-row-icon-h,
+html[data-motion-lite] .faq-row-icon-v { transition: none; }
+
 /* ── TRUST ─────────────────────────────────────────────────── */
 /* ── TRUST — editorial-style staggered testimonials ────────────────────
    No more 3 identical cards in a row. Instead: large serif quotes that

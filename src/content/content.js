@@ -9,6 +9,7 @@ const CONTENT = {
       skills: "Стек",
       services: "Услуги",
       cv: "Опыт",
+      faq: "Вопросы",
       contact: "Контакт",
     },
     hero: {
@@ -296,6 +297,41 @@ const CONTENT = {
         },
       ],
     },
+    faq: {
+      eyebrow: "FAQ",
+      title: "Частые вопросы",
+      lead: "Коротко — то, что обычно спрашивают до старта.",
+      items: [
+        {
+          q: "Сколько стоит проект?",
+          a: "Зависит от объёма — от простого лендинга за несколько дней до полноценного продукта с AI-частью за месяцы. После короткого созвона даю вилку по деньгам и срокам, без скрытых наценок.",
+        },
+        {
+          q: "Сколько времени займёт разработка?",
+          a: "Лендинг или MVP — 1–3 недели. Продукт с бэкендом и AI-слоем — от месяца. Точный срок фиксирую после короткого discovery-этапа, не раньше.",
+        },
+        {
+          q: "Вы работаете один или это студия?",
+          a: "Один — от дизайна до деплоя и поддержки. Никакой прослойки между вами и разработчиком и никакой агентской наценки. Под большой объём точечно подключаю проверенных специалистов, но за результат отвечаю я.",
+        },
+        {
+          q: "У меня нет технического задания — это проблема?",
+          a: "Нет. Большинство приходит с идеей, а не с ТЗ. Проговариваем цель, ограничения и бюджет — архитектуру и план собираю сам, это часть работы, а не отдельная услуга.",
+        },
+        {
+          q: "Как устроена оплата?",
+          a: "Обычно поэтапно: аванс перед стартом, остаток — по завершении ключевых этапов. Условия фиксируем письменно до начала работы.",
+        },
+        {
+          q: "Что после запуска — есть поддержка?",
+          a: "Да. Раннее сопровождение после релиза включено в проект, дальше — почасовая поддержка или доработки по договорённости.",
+        },
+        {
+          q: "Как быстро можно начать?",
+          a: "Обычно готов стартовать в течение нескольких дней после согласования деталей. Быстрее всего обсудить сроки — в Telegram.",
+        },
+      ],
+    },
     trust: {
       eyebrow: "Trust",
       title: "Отзывы команд",
@@ -358,7 +394,7 @@ const CONTENT = {
   },
 
   en: {
-    nav: { about: "About", projects: "Work", skills: "Stack", services: "Services", cv: "CV", contact: "Contact" },
+    nav: { about: "About", projects: "Work", skills: "Stack", services: "Services", cv: "CV", faq: "FAQ", contact: "Contact" },
     hero: {
       eyebrow: "Executive AI Code Lab — v.2026",
       name: "Samandar",
@@ -641,6 +677,41 @@ const CONTENT = {
         },
       ],
     },
+    faq: {
+      eyebrow: "FAQ",
+      title: "Frequent questions",
+      lead: "Short version — what people usually ask before we start.",
+      items: [
+        {
+          q: "How much does a project cost?",
+          a: "Depends on scope — from a simple landing page in a few days to a full product with an AI layer over months. After a short call I give a real range for budget and timeline, no hidden markup.",
+        },
+        {
+          q: "How long does development take?",
+          a: "A landing page or MVP — 1–3 weeks. A product with a backend and AI layer — a month or more. I lock in the exact timeline after a short discovery phase, not before.",
+        },
+        {
+          q: "Do you work alone, or is this a studio?",
+          a: "Alone — design through deployment and support. No layer between you and the developer, no agency markup. For larger scope I bring in vetted specialists for specific tasks, but I own the result.",
+        },
+        {
+          q: "I don't have a spec — is that a problem?",
+          a: "No. Most people arrive with an idea, not a spec. We talk through the goal, constraints, and budget — I put together the architecture and plan myself; that's part of the work, not a separate service.",
+        },
+        {
+          q: "How does payment work?",
+          a: "Usually in stages: a deposit before starting, the rest after key milestones or project completion. Terms are set in writing before work begins.",
+        },
+        {
+          q: "What about support after launch?",
+          a: "Yes. Early post-launch support is included; after that it's hourly support or further work by agreement.",
+        },
+        {
+          q: "How soon can we start?",
+          a: "Usually within a few days of agreeing on details. Telegram is the fastest way to talk timeline.",
+        },
+      ],
+    },
     trust: {
       eyebrow: "Trust",
       title: "What teams say",
@@ -696,7 +767,7 @@ const CONTENT = {
   },
 
   uz: {
-    nav: { about: "Men haqimda", projects: "Loyihalar", skills: "Stek", services: "Xizmatlar", cv: "Tajriba", contact: "Aloqa" },
+    nav: { about: "Men haqimda", projects: "Loyihalar", skills: "Stek", services: "Xizmatlar", cv: "Tajriba", faq: "Savollar", contact: "Aloqa" },
     hero: {
       eyebrow: "Executive AI Code Lab — v.2026",
       name: "Samandar",
@@ -976,6 +1047,41 @@ const CONTENT = {
             { kind: "output", text: "  ingest rate 412 leads/min · cost $0.0008/lead" },
             { kind: "done", text: "✓ deployed · 1m 58s · CRM in sync" },
           ],
+        },
+      ],
+    },
+    faq: {
+      eyebrow: "FAQ",
+      title: "Tez-tez so'raladigan savollar",
+      lead: "Qisqacha — boshlashdan oldin odatda so'raladigan savollar.",
+      items: [
+        {
+          q: "Loyiha qancha turadi?",
+          a: "Hajmga bog'liq — bir necha kunlik oddiy landingdan tortib, AI-qatlamli to'liq mahsulotgacha oylab davom etishi mumkin. Qisqa suhbatdan so'ng byudjet va muddat bo'yicha aniq vilkani beraman, yashirin ustama yo'q.",
+        },
+        {
+          q: "Ishlab chiqish qancha vaqt oladi?",
+          a: "Landing yoki MVP — 1–3 hafta. Backend va AI-qatlamli mahsulot — bir oydan ko'proq. Aniq muddatni qisqa discovery bosqichidan keyin belgilayman.",
+        },
+        {
+          q: "Yolg'iz ishlaysizmi yoki bu studiyami?",
+          a: "Yolg'iz — dizayndan deployga va qo'llab-quvvatlashgacha. Siz bilan dasturchi orasida hech qanday vositachi yo'q, agentlik ustamasi yo'q. Katta hajm uchun aniq vazifalarga tekshirilgan mutaxassislarni jalb qilaman, lekin natija uchun men javobgarman.",
+        },
+        {
+          q: "Menda texnik topshiriq yo'q — bu muammomi?",
+          a: "Yo'q. Ko'pchilik g'oya bilan keladi, TT bilan emas. Maqsad, cheklovlar va byudjetni muhokama qilamiz — arxitektura va rejani o'zim tuzaman, bu ishning qismi, alohida xizmat emas.",
+        },
+        {
+          q: "To'lov qanday amalga oshiriladi?",
+          a: "Odatda bosqichma-bosqich: boshlashdan oldin avans, qolgani — asosiy bosqichlar yoki loyiha yakunlangandan keyin. Shartlar ish boshlanishidan oldin yozma tarzda belgilanadi.",
+        },
+        {
+          q: "Ishga tushirilgandan keyin qo'llab-quvvatlash bormi?",
+          a: "Ha. Relizdan keyingi dastlabki qo'llab-quvvatlash loyihaga kiritilgan, keyin — soatlik yordam yoki kelishuv asosida qo'shimcha ishlar.",
+        },
+        {
+          q: "Qachon boshlash mumkin?",
+          a: "Odatda tafsilotlar kelishilgandan so'ng bir necha kun ichida boshlashga tayyorman. Muddatlarni muhokama qilishning eng tez yo'li — Telegram.",
         },
       ],
     },

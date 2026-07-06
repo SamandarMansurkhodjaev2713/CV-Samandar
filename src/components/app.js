@@ -49,7 +49,7 @@ const LINKS = {
   telegram: "t.me/killallofthem13",
   email: "sam4k27@gmail.com"
 };
-const NAV_SECTIONS = ["about", "projects", "skills", "services", "cv", "contact"];
+const NAV_SECTIONS = ["about", "projects", "skills", "services", "cv", "faq", "contact"];
 
 // ── Haptic helper.
 // `navigator.vibrate` is supported on Android Chrome and ~most Android browsers.
@@ -613,6 +613,8 @@ function App() {
     t: t,
     links: LINKS
   })), /*#__PURE__*/React.createElement(Process, {
+    t: t
+  }), /*#__PURE__*/React.createElement(Faq, {
     t: t
   }), /*#__PURE__*/React.createElement("div", {
     className: "pin-host",

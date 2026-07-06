@@ -411,14 +411,23 @@ section[data-enter="line-stagger"].sec-in { animation: secLineLift var(--sec-dur
   to   { opacity: 1; transform: none; }
 }
 
-/* 08 trust — slide-from-right (mirror of services; pinned → .shell). */
+/* 08 faq — assemble: quiet scale-settle + fade. Distinct from develop's film-
+   blur (02) and rise's deeper lift (03) — plainer and a touch faster, since
+   this is a utilitarian Q&A list, not a cinematic set-piece. */
+section[data-enter="assemble"].sec-in { animation: secAssemble .9s var(--sec-ease) both; }
+@keyframes secAssemble {
+  from { opacity: 0; transform: translateY(20px) scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* 09 trust — slide-from-right (mirror of services; pinned → .shell). */
 .pin-host > section[data-enter="slide-right"].sec-in > .shell { animation: secSlideRight var(--sec-dur) var(--sec-ease) both; }
 @keyframes secSlideRight {
   from { opacity: 0; transform: translateX(95px); }
   to   { opacity: 1; transform: none; }
 }
 
-/* 09 contact — rise + brighten arrival (pinned → .shell). */
+/* 10 contact — rise + brighten arrival (pinned → .shell). */
 .pin-host > section[data-enter="rise-bright"].sec-in > .shell {
   animation: secRiseBright 1.0s var(--sec-ease) both;
   transform-origin: 50% 80%;

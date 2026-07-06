@@ -42,6 +42,15 @@
     // was ever visible — the likely reason it "never showed". After the grace
     // window it's freely skippable (click / scroll / touch / Esc-Enter-Space).
     SKIP_GRACE_MS: 600,
+    // Fade mode's own timeline: hold the glow, then fade. Totals ~3s, matching
+    // the full canvas mode — the intro's real job (buying load time for the
+    // Spline robot + rest of the page behind the opaque curtain) doesn't stop
+    // mattering just because a device takes the cheap visual path. A ~0.85s
+    // fade — the previous timing — cleared before assets had a real chance to
+    // finish, so the hero could still be visibly mid-load right as the curtain
+    // lifted.
+    FADE_HOLD_MS: 2350,
+    FADE_OUT_MS: 600,
     CORE_Y: 0.42,           // vertical focus (matches hero photo focus)
   };
 
@@ -97,21 +106,52 @@
     if (intent.mode === "fade") {
       var fa1 = readRGB("--accent-rgb", [217, 119, 87]);
       var fa2 = readRGB("--accent-2-rgb", [200, 155, 94]);
+      var fadeStart = performance.now();
+      var holdTimer = 0, fadeOutTimer = 0, fadeDone = false;
       panel.style.background =
         "radial-gradient(circle at 50% 42%, rgba(" + fa1[0] + "," + fa1[1] + "," + fa1[2] + ",0.95) 0%, " +
         "rgba(" + fa2[0] + "," + fa2[1] + "," + fa2[2] + ",0.6) 30%, #1F1E1B 70%)";
-      panel.style.transition = "opacity .55s cubic-bezier(.2,.6,.18,1)";
-      // Hold at full opacity briefly so the glow actually registers as a
-      // moment before fading — the previous version began fading on the very
-      // next frame, so at most one rendered frame was ever fully visible.
-      setTimeout(function () {
+      panel.style.transition = "opacity " + (CFG.FADE_OUT_MS / 1000) + "s cubic-bezier(.2,.6,.18,1)";
+
+      function fadeTeardown() {
+        if (fadeDone) return;
+        fadeDone = true;
+        if (forcedTimer) { clearTimeout(forcedTimer); forcedTimer = 0; }
+        if (holdTimer) { clearTimeout(holdTimer); holdTimer = 0; }
+        if (fadeOutTimer) { clearTimeout(fadeOutTimer); fadeOutTimer = 0; }
+        window.removeEventListener("keydown", onFadeKey, true);
+        window.removeEventListener("wheel", onFadeSkip);
+        window.removeEventListener("touchstart", onFadeSkip);
+        window.removeEventListener("pointerdown", onFadeSkip);
+        if (panel.parentNode) panel.remove();
+        try { window.dispatchEvent(new CustomEvent("sm:intro-done")); } catch (e) { /* opportunistic */ }
+      }
+      function startFadeOut() {
+        if (holdTimer) { holdTimer = 0; }
         panel.style.opacity = "0";
-        setTimeout(function () {
-          if (forcedTimer) { clearTimeout(forcedTimer); forcedTimer = 0; }
-          if (panel.parentNode) panel.remove();
-          try { window.dispatchEvent(new CustomEvent("sm:intro-done")); } catch (e) { /* opportunistic */ }
-        }, 570);
-      }, 300);
+        fadeOutTimer = setTimeout(fadeTeardown, CFG.FADE_OUT_MS + 20);
+      }
+      // Same grace window as full mode — ignore a stray early event (the tap
+      // that opened the page, etc.), freely skippable after that.
+      function requestFadeSkip() {
+        if (fadeDone || fadeOutTimer) return;
+        if (performance.now() - fadeStart < CFG.SKIP_GRACE_MS) return;
+        window.removeEventListener("wheel", onFadeSkip);
+        window.removeEventListener("touchstart", onFadeSkip);
+        window.removeEventListener("pointerdown", onFadeSkip);
+        startFadeOut();
+      }
+      function onFadeKey(e) { if (e.key === "Escape" || e.key === "Enter" || e.key === " ") requestFadeSkip(); }
+      function onFadeSkip() { requestFadeSkip(); }
+      window.addEventListener("keydown", onFadeKey, true);
+      window.addEventListener("wheel", onFadeSkip, { passive: true });
+      window.addEventListener("touchstart", onFadeSkip, { passive: true });
+      window.addEventListener("pointerdown", onFadeSkip, { passive: true });
+
+      // Hold at full opacity so the glow registers AND the page behind the
+      // curtain gets real time to load — the previous version began fading on
+      // the very next frame, so at most one rendered frame was ever visible.
+      holdTimer = setTimeout(startFadeOut, CFG.FADE_HOLD_MS);
       return;
     }
 

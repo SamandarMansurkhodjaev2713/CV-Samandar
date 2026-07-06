@@ -783,6 +783,84 @@ function Process({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// FAQ — accordion of common client questions. Single-open-at-a-time, click/tap
+// only (no hover-preview — this is a utilitarian Q&A list, not the editorial
+// browsing Signal owns). First question starts open so the interaction pattern
+// is visible without requiring a click.
+// ─────────────────────────────────────────────────────────────────────────────
+function FaqRow({
+  item,
+  index,
+  open,
+  onToggle
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: `faq-row${open ? " is-open" : ""}`
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "faq-row-head",
+    "aria-expanded": open,
+    "aria-controls": `faq-a-${index}`,
+    onClick: () => onToggle(index)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "faq-row-num mono"
+  }, String(index + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("span", {
+    className: "faq-row-q"
+  }, item.q), /*#__PURE__*/React.createElement("span", {
+    className: "faq-row-icon",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "faq-row-icon-h"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "faq-row-icon-v"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "faq-row-detail",
+    id: `faq-a-${index}`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "faq-row-detail-inner"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "faq-row-a"
+  }, item.a))));
+}
+function Faq({
+  t
+}) {
+  const ref = useRevealRoot([t]);
+  const [openIndex, setOpenIndex] = useState2(0);
+  const items = t.faq && Array.isArray(t.faq.items) ? t.faq.items : [];
+  function handleToggle(i) {
+    setOpenIndex(prev => prev === i ? -1 : i);
+  }
+  return /*#__PURE__*/React.createElement("section", {
+    "data-section": "faq",
+    id: "faq",
+    "data-enter": "assemble",
+    ref: ref
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "shell"
+  }, /*#__PURE__*/React.createElement(SecHead, {
+    num: "08",
+    eyebrow: t.faq.eyebrow,
+    title: t.faq.title,
+    meta: `${items.length} · Q&A`
+  }), /*#__PURE__*/React.createElement("p", {
+    className: "lead-line",
+    "data-reveal": true
+  }, t.faq.lead), /*#__PURE__*/React.createElement("div", {
+    className: "faq-list",
+    "data-reveal": true
+  }, items.map(function renderFaq(item, i) {
+    return /*#__PURE__*/React.createElement(FaqRow, {
+      key: i,
+      item: item,
+      index: i,
+      open: openIndex === i,
+      onToggle: handleToggle
+    });
+  }))));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // TRUST — testimonials
 // ─────────────────────────────────────────────────────────────────────────────
 // Honesty rule: every number in this section must be traceable to the actual
@@ -824,7 +902,7 @@ function Trust({
   }, /*#__PURE__*/React.createElement("div", {
     className: "shell"
   }, /*#__PURE__*/React.createElement(SecHead, {
-    num: "08",
+    num: "09",
     eyebrow: t.trust.eyebrow,
     title: t.trust.title,
     meta: `${totalQuotes} · signed`
@@ -1014,7 +1092,7 @@ function Contact({
   }, /*#__PURE__*/React.createElement("div", {
     className: "shell"
   }, /*#__PURE__*/React.createElement(SecHead, {
-    num: "09",
+    num: "10",
     eyebrow: t.contact.eyebrow,
     title: t.contact.title,
     em: t.contact.title.split(" ").pop(),

@@ -25,7 +25,7 @@ class ErrorBoundary extends React.Component {
 }
 
 const LINKS = { github: "github.com/SamandarMansurkhodjaev2713", telegram: "t.me/killallofthem13", email: "sam4k27@gmail.com" };
-const NAV_SECTIONS = ["about", "projects", "skills", "services", "cv", "contact"];
+const NAV_SECTIONS = ["about", "projects", "skills", "services", "cv", "faq", "contact"];
 
 // ── Haptic helper.
 // `navigator.vibrate` is supported on Android Chrome and ~most Android browsers.
@@ -439,6 +439,7 @@ function App() {
           <CV t={t} links={LINKS} />
         </div>
         <Process t={t} />
+        <Faq t={t} />
         {/* Pinned-overlap #2 — Trust recedes as Contact (the closing CTA) rises. */}
         <div className="pin-host" data-pin>
           <Trust t={t} />
