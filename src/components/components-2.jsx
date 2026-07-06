@@ -675,15 +675,14 @@ const BUILDER_TECH = {
 };
 
 // Maps scale → the Contact form's budget bucket index
-// (["< $1k","$1-3k","$3-7k","$7-15k","$15k+"]) plus a display range.
-// Ranges grounded in solo/early-career freelance rates for a Tashkent-based
-// developer serving UZ/CIS + remote clients (not agency pricing) — see the
-// 2026-07 pricing pass. The old scheme (mvp $2-5k / prod $8-20k / product
-// $20k+) read as agency-inflated for this profile.
+// (["< $200","$200-600","$600-1.5k","$1.5-3k","$3k+"]) plus a display range.
+// Ranges confirmed directly against the actual Uzbekistan market (client's
+// own numbers, 2026-07) — even the FIRST pricing pass (grounded in solo/
+// CIS-remote research) still read as agency-inflated for local UZ clients.
 const BUILDER_SCALE_META = {
-  mvp: { budgetIdx: 1, budget: "$1–3.5k" },
-  prod: { budgetIdx: 2, budget: "$4–9k" },
-  product: { budgetIdx: 3, budget: "$9–16k" },
+  mvp: { budgetIdx: 1, budget: "$250–1k" },
+  prod: { budgetIdx: 2, budget: "$500–2k" },
+  product: { budgetIdx: 4, budget: "$2–5k" },
 };
 
 function builderDedupe(arr) {
@@ -1109,9 +1108,9 @@ function Contact({ t, links }) {
   // also reveals the available service categories at a glance.
   const [scopeSet, setScopeSet] = useState2(() => new Set());
   // Budget slider — 5 fixed buckets so we don't ask for awkward exact numbers.
-  // Grounded in solo/early-career Tashkent-based freelance rates, not agency
-  // pricing (see BUILDER_SCALE_META above for the same 2026-07 pricing pass).
-  const BUDGET_BUCKETS = ["< $1k", "$1-3k", "$3-7k", "$7-15k", "$15k+"];
+  // Confirmed directly against the real Uzbekistan market (client's own
+  // numbers, 2026-07) — see BUILDER_SCALE_META above for the same pass.
+  const BUDGET_BUCKETS = ["< $200", "$200-600", "$600-1.5k", "$1.5-3k", "$3k+"];
   const [budgetIdx, setBudgetIdx] = useState2(1);
   // Timeline preference — small chip row for urgency, helps scoping.
   const TIMELINE_LABEL = t.contact.form.timeline || "Сроки";
