@@ -26,7 +26,7 @@ function SecHead({ num, eyebrow, title, meta, em }) {
   return (
     <header className="sec-head" data-reveal>
       <div>
-        <div className="num">{num} · {eyebrow}</div>
+        <div className="num">{num ? <>{num} · </> : null}{eyebrow}</div>
         <h2 style={{ marginTop: 14 }}>{titleNode}</h2>
       </div>
       {meta ? <div className="sec-meta">{meta}</div> : null}

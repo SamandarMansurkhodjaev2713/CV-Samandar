@@ -657,10 +657,6 @@ function Process({
   t
 }) {
   const ref = useRevealRoot([t]);
-  const cliRef = useRef2(null);
-  const cliCtrlRef = useRef2(null);
-  const pgRef = useRef2(null);
-  const pgCtrlRef = useRef2(null);
   const steps = useMemoFromComponents1(function buildSteps() {
     return t.process.steps.map(function buildStep(s, i) {
       const slug = String(s.k || "step").toLowerCase().replace(/[^a-z0-9]+/g, "-");
@@ -674,46 +670,6 @@ function Process({
       };
     });
   }, [t]);
-
-  // Mount the looping Claude Code session terminal. Re-creates on language
-  // change so sessions render in the current locale. Pauses itself when
-  // off-screen via IntersectionObserver inside the module.
-  useEffect2(function mountCli() {
-    if (!cliRef.current || !window.CliCinema) return undefined;
-    // Defensive: cli_sessions may be missing if content.js was partially
-    // updated. Module falls back to bundled English defaults in that case.
-    const sessions = t.process && Array.isArray(t.process.cli_sessions) ? t.process.cli_sessions : null;
-    cliCtrlRef.current = window.CliCinema.create(cliRef.current, sessions ? {
-      sessions: sessions
-    } : {});
-    return function () {
-      if (cliCtrlRef.current && cliCtrlRef.current.dispose) cliCtrlRef.current.dispose();
-      cliCtrlRef.current = null;
-    };
-  }, [t]);
-
-  // v61: Stack Radar — the constellation now carries SIGNAL, not noise. Nodes
-  // are the real stack technologies grouped by the six real domains; clicking a
-  // node surfaces the actual projects that use it (matched against each
-  // project's declared stack — no invented links). Data flows in from content.
-  useEffect2(function mountConstellation() {
-    if (!pgRef.current || !window.CursorConstellation) return undefined;
-    const langGuess = typeof t === "object" && t && t.lang ? t.lang : "ru";
-    pgCtrlRef.current = window.CursorConstellation.create(pgRef.current, {
-      lang: langGuess,
-      groups: t.skills && Array.isArray(t.skills.groups) ? t.skills.groups : null,
-      projects: t.projects && Array.isArray(t.projects.items) ? t.projects.items : null
-    });
-    return function () {
-      if (pgCtrlRef.current && pgCtrlRef.current.dispose) pgCtrlRef.current.dispose();
-      pgCtrlRef.current = null;
-    };
-  }, [t]);
-
-  // Localized labels (with fallbacks if cli_* keys are absent in older content).
-  const cliEyebrow = t.process && t.process.cli_eyebrow || "live";
-  const cliTitle = t.process && t.process.cli_title || "Claude Code";
-  const cliLead = t.process && t.process.cli_lead || "";
   return /*#__PURE__*/React.createElement("section", {
     "data-section": "process",
     id: "process",
@@ -754,32 +710,320 @@ function Process({
     className: "proc-terminal-prompt"
   }, "\u203A"), /*#__PURE__*/React.createElement("span", null, "READY \xB7 listening on :443"), /*#__PURE__*/React.createElement("span", {
     className: "proc-terminal-cursor"
-  }, "\u258C"))), /*#__PURE__*/React.createElement("div", {
-    className: "proc-cli-block",
-    "data-reveal": true,
-    "data-reveal-delay": "0.05"
-  }, /*#__PURE__*/React.createElement("header", {
-    className: "proc-cli-block-head"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "proc-cli-block-eyebrow mono"
-  }, cliEyebrow), /*#__PURE__*/React.createElement("h3", {
-    className: "proc-cli-block-title"
-  }, cliTitle), cliLead ? /*#__PURE__*/React.createElement("p", {
-    className: "proc-cli-block-lead"
-  }, cliLead) : null), /*#__PURE__*/React.createElement("div", {
-    className: "proc-cli-card card"
-  }, /*#__PURE__*/React.createElement("div", {
-    ref: cliRef
-  })))), /*#__PURE__*/React.createElement("div", {
-    className: "constellation-section"
+  }, "\u258C")))));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROJECT BUILDER — "Живой конструктор проекта"
+// The site's signature interactive + lead magnet. The visitor picks a project
+// TYPE and SCALE; a warm architecture blueprint assembles live (a layered
+// "system cake": client → logic → intelligence → data → infrastructure) while
+// a readout crystallizes (stack · timeline · budget). CTAs: a Telegram
+// deep-link and a handoff that pre-fills the Contact form via a window
+// CustomEvent ("sm:builder-config").
+//
+// Why a layer stack, not measured SVG connectors: every layer is a fixed slot
+// toggled by `is-active` (grid-rows 0fr→1fr collapse — the same trick the FAQ
+// and Signal accordions use), so there is ZERO DOM-coordinate math, it
+// animates smoothly, and it can never misalign on resize or font swap.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Neutral (language-independent) tech vocabulary — real tools, matched to what
+// the rest of the site already claims (see skills.groups / projects[].stack).
+const BUILDER_TECH = {
+  frontend: ["Next.js", "React", "Tailwind"],
+  telegram: ["Bot API", "Web App"],
+  triggers: ["Webhooks", "n8n", "Cron"],
+  api: ["FastAPI", "Node", "tRPC"],
+  bot: ["Node", "Python", "Queue"],
+  pipeline: ["Python", "Workers", "Queue"],
+  ai: ["Claude", "GPT-4o", "LangChain", "RAG"]
+};
+
+// Maps scale → the Contact form's budget bucket index
+// (["< $2k","$2-5k","$5-10k","$10-20k","$20k+"]) plus a display range.
+const BUILDER_SCALE_META = {
+  mvp: {
+    budgetIdx: 1,
+    budget: "$2–5k"
+  },
+  prod: {
+    budgetIdx: 3,
+    budget: "$8–20k"
+  },
+  product: {
+    budgetIdx: 4,
+    budget: "$20k+"
+  }
+};
+
+// Pure function: which layers exist + their tech, given (type, scale).
+function builderModel(typeKey, scaleKey, sub) {
+  const isAI = typeKey === "ai" || typeKey === "automation";
+  const prod = scaleKey === "prod" || scaleKey === "product";
+  const product = scaleKey === "product";
+  let clientSub, clientTech;
+  if (typeKey === "bot") {
+    clientSub = sub.telegram;
+    clientTech = BUILDER_TECH.telegram;
+  } else if (typeKey === "automation") {
+    clientSub = sub.triggers;
+    clientTech = BUILDER_TECH.triggers;
+  } else {
+    clientSub = sub.frontend;
+    clientTech = BUILDER_TECH.frontend;
+  }
+  let logicSub, logicTech;
+  if (typeKey === "bot") {
+    logicSub = sub.bot;
+    logicTech = BUILDER_TECH.bot;
+  } else if (typeKey === "automation") {
+    logicSub = sub.pipeline;
+    logicTech = BUILDER_TECH.pipeline;
+  } else {
+    logicSub = sub.api;
+    logicTech = BUILDER_TECH.api;
+  }
+  const dataTech = ["Postgres"];
+  if (prod) dataTech.push("Redis");
+  if (isAI) dataTech.push("pgvector");
+  const infraTech = ["Docker", "Deploy"];
+  if (prod) infraTech.push("Auth · RBAC", "Sentry", "GitHub Actions");
+  if (product) infraTech.push("Analytics", "CDN");
+  return [{
+    id: "client",
+    sub: clientSub,
+    tech: clientTech,
+    active: true
+  }, {
+    id: "logic",
+    sub: logicSub,
+    tech: logicTech,
+    active: true
+  }, {
+    id: "ai",
+    sub: sub.ai,
+    tech: BUILDER_TECH.ai,
+    active: isAI
+  }, {
+    id: "data",
+    sub: "",
+    tech: dataTech,
+    active: true
+  }, {
+    id: "infra",
+    sub: "",
+    tech: infraTech,
+    active: true
+  }];
+}
+
+// One representative tech per active layer, in flow order — the readout summary.
+function builderStackSummary(layers) {
+  const picks = [];
+  layers.forEach(function pick(L) {
+    if (L.active && L.tech && L.tech.length) picks.push(L.tech[0]);
+  });
+  return picks.join(" · ");
+}
+
+// Builder type → Contact scope_opts label (for chip pre-select on handoff).
+const BUILDER_SCOPE_MAP = {
+  web: "Web App / MVP",
+  ai: "AI Automation",
+  bot: "Telegram Bot",
+  automation: "AI Automation"
+};
+function ProjectBuilder({
+  t,
+  links
+}) {
+  const ref = useRevealRoot([t]);
+  const b = t.builder;
+  const [typeKey, setTypeKey] = useState2("web");
+  const [scaleKey, setScaleKey] = useState2("mvp");
+
+  // Defensive: if a content bundle predates the builder block, render nothing
+  // rather than throwing (keeps older cached content.js from white-screening).
+  if (!b) return null;
+  const layers = builderModel(typeKey, scaleKey, b.sub);
+  const scaleMeta = BUILDER_SCALE_META[scaleKey] || BUILDER_SCALE_META.mvp;
+  const stackSummary = builderStackSummary(layers);
+  const timeText = b.times && b.times[scaleKey] || "";
+  function typeLabel() {
+    const found = b.types.filter(function (x) {
+      return x.k === typeKey;
+    })[0];
+    return found ? found.label : typeKey;
+  }
+  function scaleLabel() {
+    const found = b.scales.filter(function (x) {
+      return x.k === scaleKey;
+    })[0];
+    return found ? found.label : scaleKey;
+  }
+  function summaryLine() {
+    return typeLabel() + " · " + scaleLabel() + "\n" + b.readout.stack + ": " + stackSummary + "\n" + b.readout.time + ": " + timeText + " · " + b.readout.budget + ": " + scaleMeta.budget;
+  }
+  function onHandoff() {
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      try {
+        navigator.vibrate(8);
+      } catch (err) {/* opportunistic */}
+    }
+    try {
+      window.dispatchEvent(new CustomEvent("sm:builder-config", {
+        detail: {
+          scope: BUILDER_SCOPE_MAP[typeKey],
+          budgetIdx: scaleMeta.budgetIdx,
+          summary: summaryLine()
+        }
+      }));
+    } catch (err) {/* opportunistic */}
+    const el = document.getElementById("contact");
+    if (el) el.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+  return /*#__PURE__*/React.createElement("section", {
+    id: "builder",
+    className: "builder-sec",
+    "data-enter": "assemble",
+    ref: ref
   }, /*#__PURE__*/React.createElement("div", {
     className: "shell"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "constellation-frame card",
+  }, /*#__PURE__*/React.createElement(SecHead, {
+    eyebrow: b.eyebrow,
+    title: b.title,
+    meta: "build.preview()"
+  }), /*#__PURE__*/React.createElement("p", {
+    className: "lead-line",
+    "data-reveal": true
+  }, b.lead), /*#__PURE__*/React.createElement("div", {
+    className: "builder card",
     "data-reveal": true
   }, /*#__PURE__*/React.createElement("div", {
-    ref: pgRef
-  })))));
+    className: "builder-panel"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "builder-step"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "builder-step-k mono"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "builder-step-n"
+  }, "01"), b.step1), /*#__PURE__*/React.createElement("div", {
+    className: "builder-opts builder-opts--type"
+  }, b.types.map(function renderType(o) {
+    const on = typeKey === o.k;
+    return /*#__PURE__*/React.createElement("button", {
+      key: o.k,
+      type: "button",
+      className: `builder-opt ${on ? "is-active" : ""}`,
+      "aria-pressed": on,
+      onClick: function () {
+        setTypeKey(o.k);
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "builder-opt-label"
+    }, o.label), /*#__PURE__*/React.createElement("span", {
+      className: "builder-opt-note mono"
+    }, o.note));
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "builder-step"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "builder-step-k mono"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "builder-step-n"
+  }, "02"), b.step2), /*#__PURE__*/React.createElement("div", {
+    className: "builder-opts builder-opts--scale"
+  }, b.scales.map(function renderScale(o) {
+    const on = scaleKey === o.k;
+    return /*#__PURE__*/React.createElement("button", {
+      key: o.k,
+      type: "button",
+      className: `builder-opt builder-opt--pill ${on ? "is-active" : ""}`,
+      "aria-pressed": on,
+      onClick: function () {
+        setScaleKey(o.k);
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "builder-opt-label"
+    }, o.label), /*#__PURE__*/React.createElement("span", {
+      className: "builder-opt-note mono"
+    }, o.note));
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "builder-readout",
+    "aria-live": "polite"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "builder-readout-row"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "builder-readout-k mono"
+  }, b.readout.stack), /*#__PURE__*/React.createElement("span", {
+    className: "builder-readout-v mono"
+  }, stackSummary)), /*#__PURE__*/React.createElement("div", {
+    className: "builder-readout-row"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "builder-readout-k mono"
+  }, b.readout.time), /*#__PURE__*/React.createElement("span", {
+    className: "builder-readout-v mono"
+  }, timeText)), /*#__PURE__*/React.createElement("div", {
+    className: "builder-readout-row"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "builder-readout-k mono"
+  }, b.readout.budget), /*#__PURE__*/React.createElement("span", {
+    className: "builder-readout-v mono"
+  }, scaleMeta.budget))), /*#__PURE__*/React.createElement("div", {
+    className: "builder-cta"
+  }, /*#__PURE__*/React.createElement("a", {
+    className: "btn btn-primary builder-cta-tg",
+    href: `https://${links.telegram}`,
+    target: "_blank",
+    rel: "noopener noreferrer"
+  }, /*#__PURE__*/React.createElement("span", null, b.cta_tg), /*#__PURE__*/React.createElement("span", {
+    className: "arrow"
+  }, "\u2192")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "builder-cta-alt",
+    onClick: onHandoff
+  }, b.cta_form, " ", /*#__PURE__*/React.createElement("span", {
+    className: "arrow"
+  }, "\u2192"))), /*#__PURE__*/React.createElement("div", {
+    className: "builder-hint mono"
+  }, b.hint)), /*#__PURE__*/React.createElement("div", {
+    className: "builder-stage",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "builder-spine"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "builder-spine-pulse"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "builder-layers"
+  }, layers.map(function renderLayer(L) {
+    return /*#__PURE__*/React.createElement("div", {
+      key: L.id,
+      className: `builder-layer ${L.active ? "is-active" : ""}`
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "builder-layer-inner"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "builder-layer-body"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "builder-layer-head"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "builder-layer-name mono"
+    }, b.layers[L.id]), L.sub ? /*#__PURE__*/React.createElement("span", {
+      className: "builder-layer-sub"
+    }, L.sub) : null), /*#__PURE__*/React.createElement("div", {
+      className: "builder-layer-tech"
+    }, L.tech.map(function renderChip(tch, i) {
+      return /*#__PURE__*/React.createElement("span", {
+        key: i,
+        className: "builder-chip mono",
+        style: {
+          "--ci": i
+        }
+      }, tch);
+    })))));
+  }))))));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -995,6 +1239,32 @@ function Contact({
   const TIMELINE_OPTS = t.contact.timeline_opts || ["ASAP", "1–2 недели", "1–2 месяца", "гибко"];
   const [timelineIdx, setTimelineIdx] = useState2(3);
   const BUDGET_LABEL = t.contact.form.budget || "Бюджет";
+  // Handoff target: the project builder above dispatches "sm:builder-config"
+  // when the visitor clicks "перенести в заявку" — we pre-fill the matching
+  // scope chip, budget bucket, and drop a summary into the message field so
+  // they land on a form that already understands their build.
+  const msgRef = useRef2(null);
+  useEffect2(function builderHandoff() {
+    function onConfig(e) {
+      const d = e && e.detail;
+      if (!d) return;
+      if (d.scope) setScopeSet(new Set([d.scope]));
+      if (typeof d.budgetIdx === "number") setBudgetIdx(d.budgetIdx);
+      if (d.summary && msgRef.current) {
+        msgRef.current.value = d.summary;
+        // nudge the reveal/validation state so the filled field looks alive
+        try {
+          msgRef.current.dispatchEvent(new Event("input", {
+            bubbles: true
+          }));
+        } catch (err) {/* opportunistic */}
+      }
+    }
+    window.addEventListener("sm:builder-config", onConfig);
+    return function () {
+      window.removeEventListener("sm:builder-config", onConfig);
+    };
+  }, []);
   function toggleScope(v) {
     setScopeSet(function (prev) {
       const next = new Set(prev);
@@ -1203,6 +1473,7 @@ function Contact({
   }, /*#__PURE__*/React.createElement("span", {
     className: "ff-k mono"
   }, t.contact.form.msg), /*#__PURE__*/React.createElement("textarea", {
+    ref: msgRef,
     name: "message",
     required: true,
     rows: "4",
@@ -1290,6 +1561,7 @@ Object.assign(window, {
   Services,
   CV,
   Process,
+  ProjectBuilder,
   Trust,
   Contact,
   Footer

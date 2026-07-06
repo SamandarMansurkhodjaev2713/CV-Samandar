@@ -38,7 +38,7 @@ function SecHead({
     "data-reveal": true
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     className: "num"
-  }, num, " \xB7 ", eyebrow), /*#__PURE__*/React.createElement("h2", {
+  }, num ? /*#__PURE__*/React.createElement(React.Fragment, null, num, " \xB7 ") : null, eyebrow), /*#__PURE__*/React.createElement("h2", {
     style: {
       marginTop: 14
     }

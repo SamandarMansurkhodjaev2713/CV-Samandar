@@ -614,6 +614,9 @@ function App() {
     links: LINKS
   })), /*#__PURE__*/React.createElement(Process, {
     t: t
+  }), /*#__PURE__*/React.createElement(ProjectBuilder, {
+    t: t,
+    links: LINKS
   }), /*#__PURE__*/React.createElement(Faq, {
     t: t
   }), /*#__PURE__*/React.createElement("div", {

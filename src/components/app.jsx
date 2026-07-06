@@ -439,6 +439,10 @@ function App() {
           <CV t={t} links={LINKS} />
         </div>
         <Process t={t} />
+        {/* Signature interactive — "Живой конструктор проекта". Standalone band
+            between Process and FAQ (no data-section, so it stays out of the nav /
+            scroll-spy). Replaces the old CLI cinema + cursor constellation. */}
+        <ProjectBuilder t={t} links={LINKS} />
         <Faq t={t} />
         {/* Pinned-overlap #2 — Trust recedes as Contact (the closing CTA) rises. */}
         <div className="pin-host" data-pin>
