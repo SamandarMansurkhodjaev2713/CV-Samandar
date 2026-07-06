@@ -2324,6 +2324,7 @@ html[data-motion-lite] .faq-row-icon-v { transition: none; }
   display: flex;
   flex-direction: column;
   gap: 18px;
+  min-width: 0; /* grid item default min-width:auto blows past the 1fr mobile track otherwise */
 }
 .ff {
   display: flex; flex-direction: column; gap: 8px;
@@ -2332,7 +2333,7 @@ html[data-motion-lite] .faq-row-icon-v { transition: none; }
   font-size: 10px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--text-mute);
+  color: var(--text-dim); /* --text-mute reads ~2.8:1 here — too faint for a field label you must read */
 }
 .ff-input {
   background: rgba(7,9,11,.4);
@@ -2498,7 +2499,7 @@ html[data-motion-lite] .faq-row-icon-v { transition: none; }
   margin-top: 14px;
   font-size: 10.5px;
   letter-spacing: 0.08em;
-  color: var(--text-mute);
+  color: var(--text-dim); /* budget brackets must stay legible — --text-mute was ~2.8:1 */
   font-family: var(--f-mono);
 }
 .ff-range-tick { text-align: center; transition: color var(--d-fast), transform var(--d-fast); }
@@ -2513,6 +2514,7 @@ html[data-motion-lite] .faq-row-icon-v { transition: none; }
 
 .contact-side {
   display: flex; flex-direction: column; gap: 16px;
+  min-width: 0; /* sibling grid item sharing the mobile 1fr track with .contact-form */
 }
 .contact-deploy {
   background: linear-gradient(180deg, rgba(20,24,28,.6), rgba(11,14,17,.6));
@@ -2541,7 +2543,7 @@ html[data-motion-lite] .faq-row-icon-v { transition: none; }
 .contact-link:last-child { border-bottom: 0; }
 .contact-link:hover { background: rgba(var(--accent-rgb) / 0.04); color: var(--accent); }
 .contact-link-k { color: var(--text-mute); font-size: 11px; letter-spacing: .14em; }
-.contact-link-v { font-family: var(--f-mono); font-size: 13px; }
+.contact-link-v { font-family: var(--f-mono); font-size: 13px; min-width: 0; overflow-wrap: anywhere; }
 
 .contact-signal {
   background: linear-gradient(180deg, rgba(var(--accent-rgb) / 0.04), transparent);

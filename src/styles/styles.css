@@ -267,7 +267,13 @@ section[data-section] {
   padding: var(--gap-section) 0;
   z-index: 2;
 }
-section[data-section]:first-of-type { padding-top: 0; }
+/* :first-of-type is scoped per DOM parent, not per-page — About/Services/Trust
+   each happen to be the first <section> child of THEIR OWN wrapper (Hero's
+   pin-host div sits before About in <main>; Services/Trust are each the first
+   section inside their own pin-host div), so the old :first-of-type selector
+   silently zeroed their top padding too. Target hero explicitly instead — it's
+   the only section that should ever lose its top gap. */
+section[data-section="hero"] { padding-top: 0; }
 
 /* — Nav — */
 .nav {
