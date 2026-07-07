@@ -652,9 +652,20 @@
   background: var(--accent, #D97757);
   border-radius: 2px;
   transform-origin: left;
-  animation: barIn 1.2s cubic-bezier(.2,.7,.2,1) both;
+  /* Default = shown full. The sweep is triggered only when the CV section
+     scrolls into view (#cv.sec-in below) — the mount animation used to finish
+     off-screen long before anyone reached it, wasting the payoff. Defaulting
+     to full (not empty) means a graceful fallback if .sec-in never fires
+     (e.g. IO-less webviews): bars just appear, never stuck at zero. */
 }
+/* Staggered sweep, left-to-right, as the résumé arrives. */
+#cv.sec-in .cv-langs .cv-lang:nth-child(1) .cv-lang-bar-fill { animation: barIn 1s cubic-bezier(.2,.7,.2,1) .05s both; }
+#cv.sec-in .cv-langs .cv-lang:nth-child(2) .cv-lang-bar-fill { animation: barIn 1s cubic-bezier(.2,.7,.2,1) .18s both; }
+#cv.sec-in .cv-langs .cv-lang:nth-child(3) .cv-lang-bar-fill { animation: barIn 1s cubic-bezier(.2,.7,.2,1) .31s both; }
 @keyframes barIn { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) {
+  #cv.sec-in .cv-langs .cv-lang .cv-lang-bar-fill { animation: none; }
+}
 .cv-lang-lvl { font-size: 10.5px; color: rgba(244,241,234,0.5); letter-spacing: 0.06em; text-align: right; }
 
 .cv-doc-foot {

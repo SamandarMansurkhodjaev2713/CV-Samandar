@@ -165,19 +165,27 @@
   const SHAPE_PULSE_OVERSHOOT = 0.25;   // 1.0 → 1.25 → 1.0
 
   // ── Section hue shifts (additive, in [-1..1] per channel) ──────────────
+  // A deliberate TEMPERATURE JOURNEY: the background runs coolest at the hero
+  // and warms as you descend, landing warmest+brightest at contact — the
+  // "instruments warming up" arc (Interstellar/Dune). Analytical sections
+  // (skills radar, cv document, process) dip slightly cooler so the human /
+  // commercial ones (projects, trust, contact) read warmer by contrast. More
+  // R and less B = warmer; the reverse = cooler. Deltas kept ~2× the old
+  // (near-imperceptible) table — enough to feel, not a disco color-cycle.
   const HUE_SHIFTS_BY_SECTION = {
-    hero:     { r:  0.00, g:  0.00, b:  0.00 },
-    signal:   { r: -0.05, g:  0.02, b:  0.05 },
-    about:    { r:  0.02, g:  0.04, b:  0.00 },
-    projects: { r:  0.06, g: -0.02, b: -0.04 },
-    skills:   { r: -0.04, g:  0.06, b:  0.08 },
-    services: { r:  0.04, g:  0.00, b: -0.06 },
-    cv:       { r:  0.02, g:  0.06, b:  0.02 },
-    process:  { r:  0.00, g:  0.00, b:  0.10 },
-    trust:    { r:  0.06, g:  0.02, b:  0.00 },
-    contact:  { r:  0.08, g: -0.04, b: -0.06 },
+    hero:     { r: -0.04, g:  0.00, b:  0.05 },  // coolest — the start
+    signal:   { r: -0.02, g:  0.01, b:  0.03 },
+    about:    { r:  0.03, g:  0.02, b: -0.01 },
+    projects: { r:  0.08, g:  0.00, b: -0.05 },  // warm — the heart
+    skills:   { r: -0.03, g:  0.03, b:  0.05 },  // dip cooler — analytical radar
+    services: { r:  0.06, g:  0.00, b: -0.05 },
+    cv:       { r: -0.02, g:  0.03, b:  0.04 },  // dip cooler — the document
+    process:  { r:  0.00, g:  0.01, b:  0.02 },
+    faq:      { r:  0.05, g:  0.00, b: -0.03 },  // warming back up
+    trust:    { r:  0.10, g:  0.01, b: -0.06 },
+    contact:  { r:  0.14, g: -0.03, b: -0.10 },  // warmest + brightest — destination
   };
-  const HUE_LERP = 0.04;
+  const HUE_LERP = 0.03; // slightly slower so the wider deltas still crossfade (no per-section flash)
   const MEDIA_REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 
   // ── Pre-validated reduced-motion fallback opacity ──────────────────────
