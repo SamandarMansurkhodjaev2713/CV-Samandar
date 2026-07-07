@@ -117,6 +117,11 @@ function Nav({ t, lang, setLang, active }) {
               <button key={L} onClick={() => setLang(L)} className={lang === L ? "active" : ""} aria-pressed={lang === L}>{L.toUpperCase()}</button>
             ))}
           </div>
+          {/* Persistent primary CTA — always one click from a conversation. */}
+          <a href="#contact" className="nav-cta" data-cursor="send" data-cursor-label="send → contact">
+            <span className="nav-cta-dot" aria-hidden="true" />
+            {t.hero.cta_primary}
+          </a>
           <button
             type="button"
             className="nav-burger"
@@ -143,6 +148,10 @@ function Nav({ t, lang, setLang, active }) {
           ))}
         </ul>
         <div className="nav-drawer-foot">
+          <a href="#contact" className="nav-drawer-cta" onClick={() => setOpen(false)}>
+            {t.hero.cta_primary}
+            <span className="arrow">→</span>
+          </a>
           <div className="nav-drawer-meta mono">EXECUTIVE AI CODE LAB · v.2026</div>
         </div>
       </div>

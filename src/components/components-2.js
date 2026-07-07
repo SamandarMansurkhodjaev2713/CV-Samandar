@@ -1719,33 +1719,86 @@ function Footer({
   t,
   links
 }) {
+  const f = t.footer || {};
+  const navKeys = ["about", "projects", "skills", "services", "cv", "faq", "contact"];
+  const contacts = [{
+    k: "GitHub",
+    v: links.github,
+    href: `https://${links.github}`
+  }, {
+    k: "Telegram",
+    v: links.telegram,
+    href: `https://${links.telegram}`
+  }, {
+    k: "Email",
+    v: links.email,
+    href: `mailto:${links.email}`
+  }];
   return /*#__PURE__*/React.createElement("footer", {
     className: "site-footer"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "shell footer-inner"
+    className: "shell footer-grid"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "footer-l"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "brand"
+    className: "footer-brand"
+  }, /*#__PURE__*/React.createElement("a", {
+    href: "#hero",
+    className: "brand",
+    "data-cursor": "link",
+    "data-cursor-label": "\u2191 top"
   }, /*#__PURE__*/React.createElement("span", {
     className: "brand-mark"
-  }), /*#__PURE__*/React.createElement("span", null, "SAMANDAR \xB7 EXEC.AI.LAB")), /*#__PURE__*/React.createElement("div", {
-    className: "mono footer-copy"
-  }, t.footer.copy)), /*#__PURE__*/React.createElement("div", {
-    className: "footer-r mono"
-  }, /*#__PURE__*/React.createElement("div", null, t.footer.built), /*#__PURE__*/React.createElement("div", {
-    className: "footer-links"
+  }), /*#__PURE__*/React.createElement("span", null, "SAMANDAR", /*#__PURE__*/React.createElement("span", {
+    className: "brand-sub"
+  }, " \xB7 EXEC.AI.LAB"))), f.tagline ? /*#__PURE__*/React.createElement("p", {
+    className: "footer-tagline"
+  }, f.tagline) : null, /*#__PURE__*/React.createElement("a", {
+    href: "#contact",
+    className: "footer-cta",
+    "data-cursor": "send",
+    "data-cursor-label": "send \u2192 contact"
+  }, t.hero.cta_primary, /*#__PURE__*/React.createElement("span", {
+    className: "arrow"
+  }, "\u2192"))), /*#__PURE__*/React.createElement("nav", {
+    className: "footer-col",
+    "aria-label": f.nav_title || "Navigation"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "footer-col-h mono"
+  }, f.nav_title), /*#__PURE__*/React.createElement("ul", {
+    className: "footer-col-list"
+  }, navKeys.map(k => /*#__PURE__*/React.createElement("li", {
+    key: k
   }, /*#__PURE__*/React.createElement("a", {
-    href: `https://${links.github}`,
-    target: "_blank",
-    rel: "noopener noreferrer"
-  }, "github"), /*#__PURE__*/React.createElement("span", null, "\xB7"), /*#__PURE__*/React.createElement("a", {
-    href: `https://${links.telegram}`,
-    target: "_blank",
-    rel: "noopener noreferrer"
-  }, "telegram"), /*#__PURE__*/React.createElement("span", null, "\xB7"), /*#__PURE__*/React.createElement("a", {
-    href: `mailto:${links.email}`
-  }, "email")))));
+    href: `#${k}`
+  }, t.nav[k]))))), /*#__PURE__*/React.createElement("div", {
+    className: "footer-col"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "footer-col-h mono"
+  }, f.contacts_title), /*#__PURE__*/React.createElement("ul", {
+    className: "footer-col-list"
+  }, contacts.map((c, i) => /*#__PURE__*/React.createElement("li", {
+    key: i
+  }, /*#__PURE__*/React.createElement("a", {
+    href: c.href,
+    target: c.k === "Email" ? undefined : "_blank",
+    rel: c.k === "Email" ? undefined : "noopener noreferrer",
+    className: "footer-contact"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "footer-contact-k mono"
+  }, c.k), /*#__PURE__*/React.createElement("span", {
+    className: "footer-contact-v"
+  }, c.v)))))), /*#__PURE__*/React.createElement("div", {
+    className: "footer-col"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "footer-col-h mono"
+  }, f.meta_title), /*#__PURE__*/React.createElement("ul", {
+    className: "footer-col-list footer-meta mono"
+  }, (f.meta || []).map((m, i) => /*#__PURE__*/React.createElement("li", {
+    key: i
+  }, m))))), /*#__PURE__*/React.createElement("div", {
+    className: "shell footer-base mono"
+  }, /*#__PURE__*/React.createElement("span", null, f.copy), /*#__PURE__*/React.createElement("span", {
+    className: "footer-base-built"
+  }, f.built)));
 }
 Object.assign(window, {
   Services,

@@ -173,7 +173,15 @@ function Nav({
     onClick: () => setLang(L),
     className: lang === L ? "active" : "",
     "aria-pressed": lang === L
-  }, L.toUpperCase()))), /*#__PURE__*/React.createElement("button", {
+  }, L.toUpperCase()))), /*#__PURE__*/React.createElement("a", {
+    href: "#contact",
+    className: "nav-cta",
+    "data-cursor": "send",
+    "data-cursor-label": "send \u2192 contact"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "nav-cta-dot",
+    "aria-hidden": "true"
+  }), t.hero.cta_primary), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "nav-burger",
     "aria-label": open ? "Close menu" : "Open menu",
@@ -202,7 +210,13 @@ function Nav({
     className: "nav-drawer-arrow"
   }, "\u2192"))))), /*#__PURE__*/React.createElement("div", {
     className: "nav-drawer-foot"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("a", {
+    href: "#contact",
+    className: "nav-drawer-cta",
+    onClick: () => setOpen(false)
+  }, t.hero.cta_primary, /*#__PURE__*/React.createElement("span", {
+    className: "arrow"
+  }, "\u2192")), /*#__PURE__*/React.createElement("div", {
     className: "nav-drawer-meta mono"
   }, "EXECUTIVE AI CODE LAB \xB7 v.2026"))));
 }

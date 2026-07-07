@@ -489,6 +489,11 @@ const CONTENT = {
     footer: {
       copy: "© 2026 — Executive AI Code Lab",
       built: "собрано на TypeScript, Three.js, React",
+      tagline: "От идеи до продукта — один инженер, полный цикл.",
+      nav_title: "Навигация",
+      contacts_title: "Контакты",
+      meta_title: "Инфо",
+      meta: ["Ташкент · UTC+5", "Ответ < 24 часов", "RU · UZ · EN (базовый)"],
     },
   },
 
@@ -961,7 +966,15 @@ const CONTENT = {
         { k: "Email", v: "sam4k27@gmail.com" },
       ],
     },
-    footer: { copy: "© 2026 — Executive AI Code Lab", built: "built on TypeScript, Three.js, React" },
+    footer: {
+      copy: "© 2026 — Executive AI Code Lab",
+      built: "built on TypeScript, Three.js, React",
+      tagline: "From idea to product — one engineer, full cycle.",
+      nav_title: "Navigation",
+      contacts_title: "Contacts",
+      meta_title: "Info",
+      meta: ["Tashkent · UTC+5", "Reply < 24 hours", "RU · UZ · EN (basic)"],
+    },
   },
 
   uz: {
@@ -1433,7 +1446,15 @@ const CONTENT = {
         { k: "Email", v: "sam4k27@gmail.com" },
       ],
     },
-    footer: { copy: "© 2026 — Executive AI Code Lab", built: "TypeScript, Three.js, React asosida" },
+    footer: {
+      copy: "© 2026 — Executive AI Code Lab",
+      built: "TypeScript, Three.js, React asosida",
+      tagline: "G'oyadan mahsulotgacha — bitta muhandis, to'liq tsikl.",
+      nav_title: "Navigatsiya",
+      contacts_title: "Kontaktlar",
+      meta_title: "Ma'lumot",
+      meta: ["Toshkent · UTC+5", "Javob < 24 soat", "RU · UZ · EN (boshlang'ich)"],
+    },
   },
 };
 

@@ -1454,23 +1454,71 @@ function Contact({ t, links }) {
 // FOOTER
 // ─────────────────────────────────────────────────────────────────────────────
 function Footer({ t, links }) {
+  const f = t.footer || {};
+  const navKeys = ["about", "projects", "skills", "services", "cv", "faq", "contact"];
+  const contacts = [
+    { k: "GitHub", v: links.github, href: `https://${links.github}` },
+    { k: "Telegram", v: links.telegram, href: `https://${links.telegram}` },
+    { k: "Email", v: links.email, href: `mailto:${links.email}` },
+  ];
   return (
     <footer className="site-footer">
-      <div className="shell footer-inner">
-        <div className="footer-l">
-          <div className="brand"><span className="brand-mark" /><span>SAMANDAR · EXEC.AI.LAB</span></div>
-          <div className="mono footer-copy">{t.footer.copy}</div>
+      <div className="shell footer-grid">
+        {/* Brand + closing CTA */}
+        <div className="footer-brand">
+          <a href="#hero" className="brand" data-cursor="link" data-cursor-label="↑ top">
+            <span className="brand-mark" />
+            <span>SAMANDAR<span className="brand-sub"> · EXEC.AI.LAB</span></span>
+          </a>
+          {f.tagline ? <p className="footer-tagline">{f.tagline}</p> : null}
+          <a href="#contact" className="footer-cta" data-cursor="send" data-cursor-label="send → contact">
+            {t.hero.cta_primary}
+            <span className="arrow">→</span>
+          </a>
         </div>
-        <div className="footer-r mono">
-          <div>{t.footer.built}</div>
-          <div className="footer-links">
-            <a href={`https://${links.github}`} target="_blank" rel="noopener noreferrer">github</a>
-            <span>·</span>
-            <a href={`https://${links.telegram}`} target="_blank" rel="noopener noreferrer">telegram</a>
-            <span>·</span>
-            <a href={`mailto:${links.email}`}>email</a>
-          </div>
+
+        {/* Navigation */}
+        <nav className="footer-col" aria-label={f.nav_title || "Navigation"}>
+          <div className="footer-col-h mono">{f.nav_title}</div>
+          <ul className="footer-col-list">
+            {navKeys.map((k) => (
+              <li key={k}><a href={`#${k}`}>{t.nav[k]}</a></li>
+            ))}
+          </ul>
+        </nav>
+
+        {/* Contacts */}
+        <div className="footer-col">
+          <div className="footer-col-h mono">{f.contacts_title}</div>
+          <ul className="footer-col-list">
+            {contacts.map((c, i) => (
+              <li key={i}>
+                <a
+                  href={c.href}
+                  target={c.k === "Email" ? undefined : "_blank"}
+                  rel={c.k === "Email" ? undefined : "noopener noreferrer"}
+                  className="footer-contact"
+                >
+                  <span className="footer-contact-k mono">{c.k}</span>
+                  <span className="footer-contact-v">{c.v}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
+
+        {/* Meta */}
+        <div className="footer-col">
+          <div className="footer-col-h mono">{f.meta_title}</div>
+          <ul className="footer-col-list footer-meta mono">
+            {(f.meta || []).map((m, i) => <li key={i}>{m}</li>)}
+          </ul>
+        </div>
+      </div>
+
+      <div className="shell footer-base mono">
+        <span>{f.copy}</span>
+        <span className="footer-base-built">{f.built}</span>
       </div>
     </footer>
   );

@@ -350,6 +350,21 @@ section[data-section="hero"] { padding-top: 0; }
 .nav-links a.active { color: var(--accent); }
 .nav-right { display: flex; align-items: center; gap: 14px; }
 
+/* Persistent primary CTA — always visible in the nav on desktop (mobile uses
+   the drawer CTA + sticky CTA instead). */
+.nav-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px; border-radius: 999px;
+  background: var(--accent); color: var(--bg-0, #1F1E1B);
+  font-family: var(--f-body); font-size: 12.5px; font-weight: 600; letter-spacing: 0.01em;
+  text-decoration: none; white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(var(--accent-rgb) / 0.28);
+  transition: transform var(--d-fast), box-shadow var(--d-fast);
+}
+.nav-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(var(--accent-rgb) / 0.44); }
+.nav-cta-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--bg-0, #1F1E1B); opacity: 0.5; }
+@media (max-width: 900px) { .nav-cta { display: none; } }
+
 /* — Language switcher — */
 .lang {
   display: flex;
@@ -745,6 +760,15 @@ body.cursor-hover .cursor-dot { opacity: 0; }
   opacity: 1; transform: translateX(0);
 }
 .nav-drawer-foot { padding-top: 24px; border-top: 1px solid var(--line); }
+.nav-drawer-cta {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 24px; border-radius: 999px; margin-bottom: 22px;
+  background: var(--accent); color: var(--bg-0, #1F1E1B);
+  font-size: 15px; font-weight: 600; text-decoration: none;
+  box-shadow: 0 6px 22px rgba(var(--accent-rgb) / 0.32);
+}
+.nav-drawer-cta .arrow { transition: transform var(--d-fast); }
+.nav-drawer-cta:active .arrow { transform: translateX(4px); }
 .nav-drawer-meta {
   font-size: 10.5px;
   letter-spacing: 0.18em;
