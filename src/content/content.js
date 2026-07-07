@@ -222,6 +222,27 @@ const CONTENT = {
       edu: [
         { y: "2028", k: "Бакалавр Software Engineering · IT Park University (3 курс)" },
       ],
+      readme: {
+        intro: "Фулстек-разработчик, AI Automation Developer и промпт-инженер. Учусь на 3 курсе Software Engineering в IT Park University и параллельно строю реальные продукты: веб-платформы, Telegram-ботов, AI-автоматизации, внутренние системы и админ-панели.",
+        intro2: "Сильная сторона — соединять разработку, продуктовый подход и бизнес-логику. Не просто пишу код по задаче, а разбираюсь, какую проблему решает продукт, где сломается процесс и как быстрее запустить рабочую версию.",
+        build_title: "что я умею",
+        build: [
+          "Фулстек — frontend, backend, БД, авторизация, API, админки, dashboards, интеграции, деплой",
+          "Backend и архитектура — бизнес-логика, REST, очереди, роли и доступы, файловые системы, Docker",
+          "AI и автоматизация — OpenAI/Claude API, RAG, структурированные ответы, AI-воркеры, Telegram-воркфлоу",
+          "Промпт-инженерия — системные инструкции, снижение галлюцинаций, контроль качества",
+          "Telegram-боты — задачи, напоминания, обработка голоса, статусы, автоматизация",
+          "Продукт и UI/UX — разобраться в задаче, собрать MVP, продумать путь пользователя",
+        ],
+        avail_title: "формат работы",
+        avail: "Открыт к full-time, стажировкам, freelance и продуктовым коллаборациям. Сильнее всего там, где важны скорость, инженерная аккуратность и умение довести идею до результата.",
+        proof_title: "живые доказательства",
+        proof: [
+          { k: "klawis.uz", v: "Legal AI · RAG · источники", url: "https://klawis.uz" },
+          { k: "softlylove.uz", v: "продукт для пар · live", url: "https://softlylove.uz" },
+          { k: "github", v: "публичный код + CI", url: "https://github.com/SamandarMansurkhodjaev2713" },
+        ],
+      },
     },
     process: {
       eyebrow: "Method",
@@ -625,6 +646,27 @@ const CONTENT = {
       edu: [
         { y: "2028", k: "BSc Software Engineering · IT Park University (3rd year)" },
       ],
+      readme: {
+        intro: "Full-stack developer, AI Automation Developer and prompt engineer. A 3rd-year Software Engineering student at IT Park University, building real products in parallel: web platforms, Telegram bots, AI automations, internal systems and admin panels.",
+        intro2: "My strength is connecting engineering, product thinking and business logic. I don't just write code to spec — I work out what problem the product solves, where the process breaks, and how to ship a working version faster.",
+        build_title: "what I do",
+        build: [
+          "Full-stack — frontend, backend, DB, auth, API, admin panels, dashboards, integrations, deploy",
+          "Backend & architecture — business logic, REST, queues, roles & access, file systems, Docker",
+          "AI & automation — OpenAI/Claude API, RAG, structured outputs, AI workers, Telegram workflows",
+          "Prompt engineering — system instructions, hallucination control, output quality",
+          "Telegram bots — tasks, reminders, voice handling, statuses, process automation",
+          "Product & UI/UX — grasp the task, ship an MVP, design the user journey",
+        ],
+        avail_title: "availability",
+        avail: "Open to full-time, internships, freelance and product collaborations. Strongest where speed, engineering care and getting an idea to a result matter.",
+        proof_title: "live proof",
+        proof: [
+          { k: "klawis.uz", v: "Legal AI · RAG · sources", url: "https://klawis.uz" },
+          { k: "softlylove.uz", v: "product for couples · live", url: "https://softlylove.uz" },
+          { k: "github", v: "public code + CI", url: "https://github.com/SamandarMansurkhodjaev2713" },
+        ],
+      },
     },
     process: {
       eyebrow: "Method",
@@ -1021,6 +1063,27 @@ const CONTENT = {
       edu: [
         { y: "2028", k: "Software Engineering bakalavriati · IT Park University (3-kurs)" },
       ],
+      readme: {
+        intro: "Fulstek-dasturchi, AI Automation Developer va prompt-muhandis. IT Park University'da Software Engineering 3-kursida o'qiyman va parallel ravishda real mahsulotlar quraman: veb-platformalar, Telegram-botlar, AI-avtomatlashtirishlar, ichki tizimlar va admin-panellar.",
+        intro2: "Kuchli tomonim — dasturlash, mahsulot yondashuvi va biznes-mantiqni birlashtirish. Shunchaki vazifa bo'yicha kod yozmayman, balki mahsulot qanday muammoni yechishini va ishchi versiyani tezroq qanday ishga tushirishni tushunaman.",
+        build_title: "nima qila olaman",
+        build: [
+          "Fulstek — frontend, backend, DB, avtorizatsiya, API, admin-panel, dashboard, integratsiya, deploy",
+          "Backend va arxitektura — biznes-mantiq, REST, navbatlar, rollar va kirish, fayl tizimlari, Docker",
+          "AI va avtomatlashtirish — OpenAI/Claude API, RAG, strukturaviy javoblar, AI-worker, Telegram-workflow",
+          "Prompt-muhandislik — tizim ko'rsatmalari, gallyutsinatsiyani kamaytirish, sifat nazorati",
+          "Telegram-botlar — vazifalar, eslatmalar, ovoz bilan ishlash, statuslar, avtomatlashtirish",
+          "Mahsulot va UI/UX — vazifani tushunish, MVP yig'ish, foydalanuvchi yo'lini o'ylash",
+        ],
+        avail_title: "ish formati",
+        avail: "Full-time, amaliyot, freelance va mahsulot hamkorliklariga ochiqman. Eng kuchli — tezlik, muhandislik aniqligi va g'oyani natijaga yetkazish muhim bo'lgan joyda.",
+        proof_title: "jonli isbot",
+        proof: [
+          { k: "klawis.uz", v: "Legal AI · RAG · manbalar", url: "https://klawis.uz" },
+          { k: "softlylove.uz", v: "juftliklar uchun mahsulot · live", url: "https://softlylove.uz" },
+          { k: "github", v: "ochiq kod + CI", url: "https://github.com/SamandarMansurkhodjaev2713" },
+        ],
+      },
     },
     process: {
       eyebrow: "Metod",

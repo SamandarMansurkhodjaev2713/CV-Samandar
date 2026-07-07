@@ -240,9 +240,62 @@ function Services({ t }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // CV — Resume document (proper, printable, mobile-friendly)
 // ─────────────────────────────────────────────────────────────────────────────
+// readme.md view — real GitHub-profile info (bio, breadth, availability, live
+// proof), rendered as a rendered-markdown-style doc. Additive to the CV: it
+// carries the "who + how I think + what I build across domains" that the
+// timeline (roles/dates) doesn't.
+function CvReadme({ r }) {
+  if (!r || !r.intro) return null;
+  const build = Array.isArray(r.build) ? r.build : [];
+  const proof = Array.isArray(r.proof) ? r.proof : [];
+  return (
+    <div className="cv-readme" data-reveal>
+      <p className="cv-readme-p">{r.intro}</p>
+      {r.intro2 ? <p className="cv-readme-p">{r.intro2}</p> : null}
+
+      {build.length ? (
+        <>
+          <h4 className="cv-block-h mono">{r.build_title}</h4>
+          <ul className="cv-readme-list">
+            {build.map((b, i) => (
+              <li key={i}><span className="cv-bullet-mark" aria-hidden="true">›</span>{b}</li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+
+      {proof.length ? (
+        <>
+          <h4 className="cv-block-h mono">{r.proof_title}</h4>
+          <div className="cv-readme-proof">
+            {proof.map((p, i) => (
+              <a key={i} className="cv-readme-proof-row" href={p.url || "#"} target="_blank" rel="noopener noreferrer" data-cursor="link" data-cursor-label={`open: ${p.k}`}>
+                <span className="mono cv-readme-proof-k">{p.k}</span>
+                <span className="cv-readme-proof-v">{p.v}</span>
+                <span className="arrow">↗</span>
+              </a>
+            ))}
+          </div>
+        </>
+      ) : null}
+
+      {r.avail ? (
+        <>
+          <h4 className="cv-block-h mono">{r.avail_title}</h4>
+          <p className="cv-readme-p">{r.avail}</p>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
 function CV({ t, links }) {
   const ref = useRevealRoot([t]);
   const [openIdx, setOpenIdx] = useState2(0);
+  // Which document view is showing: the résumé ("cv") or the GitHub readme.
+  const [docTab, setDocTab] = useState2("cv");
+  const hasReadme = !!(t.cv && t.cv.readme && t.cv.readme.intro);
+  const showReadme = hasReadme && docTab === "readme";
   // Roles are an accordion: only one open at a time normally. For print we
   // force ALL open so the printed PDF shows the full timeline, then restore
   // the user's previous state after the print dialog closes.
@@ -250,6 +303,7 @@ function CV({ t, links }) {
 
   function onPrint() {
     restoreOpenIdx.current = openIdx;
+    setDocTab("cv"); // the printed PDF is the résumé, never the readme view
     setOpenIdx(-2); // sentinel: "all open" (any non-numeric index that isn't matched)
     // Use a microtask + rAF so React commits the open-state change before
     // the synchronous window.print() blocks the main thread.
@@ -287,9 +341,32 @@ function CV({ t, links }) {
         <article className="cv-doc" data-reveal>
           {/* Doc chrome */}
           <header className="cv-doc-head">
-            <div className="cv-doc-tabs mono" aria-hidden="true">
-              <span className="cv-doc-tab is-active">samandar.cv</span>
-              <span className="cv-doc-tab">readme.md</span>
+            {/* Segmented toggle — clicking switches the document view. The
+                pill-with-highlighted-segment shape reads as switchable on
+                sight; hover + cursor reinforce it. */}
+            <div className="cv-doc-tabs mono" role="tablist" aria-label="document view">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={!showReadme}
+                className={`cv-doc-tab ${!showReadme ? "is-active" : ""}`}
+                onClick={() => setDocTab("cv")}
+                data-cursor="link"
+              >
+                samandar.cv
+              </button>
+              {hasReadme ? (
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={showReadme}
+                  className={`cv-doc-tab ${showReadme ? "is-active" : ""}`}
+                  onClick={() => setDocTab("readme")}
+                  data-cursor="link"
+                >
+                  readme.md
+                </button>
+              ) : null}
             </div>
             <div className="cv-doc-actions mono">
               <button className="cv-action" type="button" onClick={onPrint} data-cursor="link" data-cursor-label="print / pdf">
@@ -327,7 +404,10 @@ function CV({ t, links }) {
             </dl>
           </div>
 
-          {/* Two-column body */}
+          {/* Body: the two-column résumé (samandar.cv) OR the readme.md view */}
+          {showReadme ? (
+            <CvReadme r={t.cv.readme} />
+          ) : (
           <div className="cv-doc-body">
             <main className="cv-main">
               <h4 className="cv-block-h mono">{t.cv.exp_title || "experience"}</h4>
@@ -414,6 +494,7 @@ function CV({ t, links }) {
               ) : null}
             </aside>
           </div>
+          )}
 
           <footer className="cv-doc-foot mono">
             <span>— end of file —</span>

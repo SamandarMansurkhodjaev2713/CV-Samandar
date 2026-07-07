@@ -267,18 +267,73 @@ function Services({
 // ─────────────────────────────────────────────────────────────────────────────
 // CV — Resume document (proper, printable, mobile-friendly)
 // ─────────────────────────────────────────────────────────────────────────────
+// readme.md view — real GitHub-profile info (bio, breadth, availability, live
+// proof), rendered as a rendered-markdown-style doc. Additive to the CV: it
+// carries the "who + how I think + what I build across domains" that the
+// timeline (roles/dates) doesn't.
+function CvReadme({
+  r
+}) {
+  if (!r || !r.intro) return null;
+  const build = Array.isArray(r.build) ? r.build : [];
+  const proof = Array.isArray(r.proof) ? r.proof : [];
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cv-readme",
+    "data-reveal": true
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "cv-readme-p"
+  }, r.intro), r.intro2 ? /*#__PURE__*/React.createElement("p", {
+    className: "cv-readme-p"
+  }, r.intro2) : null, build.length ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h4", {
+    className: "cv-block-h mono"
+  }, r.build_title), /*#__PURE__*/React.createElement("ul", {
+    className: "cv-readme-list"
+  }, build.map((b, i) => /*#__PURE__*/React.createElement("li", {
+    key: i
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cv-bullet-mark",
+    "aria-hidden": "true"
+  }, "\u203A"), b)))) : null, proof.length ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h4", {
+    className: "cv-block-h mono"
+  }, r.proof_title), /*#__PURE__*/React.createElement("div", {
+    className: "cv-readme-proof"
+  }, proof.map((p, i) => /*#__PURE__*/React.createElement("a", {
+    key: i,
+    className: "cv-readme-proof-row",
+    href: p.url || "#",
+    target: "_blank",
+    rel: "noopener noreferrer",
+    "data-cursor": "link",
+    "data-cursor-label": `open: ${p.k}`
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mono cv-readme-proof-k"
+  }, p.k), /*#__PURE__*/React.createElement("span", {
+    className: "cv-readme-proof-v"
+  }, p.v), /*#__PURE__*/React.createElement("span", {
+    className: "arrow"
+  }, "\u2197"))))) : null, r.avail ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h4", {
+    className: "cv-block-h mono"
+  }, r.avail_title), /*#__PURE__*/React.createElement("p", {
+    className: "cv-readme-p"
+  }, r.avail)) : null);
+}
 function CV({
   t,
   links
 }) {
   const ref = useRevealRoot([t]);
   const [openIdx, setOpenIdx] = useState2(0);
+  // Which document view is showing: the résumé ("cv") or the GitHub readme.
+  const [docTab, setDocTab] = useState2("cv");
+  const hasReadme = !!(t.cv && t.cv.readme && t.cv.readme.intro);
+  const showReadme = hasReadme && docTab === "readme";
   // Roles are an accordion: only one open at a time normally. For print we
   // force ALL open so the printed PDF shows the full timeline, then restore
   // the user's previous state after the print dialog closes.
   const restoreOpenIdx = useRef2(0);
   function onPrint() {
     restoreOpenIdx.current = openIdx;
+    setDocTab("cv"); // the printed PDF is the résumé, never the readme view
     setOpenIdx(-2); // sentinel: "all open" (any non-numeric index that isn't matched)
     // Use a microtask + rAF so React commits the open-state change before
     // the synchronous window.print() blocks the main thread.
@@ -329,12 +384,23 @@ function CV({
     className: "cv-doc-head"
   }, /*#__PURE__*/React.createElement("div", {
     className: "cv-doc-tabs mono",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "cv-doc-tab is-active"
-  }, "samandar.cv"), /*#__PURE__*/React.createElement("span", {
-    className: "cv-doc-tab"
-  }, "readme.md")), /*#__PURE__*/React.createElement("div", {
+    role: "tablist",
+    "aria-label": "document view"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    role: "tab",
+    "aria-selected": !showReadme,
+    className: `cv-doc-tab ${!showReadme ? "is-active" : ""}`,
+    onClick: () => setDocTab("cv"),
+    "data-cursor": "link"
+  }, "samandar.cv"), hasReadme ? /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    role: "tab",
+    "aria-selected": showReadme,
+    className: `cv-doc-tab ${showReadme ? "is-active" : ""}`,
+    onClick: () => setDocTab("readme"),
+    "data-cursor": "link"
+  }, "readme.md") : null), /*#__PURE__*/React.createElement("div", {
     className: "cv-doc-actions mono"
   }, /*#__PURE__*/React.createElement("button", {
     className: "cv-action",
@@ -374,7 +440,9 @@ function CV({
     className: "cv-id-stat"
   }, /*#__PURE__*/React.createElement("dt", {
     className: "mono"
-  }, s.k), /*#__PURE__*/React.createElement("dd", null, s.v))))), /*#__PURE__*/React.createElement("div", {
+  }, s.k), /*#__PURE__*/React.createElement("dd", null, s.v))))), showReadme ? /*#__PURE__*/React.createElement(CvReadme, {
+    r: t.cv.readme
+  }) : /*#__PURE__*/React.createElement("div", {
     className: "cv-doc-body"
   }, /*#__PURE__*/React.createElement("main", {
     className: "cv-main"

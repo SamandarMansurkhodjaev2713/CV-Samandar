@@ -321,22 +321,28 @@
   background: rgba(7,9,11,0.6);
   flex-wrap: wrap;
 }
-.cv-doc-tabs { display: flex; gap: 2px; }
-.cv-doc-tab {
-  font-size: 11px;
-  padding: 8px 14px;
-  color: rgba(244,241,234,0.45);
-  background: transparent;
-  border-radius: 6px 6px 0 0;
-  border-bottom: 2px solid transparent;
-  letter-spacing: 0.04em;
+/* Segmented toggle (was decorative spans) — the pill container with one
+   highlighted segment reads as switchable on sight. */
+.cv-doc-tabs {
+  display: inline-flex; gap: 3px; padding: 3px;
+  border: 1px solid var(--line-strong, rgba(244,241,234,0.12));
+  border-radius: 8px;
+  background: rgba(7,9,11,0.4);
 }
+.cv-doc-tab {
+  font: inherit; font-size: 11px; letter-spacing: 0.04em;
+  padding: 6px 13px; border: 0; border-radius: 6px;
+  background: transparent; color: rgba(244,241,234,0.5);
+  cursor: pointer;
+  transition: color .2s, background .2s, box-shadow .2s;
+}
+.cv-doc-tab:hover { color: var(--text-dim, rgba(244,241,234,0.75)); }
 .cv-doc-tab.is-active {
   color: var(--text, #f4f1ea);
-  font-weight: 500;
-  border-bottom-color: var(--accent, #D97757);
-  background: rgba(244,241,234,0.03);
+  background: rgba(var(--accent-rgb) / 0.12);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb) / 0.35);
 }
+.cv-doc-tab:focus-visible { outline: 2px solid var(--accent, #D97757); outline-offset: 2px; }
 .cv-doc-actions { display: flex; gap: 6px; }
 .cv-action {
   display: inline-flex; align-items: center; gap: 8px;
@@ -353,6 +359,35 @@
 }
 .cv-action:hover { color: var(--accent, #D97757); border-color: rgba(var(--accent-rgb) / 0.4); background: rgba(var(--accent-rgb) / 0.04); }
 .cv-action-ico { color: rgba(244,241,234,0.4); font-size: 10px; }
+
+/* readme.md view — rendered-markdown-style GitHub-profile info. */
+.cv-readme { padding: 28px 40px 34px; }
+.cv-readme-p { font-size: 15px; line-height: 1.66; color: var(--text-dim, rgba(244,241,234,0.75)); margin: 0 0 14px; max-width: 70ch; }
+.cv-readme .cv-block-h { margin: 26px 0 12px; }
+.cv-readme-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.cv-readme-list li { display: flex; gap: 10px; font-size: 14px; line-height: 1.5; color: var(--text-dim, rgba(244,241,234,0.75)); }
+.cv-readme-list .cv-bullet-mark { color: var(--accent, #D97757); flex: none; }
+.cv-readme-proof {
+  display: flex; flex-direction: column;
+  border: 1px solid var(--line, rgba(244,241,234,0.08)); border-radius: 10px; overflow: hidden;
+  background: linear-gradient(180deg, rgba(20,24,28,.4), rgba(11,14,17,.4));
+}
+.cv-readme-proof-row {
+  display: grid; grid-template-columns: 148px 1fr auto; gap: 12px; align-items: center;
+  padding: 13px 16px; text-decoration: none; color: var(--text, #f4f1ea);
+  border-bottom: 1px solid var(--line, rgba(244,241,234,0.08));
+  transition: background .2s, color .2s;
+}
+.cv-readme-proof-row:last-child { border-bottom: 0; }
+.cv-readme-proof-row:hover { background: rgba(var(--accent-rgb) / 0.05); color: var(--accent, #D97757); }
+.cv-readme-proof-k { font-size: 13px; color: var(--accent, #D97757); }
+.cv-readme-proof-v { font-size: 13px; color: var(--text-dim, rgba(244,241,234,0.7)); overflow-wrap: anywhere; }
+.cv-readme-proof-row .arrow { color: var(--text-mute, rgba(244,241,234,0.45)); }
+@media (max-width: 600px) {
+  .cv-readme { padding: 20px 16px 24px; }
+  .cv-readme-proof-row { grid-template-columns: 1fr auto; row-gap: 2px; }
+  .cv-readme-proof-v { grid-column: 1 / -1; }
+}
 
 /* Identity strip */
 .cv-id {
