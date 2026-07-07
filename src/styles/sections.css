@@ -982,11 +982,12 @@
 
 .lead-line {
   font-family: var(--f-display);
-  font-size: clamp(20px, 2vw, 28px);
+  font-size: clamp(21px, 2vw, 28px);
   color: var(--text-dim);
   margin-bottom: 56px;
-  max-width: 60ch;
-  line-height: 1.4;
+  max-width: 62ch;
+  line-height: 1.48; /* was 1.4 — a touch more air for these multi-line intros */
+  text-wrap: balance;
 }
 
 /* ── PROJECTS ──────────────────────────────────────────────── */

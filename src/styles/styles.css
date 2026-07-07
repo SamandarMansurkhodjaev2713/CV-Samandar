@@ -155,8 +155,12 @@ body {
   background: var(--bg-0);
   color: var(--text);
   font-family: var(--f-body);
-  font-size: 15px;
-  line-height: 1.55;
+  /* 16px/1.62 — bumped from 15/1.55 for comfortable long-form reading (the
+     single biggest legibility win on a content-dense page). Component text
+     (nav, buttons, chips, mono) sets its own explicit size, so this only
+     affects actual body copy. */
+  font-size: 16px;
+  line-height: 1.62;
   font-feature-settings: "ss01", "cv11";
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -215,10 +219,13 @@ h1, h2, h3, h4 {
   letter-spacing: -0.025em;
   line-height: 1.02;
   color: var(--text);
+  text-wrap: balance; /* even heading line lengths (modern engines; ignored elsewhere) */
 }
 h1 { font-size: clamp(42px, 5.4vw, 88px); letter-spacing: -0.035em; font-weight: 500; line-height: 1.0; }
 h2 { font-size: clamp(32px, 4.2vw, 64px); letter-spacing: -0.03em; line-height: 1.05; }
 h3 { font-size: clamp(20px, 1.9vw, 28px); letter-spacing: -0.02em; }
+/* Body copy gets prettier last-line/rag balancing where supported. */
+p { text-wrap: pretty; }
 .eyebrow {
   font-family: var(--f-mono);
   font-size: 11px;
