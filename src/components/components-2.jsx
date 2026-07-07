@@ -865,6 +865,11 @@ function ProjectBuilder({ t, links }) {
     // Re-run on any choice change (activeCount captures type/priority AI toggling).
   }, [typeKey, scaleKey, priorityKey, activeCount]);
 
+  // Reset the cascade SYNCHRONOUSLY on any choice so the machine visibly
+  // "recomputes" — layers AND readout tear down and re-resolve together,
+  // instead of flashing the finished new state for one frame first.
+  function choose(setter, k) { setter(k); setShown(0); }
+
   function pick(list, k) { const f = list.filter(function (x) { return x.k === k; })[0]; return f ? f.label : k; }
   function summaryLine() {
     return pick(b.types, typeKey) + " · " + pick(b.scales, scaleKey) + " · " + pick(b.priorities, priorityKey) + "\n" +
@@ -910,7 +915,7 @@ function ProjectBuilder({ t, links }) {
                 {b.types.map(function renderType(o) {
                   const on = typeKey === o.k;
                   return (
-                    <button key={o.k} type="button" className={`builder-opt ${on ? "is-active" : ""}`} aria-pressed={on} onClick={function () { setTypeKey(o.k); }}>
+                    <button key={o.k} type="button" className={`builder-opt ${on ? "is-active" : ""}`} aria-pressed={on} onClick={function () { choose(setTypeKey, o.k); }}>
                       <span className="builder-opt-label">{o.label}</span>
                       <span className="builder-opt-note mono">{o.note}</span>
                     </button>
@@ -925,7 +930,7 @@ function ProjectBuilder({ t, links }) {
                 {b.scales.map(function renderScale(o) {
                   const on = scaleKey === o.k;
                   return (
-                    <button key={o.k} type="button" className={`builder-opt builder-opt--pill ${on ? "is-active" : ""}`} aria-pressed={on} onClick={function () { setScaleKey(o.k); }}>
+                    <button key={o.k} type="button" className={`builder-opt builder-opt--pill ${on ? "is-active" : ""}`} aria-pressed={on} onClick={function () { choose(setScaleKey, o.k); }}>
                       <span className="builder-opt-label">{o.label}</span>
                       <span className="builder-opt-note mono">{o.note}</span>
                     </button>
@@ -940,7 +945,7 @@ function ProjectBuilder({ t, links }) {
                 {b.priorities.map(function renderPrio(o) {
                   const on = priorityKey === o.k;
                   return (
-                    <button key={o.k} type="button" className={`builder-opt builder-opt--pill ${on ? "is-active" : ""}`} aria-pressed={on} onClick={function () { setPriorityKey(o.k); }}>
+                    <button key={o.k} type="button" className={`builder-opt builder-opt--pill ${on ? "is-active" : ""}`} aria-pressed={on} onClick={function () { choose(setPriorityKey, o.k); }}>
                       <span className="builder-opt-label">{o.label}</span>
                       <span className="builder-opt-note mono">{o.note}</span>
                     </button>
@@ -983,21 +988,25 @@ function ProjectBuilder({ t, links }) {
 
           {/* READOUT — crystallizing stack/timeline/budget + expert verdict */}
           <div className="builder-readout-block">
+            {/* Readout crystallizes IN STEP with the layer cascade: each row
+                resolves as the assembly reaches it (shown counter), and the
+                verdict lands once the whole system is built. Same `shown` that
+                drives the layers → one machine computing an answer. */}
             <div className="builder-readout" aria-live="polite">
-              <div className="builder-readout-row">
+              <div className={`builder-readout-row ${shown >= 1 ? "is-in" : ""}`}>
                 <span className="builder-readout-k mono">{b.readout.stack}</span>
-                <span className="builder-readout-v mono" key={"s" + stackSummary}>{stackSummary}</span>
+                <span className="builder-readout-v mono">{stackSummary}</span>
               </div>
-              <div className="builder-readout-row">
+              <div className={`builder-readout-row ${shown >= 2 ? "is-in" : ""}`}>
                 <span className="builder-readout-k mono">{b.readout.time}</span>
-                <span className="builder-readout-v mono" key={"t" + timeText}>{timeText}</span>
+                <span className="builder-readout-v mono">{timeText}</span>
               </div>
-              <div className="builder-readout-row">
+              <div className={`builder-readout-row ${shown >= 3 ? "is-in" : ""}`}>
                 <span className="builder-readout-k mono">{b.readout.budget}</span>
-                <span className="builder-readout-v mono" key={"b" + scaleMeta.budget}>{scaleMeta.budget}</span>
+                <span className="builder-readout-v mono">{scaleMeta.budget}</span>
               </div>
             </div>
-            <div className="builder-verdict" key={verdict}>
+            <div className={`builder-verdict ${shown >= activeCount ? "is-in" : ""}`}>
               <span className="builder-verdict-mark" aria-hidden="true">“</span>
               <p className="builder-verdict-text">{verdict}</p>
             </div>

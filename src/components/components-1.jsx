@@ -910,6 +910,7 @@ function ProjectCard({ p, i, cta }) {
       onMouseLeave={onLeave}
     >
       <div className="proj-glow" />
+      <span className="proj-num mono" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
       <div className="proj-head">
         <span className="mono proj-tag">{p.tag}</span>
         <span className={`proj-status proj-status-${p.status.toLowerCase()}`}>{p.status}</span>

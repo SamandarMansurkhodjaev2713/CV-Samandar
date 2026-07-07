@@ -1054,7 +1054,10 @@ function ProjectCard({
     onMouseLeave: onLeave
   }, /*#__PURE__*/React.createElement("div", {
     className: "proj-glow"
-  }), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "proj-num mono",
+    "aria-hidden": "true"
+  }, String(i + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("div", {
     className: "proj-head"
   }, /*#__PURE__*/React.createElement("span", {
     className: "mono proj-tag"

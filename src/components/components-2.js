@@ -976,6 +976,14 @@ function ProjectBuilder({
     };
     // Re-run on any choice change (activeCount captures type/priority AI toggling).
   }, [typeKey, scaleKey, priorityKey, activeCount]);
+
+  // Reset the cascade SYNCHRONOUSLY on any choice so the machine visibly
+  // "recomputes" — layers AND readout tear down and re-resolve together,
+  // instead of flashing the finished new state for one frame first.
+  function choose(setter, k) {
+    setter(k);
+    setShown(0);
+  }
   function pick(list, k) {
     const f = list.filter(function (x) {
       return x.k === k;
@@ -1057,7 +1065,7 @@ function ProjectBuilder({
       className: `builder-opt ${on ? "is-active" : ""}`,
       "aria-pressed": on,
       onClick: function () {
-        setTypeKey(o.k);
+        choose(setTypeKey, o.k);
       }
     }, /*#__PURE__*/React.createElement("span", {
       className: "builder-opt-label"
@@ -1080,7 +1088,7 @@ function ProjectBuilder({
       className: `builder-opt builder-opt--pill ${on ? "is-active" : ""}`,
       "aria-pressed": on,
       onClick: function () {
-        setScaleKey(o.k);
+        choose(setScaleKey, o.k);
       }
     }, /*#__PURE__*/React.createElement("span", {
       className: "builder-opt-label"
@@ -1103,7 +1111,7 @@ function ProjectBuilder({
       className: `builder-opt builder-opt--pill ${on ? "is-active" : ""}`,
       "aria-pressed": on,
       onClick: function () {
-        setPriorityKey(o.k);
+        choose(setPriorityKey, o.k);
       }
     }, /*#__PURE__*/React.createElement("span", {
       className: "builder-opt-label"
@@ -1160,29 +1168,25 @@ function ProjectBuilder({
     className: "builder-readout",
     "aria-live": "polite"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "builder-readout-row"
+    className: `builder-readout-row ${shown >= 1 ? "is-in" : ""}`
   }, /*#__PURE__*/React.createElement("span", {
     className: "builder-readout-k mono"
   }, b.readout.stack), /*#__PURE__*/React.createElement("span", {
-    className: "builder-readout-v mono",
-    key: "s" + stackSummary
+    className: "builder-readout-v mono"
   }, stackSummary)), /*#__PURE__*/React.createElement("div", {
-    className: "builder-readout-row"
+    className: `builder-readout-row ${shown >= 2 ? "is-in" : ""}`
   }, /*#__PURE__*/React.createElement("span", {
     className: "builder-readout-k mono"
   }, b.readout.time), /*#__PURE__*/React.createElement("span", {
-    className: "builder-readout-v mono",
-    key: "t" + timeText
+    className: "builder-readout-v mono"
   }, timeText)), /*#__PURE__*/React.createElement("div", {
-    className: "builder-readout-row"
+    className: `builder-readout-row ${shown >= 3 ? "is-in" : ""}`
   }, /*#__PURE__*/React.createElement("span", {
     className: "builder-readout-k mono"
   }, b.readout.budget), /*#__PURE__*/React.createElement("span", {
-    className: "builder-readout-v mono",
-    key: "b" + scaleMeta.budget
+    className: "builder-readout-v mono"
   }, scaleMeta.budget))), /*#__PURE__*/React.createElement("div", {
-    className: "builder-verdict",
-    key: verdict
+    className: `builder-verdict ${shown >= activeCount ? "is-in" : ""}`
   }, /*#__PURE__*/React.createElement("span", {
     className: "builder-verdict-mark",
     "aria-hidden": "true"
