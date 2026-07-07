@@ -388,6 +388,7 @@
       send: "send →",
       input: "type · esc to clear",
       tab: "switch",
+      target: "◎ explore",
     };
 
     function readableText(el) {

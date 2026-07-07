@@ -1661,7 +1661,9 @@ function Skills({
     ref: stageRef,
     className: "skills-radar-stage",
     onMouseMove: onPointerMove,
-    onMouseLeave: onPointerLeave
+    onMouseLeave: onPointerLeave,
+    "data-cursor": "target",
+    "data-cursor-label": "\u25CE \u0440\u0430\u0434\u0430\u0440"
   }, /*#__PURE__*/React.createElement(SkillsRadar, {
     groups: t.skills.groups,
     active: Math.max(0, active),
@@ -1722,7 +1724,9 @@ function Skills({
     ref: stageRef,
     className: "skills-radar-stage",
     onMouseMove: onPointerMove,
-    onMouseLeave: onPointerLeave
+    onMouseLeave: onPointerLeave,
+    "data-cursor": "target",
+    "data-cursor-label": "\u25CE \u0440\u0430\u0434\u0430\u0440"
   }, /*#__PURE__*/React.createElement(SkillsRadar, {
     groups: t.skills.groups,
     active: Math.max(0, active),

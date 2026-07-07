@@ -1376,6 +1376,8 @@ function Skills({ t }) {
               className="skills-radar-stage"
               onMouseMove={onPointerMove}
               onMouseLeave={onPointerLeave}
+              data-cursor="target"
+              data-cursor-label="◎ радар"
             >
               <SkillsRadar groups={t.skills.groups} active={Math.max(0, active)} onActivate={setActive} />
               <div className="skills-radar-hint mono" aria-hidden="true">tap a group above</div>
@@ -1424,6 +1426,8 @@ function Skills({ t }) {
                 className="skills-radar-stage"
                 onMouseMove={onPointerMove}
                 onMouseLeave={onPointerLeave}
+                data-cursor="target"
+                data-cursor-label="◎ радар"
               >
                 <SkillsRadar groups={t.skills.groups} active={Math.max(0, active)} onActivate={setActive} />
                 <div className="skills-radar-hint mono" aria-hidden="true">hover · radar</div>

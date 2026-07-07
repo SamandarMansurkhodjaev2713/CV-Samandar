@@ -124,6 +124,12 @@
 .sc-cursor[data-mode="send"] .sc-ring { border-radius: 999px; opacity: 0.9; background: rgba(var(--accent-rgb) / 0.08); }
 .sc-cursor[data-mode="input"] .sc-ring { border-radius: 2px; opacity: 0.6; transform: translate(-50%, -50%) scaleX(0.15); }
 .sc-cursor[data-mode="tab"] .sc-ring { border-radius: 999px; opacity: 0.7; border-style: dotted; }
+/* "target" — a reticle/lock state (used over the skills radar): show the
+   built-in crosshair, expand the ring into a square bracket, drop the dot. */
+.sc-cursor[data-mode="target"] .sc-cross-h,
+.sc-cursor[data-mode="target"] .sc-cross-v { display: block; }
+.sc-cursor[data-mode="target"] .sc-ring { border-radius: 2px; opacity: 0.75; transform: translate(-50%, -50%) scale(1.5); }
+.sc-cursor[data-mode="target"] .sc-dot { opacity: 0; }
 .sc-cursor.is-down .sc-ring { opacity: 1; transform: translate(-50%, -50%) scale(0.7); }
 
 /* ── Label (the "smart" part) */

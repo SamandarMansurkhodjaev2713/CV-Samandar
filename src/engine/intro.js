@@ -81,7 +81,7 @@
     var a1 = readRGB("--accent-rgb", [217, 119, 87]);
     var a2 = readRGB("--accent-2-rgb", [200, 155, 94]);
 
-    var elPct, elLine, elLabelState, particleCv, particleCtx;
+    var elPct, elLine, elLabelState, smBoot, particleCv, particleCtx;
     var particles = null, pW = 0, pH = 0, pDpr = 1;
     var start = 0, raf = 0, resizeHandler = null;
     var exitFrom = 0, finished = false, revealing = false;
@@ -108,6 +108,7 @@
         '<div class="sm-boot-pct"><span class="sm-boot-pct-n">00</span><span class="sm-boot-pct-sign">%</span></div>' +
         '<div class="sm-boot-line"><i></i></div>';
       panel.appendChild(wrap);
+      smBoot = wrap;
       elPct = wrap.querySelector(".sm-boot-pct-n");
       elLine = wrap.querySelector(".sm-boot-line > i");
       elLabelState = wrap.querySelector(".sm-boot-state");
@@ -197,6 +198,7 @@
       revealing = true;
       if (raf) { cancelAnimationFrame(raf); raf = 0; }
       if (elLabelState) elLabelState.textContent = "ONLINE";
+      if (smBoot) smBoot.classList.add("is-online");
       setPercent(100);
       setTimeout(function () {
         panel.style.transition = "opacity " + (CFG.REVEAL_MS / 1000) + "s cubic-bezier(.2,.6,.18,1)";
