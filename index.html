@@ -5,12 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#1F1E1B" />
 
-  <!-- Intro curtain: paint a solid warm panel over the page on frame 0 so there
-       is no flash of hero before the "Boot Sequence" loader (percentage +
-       CORE.AI status, gated on the real robot asset — see src/engine/intro.js).
-       LCP text (h1/CTA) still renders underneath (occluded, not delayed: the
-       element IS painted, the LCP timestamp is unaffected by being visually
-       covered while loading). -->
+  <!-- Intro: paint a solid warm panel over the page on frame 0, then run the
+       "RACK FOCUS" intro (src/engine/intro.js) — the panel becomes the hero's
+       own cockpit photo held out-of-focus, which racks into focus in place and
+       dissolves onto the identical live hero photo (no cut). We also arm
+       .intro-armed on <html> here so the hero content stays held until the
+       focus climax releases it. LCP text (h1/CTA) still renders underneath
+       (occluded, not delayed — the element IS painted; being visually covered
+       while loading doesn't move the LCP timestamp). -->
   <script>
   (function () {
     try {
@@ -38,6 +40,12 @@
         "position:fixed;inset:0;z-index:2147483000;background:#1F1E1B;pointer-events:auto;contain:strict;";
       window.__SM_INTRO = { mode: (reduced || lowTier) ? "fade" : "full", panel: panel };
       document.documentElement.appendChild(panel);
+      // Arm the hero content hold from frame 0 (before React mounts), so the
+      // RACK FOCUS intro can release it AT the focus climax — the headline
+      // rises WITH the photo coming into focus instead of being statically
+      // uncovered. intro.js's unarm() removes this on every exit path; the
+      // safety net below also removes it if intro.js never runs.
+      document.documentElement.classList.add("intro-armed");
       // Safety net: if intro.js never runs (blocked/slow script/404), self-clear
       // after 3.2s so the page is never permanently curtained. Critically, this
       // ALSO dispatches sm:intro-done — bg-fx.js's WebGL loop and the robot's
@@ -49,6 +57,7 @@
       // right away rather than after the 420ms fade so recovery isn't delayed
       // by an animation nobody asked for in this already-degraded path.
       window.__SM_INTRO.safety = setTimeout(function () {
+        document.documentElement.classList.remove("intro-armed");
         if (panel && panel.parentNode) {
           panel.style.transition = "opacity .4s";
           panel.style.opacity = "0";
@@ -94,10 +103,12 @@
   <link rel="preconnect" href="https://unpkg.com" crossorigin />
   <link rel="preconnect" href="https://prod.spline.design" crossorigin />
 
-  <!-- The intro's iris opens onto the hero photo — preload it so the porthole
-       reveals a decoded image, not a late-arriving blank. Desktop only; mobile
-       uses orbital-station.webp (much smaller, arrives well within 2.4s). -->
+  <!-- The RACK FOCUS intro IS this photo, held out-of-focus, from frame 0 — so
+       BOTH breakpoint assets must be preloaded (the intro paints the image
+       immediately, it's no longer a late reveal). Per-breakpoint media so each
+       device fetches only its own asset. -->
   <link rel="preload" as="image" href="assets/hero-cockpit.webp" fetchpriority="high" media="(min-width: 901px)" />
+  <link rel="preload" as="image" href="assets/orbital-station.webp" fetchpriority="high" media="(max-width: 900px)" />
 
   <!-- ════════════════════════════════════════════════════════════════════
        v51 — restructured paths. All app code lives under src/:
@@ -111,11 +122,11 @@
        ═══════════════════════════════════════════════════════════════════ -->
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="src/styles/styles.css?v=114" />
-  <link rel="stylesheet" href="src/styles/sections.css?v=114" />
-  <link rel="stylesheet" href="src/styles/cursor.css?v=114" />
-  <link rel="stylesheet" href="src/styles/cv-doc.css?v=114" />
-  <link rel="stylesheet" href="src/styles/features.css?v=114" />
+  <link rel="stylesheet" href="src/styles/styles.css?v=115" />
+  <link rel="stylesheet" href="src/styles/sections.css?v=115" />
+  <link rel="stylesheet" href="src/styles/cursor.css?v=115" />
+  <link rel="stylesheet" href="src/styles/cv-doc.css?v=115" />
+  <link rel="stylesheet" href="src/styles/features.css?v=115" />
 
   <!-- Three.js r128 -->
   <script src="vendor/three.min.js"></script>
@@ -130,30 +141,30 @@
   <div id="root"></div>
 
   <!-- Content + i18n -->
-  <script src="src/content/content.js?v=114"></script>
+  <script src="src/content/content.js?v=115"></script>
 
   <!-- Intro timeline — consumes window.__SM_INTRO stashed by the head-boot
        script above. Loads before the other engine scripts so it can start
        its rAF loop as early as possible; it needs no content/theme state. -->
-  <script src="src/engine/intro.js?v=114"></script>
+  <script src="src/engine/intro.js?v=115"></script>
 
   <!-- Engine: theming, motion observers, background WebGL, view transitions.
        (v56 — single Ember theme; theme-transition.js + the multi-theme
        switcher removed.) -->
-  <script src="src/engine/themes.js?v=114"></script>
-  <script src="src/engine/motion.js?v=114"></script>
-  <script src="src/engine/bg-fx.js?v=114"></script>
-  <script src="src/engine/scene-cinema.js?v=114"></script>
+  <script src="src/engine/themes.js?v=115"></script>
+  <script src="src/engine/motion.js?v=115"></script>
+  <script src="src/engine/bg-fx.js?v=115"></script>
+  <script src="src/engine/scene-cinema.js?v=115"></script>
 
   <!-- Robot: Spline runtime + hand-built fallback -->
-  <script src="src/robot/robot.js?v=114"></script>
-  <script src="src/robot/robot-spline.js?v=114"></script>
+  <script src="src/robot/robot.js?v=115"></script>
+  <script src="src/robot/robot-spline.js?v=115"></script>
 
   <!-- Components + app — PRE-COMPILED plain JS (generated by build.js from
        the .jsx sources). After editing any .jsx, run `node build.js`. -->
-  <script src="src/components/tweaks-panel.js?v=114"></script>
-  <script src="src/components/components-1.js?v=114"></script>
-  <script src="src/components/components-2.js?v=114"></script>
-  <script src="src/components/app.js?v=114"></script>
+  <script src="src/components/tweaks-panel.js?v=115"></script>
+  <script src="src/components/components-1.js?v=115"></script>
+  <script src="src/components/components-2.js?v=115"></script>
+  <script src="src/components/app.js?v=115"></script>
 </body>
 </html>

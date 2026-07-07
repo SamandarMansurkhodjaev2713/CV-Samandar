@@ -62,6 +62,19 @@ function Hero({
   // there and only update if the legacy fallback factory reports otherwise.
   // eslint-disable-next-line no-unused-vars
   const [robotMood, setRobotMood] = useState("idle");
+  // Ember → robot glow baton-pass: the RACK FOCUS intro dispatches
+  // sm:core-ignite at its focus climax; we flip .core-lit so the CSS glow
+  // ignites from the robot's core exactly as the hero rises into view. State
+  // (not a raw DOM class) so React re-renders don't strip it.
+  const [coreLit, setCoreLit] = useState(false);
+  useEffect(() => {
+    if (coreLit) return undefined;
+    function onIgnite() {
+      setCoreLit(true);
+    }
+    window.addEventListener("sm:core-ignite", onIgnite);
+    return () => window.removeEventListener("sm:core-ignite", onIgnite);
+  }, [coreLit]);
 
   // Robot loading strategy:
   //   1. ALWAYS try the Spline runtime (community asset "GENKUB - Greeting
@@ -450,7 +463,7 @@ function Hero({
     "data-reveal": true,
     "data-reveal-delay": "0.15"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "hero-robot",
+    className: `hero-robot ${coreLit ? "core-lit" : ""}`,
     onClick: onRobotClick
   }, /*#__PURE__*/React.createElement("canvas", {
     ref: robotCanvasRef,

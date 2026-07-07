@@ -3033,10 +3033,14 @@ html[data-motion-lite] .builder-chip { animation: none; }
   .hero-scroll-hint { display: flex; }
 }
 
-/* ── INTRO CURTAIN — "Boot Sequence" loader ──────────────────────────
-   Most styling is set inline by JS (src/engine/intro.js) for frame-0 safety
-   (it has to paint before this stylesheet is guaranteed to have loaded).
-   These rules are belt-and-suspenders + the reduced-motion hardening. */
+/* ── INTRO — "RACK FOCUS" ─────────────────────────────────────────────
+   The intro IS the hero's own cockpit photo held out-of-focus, racked into
+   focus in place (see src/engine/intro.js). The rack image is seeded from the
+   SAME per-breakpoint asset + crop the hero paints, so the blurred copy
+   dissolves to reveal the identical sharp hero photo underneath — no cut.
+   The blur radius is set ONCE here and NEVER animated (animating it re-
+   rasterizes every frame = jank); the "rack" is a compositor opacity+scale
+   crossfade driven inline by JS. */
 #sm-intro {
   position: fixed; inset: 0;
   z-index: 2147483000; /* above nav + everything */
@@ -3046,70 +3050,105 @@ html[data-motion-lite] .builder-chip { animation: none; }
   isolation: isolate;
 }
 #sm-intro canvas { position: absolute; inset: 0; }
-@media (prefers-reduced-motion: reduce) {
-  /* Primary path is the head-boot's 'fade' mode (no canvas is ever created
-     when reduced-motion is set) — this just hardens against any edge case. */
-  #sm-intro canvas { display: none !important; }
-  #sm-intro { transition: opacity .4s cubic-bezier(.2,.6,.18,1); }
+/* Rack image — matches .hero-photo-wrap / .hero-photo-inner box math exactly so
+   the crop lines up when the panel dissolves onto the live hero photo. */
+#sm-intro .sm-rack-wrap {
+  position: absolute; left: 0; right: 0; top: -15%; height: 130%;
+  overflow: hidden; pointer-events: none;
 }
-
-/* Boot readout — CORE.AI status label, percentage counter, progress line.
-   Positioned around the same focal point the iris opens from (CFG.CORE_Y,
-   set inline as `top`), so the reveal feels continuous rather than a jump. */
-.sm-boot {
-  position: absolute;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  width: min(88vw, 420px);
-  text-align: center;
+#sm-intro .sm-rack-img {
+  position: absolute; inset: 0;
+  background-image: url("../../assets/hero-cockpit.webp");
+  background-size: cover; background-position: center 42%;
+  will-change: opacity, transform;
 }
-.sm-boot-label {
-  font-size: 12px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
+/* Only the blurred (full-mode) copy carries the one-time blur + over-scale.
+   Reduced/low-tier gets a SHARP copy (no is-blur) → pure cross-dissolve. */
+#sm-intro .sm-rack-img.is-blur { filter: blur(22px); transform: scale(1.08); }
+@media (max-width: 900px) {
+  #sm-intro .sm-rack-wrap { top: -6%; height: 112%; }
+  #sm-intro .sm-rack-img {
+    background-image: url("../../assets/orbital-station.webp");
+    background-position: center top;
+  }
+}
+/* Warm wash — the "dark/loading" veil that lifts as the frame comes into
+   focus. Radial hot-spot sits at the same 42% focal point as the ember. */
+#sm-intro .sm-wash {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(var(--accent-rgb) / 0.16) 0%, transparent 46%),
+    rgba(31, 30, 27, 0.82);
+  will-change: opacity;
+}
+#sm-intro .sm-ember { position: absolute; inset: 0; display: block; }
+/* Telemetry — a hair-thin CORE.AI line + a real T+ clock (the only literal
+   signal; it can never lie). Fades with the wash on the rack. */
+#sm-intro .sm-tele {
+  position: absolute; left: 0; right: 0; bottom: 8%;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-size: 10.5px; letter-spacing: 0.2em; text-transform: uppercase;
   color: var(--text-mute);
 }
-.sm-boot-state {
-  color: rgba(var(--accent-rgb) / 0.85);
-  transition: color .3s ease;
+#sm-intro .sm-tele-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent); box-shadow: 0 0 8px var(--accent);
+  animation: smTeleBlink 1.8s ease-in-out infinite;
 }
-.sm-boot-pct {
-  display: flex;
-  align-items: baseline;
-  gap: 3px;
-  font-family: var(--f-display);
-  font-weight: 700;
-  line-height: 1;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
+#sm-intro .sm-tele-k { color: var(--text-dim); }
+#sm-intro .sm-tele-t { color: var(--text-mute); font-variant-numeric: tabular-nums; }
+@keyframes smTeleBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+@media (prefers-reduced-motion: reduce) {
+  #sm-intro .sm-ember { display: none !important; }
+  #sm-intro .sm-tele-dot { animation: none; }
 }
-.sm-boot-pct-n { font-size: clamp(48px, 11vw, 88px); }
-.sm-boot-pct-sign {
-  font-size: clamp(18px, 3.2vw, 26px);
-  color: var(--text-dim);
-  transform: translateY(-0.3em);
+
+/* ── Hero content hold — the choreographed reveal gate ────────────────
+   While .intro-armed is on <html> (set in the head-boot, before React), the
+   hero's own column wrappers are held out of view; intro.js removes the class
+   at the rack so they precipitate UP out of the clearing focus, in step with
+   the photo sharpening. This is paint suppression on the hero's containers —
+   it does NOT touch motion.js's reveal logic (the wrappers below are not the
+   [data-reveal] elements themselves, so there's no inline-!important fight).
+   Every intro exit path calls unarm(), so the hero can never stay hidden. */
+.hero .hero-left,
+.hero .hero-right,
+.hero .hero-marquee,
+.hero .hero-scroll-hint {
+  transition: opacity .95s cubic-bezier(.2, .6, .18, 1), transform .95s cubic-bezier(.2, .6, .18, 1);
 }
-.sm-boot-line {
-  width: 100%;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--line-strong);
-  overflow: hidden;
+.hero .hero-right { transition-delay: .09s; }
+.hero .hero-marquee { transition-delay: .20s; }
+.hero .hero-scroll-hint { transition-delay: .26s; }
+.intro-armed .hero .hero-left { opacity: 0 !important; transform: translateY(26px); }
+.intro-armed .hero .hero-right { opacity: 0 !important; transform: translateY(32px) scale(.984); }
+.intro-armed .hero .hero-marquee,
+.intro-armed .hero .hero-scroll-hint { opacity: 0 !important; }
+@media (prefers-reduced-motion: reduce) {
+  .hero .hero-left,
+  .hero .hero-right,
+  .hero .hero-marquee,
+  .hero .hero-scroll-hint { transition: opacity .4s ease; }
+  .intro-armed .hero .hero-left,
+  .intro-armed .hero .hero-right { transform: none; }
 }
-.sm-boot-line > i {
-  display: block;
-  height: 100%;
-  width: 0%;
-  border-radius: 2px;
-  background: linear-gradient(90deg, var(--accent), var(--accent-2));
-  box-shadow: 0 0 12px rgba(var(--accent-rgb) / 0.6);
-  transition: width .25s linear;
+
+/* Ember → robot glow baton-pass. The intro fires sm:core-ignite at the rack;
+   Hero adds .core-lit (React state), and this warm radial ignites from the
+   robot's core and settles to an ambient glow — CSS only, so it lands on time
+   even if the Spline model is a beat behind. inset:0 keeps it inside the
+   robot box (which is overflow:hidden), so it's never clipped oddly. */
+.hero-robot::before {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(circle at 50% 46%, rgba(var(--accent-rgb) / 0.55) 0%, rgba(var(--accent-2-rgb) / 0.16) 34%, transparent 62%);
+  opacity: 0;
 }
-@media (max-width: 480px) {
-  .sm-boot { gap: 10px; }
-  .sm-boot-label { font-size: 10.5px; }
+.hero-robot.core-lit::before { animation: coreIgnite 1.2s cubic-bezier(.2, .6, .18, 1) both; }
+@keyframes coreIgnite {
+  0% { opacity: 0; transform: scale(.55); }
+  26% { opacity: 1; transform: scale(1.06); }
+  100% { opacity: .42; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-robot.core-lit::before { animation: none; opacity: .42; }
 }
