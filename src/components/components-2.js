@@ -1418,8 +1418,23 @@ function Contact({
   const [sending, setSending] = useState2(false);
   const [errorMsg, setErrorMsg] = useState2("");
   const [copied, setCopied] = useState2(false);
+  const [copiedIdx, setCopiedIdx] = useState2(-1);
   const formRef = useRef2(null);
   const TELEGRAM_URL = "https://" + (links.telegram || "t.me/killallofthem13");
+
+  // Copy a contact value (email/telegram/github handle) to the clipboard.
+  function copyContact(val, idx) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(val).then(function () {
+          setCopiedIdx(idx);
+          window.setTimeout(function () {
+            setCopiedIdx(-1);
+          }, 2000);
+        }, function () {/* clipboard denied — the link still works */});
+      }
+    } catch (err) {/* opportunistic */}
+  }
   // Multi-select chips for project scope — a single dropdown was hiding the
   // breadth of services. Chips let the visitor click as many as apply, which
   // also reveals the available service categories at a glance.
@@ -1749,19 +1764,28 @@ function Contact({
     className: "chip-dot"
   }), "ready"), /*#__PURE__*/React.createElement("span", null, "deploy.endpoint")), /*#__PURE__*/React.createElement("div", {
     className: "contact-deploy-body"
-  }, t.contact.links.map((l, i) => /*#__PURE__*/React.createElement("a", {
-    key: i,
+  }, t.contact.links.map((l, i) => /*#__PURE__*/React.createElement("div", {
+    className: "contact-link",
+    key: i
+  }, /*#__PURE__*/React.createElement("a", {
+    className: "contact-link-main",
     href: l.k === "Email" ? `mailto:${l.v}` : `https://${l.v}`,
     target: l.k === "Email" ? undefined : "_blank",
     rel: l.k === "Email" ? undefined : "noopener noreferrer",
-    className: "contact-link"
+    "data-cursor": "link",
+    "data-cursor-label": `open: ${l.k}`
   }, /*#__PURE__*/React.createElement("span", {
     className: "mono contact-link-k"
   }, l.k), /*#__PURE__*/React.createElement("span", {
     className: "contact-link-v"
-  }, l.v), /*#__PURE__*/React.createElement("span", {
-    className: "arrow"
-  }, "\u2197"))))), /*#__PURE__*/React.createElement("div", {
+  }, l.v)), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: `contact-copy ${copiedIdx === i ? "is-copied" : ""}`,
+    "aria-label": `${t.contact.form && t.contact.form.copy || "Копировать"} ${l.k}`,
+    onClick: () => copyContact(l.v, i)
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true"
+  }, copiedIdx === i ? "✓" : "⧉")))))), /*#__PURE__*/React.createElement("div", {
     className: "contact-signal"
   }, /*#__PURE__*/React.createElement("div", {
     className: "signal-pulse"

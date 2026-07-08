@@ -2811,19 +2811,36 @@ html[data-motion-lite] .builder-chip { animation: none; }
 .contact-deploy-body { display: flex; flex-direction: column; }
 .contact-link {
   display: grid;
-  grid-template-columns: 90px 1fr auto;
-  gap: 12px;
-  padding: 18px;
-  align-items: center;
-  text-decoration: none;
-  color: var(--text);
+  grid-template-columns: 1fr auto;
+  align-items: stretch;
   border-bottom: 1px solid var(--line);
-  transition: background var(--d-fast), color var(--d-fast);
+  min-width: 0;
 }
 .contact-link:last-child { border-bottom: 0; }
-.contact-link:hover { background: rgba(var(--accent-rgb) / 0.04); color: var(--accent); }
+.contact-link-main {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 16px 8px 16px 18px;
+  text-decoration: none;
+  color: var(--text);
+  min-width: 0;
+  transition: background var(--d-fast), color var(--d-fast);
+}
+.contact-link-main:hover { background: rgba(var(--accent-rgb) / 0.04); color: var(--accent); }
 .contact-link-k { color: var(--text-mute); font-size: 11px; letter-spacing: .14em; }
 .contact-link-v { font-family: var(--f-mono); font-size: 13px; min-width: 0; overflow-wrap: anywhere; }
+/* Copy-to-clipboard button per contact row. */
+.contact-copy {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 42px; border: 0; border-left: 1px solid var(--line);
+  background: transparent; color: var(--text-mute);
+  font-size: 14px; cursor: pointer;
+  transition: color var(--d-fast), background var(--d-fast);
+}
+.contact-copy:hover { color: var(--accent); background: rgba(var(--accent-rgb) / 0.06); }
+.contact-copy.is-copied { color: var(--accent); }
 
 .contact-signal {
   background: linear-gradient(180deg, rgba(var(--accent-rgb) / 0.04), transparent);

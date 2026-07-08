@@ -590,7 +590,10 @@ function App() {
 
   // Mid-scroll visibility for mobile dock + sticky CTA.
   const midScrollVisible = useMidScrollVisibility();
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("canvas", {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("a", {
+    href: "#main",
+    className: "skip-link"
+  }, t.nav && t.nav.skip || "К содержимому"), /*#__PURE__*/React.createElement("canvas", {
     ref: bgFxCanvasRef,
     className: "bg-fx-canvas",
     "aria-hidden": "true"
@@ -605,7 +608,9 @@ function App() {
     lang: lang,
     setLang: v => setTweak("lang", v),
     active: activeSection
-  }), /*#__PURE__*/React.createElement("main", null, /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("main", {
+    id: "main"
+  }, /*#__PURE__*/React.createElement("div", {
     className: "pin-host pin-host--hero"
   }, /*#__PURE__*/React.createElement(Hero, {
     t: t,

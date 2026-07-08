@@ -412,6 +412,9 @@ function App() {
 
   return (
     <>
+      {/* Keyboard/screen-reader skip link — first focusable element. */}
+      <a href="#main" className="skip-link">{(t.nav && t.nav.skip) || "К содержимому"}</a>
+
       <canvas ref={bgFxCanvasRef} className="bg-fx-canvas" aria-hidden="true" />
       <div className="bg-grid" />
       <div className="bg-noise" />
@@ -424,7 +427,7 @@ function App() {
         active={activeSection}
       />
 
-      <main>
+      <main id="main">
         {/* Hero→Signal cover — NATIVE position:sticky (features.css
             .pin-host--hero rules). No data-pin here: unlike the two JS-driven
             pairs below, this pair needs zero JavaScript — Hero sticks to the

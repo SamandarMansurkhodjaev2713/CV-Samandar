@@ -11,6 +11,7 @@ const CONTENT = {
       cv: "Опыт",
       faq: "Вопросы",
       contact: "Контакт",
+      skip: "К содержимому",
     },
     hero: {
       eyebrow: "Executive AI Code Lab — v.2026",
@@ -479,6 +480,7 @@ const CONTENT = {
         error: "Не удалось отправить. Напишите в Telegram — отвечу быстрее.",
         telegram: "В Telegram",
         copied: "Заявка скопирована — вставь в чат Telegram",
+        copy: "Копировать",
       },
       scope_opts: ["Web App / MVP", "AI Automation", "Telegram Bot", "Dashboard / CRM", "Landing", "Consulting"],
       timeline_opts: ["ASAP", "1–2 недели", "1–2 месяца", "гибко"],
@@ -500,7 +502,7 @@ const CONTENT = {
   },
 
   en: {
-    nav: { about: "About", projects: "Work", skills: "Stack", services: "Services", cv: "CV", faq: "FAQ", contact: "Contact" },
+    nav: { about: "About", projects: "Work", skills: "Stack", services: "Services", cv: "CV", faq: "FAQ", contact: "Contact", skip: "Skip to content" },
     hero: {
       eyebrow: "Executive AI Code Lab — v.2026",
       name: "Samandar",
@@ -961,6 +963,7 @@ const CONTENT = {
         error: "Couldn't send. Message me on Telegram — I reply faster there.",
         telegram: "To Telegram",
         copied: "Brief copied — paste it into the Telegram chat",
+        copy: "Copy",
       },
       scope_opts: ["Web App / MVP", "AI Automation", "Telegram Bot", "Dashboard / CRM", "Landing", "Consulting"],
       timeline_opts: ["ASAP", "1–2 weeks", "1–2 months", "flexible"],
@@ -982,7 +985,7 @@ const CONTENT = {
   },
 
   uz: {
-    nav: { about: "Men haqimda", projects: "Loyihalar", skills: "Stek", services: "Xizmatlar", cv: "Tajriba", faq: "Savollar", contact: "Aloqa" },
+    nav: { about: "Men haqimda", projects: "Loyihalar", skills: "Stek", services: "Xizmatlar", cv: "Tajriba", faq: "Savollar", contact: "Aloqa", skip: "Kontentga o'tish" },
     hero: {
       eyebrow: "Executive AI Code Lab — v.2026",
       name: "Samandar",
@@ -1443,6 +1446,7 @@ const CONTENT = {
         error: "Yuborib bo'lmadi. Telegram'ga yozing — tezroq javob beraman.",
         telegram: "Telegramga",
         copied: "Ariza nusxalandi — Telegram chatga joylang",
+        copy: "Nusxa olish",
       },
       scope_opts: ["Web App / MVP", "AI Avtomatlashtirish", "Telegram Bot", "Dashboard / CRM", "Landing", "Konsalting"],
       timeline_opts: ["ASAP", "1–2 hafta", "1–2 oy", "moslashuvchan"],

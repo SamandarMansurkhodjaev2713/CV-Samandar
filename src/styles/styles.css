@@ -180,6 +180,22 @@ body {
   letter-spacing: -0.005em;
 }
 
+/* — Accessibility: skip link + keyboard focus ring —
+   The smart cursor sets cursor:none site-wide, so a clear :focus-visible ring
+   is essential for keyboard users. :focus-visible only shows on keyboard nav,
+   never on mouse click, so it doesn't add visual noise for pointer users. */
+.skip-link {
+  position: fixed; top: 8px; left: 8px; z-index: 2147483001;
+  transform: translateY(-160%);
+  padding: 10px 16px; border-radius: 8px;
+  background: var(--accent); color: var(--bg-0);
+  font-family: var(--f-body); font-size: 13px; font-weight: 600;
+  text-decoration: none;
+  transition: transform .2s var(--ease-out);
+}
+.skip-link:focus { transform: translateY(0); outline: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+
 /* — Background atmosphere — */
 .bg-fx-canvas {
   position: fixed;
