@@ -954,6 +954,17 @@ function ProjectBuilder({
     return n + (L.active ? L.tech.length : 0);
   }, 0);
   const verdict = (b.verdictLead[typeKey] || "") + " — " + (b.verdictTail[priorityKey] || "");
+  // Richer output: concrete deliverables (derived from the ACTIVE layers so it
+  // always matches the assembled system), the process stages, and an honest
+  // scope boundary per scale ("what's NOT in this pass" — expectation-setting
+  // reads as professional, not evasive).
+  const includes = layers.filter(function (L) {
+    return L.active;
+  }).map(function (L) {
+    return b.deliverables && b.deliverables[L.id] || "";
+  }).filter(Boolean);
+  const stages = Array.isArray(b.stages) ? b.stages : [];
+  const scopeNote = b.scopeNote && b.scopeNote[scaleKey] || "";
   useEffect2(function runAssembly() {
     const reduce = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.hasAttribute("data-motion-lite");
     if (reduce) {
@@ -981,6 +992,11 @@ function ProjectBuilder({
   // "recomputes" — layers AND readout tear down and re-resolve together,
   // instead of flashing the finished new state for one frame first.
   function choose(setter, k) {
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      try {
+        navigator.vibrate(6);
+      } catch (err) {/* opportunistic haptic */}
+    }
     setter(k);
     setShown(0);
   }
@@ -1186,6 +1202,45 @@ function ProjectBuilder({
   }, b.readout.budget), /*#__PURE__*/React.createElement("span", {
     className: "builder-readout-v mono"
   }, scaleMeta.budget))), /*#__PURE__*/React.createElement("div", {
+    className: `builder-spec ${shown >= activeCount ? "is-in" : ""}`
+  }, includes.length && b.lbl ? /*#__PURE__*/React.createElement("div", {
+    className: "builder-spec-group"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "builder-spec-h mono"
+  }, b.lbl.includes), /*#__PURE__*/React.createElement("ul", {
+    className: "builder-includes"
+  }, includes.map(function renderInclude(d, i) {
+    return /*#__PURE__*/React.createElement("li", {
+      key: i,
+      className: "builder-include",
+      style: {
+        "--si": i
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "builder-include-tick",
+      "aria-hidden": "true"
+    }, "\u2713"), /*#__PURE__*/React.createElement("span", null, d));
+  }))) : null, stages.length && b.lbl ? /*#__PURE__*/React.createElement("div", {
+    className: "builder-spec-group"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "builder-spec-h mono"
+  }, b.lbl.stages), /*#__PURE__*/React.createElement("div", {
+    className: "builder-proc"
+  }, stages.map(function renderStage(s, i) {
+    return /*#__PURE__*/React.createElement("span", {
+      key: i,
+      className: "builder-proc-node",
+      style: {
+        "--si": i
+      }
+    }, s);
+  }))) : null, scopeNote && b.lbl ? /*#__PURE__*/React.createElement("div", {
+    className: "builder-boundary"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "builder-boundary-k mono"
+  }, b.lbl.boundary), /*#__PURE__*/React.createElement("span", {
+    className: "builder-boundary-v"
+  }, scopeNote)) : null), /*#__PURE__*/React.createElement("div", {
     className: `builder-verdict ${shown >= activeCount ? "is-in" : ""}`
   }, /*#__PURE__*/React.createElement("span", {
     className: "builder-verdict-mark",

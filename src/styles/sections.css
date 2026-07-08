@@ -2248,24 +2248,35 @@ html[data-motion-lite] .faq-row-icon-v { transition: none; }
   .builder-opts--scale { grid-template-columns: 1fr 1fr; }
 }
 
+/* Buttons were rgba(7,9,11,.35) — 35% fill over an already-dark textured
+   section, so inactive options nearly vanished ("прозрачные кнопки сливаются
+   с фоном"). Now a solid warm-dark panel with a top inset highlight + drop
+   shadow → each option reads as a real, tactile control at rest. */
 .builder-opt {
   display: flex; flex-direction: column; gap: 4px; text-align: left;
-  padding: 12px 14px; border-radius: 10px;
-  background: rgba(7, 9, 11, 0.35);
+  padding: 13px 15px; border-radius: 11px;
+  background: linear-gradient(180deg, rgba(58, 50, 42, 0.55), rgba(30, 27, 22, 0.62));
   border: 1px solid var(--line-strong);
+  box-shadow: inset 0 1px 0 rgba(245, 240, 230, 0.05), 0 1px 2px rgba(0, 0, 0, 0.25);
   color: var(--text);
   cursor: pointer;
   transition: border-color var(--d-fast), background var(--d-fast), transform var(--d-fast), box-shadow var(--d-fast);
 }
-.builder-opt:hover { border-color: rgba(var(--accent-rgb) / 0.5); transform: translateY(-1px); }
+.builder-opt:hover {
+  border-color: rgba(var(--accent-rgb) / 0.55);
+  background: linear-gradient(180deg, rgba(72, 62, 51, 0.6), rgba(37, 33, 27, 0.66));
+  transform: translateY(-2px);
+  box-shadow: inset 0 1px 0 rgba(245, 240, 230, 0.06), 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+.builder-opt:active { transform: translateY(0) scale(0.985); }
 .builder-opt.is-active {
   border-color: var(--accent);
-  background: rgba(var(--accent-rgb) / 0.08);
-  box-shadow: 0 0 0 1px rgba(var(--accent-rgb) / 0.3), 0 8px 22px rgba(var(--accent-rgb) / 0.12);
+  background: linear-gradient(180deg, rgba(var(--accent-rgb) / 0.16), rgba(var(--accent-rgb) / 0.06));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 0 1px rgba(var(--accent-rgb) / 0.35), 0 10px 26px rgba(var(--accent-rgb) / 0.16);
 }
-.builder-opt-label { font-size: 14px; font-weight: 500; }
+.builder-opt-label { font-size: 14px; font-weight: 500; color: var(--text); }
 .builder-opt.is-active .builder-opt-label { color: var(--accent); }
-.builder-opt-note { font-size: 10px; letter-spacing: 0.03em; color: var(--text-mute); }
+.builder-opt-note { font-size: 10px; letter-spacing: 0.03em; color: var(--text-dim); }
 
 /* readout — the crystallizing stack / timeline / budget */
 .builder-readout {
@@ -2284,6 +2295,53 @@ html[data-motion-lite] .faq-row-icon-v { transition: none; }
 .builder-readout-row:last-child { border-bottom: 0; }
 .builder-readout-k { font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-dim); }
 .builder-readout-v { font-size: 14px; color: var(--text); overflow-wrap: anywhere; }
+
+/* SPEC — deliverables / process / honest boundary. Resolves once the system is
+   fully assembled (shown ≥ activeCount → .is-in), children staggered so it
+   reads as the machine "printing the spec". */
+.builder-spec {
+  margin-top: 14px; display: flex; flex-direction: column; gap: 16px;
+  opacity: 0; transform: translateY(8px);
+  transition: opacity .55s var(--ease-out, ease), transform .55s var(--ease-out, ease);
+}
+.builder-spec.is-in { opacity: 1; transform: none; }
+.builder-spec-group { display: flex; flex-direction: column; gap: 9px; }
+.builder-spec-h { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-dim); }
+
+.builder-includes { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.builder-include {
+  display: grid; grid-template-columns: 18px 1fr; align-items: start; gap: 8px;
+  font-size: 13px; line-height: 1.42; color: var(--text);
+  opacity: 0; transform: translateY(4px);
+  transition: opacity .4s var(--ease-out, ease), transform .4s var(--ease-out, ease);
+  transition-delay: calc(var(--si) * 60ms);
+}
+.builder-spec.is-in .builder-include { opacity: 1; transform: none; }
+.builder-include-tick { color: var(--accent); font-size: 12px; line-height: 1.5; font-weight: 700; }
+
+/* process strip — Созвон → Архитектура → Сборка → Запуск */
+.builder-proc { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 0; }
+.builder-proc-node {
+  position: relative; font-family: var(--f-mono, ui-monospace, monospace);
+  font-size: 11px; letter-spacing: 0.04em; color: var(--text-dim);
+  padding: 5px 11px; border: 1px solid var(--line-strong); border-radius: 999px;
+  background: linear-gradient(180deg, rgba(40, 36, 30, 0.5), rgba(22, 20, 16, 0.55));
+}
+.builder-proc-node:not(:last-child) { margin-right: 26px; }
+.builder-proc-node:not(:last-child)::after {
+  content: "→"; position: absolute; right: -20px; top: 50%; transform: translateY(-50%);
+  color: rgba(var(--accent-rgb) / 0.6); font-size: 12px;
+}
+
+/* boundary — honest "not in this pass"; dashed aside reads as candid, not evasive */
+.builder-boundary {
+  display: flex; flex-direction: column; gap: 5px;
+  padding: 12px 14px; border-radius: 10px;
+  border: 1px dashed var(--line-strong);
+  background: rgba(20, 18, 15, 0.4);
+}
+.builder-boundary-k { font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-mute); }
+.builder-boundary-v { font-size: 12.5px; line-height: 1.5; color: var(--text-dim); }
 
 /* verdict — one line in Samandar's voice; lands once the whole system is built */
 .builder-verdict {

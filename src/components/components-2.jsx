@@ -850,6 +850,16 @@ function ProjectBuilder({ t, links }) {
   const activeCount = layers.reduce(function (n, L) { return n + (L.active ? 1 : 0); }, 0);
   const moduleCount = layers.reduce(function (n, L) { return n + (L.active ? L.tech.length : 0); }, 0);
   const verdict = (b.verdictLead[typeKey] || "") + " — " + (b.verdictTail[priorityKey] || "");
+  // Richer output: concrete deliverables (derived from the ACTIVE layers so it
+  // always matches the assembled system), the process stages, and an honest
+  // scope boundary per scale ("what's NOT in this pass" — expectation-setting
+  // reads as professional, not evasive).
+  const includes = layers
+    .filter(function (L) { return L.active; })
+    .map(function (L) { return (b.deliverables && b.deliverables[L.id]) || ""; })
+    .filter(Boolean);
+  const stages = Array.isArray(b.stages) ? b.stages : [];
+  const scopeNote = (b.scopeNote && b.scopeNote[scaleKey]) || "";
 
   useEffect2(function runAssembly() {
     const reduce =
@@ -868,7 +878,12 @@ function ProjectBuilder({ t, links }) {
   // Reset the cascade SYNCHRONOUSLY on any choice so the machine visibly
   // "recomputes" — layers AND readout tear down and re-resolve together,
   // instead of flashing the finished new state for one frame first.
-  function choose(setter, k) { setter(k); setShown(0); }
+  function choose(setter, k) {
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      try { navigator.vibrate(6); } catch (err) { /* opportunistic haptic */ }
+    }
+    setter(k); setShown(0);
+  }
 
   function pick(list, k) { const f = list.filter(function (x) { return x.k === k; })[0]; return f ? f.label : k; }
   function summaryLine() {
@@ -1006,6 +1021,46 @@ function ProjectBuilder({ t, links }) {
                 <span className="builder-readout-v mono">{scaleMeta.budget}</span>
               </div>
             </div>
+
+            {/* SPEC — concrete deliverables, process, and honest scope boundary.
+                Resolves once the system is fully assembled (shown ≥ activeCount),
+                staggered by CSS so it reads as the machine "printing the spec". */}
+            <div className={`builder-spec ${shown >= activeCount ? "is-in" : ""}`}>
+              {includes.length && b.lbl ? (
+                <div className="builder-spec-group">
+                  <div className="builder-spec-h mono">{b.lbl.includes}</div>
+                  <ul className="builder-includes">
+                    {includes.map(function renderInclude(d, i) {
+                      return (
+                        <li key={i} className="builder-include" style={{ "--si": i }}>
+                          <span className="builder-include-tick" aria-hidden="true">✓</span>
+                          <span>{d}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ) : null}
+
+              {stages.length && b.lbl ? (
+                <div className="builder-spec-group">
+                  <div className="builder-spec-h mono">{b.lbl.stages}</div>
+                  <div className="builder-proc">
+                    {stages.map(function renderStage(s, i) {
+                      return <span key={i} className="builder-proc-node" style={{ "--si": i }}>{s}</span>;
+                    })}
+                  </div>
+                </div>
+              ) : null}
+
+              {scopeNote && b.lbl ? (
+                <div className="builder-boundary">
+                  <span className="builder-boundary-k mono">{b.lbl.boundary}</span>
+                  <span className="builder-boundary-v">{scopeNote}</span>
+                </div>
+              ) : null}
+            </div>
+
             <div className={`builder-verdict ${shown >= activeCount ? "is-in" : ""}`}>
               <span className="builder-verdict-mark" aria-hidden="true">“</span>
               <p className="builder-verdict-text">{verdict}</p>
