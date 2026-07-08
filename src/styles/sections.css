@@ -158,7 +158,25 @@
   background:
     radial-gradient(ellipse 70% 55% at 15% 0%, rgba(var(--accent-rgb) / 0.07), transparent 62%),
     radial-gradient(ellipse 50% 40% at 100% 100%, rgba(var(--accent-2-rgb) / 0.05), transparent 65%),
-    var(--bg-0);
+    /* Was a flat var(--bg-0) fill for the section's full height — opaque right
+       up to the last pixel, then About's section starts fully transparent
+       (its own "transparent-over-WebGL" design), so the fixed bg-fx-canvas/
+       bg-grid texture snapped from invisible to fully visible in one frame at
+       the Signal→About boundary (the hard "seam" flagged from a screenshot).
+       By the time this fade starts, the pin-scroll cover of Hero is long
+       finished — Hero unsticks and scrolls away well before Signal's own
+       bottom edge is reached — so nothing is left that still needs opaque
+       covering here. Fading the last stretch to transparent lets the same
+       fixed texture About already shows bleed in gradually, so the two
+       sections read as one continuous backdrop instead of a cut.
+       90px, not the more gradual 240px first tried: measured live, the last
+       signal-row's real content ends only ~112-118px above the section's
+       bottom edge (desktop 1280 and mobile 390 both checked) — a taller fade
+       would have started UNDER the last row's text, fading its own backdrop
+       to transparent behind it and quietly re-breaking the exact contrast
+       problem this whole pass was fixing. 90px sits safely inside that
+       measured dead space on both. */
+    linear-gradient(to bottom, var(--bg-0) 0%, var(--bg-0) calc(100% - 90px), transparent 100%);
   box-shadow: 0 -22px 50px -22px rgba(0, 0, 0, 0.6);
 }
 .pin-host--hero > section[data-section]:last-child::after {
@@ -1506,9 +1524,13 @@ html[data-motion-lite] .skills-acc-row.is-open .skills-items { animation: none; 
 .svc-panel-wrap {
   position: relative;
   min-height: 340px;          /* reserve height → no CLS on crossfade */
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   border-radius: 14px;
-  background: linear-gradient(180deg, rgba(244,241,234,.025), rgba(244,241,234,.005));
+  /* Was a near-invisible light film (rgba(244,241,234,.025)) → the panel had no
+     real surface, so the --text-dim description sat straight on the textured
+     section bg and washed out ("сливается с фоном"). Now a solid warm-dark
+     panel so content reads with clear contrast. */
+  background: linear-gradient(180deg, rgba(32, 29, 24, 0.55), rgba(20, 18, 15, 0.6));
   padding: 34px 34px 30px;
   overflow: hidden;
 }
@@ -1549,7 +1571,7 @@ html[data-motion-lite] .skills-acc-row.is-open .skills-items { animation: none; 
 .svc-detail-v {
   font-size: 16.5px;
   line-height: 1.6;
-  color: var(--text-dim);
+  color: var(--text);          /* was --text-dim → primary description, keep it clearly legible */
   max-width: 46ch;
   margin: 0;
 }

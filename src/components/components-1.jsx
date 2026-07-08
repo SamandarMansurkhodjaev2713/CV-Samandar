@@ -429,7 +429,9 @@ const SIGNAL_TAILS = [
 ];
 
 function SignalRow({ card, index, total, open, onToggle, hasHover }) {
-  const tail = SIGNAL_TAILS[index] || "";
+  // Prefer the card's own localized tail (identity signals); fall back to the
+  // legacy hardcoded list only if a cached content bundle lacks per-card tails.
+  const tail = card.tail || SIGNAL_TAILS[index] || "";
   // On hover-capable desktops, mouseenter always fires before click (the
   // cursor has to enter the row before it can be clicked) — if click always
   // toggled, it would immediately re-close whatever hover just opened. So on
@@ -506,7 +508,7 @@ function Signal({ t }) {
           eyebrow={t.signal.eyebrow}
           title={t.signal.title}
           em={t.signal.title.split(" ").pop()}
-          meta={`${t.signal.cards.length} каналов · сигнал`}
+          meta={`${t.signal.cards.length} · signal`}
         />
         <div className="signal-rows">
           {t.signal.cards.map((c, i) => (
