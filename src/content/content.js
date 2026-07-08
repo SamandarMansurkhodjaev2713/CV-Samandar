@@ -229,7 +229,7 @@ const CONTENT = {
         { k: "Dashboards", v: "Админ-панели, CRM, операционные дашборды", io: "data → ops view" },
         { k: "MVP / Prototype", v: "От идеи до работающего прототипа за недели", io: "idea → demo" },
         { k: "Internal Tools", v: "CRM, кабинеты, инструменты для команды", io: "team → tool" },
-        { k: "Tech Consulting", v: "Архитектура, аудит, стек, тех-стратегия", io: "question → plan" },
+        { k: "Tech Consulting", v: "Архитектура, аудит, стек, тех-стратегия", io: "question → plan", covers: ["Архитектура и ревью решений", "Выбор стека и технический аудит", "Техстратегия и план запуска"] },
       ],
     },
     cv: {
@@ -714,7 +714,7 @@ const CONTENT = {
         { k: "Dashboards", v: "Admin panels, CRM, ops dashboards", io: "data → ops view" },
         { k: "MVP / Prototype", v: "Idea to working prototype in weeks", io: "idea → demo" },
         { k: "Internal Tools", v: "CRM, portals, team-only software", io: "team → tool" },
-        { k: "Tech Consulting", v: "Architecture, audit, stack, strategy", io: "question → plan" },
+        { k: "Tech Consulting", v: "Architecture, audit, stack, strategy", io: "question → plan", covers: ["Architecture & solution review", "Stack choice & technical audit", "Tech strategy & launch plan"] },
       ],
     },
     cv: {
@@ -1199,7 +1199,7 @@ const CONTENT = {
         { k: "Dashboardlar", v: "Admin paneller, CRM, ops dashboardlar", io: "data → ops view" },
         { k: "MVP / Prototip", v: "Goyadan ishlovchi prototipgacha", io: "idea → demo" },
         { k: "Ichki asboblar", v: "CRM, kabinetlar, jamoa uchun", io: "team → tool" },
-        { k: "Texnik konsalting", v: "Arxitektura, audit, stek, strategiya", io: "question → plan" },
+        { k: "Texnik konsalting", v: "Arxitektura, audit, stek, strategiya", io: "question → plan", covers: ["Arxitektura va yechim ko'rigi", "Stek tanlash va texnik audit", "Texnik strategiya va ishga tushirish rejasi"] },
       ],
     },
     cv: {

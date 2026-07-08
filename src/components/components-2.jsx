@@ -18,17 +18,21 @@ const { useEffect: useEffect2, useRef: useRef2, useState: useState2, useMemo: us
 // match (Internal Tools, Tech Consulting) simply omit the block.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Hard map: service index → projects[].name that genuinely delivers it.
-// null = no honest 1:1 match → the related block is not rendered.
+// Hard map: service index → projects[].name that genuinely delivers it. MUST
+// match a real projects[].name EXACTLY or the related block silently never
+// renders — which is what happened: the previous names (Business Automation
+// Engine, Railway Infrastructure Site, …) were from an older projects set and
+// matched nothing, so EVERY service panel showed only description+io and the
+// reserved min-height became a big empty box under the new solid panel bg.
 const SERVICE_RELATED = [
-  "Business Automation Engine", // 0 Web Apps        → full product build
-  "Railway Infrastructure Site",// 1 Landing & Sites → premium landing
-  "Task Orchestrator Bot",      // 2 Telegram Bots   → team bot
-  "Business Automation Engine", // 3 AI Automation   → LLM workflow pipeline
-  "Biogas Operations Panel",    // 4 Dashboards      → ops dashboard
-  "Group Voice Task Bot",       // 5 MVP / Prototype → "MVP in 11 days"
-  null,                         // 6 Internal Tools  → no honest 1:1 case
-  null,                         // 7 Tech Consulting → advisory, no shippable case
+  "TTYL Platform",                    // 0 Web Apps        → full product/platform build
+  "3D Landing",                       // 1 Landing & Sites → premium Three.js landing
+  "Task-manager / Task Manage Bot",   // 2 Telegram Bots   → team/task bot
+  "Klawis — Legal AI Assistant",      // 3 AI Automation   → live AI product (RAG)
+  "Sentinel Edge",                    // 4 Dashboards      → realtime ops dashboard
+  "CoupleOS / Softly",                // 5 MVP / Prototype → live product MVP
+  "BelfProctor",                      // 6 Internal Tools  → internal monitoring system
+  null,                               // 7 Tech Consulting → advisory, no single shippable case
 ];
 
 // Split "spec → prod app" into [input, output] on the arrow.
@@ -108,6 +112,21 @@ function Services({ t }) {
       <div className="svc-detail-inner">
         <p className="svc-detail-v">{s.v}</p>
         <ServiceIoFlow io={s.io} />
+        {/* Advisory services have no shippable 1:1 case — instead of a related
+            project card they list what the engagement covers (honest, and it
+            gives the panel real content instead of empty reserved space). */}
+        {Array.isArray(s.covers) && s.covers.length ? (
+          <ul className="svc-covers">
+            {s.covers.map(function renderCover(c, ci) {
+              return (
+                <li key={ci} className="svc-cover">
+                  <span className="svc-cover-mark" aria-hidden="true">→</span>
+                  <span>{c}</span>
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
         {rel ? (
           <a
             className="svc-related"

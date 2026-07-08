@@ -1634,6 +1634,14 @@ html[data-motion-lite] .skills-acc-row.is-open .skills-items { animation: none; 
   100% { left: 100%; opacity: 0; }
 }
 
+/* ── covers list (advisory services, no shippable case) ── */
+.svc-covers { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.svc-cover {
+  display: grid; grid-template-columns: 20px 1fr; align-items: start; gap: 10px;
+  font-size: 15px; line-height: 1.4; color: var(--text-dim);
+}
+.svc-cover-mark { color: var(--accent); font-family: var(--f-mono); font-size: 14px; line-height: 1.5; }
+
 /* ── related project ── */
 .svc-related {
   position: relative;
