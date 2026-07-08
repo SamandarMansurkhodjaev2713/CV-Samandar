@@ -1400,10 +1400,12 @@ function Trust({
 // ─────────────────────────────────────────────────────────────────────────────
 // CONTACT
 // ─────────────────────────────────────────────────────────────────────────────
-// Contact form delivery endpoint. Create a free form at https://formspree.io
-// and replace YOUR_FORM_ID with the real id (e.g. "xeozabcd"). Until then the
-// form runs in "demo" mode — it shows an optimistic success WITHOUT actually
-// sending, so the UI is never broken while the endpoint is unconfigured.
+// Contact form EMAIL delivery endpoint. Create a free form at
+// https://formspree.io and replace YOUR_FORM_ID with the real id (e.g.
+// "xeozabcd") to enable email delivery. Until then the form does NOT fake a
+// success — the submit button routes honestly to the Telegram hand-off
+// (composeMessage → clipboard + open chat), which works with no backend. The
+// dedicated "✈ Telegram" button always does the same, regardless of this id.
 const CONTACT_FORM_ENDPOINT = "https://formspree.io/f/YOUR_FORM_ID";
 const FORM_ENDPOINT_CONFIGURED = CONTACT_FORM_ENDPOINT.indexOf("YOUR_FORM_ID") === -1;
 const CONTACT_FETCH_TIMEOUT_MS = 12000;
@@ -1415,6 +1417,9 @@ function Contact({
   const [sent, setSent] = useState2(false);
   const [sending, setSending] = useState2(false);
   const [errorMsg, setErrorMsg] = useState2("");
+  const [copied, setCopied] = useState2(false);
+  const formRef = useRef2(null);
+  const TELEGRAM_URL = "https://" + (links.telegram || "t.me/killallofthem13");
   // Multi-select chips for project scope — a single dropdown was hiding the
   // breadth of services. Chips let the visitor click as many as apply, which
   // also reveals the available service categories at a glance.
@@ -1492,21 +1497,62 @@ function Contact({
       setSent(false);
     }, SENT_HIDE_DELAY_MS);
   }
-  function onSubmit(e) {
-    e.preventDefault();
-    const formEl = e.currentTarget;
-    setErrorMsg("");
 
-    // Collect native fields (name/email/message via their `name=` attrs) plus
-    // the React-controlled selections that aren't native inputs.
+  // Collect native fields (name/email/message via their `name=` attrs) plus
+  // the React-controlled selections that aren't native inputs.
+  function buildFd(formEl) {
     const fd = new FormData(formEl);
     fd.append("scope", Array.from(scopeSet).join(", "));
     fd.append("budget", BUDGET_BUCKETS[budgetIdx]);
     fd.append("timeline", TIMELINE_OPTS[timelineIdx]);
+    return fd;
+  }
 
-    // Demo mode (endpoint not configured) — optimistic success, no network.
+  // Build a readable brief from the form fields for the Telegram hand-off.
+  function composeMessage(fd) {
+    const g = function (k) {
+      return (fd.get(k) || "").toString().trim();
+    };
+    const L = t.contact.form || {};
+    return ["Заявка с сайта — SM", g("name") ? (L.name || "Имя") + ": " + g("name") : "", g("email") ? (L.email || "Email") + ": " + g("email") : "", g("scope") ? (L.scope || "Scope") + ": " + g("scope") : "", g("budget") ? (L.budget || "Бюджет") + ": " + g("budget") : "", g("timeline") ? (L.timeline || "Сроки") + ": " + g("timeline") : "", "", g("message")].filter(function (line) {
+      return line !== "";
+    }).join("\n");
+  }
+
+  // Telegram delivery: a personal @username can't accept prefilled DM text via
+  // a link, so we copy the composed brief to the clipboard (the visitor pastes
+  // it) AND open the chat. Honest + no backend required.
+  function openTelegram(formEl) {
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      try {
+        navigator.vibrate(10);
+      } catch (err) {/* opportunistic */}
+    }
+    const text = composeMessage(buildFd(formEl));
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          setCopied(true);
+          window.setTimeout(function () {
+            setCopied(false);
+          }, 4500);
+        }, function () {/* clipboard denied — still open the chat */});
+      }
+    } catch (err) {/* opportunistic */}
+    try {
+      window.open(TELEGRAM_URL, "_blank", "noopener,noreferrer");
+    } catch (err) {/* opportunistic */}
+  }
+  function onSubmit(e) {
+    e.preventDefault();
+    const formEl = e.currentTarget;
+    setErrorMsg("");
+    const fd = buildFd(formEl);
+
+    // Endpoint not configured yet → route HONESTLY to Telegram (never a fake
+    // "sent"). Once a real Formspree id is set, email delivery takes over.
     if (!FORM_ENDPOINT_CONFIGURED) {
-      finishSent(formEl);
+      openTelegram(formEl);
       return;
     }
 
@@ -1563,6 +1609,7 @@ function Contact({
   }, t.contact.lead), /*#__PURE__*/React.createElement("div", {
     className: "contact-layout"
   }, /*#__PURE__*/React.createElement("form", {
+    ref: formRef,
     className: "contact-form card",
     onSubmit: onSubmit,
     "data-reveal": true
@@ -1672,13 +1719,24 @@ function Contact({
   })), errorMsg ? /*#__PURE__*/React.createElement("div", {
     className: "contact-form-error mono",
     role: "alert"
-  }, errorMsg) : null, /*#__PURE__*/React.createElement("button", {
+  }, errorMsg) : null, copied ? /*#__PURE__*/React.createElement("div", {
+    className: "contact-copied mono",
+    role: "status"
+  }, t.contact.form && t.contact.form.copied || "Заявка скопирована — вставь в чат Telegram") : null, /*#__PURE__*/React.createElement("div", {
+    className: "contact-actions"
+  }, /*#__PURE__*/React.createElement("button", {
     type: "submit",
     className: `btn btn-primary contact-submit ${sent ? "is-sent" : ""}`,
     disabled: sent || sending
   }, /*#__PURE__*/React.createElement("span", null, sending ? t.contact.form.sending || "Отправка…" : sent ? t.contact.form.sent : t.contact.form.submit), /*#__PURE__*/React.createElement("span", {
     className: "arrow"
-  }, sent ? "✓" : "→"))), /*#__PURE__*/React.createElement("aside", {
+  }, sent ? "✓" : "→")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "btn btn-ghost contact-tg",
+    onClick: function () {
+      if (formRef.current) openTelegram(formRef.current);
+    }
+  }, /*#__PURE__*/React.createElement("span", null, "\u2708 ", t.contact.form && t.contact.form.telegram || "В Telegram")))), /*#__PURE__*/React.createElement("aside", {
     className: "contact-side",
     "data-reveal": true
   }, /*#__PURE__*/React.createElement("div", {

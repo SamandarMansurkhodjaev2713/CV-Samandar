@@ -2622,12 +2622,30 @@ html[data-motion-lite] .builder-chip { animation: none; }
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
+.contact-actions {
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 8px;
+}
 .contact-submit {
-  align-self: flex-start;
-  margin-top: 8px;
   transition: transform var(--d-fast), background var(--d-fast);
 }
 .contact-submit.is-sent { background: var(--accent); color: var(--bg-0); }
+.contact-tg { white-space: nowrap; }
+/* "copied → paste into Telegram" confirmation */
+.contact-copied {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 4px; padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(var(--accent-rgb) / 0.1);
+  border: 1px solid rgba(var(--accent-rgb) / 0.35);
+  color: var(--accent);
+  font-size: 11.5px; letter-spacing: 0.02em;
+  animation: contactCopiedIn .3s var(--ease-out, ease) both;
+}
+@keyframes contactCopiedIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+@media (max-width: 420px) {
+  .contact-actions { width: 100%; }
+  .contact-actions .btn { flex: 1 1 auto; justify-content: center; }
+}
 
 /* ── Chip multi-select (scope) + radio chips (timeline) ────── */
 .ff-chips {
