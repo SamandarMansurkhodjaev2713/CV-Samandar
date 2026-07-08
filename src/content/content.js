@@ -433,33 +433,17 @@ const CONTENT = {
       ],
     },
     trust: {
-      eyebrow: "Trust",
-      title: "Отзывы команд",
-      lead: "Что говорят те, с кем я уже работал.",
-      // Placeholder phase: quotes below are illustrative (see note), not yet
-      // real client testimonials. kQuotes/kRoles/kSpan label the strip's
-      // genuinely-derived counts; note is the honest flag shown alongside
-      // them. Delete `note` once real quotes replace the placeholders.
-      kQuotes: "цитаты",
-      kRoles: "роли",
-      kSpan: "период",
-      note: "иллюстративно — реальные отзывы скоро",
-      items: [
-        {
-          q: "Принёс архитектурный черновик к первой встрече. Через месяц у нас работала первая версия — без скоупа, который раздулся бы у любого подрядчика.",
-          who: "Product Lead",
-          role: "Логистическая компания · 2025",
-        },
-        {
-          q: "AI-интеграция работает в проде уже 8 месяцев. Без галлюцинаций, с метриками, с graceful-fallback. Это не демо — это инструмент.",
-          who: "CTO",
-          role: "SaaS-стартап · 2024",
-        },
-        {
-          q: "Telegram-бот заменил два рабочих часа в день у каждого менеджера. Поставили за две недели, окупился за месяц.",
-          who: "Founder",
-          role: "B2B-сервис · 2024",
-        },
+      eyebrow: "Proof",
+      title: "Доказательства, а не обещания",
+      lead: "Отзывы не публикую — вместо них то, что можно открыть и проверить прямо сейчас: живые продукты и публичный код.",
+      note: "открыто к проверке",
+      proof: [
+        { k: "Klawis", v: "Legal AI · RAG · цитирование источников", tag: "LIVE", url: "https://klawis.uz" },
+        { k: "CoupleOS / Softly", v: "Продукт для пар · mobile-first", tag: "LIVE", url: "https://softlylove.uz" },
+        { k: "Sentinel Edge", v: "Realtime-дашборд + firmware", tag: "DEMO", url: "https://samandarmansurkhodjaev2713.github.io/sentinel-edge-smart-system/" },
+        { k: "3D Landing", v: "Three.js / WebGL сцена", tag: "DEMO", url: "https://samandarmansurkhodjaev2713.github.io/3d-landing/" },
+        { k: "Task-manager", v: "Rust Telegram-бот · public repo + CI", tag: "CODE", url: "https://github.com/SamandarMansurkhodjaev2713/Task-manager" },
+        { k: "GitHub", v: "весь публичный код + NDA-кейсы", tag: "CODE", url: "https://github.com/SamandarMansurkhodjaev2713" },
       ],
     },
     contact: {
@@ -920,29 +904,17 @@ const CONTENT = {
       ],
     },
     trust: {
-      eyebrow: "Trust",
-      title: "What teams say",
-      lead: "From people I've worked with.",
-      kQuotes: "quotes",
-      kRoles: "roles",
-      kSpan: "span",
-      note: "illustrative — real quotes coming soon",
-      items: [
-        {
-          q: "Brought an architecture draft to our first call. A month later we had a working version — no scope creep, which any other vendor would have given us.",
-          who: "Product Lead",
-          role: "Logistics company · 2025",
-        },
-        {
-          q: "The AI integration has been in production for 8 months. No hallucinations, with metrics, with graceful fallback. It's a tool, not a demo.",
-          who: "CTO",
-          role: "SaaS startup · 2024",
-        },
-        {
-          q: "The Telegram bot replaced two hours of work per day for each manager. Delivered in two weeks, paid for itself in a month.",
-          who: "Founder",
-          role: "B2B service · 2024",
-        },
+      eyebrow: "Proof",
+      title: "Proof, not promises",
+      lead: "I don't publish testimonials — instead, things you can open and verify right now: live products and public code.",
+      note: "open to inspection",
+      proof: [
+        { k: "Klawis", v: "Legal AI · RAG · cited sources", tag: "LIVE", url: "https://klawis.uz" },
+        { k: "CoupleOS / Softly", v: "Product for couples · mobile-first", tag: "LIVE", url: "https://softlylove.uz" },
+        { k: "Sentinel Edge", v: "Realtime dashboard + firmware", tag: "DEMO", url: "https://samandarmansurkhodjaev2713.github.io/sentinel-edge-smart-system/" },
+        { k: "3D Landing", v: "Three.js / WebGL scene", tag: "DEMO", url: "https://samandarmansurkhodjaev2713.github.io/3d-landing/" },
+        { k: "Task-manager", v: "Rust Telegram bot · public repo + CI", tag: "CODE", url: "https://github.com/SamandarMansurkhodjaev2713/Task-manager" },
+        { k: "GitHub", v: "all public code + NDA case studies", tag: "CODE", url: "https://github.com/SamandarMansurkhodjaev2713" },
       ],
     },
     contact: {
@@ -1403,29 +1375,17 @@ const CONTENT = {
       ],
     },
     trust: {
-      eyebrow: "Trust",
-      title: "Jamoalar nima deydi",
-      lead: "Birga ishlagan odamlardan.",
-      kQuotes: "iqtiboslar",
-      kRoles: "rollar",
-      kSpan: "davr",
-      note: "illyustrativ — haqiqiy fikrlar tez orada",
-      items: [
-        {
-          q: "Birinchi uchrashuvga arxitektura qoralamasini olib keldi. Bir oydan keyin birinchi versiya ishlay boshladi — boshqa pudratchi shishirib yuborgan qamrovsiz.",
-          who: "Product Lead",
-          role: "Logistika kompaniyasi · 2025",
-        },
-        {
-          q: "AI-integratsiya 8 oydan beri prodda ishlaydi. Gallyutsinatsiyalarsiz, metrikalar bilan, graceful-fallback bilan. Bu — asbob, demo emas.",
-          who: "CTO",
-          role: "SaaS-startap · 2024",
-        },
-        {
-          q: "Telegram-bot har bir menejerga kuniga ikki ish soatini qaytarib berdi. Ikki haftada qildi, bir oyda o'zini qoplab oldi.",
-          who: "Founder",
-          role: "B2B xizmat · 2024",
-        },
+      eyebrow: "Proof",
+      title: "Va'da emas, isbot",
+      lead: "Fikrlarni chop etmayman — o'rniga hoziroq ochib tekshirsa bo'ladigan narsalar: jonli mahsulotlar va ochiq kod.",
+      note: "tekshirishga ochiq",
+      proof: [
+        { k: "Klawis", v: "Legal AI · RAG · manba ko'rsatish", tag: "LIVE", url: "https://klawis.uz" },
+        { k: "CoupleOS / Softly", v: "Juftliklar uchun · mobile-first", tag: "LIVE", url: "https://softlylove.uz" },
+        { k: "Sentinel Edge", v: "Realtime-dashboard + firmware", tag: "DEMO", url: "https://samandarmansurkhodjaev2713.github.io/sentinel-edge-smart-system/" },
+        { k: "3D Landing", v: "Three.js / WebGL sahna", tag: "DEMO", url: "https://samandarmansurkhodjaev2713.github.io/3d-landing/" },
+        { k: "Task-manager", v: "Rust Telegram-bot · public repo + CI", tag: "CODE", url: "https://github.com/SamandarMansurkhodjaev2713/Task-manager" },
+        { k: "GitHub", v: "barcha ochiq kod + NDA keyslar", tag: "CODE", url: "https://github.com/SamandarMansurkhodjaev2713" },
       ],
     },
     contact: {

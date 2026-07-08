@@ -1097,81 +1097,52 @@ function Faq({ t }) {
 // working (totalQuotes/uniqueRoles recompute) and the "illustrative" note
 // can be deleted in one place (t.trust.note).
 
+// PROOF — replaces placeholder testimonials with verifiable receipts: live
+// products + public code you can open right now. Honest > fake quotes, and it
+// reads as "here are my receipts", which is the actual professional signal.
 function Trust({ t }) {
   const ref = useRevealRoot([t]);
-  const items = (t.trust && Array.isArray(t.trust.items)) ? t.trust.items : [];
-  // Aggregate metrics — derived (not hand-set) so they stay honest.
-  const totalQuotes = items.length;
-  const uniqueRoles = (function countUniqueRoles() {
-    const seen = new Set();
-    for (let i = 0; i < items.length; i++) {
-      const r = (items[i].role || "").split(/[·•]/)[0].trim();
-      if (r) seen.add(r);
-    }
-    return seen.size;
-  })();
-  const years = (function spanYears() {
-    const seen = new Set();
-    for (let i = 0; i < items.length; i++) {
-      const m = (items[i].role || "").match(/(20\d\d)/);
-      if (m) seen.add(m[1]);
-    }
-    return Array.from(seen).sort();
-  })();
-  const yearLabel = years.length >= 2 ? `${years[0]}–${years[years.length - 1]}` : (years[0] || "");
+  const proof = (t.trust && Array.isArray(t.trust.proof)) ? t.trust.proof : [];
+  const liveCount = proof.filter(function (p) { return p.tag === "LIVE"; }).length;
 
   return (
     <section data-section="trust" id="trust" data-enter="slide-right" ref={ref}>
       <div className="shell">
-        <SecHead num="09" eyebrow={t.trust.eyebrow} title={t.trust.title} meta={`${totalQuotes} · signed`} />
+        <SecHead num="09" eyebrow={t.trust.eyebrow} title={t.trust.title} meta={`${proof.length} · open`} />
         <p className="lead-line" data-reveal>{t.trust.lead}</p>
 
-        {/* Aggregate trust strip — ONLY genuinely-derived counts. No stars,
-            no fabricated percentages. If t.trust.note is set (placeholder
-            phase), it renders as a plainly-labeled illustrative flag rather
-            than being hidden — visible honesty reads as more credible than
-            silence, and it doubles as an editorial/attention-grabbing beat. */}
-        <div className="trust-strip" data-reveal>
-          <div className="trust-strip-cell">
-            <span className="trust-strip-val">{totalQuotes}</span>
-            <span className="trust-strip-k mono">{t.trust.kQuotes || "quotes"}</span>
-          </div>
-          <div className="trust-strip-cell">
-            <span className="trust-strip-val">{uniqueRoles}</span>
-            <span className="trust-strip-k mono">{t.trust.kRoles || "roles"}</span>
-          </div>
-          {yearLabel ? (
-            <div className="trust-strip-cell">
-              <span className="trust-strip-val">{yearLabel}</span>
-              <span className="trust-strip-k mono">{t.trust.kSpan || "span"}</span>
-            </div>
-          ) : null}
-          {t.trust.note ? (
-            <div className="trust-strip-cell trust-strip-note">
-              <span className="trust-strip-flag mono">{t.trust.note}</span>
-            </div>
-          ) : null}
-        </div>
-
-        <div className="trust-grid">
-          {items.map(function renderTrust(it, i) {
+        <div className="proof-grid" data-reveal>
+          {proof.map(function renderProof(p, i) {
             return (
-              <figure key={i} className="trust-card" data-reveal data-reveal-from="translateY(20px) scale(.98)" data-reveal-delay={(i * 0.08).toFixed(2)}>
-                <div className="trust-quote-mark" aria-hidden="true">"</div>
-                <blockquote className="trust-q">{it.q}</blockquote>
-                <figcaption className="trust-cap">
-                  <div className="trust-avatar" aria-hidden="true">
-                    <span>{it.who.split(" ").map(function (w) { return w[0]; }).join("").slice(0, 2)}</span>
-                  </div>
-                  <div className="trust-cap-text">
-                    <div className="trust-who">{it.who}</div>
-                    <div className="trust-role mono">{it.role}</div>
-                  </div>
-                </figcaption>
-              </figure>
+              <a
+                key={i}
+                className="proof-card"
+                href={p.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-cursor="link"
+                data-cursor-label={`open: ${p.k}`}
+                data-reveal
+                data-reveal-from="translateY(18px) scale(.98)"
+                data-reveal-delay={(i * 0.06).toFixed(2)}
+              >
+                <div className="proof-card-top">
+                  <span className={`proof-tag mono proof-tag--${(p.tag || "").toLowerCase()}`}>{p.tag}</span>
+                  <span className="arrow" aria-hidden="true">↗</span>
+                </div>
+                <div className="proof-card-k">{p.k}</div>
+                <div className="proof-card-v">{p.v}</div>
+              </a>
             );
           })}
         </div>
+
+        {t.trust.note ? (
+          <div className="proof-foot mono" data-reveal>
+            <span className="proof-foot-dot" aria-hidden="true" />
+            {liveCount ? `${liveCount} live · ` : ""}{t.trust.note}
+          </div>
+        ) : null}
       </div>
     </section>
   );

@@ -1302,30 +1302,17 @@ function Faq({
 // working (totalQuotes/uniqueRoles recompute) and the "illustrative" note
 // can be deleted in one place (t.trust.note).
 
+// PROOF — replaces placeholder testimonials with verifiable receipts: live
+// products + public code you can open right now. Honest > fake quotes, and it
+// reads as "here are my receipts", which is the actual professional signal.
 function Trust({
   t
 }) {
   const ref = useRevealRoot([t]);
-  const items = t.trust && Array.isArray(t.trust.items) ? t.trust.items : [];
-  // Aggregate metrics — derived (not hand-set) so they stay honest.
-  const totalQuotes = items.length;
-  const uniqueRoles = function countUniqueRoles() {
-    const seen = new Set();
-    for (let i = 0; i < items.length; i++) {
-      const r = (items[i].role || "").split(/[·•]/)[0].trim();
-      if (r) seen.add(r);
-    }
-    return seen.size;
-  }();
-  const years = function spanYears() {
-    const seen = new Set();
-    for (let i = 0; i < items.length; i++) {
-      const m = (items[i].role || "").match(/(20\d\d)/);
-      if (m) seen.add(m[1]);
-    }
-    return Array.from(seen).sort();
-  }();
-  const yearLabel = years.length >= 2 ? `${years[0]}–${years[years.length - 1]}` : years[0] || "";
+  const proof = t.trust && Array.isArray(t.trust.proof) ? t.trust.proof : [];
+  const liveCount = proof.filter(function (p) {
+    return p.tag === "LIVE";
+  }).length;
   return /*#__PURE__*/React.createElement("section", {
     "data-section": "trust",
     id: "trust",
@@ -1337,64 +1324,44 @@ function Trust({
     num: "09",
     eyebrow: t.trust.eyebrow,
     title: t.trust.title,
-    meta: `${totalQuotes} · signed`
+    meta: `${proof.length} · open`
   }), /*#__PURE__*/React.createElement("p", {
     className: "lead-line",
     "data-reveal": true
   }, t.trust.lead), /*#__PURE__*/React.createElement("div", {
-    className: "trust-strip",
+    className: "proof-grid",
     "data-reveal": true
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "trust-strip-cell"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "trust-strip-val"
-  }, totalQuotes), /*#__PURE__*/React.createElement("span", {
-    className: "trust-strip-k mono"
-  }, t.trust.kQuotes || "quotes")), /*#__PURE__*/React.createElement("div", {
-    className: "trust-strip-cell"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "trust-strip-val"
-  }, uniqueRoles), /*#__PURE__*/React.createElement("span", {
-    className: "trust-strip-k mono"
-  }, t.trust.kRoles || "roles")), yearLabel ? /*#__PURE__*/React.createElement("div", {
-    className: "trust-strip-cell"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "trust-strip-val"
-  }, yearLabel), /*#__PURE__*/React.createElement("span", {
-    className: "trust-strip-k mono"
-  }, t.trust.kSpan || "span")) : null, t.trust.note ? /*#__PURE__*/React.createElement("div", {
-    className: "trust-strip-cell trust-strip-note"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "trust-strip-flag mono"
-  }, t.trust.note)) : null), /*#__PURE__*/React.createElement("div", {
-    className: "trust-grid"
-  }, items.map(function renderTrust(it, i) {
-    return /*#__PURE__*/React.createElement("figure", {
+  }, proof.map(function renderProof(p, i) {
+    return /*#__PURE__*/React.createElement("a", {
       key: i,
-      className: "trust-card",
+      className: "proof-card",
+      href: p.url,
+      target: "_blank",
+      rel: "noopener noreferrer",
+      "data-cursor": "link",
+      "data-cursor-label": `open: ${p.k}`,
       "data-reveal": true,
-      "data-reveal-from": "translateY(20px) scale(.98)",
-      "data-reveal-delay": (i * 0.08).toFixed(2)
+      "data-reveal-from": "translateY(18px) scale(.98)",
+      "data-reveal-delay": (i * 0.06).toFixed(2)
     }, /*#__PURE__*/React.createElement("div", {
-      className: "trust-quote-mark",
+      className: "proof-card-top"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: `proof-tag mono proof-tag--${(p.tag || "").toLowerCase()}`
+    }, p.tag), /*#__PURE__*/React.createElement("span", {
+      className: "arrow",
       "aria-hidden": "true"
-    }, "\""), /*#__PURE__*/React.createElement("blockquote", {
-      className: "trust-q"
-    }, it.q), /*#__PURE__*/React.createElement("figcaption", {
-      className: "trust-cap"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "trust-avatar",
-      "aria-hidden": "true"
-    }, /*#__PURE__*/React.createElement("span", null, it.who.split(" ").map(function (w) {
-      return w[0];
-    }).join("").slice(0, 2))), /*#__PURE__*/React.createElement("div", {
-      className: "trust-cap-text"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "trust-who"
-    }, it.who), /*#__PURE__*/React.createElement("div", {
-      className: "trust-role mono"
-    }, it.role))));
-  }))));
+    }, "\u2197")), /*#__PURE__*/React.createElement("div", {
+      className: "proof-card-k"
+    }, p.k), /*#__PURE__*/React.createElement("div", {
+      className: "proof-card-v"
+    }, p.v));
+  })), t.trust.note ? /*#__PURE__*/React.createElement("div", {
+    className: "proof-foot mono",
+    "data-reveal": true
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "proof-foot-dot",
+    "aria-hidden": "true"
+  }), liveCount ? `${liveCount} live · ` : "", t.trust.note) : null));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
