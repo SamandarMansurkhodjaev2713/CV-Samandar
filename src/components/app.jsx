@@ -214,6 +214,37 @@ function useMidScrollVisibility() {
   return visible;
 }
 
+// The page has 11 real [data-section] chapters, but the dock only has room for
+// the 7 that mirror the primary nav menu (about/projects/skills/services/cv/
+// faq/contact) — signal, process ("Method") and trust ("Quality") ride between
+// them with no dot of their own. The OLD logic compared activeSection to
+// NAV_SECTIONS with a plain `indexOf`: for any of those 3 "gap" sections that
+// returns -1, which silently fell back to index 0 ("about") for BOTH the label
+// text and (via a separate, un-synced comparison) left every dot unlit — so a
+// reader deep in Method or Quality saw the indicator confidently claim "01 · О
+// себе" while no dot agreed with it. That's the "misleading" bug.
+// Fix: resolve every real section to the nearest NAV_SECTIONS entry AT OR
+// BEFORE it in actual DOM order (standard scrollspy behavior — highlight the
+// last landmark the reader has passed) and derive BOTH the dot and the label
+// from that single resolved index, so they can never disagree.
+function useSectionOrder() {
+  const [order, setOrder] = useS(null);
+  useE(() => {
+    setOrder([...document.querySelectorAll("[data-section]")].map((el) => el.getAttribute("data-section")));
+  }, []);
+  return order;
+}
+function resolveNavIndex(activeSection, order) {
+  if (!order) return 0;
+  const pos = order.indexOf(activeSection);
+  if (pos === -1) return 0;
+  for (let i = pos; i >= 0; i--) {
+    const navIdx = NAV_SECTIONS.indexOf(order[i]);
+    if (navIdx !== -1) return navIdx;
+  }
+  return 0; // nothing but hero/signal precede us — next landmark is "about"
+}
+
 function MobileScrollDock({ t, activeSection, visible }) {
   // 6 dots for the main NAV sections. Tap → smooth scroll + light haptic.
   function onDotClick(id) {
@@ -221,8 +252,10 @@ function MobileScrollDock({ t, activeSection, visible }) {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   }
-  const activeIdx = Math.max(0, NAV_SECTIONS.indexOf(activeSection));
-  const activeLabel = (activeSection && t.nav && t.nav[activeSection]) || (t.nav && t.nav[NAV_SECTIONS[0]]) || "";
+  const order = useSectionOrder();
+  const activeIdx = resolveNavIndex(activeSection, order);
+  const activeId = NAV_SECTIONS[activeIdx];
+  const activeLabel = (t.nav && t.nav[activeId]) || "";
   return (
     <div className={`mobile-dock ${visible ? "is-visible" : ""}`} role="navigation" aria-label="sections">
       <ol className="mobile-dock-dots">
@@ -230,7 +263,7 @@ function MobileScrollDock({ t, activeSection, visible }) {
           <li key={id}>
             <button
               type="button"
-              className={`mobile-dock-dot ${activeSection === id ? "is-active" : ""}`}
+              className={`mobile-dock-dot ${i === activeIdx ? "is-active" : ""}`}
               aria-label={t.nav && t.nav[id] ? t.nav[id] : id}
               onClick={() => onDotClick(id)}
             />

@@ -1452,7 +1452,12 @@ function Skills({ t }) {
             </div>
             <div className="skills-panel card" data-reveal>
               <div className="skills-panel-head">
-                <span className="mono">{`/stack/${t.skills.groups[Math.max(0, active)].k.toLowerCase().replace(/\W+/g, "-")}`}</span>
+                {/* An explicit ASCII `slug` avoids mangling Cyrillic/Uzbek group
+                    names: \W in a plain (non-unicode) JS regex only recognizes
+                    ASCII word chars, so a fully-Cyrillic label like "Качество"
+                    collapsed the ENTIRE string to a single "-" (`/stack/-`).
+                    Falls back to the old derivation for any group missing it. */}
+                <span className="mono">{`/stack/${t.skills.groups[Math.max(0, active)].slug || t.skills.groups[Math.max(0, active)].k.toLowerCase().replace(/\W+/g, "-")}`}</span>
                 <span className="chip"><span className="chip-dot" />ready</span>
               </div>
               <div className="skills-items">

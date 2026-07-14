@@ -624,6 +624,15 @@
 
 @media (max-width: 640px) {
   .signal-row .row-ghost { font-size: clamp(80px, 24vw, 130px); }
+  /* The ::after accent glow (radial-gradient, opacity .24 on .is-open) was
+     designed as a wide-viewport hover accent — at mobile width the row is
+     nearly edge-to-edge, so the same ellipse reads as a hard, unexplained
+     orange smear sitting directly behind the heading text instead of ambient
+     light ("что за пятно на фоне — так не должно быть"). Tap-to-open on
+     mobile already reads clearly via the left accent bar + oversized ghost
+     numeral + faint background tint (.is-open{background:rgba(accent/.035)})
+     — the glow adds visual noise without adding information, so it's off here. */
+  .signal-row.is-open::after { opacity: 0; }
 }
 
 .signal-row-num {

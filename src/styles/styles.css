@@ -289,6 +289,12 @@ section[data-section] {
   position: relative;
   padding: var(--gap-section) 0;
   z-index: 2;
+  /* Every anchor jump on the site (nav links, drawer, mobile dock dots, the
+     "Обсудить проект" sticky CTA, hero's "Смотреть работы") targets a
+     section's top via #id. Without this, the fixed .nav (height var(--nav-h),
+     z-index:100) covers the landed section's heading — the jump LOOKS broken
+     even though the scroll itself is correct. */
+  scroll-margin-top: calc(var(--nav-h) + 16px);
 }
 /* :first-of-type is scoped per DOM parent, not per-page — About/Services/Trust
    each happen to be the first <section> child of THEIR OWN wrapper (Hero's

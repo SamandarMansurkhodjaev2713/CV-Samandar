@@ -1782,7 +1782,7 @@ function Skills({
     className: "skills-panel-head"
   }, /*#__PURE__*/React.createElement("span", {
     className: "mono"
-  }, `/stack/${t.skills.groups[Math.max(0, active)].k.toLowerCase().replace(/\W+/g, "-")}`), /*#__PURE__*/React.createElement("span", {
+  }, `/stack/${t.skills.groups[Math.max(0, active)].slug || t.skills.groups[Math.max(0, active)].k.toLowerCase().replace(/\W+/g, "-")}`), /*#__PURE__*/React.createElement("span", {
     className: "chip"
   }, /*#__PURE__*/React.createElement("span", {
     className: "chip-dot"
