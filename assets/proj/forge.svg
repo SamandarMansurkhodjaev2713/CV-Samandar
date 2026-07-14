@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 112" role="img" aria-label="Forge learning OS: a mission path with completed nodes, a gate and a proof badge">
+  <rect width="320" height="112" fill="#151020"/>
+  <line x1="28" y1="56" x2="276" y2="56" stroke="#2a2340" stroke-width="2"/>
+  <circle cx="28" cy="56" r="9" fill="#8B7CE0"/>
+  <circle cx="74" cy="56" r="9" fill="#8B7CE0"/>
+  <circle cx="120" cy="56" r="9" fill="#8B7CE0" opacity="0.55"/>
+  <rect x="158" y="46" width="24" height="20" rx="3" fill="none" stroke="#b3a6f0" stroke-width="2"/>
+  <path d="M163 46 v-3 a7 7 0 0 1 14 0 v3" fill="none" stroke="#b3a6f0" stroke-width="2"/>
+  <circle cx="214" cy="56" r="9" fill="none" stroke="#3a3358" stroke-width="2"/>
+  <path d="M276 38 l16 6 v10 c0 10 -8 16 -16 20 c-8 -4 -16 -10 -16 -20 v-10 z" fill="none" stroke="#E0A45C" stroke-width="2"/>
+  <path d="M276 50 l2.4 5 l5.4 .6 l-4 3.8 l1.1 5.3 l-4.9 -2.7 l-4.9 2.7 l1.1 -5.3 l-4 -3.8 l5.4 -.6 z" fill="#E0A45C"/>
+</svg>

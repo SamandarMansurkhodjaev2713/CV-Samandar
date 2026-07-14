@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 112" role="img" aria-label="Marketbot commerce automation: event stream into a queue, admin table and notification bell">
+  <rect width="320" height="112" fill="#0e1613"/>
+  <line x1="16" y1="30" x2="120" y2="30" stroke="#1f3a2e" stroke-width="1.5"/>
+  <circle cx="30" cy="30" r="4" fill="#2FB673"/>
+  <circle cx="58" cy="30" r="4" fill="#2FB673" opacity="0.7"/>
+  <circle cx="86" cy="30" r="4" fill="#2FB673" opacity="0.45"/>
+  <rect x="120" y="18" width="70" height="10" rx="3" fill="#173026"/>
+  <rect x="120" y="31" width="70" height="10" rx="3" fill="#173026"/>
+  <rect x="120" y="44" width="70" height="10" rx="3" fill="#1c3d2f"/>
+  <rect x="16" y="64" width="174" height="34" rx="6" fill="#12211b"/>
+  <rect x="26" y="72" width="60" height="4" rx="2" fill="#2c5343"/>
+  <rect x="26" y="82" width="150" height="3.6" rx="2" fill="#1f3a2e"/>
+  <rect x="26" y="90" width="120" height="3.6" rx="2" fill="#1f3a2e"/>
+  <rect x="200" y="14" width="108" height="84" rx="7" fill="#12211b"/>
+  <path d="M254 32 a14 14 0 0 1 14 14 v10 l4 6 h-36 l4 -6 v-10 a14 14 0 0 1 14 -14 z" fill="none" stroke="#E0A45C" stroke-width="2"/>
+  <path d="M250 68 a4 4 0 0 0 8 0" fill="none" stroke="#E0A45C" stroke-width="2"/>
+  <circle cx="270" cy="34" r="5" fill="#E0A45C"/>
+  <rect x="216" y="82" width="76" height="4" rx="2" fill="#2c5343"/>
+</svg>

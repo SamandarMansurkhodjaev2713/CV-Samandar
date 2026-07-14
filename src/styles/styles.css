@@ -794,7 +794,10 @@ body.cursor-hover .cursor-dot { opacity: 0; }
 
 /* — Mobile — */
 @media (max-width: 900px) {
-  :root { --gap-section: 80px; --gap-block: 36px; --pad-card: 20px; }
+  /* Tighter vertical rhythm on mobile — 80px×2 per section across ~12 sections
+     was ~2.4 screens of pure padding. 58/28 trims the page meaningfully while
+     keeping clear separation. */
+  :root { --gap-section: 58px; --gap-block: 28px; --pad-card: 18px; }
   .nav-links { display: none; }
   .nav-burger { display: inline-block; }
   .brand-sub { display: none; }

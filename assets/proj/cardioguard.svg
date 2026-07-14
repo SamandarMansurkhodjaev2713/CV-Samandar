@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 112" role="img" aria-label="CardioGuard health app: BPM tile, trend chart and an ECG strip">
+  <rect width="320" height="112" fill="#15181d"/>
+  <rect x="12" y="12" width="92" height="44" rx="7" fill="#1e2228"/>
+  <text x="23" y="41" font-family="ui-monospace,monospace" font-size="22" font-weight="700" fill="#F0575E">72</text>
+  <text x="60" y="41" font-family="ui-monospace,monospace" font-size="9" fill="#7a828c">BPM</text>
+  <rect x="112" y="12" width="92" height="44" rx="7" fill="#1e2228"/>
+  <polyline points="123,45 135,37 147,41 159,29 171,34 183,23 195,27" fill="none" stroke="#38C0A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="212" y="12" width="96" height="44" rx="7" fill="#1e2228"/>
+  <circle cx="230" cy="34" r="7" fill="none" stroke="#38C0A8" stroke-width="2"/>
+  <path d="M226.5 34 l2.4 2.4 l4.2 -5.2" fill="none" stroke="#38C0A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="246" y="30" width="50" height="4" rx="2" fill="#3a424c"/>
+  <rect x="246" y="38" width="32" height="4" rx="2" fill="#2c333b"/>
+  <rect x="12" y="64" width="296" height="36" rx="7" fill="#1e2228"/>
+  <polyline points="22,82 62,82 74,82 80,70 86,94 92,82 132,82 152,82 158,66 164,98 170,82 212,82 232,82 238,72 244,92 250,82 300,82" fill="none" stroke="#F0575E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

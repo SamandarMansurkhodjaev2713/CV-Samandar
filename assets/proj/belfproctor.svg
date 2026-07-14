@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 112" role="img" aria-label="BelfProctor: a monitored window with a watching eye, heartbeat and agent telemetry statuses">
+  <rect width="320" height="112" fill="#14161b"/>
+  <rect x="12" y="14" width="180" height="84" rx="7" fill="#1c2029"/>
+  <path d="M12 21 a7 7 0 0 1 7 -7 h166 a7 7 0 0 1 7 7 v9 h-180 z" fill="#232833"/>
+  <circle cx="24" cy="22" r="2.4" fill="#e0574e"/>
+  <circle cx="33" cy="22" r="2.4" fill="#7a828c"/>
+  <path d="M70 60 q32 -22 64 0 q-32 22 -64 0 z" fill="none" stroke="#8892a0" stroke-width="2"/>
+  <circle cx="102" cy="60" r="9" fill="none" stroke="#E0574E" stroke-width="2"/>
+  <circle cx="102" cy="60" r="3.4" fill="#E0574E"/>
+  <polyline points="24,86 60,86 66,76 72,96 78,86 120,86 126,80 132,92 138,86 182,86" fill="none" stroke="#E0574E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="204" y="14" width="104" height="84" rx="7" fill="#1c2029"/>
+  <circle cx="220" cy="30" r="4" fill="#4FB06A"/>
+  <rect x="232" y="27" width="66" height="5" rx="2.5" fill="#333a45"/>
+  <circle cx="220" cy="50" r="4" fill="#E0A45C"/>
+  <rect x="232" y="47" width="50" height="5" rx="2.5" fill="#333a45"/>
+  <circle cx="220" cy="70" r="4" fill="#E0574E"/>
+  <rect x="232" y="67" width="58" height="5" rx="2.5" fill="#333a45"/>
+  <rect x="216" y="84" width="80" height="6" rx="3" fill="#262c36"/>
+</svg>

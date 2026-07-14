@@ -876,6 +876,31 @@ function formatTashkentTime(date) {
 // ─────────────────────────────────────────────────────────────────────────────
 // PROJECTS — floating product screens
 // ─────────────────────────────────────────────────────────────────────────────
+
+// Per-project brand cards — a purpose-designed "stylized mini-interface" SVG for
+// EACH project, keyed by projects[].name (identical across locales, so one
+// language-independent map — same pattern as SERVICE_RELATED). Each card is a
+// flat mini-UI in the project's own brand palette (legal navy+gold, health
+// coral+teal, IoT lime…), living inside the shared monitor chrome so the grid
+// still reads as one system while every screen is unmistakably that product.
+// `bg` matches the SVG's own background fill: the body paints it so object-fit:
+// contain letterboxes seamlessly at any card width (no crop, no distortion).
+const PROJ_CARD = {
+  "Klawis — Legal AI Assistant":     { src: "assets/proj/klawis.svg",       bg: "#0f1830" },
+  "CoupleOS / Softly":               { src: "assets/proj/softly.svg",       bg: "#241628" },
+  "TTYL Platform":                   { src: "assets/proj/ttyl.svg",         bg: "#0f1822" },
+  "Task-manager / Task Manage Bot":  { src: "assets/proj/task-manager.svg", bg: "#17110c" },
+  "Marketbot":                       { src: "assets/proj/marketbot.svg",    bg: "#0e1613" },
+  "Sentinel Edge":                   { src: "assets/proj/sentinel.svg",     bg: "#0c1310" },
+  "Forge / Learning OS":             { src: "assets/proj/forge.svg",        bg: "#151020" },
+  "BelfProctor":                     { src: "assets/proj/belfproctor.svg",  bg: "#14161b" },
+  "VFS Killer":                      { src: "assets/proj/vfs-killer.svg",   bg: "#0a0f12" },
+  "med-exe":                         { src: "assets/proj/med-exe.svg",      bg: "#101619" },
+  "3D Landing":                      { src: "assets/proj/3d-landing.svg",   bg: "#0c0a16" },
+  "CardioGuard":                     { src: "assets/proj/cardioguard.svg",  bg: "#15181d" },
+  "BioFlux Observer":                { src: "assets/proj/bioflux.svg",      bg: "#14130d" },
+};
+
 function ProjectCard({ p, i, cta }) {
   const cardRef = useRef(null);
   function onMove(e) {
@@ -924,14 +949,33 @@ function ProjectCard({ p, i, cta }) {
           <div className="proj-screen-dots"><i></i><i></i><i></i></div>
           <span className="mono">/{p.name.toLowerCase().replace(/\s+/g, "-")}</span>
         </div>
-        <div className="proj-screen-body">
-          <div className="proj-screen-row" style={{ width: "82%" }}></div>
-          <div className="proj-screen-row" style={{ width: "60%" }}></div>
-          <div className="proj-screen-row" style={{ width: "72%" }}></div>
-          <div className="proj-screen-grid">
-            {[...Array(6)].map((_, k) => <div key={k} className="proj-screen-cell" />)}
+        {PROJ_CARD[p.name] ? (
+          <div
+            className="proj-screen-body proj-screen-body--img"
+            style={{ background: PROJ_CARD[p.name].bg }}
+          >
+            {/* Purpose-built brand mini-interface (SVG) inside the monitor
+                chrome. alt="" — the frame is aria-hidden decoration; the card's
+                text already names the project. The body background matches the
+                SVG's own fill so object-fit:contain letterboxes seamlessly. */}
+            <img
+              className="proj-screen-img"
+              src={PROJ_CARD[p.name].src}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
           </div>
-        </div>
+        ) : (
+          <div className="proj-screen-body">
+            <div className="proj-screen-row" style={{ width: "82%" }}></div>
+            <div className="proj-screen-row" style={{ width: "60%" }}></div>
+            <div className="proj-screen-row" style={{ width: "72%" }}></div>
+            <div className="proj-screen-grid">
+              {[...Array(6)].map((_, k) => <div key={k} className="proj-screen-cell" />)}
+            </div>
+          </div>
+        )}
         {/* Scanline overlay — adds CRT-monitor texture without the pixel-
             dither overhead. CSS-driven, zero JS, GPU-composited. */}
         <div className="proj-screen-scanlines" />

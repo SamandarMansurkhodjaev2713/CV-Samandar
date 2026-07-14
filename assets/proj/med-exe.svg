@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 112" role="img" aria-label="med-exe offline desktop: a calculation panel with a precise result and an offline shield">
+  <rect width="320" height="112" fill="#101619"/>
+  <rect x="12" y="14" width="176" height="84" rx="7" fill="#172227"/>
+  <rect x="24" y="26" width="60" height="6" rx="3" fill="#2b4046"/>
+  <rect x="90" y="26" width="12" height="6" rx="3" fill="#2FB6A8"/>
+  <rect x="108" y="26" width="40" height="6" rx="3" fill="#2b4046"/>
+  <rect x="24" y="42" width="44" height="6" rx="3" fill="#2b4046"/>
+  <rect x="74" y="42" width="12" height="6" rx="3" fill="#2FB6A8"/>
+  <rect x="92" y="42" width="56" height="6" rx="3" fill="#2b4046"/>
+  <line x1="24" y1="60" x2="176" y2="60" stroke="#24343a" stroke-width="1.5"/>
+  <rect x="24" y="70" width="40" height="6" rx="3" fill="#24343a"/>
+  <text x="176" y="88" font-family="ui-monospace,monospace" font-size="20" font-weight="700" fill="#2FB6A8" text-anchor="end">0.847</text>
+  <rect x="200" y="14" width="108" height="84" rx="7" fill="#172227"/>
+  <path d="M254 30 l20 7 v12 c0 12 -10 19 -20 24 c-10 -5 -20 -12 -20 -24 v-12 z" fill="none" stroke="#2FB6A8" stroke-width="2"/>
+  <path d="M246 52 l6 6 l12 -13" fill="none" stroke="#2FB6A8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="254" y="92" font-family="ui-monospace,monospace" font-size="8" fill="#5b7078" text-anchor="middle">OFFLINE</text>
+</svg>

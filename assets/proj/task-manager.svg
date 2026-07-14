@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 112" role="img" aria-label="Task manager Telegram bot: checklist with completed tasks, a Telegram plane and a gear">
+  <rect width="320" height="112" fill="#17110c"/>
+  <rect x="12" y="14" width="196" height="84" rx="7" fill="#211812"/>
+  <rect x="24" y="26" width="14" height="14" rx="3" fill="#D9743F"/>
+  <path d="M27 33 l2.6 2.6 l4.6 -5" fill="none" stroke="#17110c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="46" y="30" width="120" height="5" rx="2.5" fill="#7a5c48"/>
+  <rect x="24" y="48" width="14" height="14" rx="3" fill="#D9743F"/>
+  <path d="M27 55 l2.6 2.6 l4.6 -5" fill="none" stroke="#17110c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="46" y="52" width="96" height="5" rx="2.5" fill="#7a5c48"/>
+  <rect x="24" y="70" width="14" height="14" rx="3" fill="none" stroke="#8a6a52" stroke-width="2"/>
+  <rect x="46" y="74" width="132" height="5" rx="2.5" fill="#c98a63"/>
+  <rect x="216" y="14" width="92" height="50" rx="7" fill="#211812"/>
+  <path d="M232 40 l60 -18 l-14 40 l-16 -12 l-8 10 l-2 -16 z" fill="#E08A54" opacity="0.92"/>
+  <path d="M240 39 l38 -11 l-28 19 z" fill="#17110c" opacity="0.35"/>
+  <rect x="216" y="70" width="92" height="28" rx="7" fill="#211812"/>
+  <circle cx="234" cy="84" r="7" fill="none" stroke="#D9743F" stroke-width="2"/>
+  <circle cx="234" cy="84" r="2.4" fill="#D9743F"/>
+  <rect x="250" y="80" width="46" height="4" rx="2" fill="#7a5c48"/>
+  <rect x="250" y="87" width="30" height="4" rx="2" fill="#5c4636"/>
+</svg>

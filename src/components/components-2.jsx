@@ -329,6 +329,13 @@ function CV({ t, links }) {
     Promise.resolve().then(function () {
       requestAnimationFrame(function () {
         requestAnimationFrame(function () {
+          // Force every strength disclosure open so its proof line prints too
+          // (native <details> hide their content when closed). Tagged so the
+          // afterprint handler can restore only the ones we opened.
+          document.querySelectorAll(".cv-strength:not([open])").forEach(function (d) {
+            d.open = true;
+            d.setAttribute("data-print-forced", "1");
+          });
           window.print();
         });
       });
@@ -340,6 +347,10 @@ function CV({ t, links }) {
   useEffect2(function bindAfterPrint() {
     const handler = function () {
       setOpenIdx(restoreOpenIdx.current);
+      document.querySelectorAll(".cv-strength[data-print-forced]").forEach(function (d) {
+        d.open = false;
+        d.removeAttribute("data-print-forced");
+      });
     };
     window.addEventListener("afterprint", handler);
     return function () { window.removeEventListener("afterprint", handler); };
@@ -487,9 +498,29 @@ function CV({ t, links }) {
                 <section className="cv-block">
                   <h4 className="cv-block-h mono">{t.cv.strengths_title || "strengths"}</h4>
                   <ul className="cv-side-list cv-strengths">
-                    {t.cv.strengths.map((s, i) => (
-                      <li key={i}><span className="cv-bullet-mark" aria-hidden="true">›</span>{s}</li>
-                    ))}
+                    {t.cv.strengths.map((s, i) => {
+                      // Back-compat: a strength may be a plain string (no proof)
+                      // or {t, p}. With a proof it becomes a real disclosure —
+                      // native <details> so the › chevron's affordance is honest
+                      // (the earlier bug: it *looked* expandable but wasn't).
+                      const title = typeof s === "string" ? s : s.t;
+                      const proof = typeof s === "string" ? null : s.p;
+                      return (
+                        <li key={i}>
+                          {proof ? (
+                            <details className="cv-strength">
+                              <summary className="cv-strength-head" data-cursor="read" data-cursor-label="proof">
+                                <span className="cv-bullet-mark" aria-hidden="true">›</span>
+                                <span className="cv-strength-t">{title}</span>
+                              </summary>
+                              <p className="cv-strength-proof">{proof}</p>
+                            </details>
+                          ) : (
+                            <span className="cv-strength-static"><span className="cv-bullet-mark" aria-hidden="true">›</span>{title}</span>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </section>
               ) : null}
@@ -526,177 +557,39 @@ function CV({ t, links }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PROCESS — deployment pipeline. Vertical terminal "stages" that flip
-//   queued → running (with typewriter command + progress bar) → done (with
-//   completion time) as they enter the viewport.
-//
-// Each stage handles its own typewriter + progress timeline independently so
-// state stays simple and the row mounts behave like real CI logs.
+// PROCESS — the delivery pipeline as a static terminal. Nine stages, each a
+// confident line: command → phase → the artifact it yields. No fake CI
+// run-lifecycle (queued/running/done, invented times, random output) anymore.
 // ─────────────────────────────────────────────────────────────────────────────
-const PROC_TYPE_INTERVAL_MS = 22;          // typewriter cadence
-const PROC_RUN_MIN_MS = 520;               // visual run-time per stage
-const PROC_RUN_VAR_MS = 240;
-const PROC_VIEWPORT_TRIGGER_RATIO = 0.4;
-const PROC_OUTPUT_SAMPLES = [
-  "ok · ready",
-  "compiled in 84ms",
-  "shipped to prod",
-  "200 · listening",
-  "no regressions",
-  "manifest verified",
-  "queue empty",
-];
-
-function ProcStage({ step, index, refSetter }) {
-  // Stage states: queued (idle) → running (typing + progress) → done (success).
-  const [state, setState] = useState2("queued");
-  const [typed, setTyped] = useState2("");
-  const [progress, setProgress] = useState2(0);
-  const stageRef = useRef2(null);
-  const timersRef = useRef2({ typer: 0, prog: 0, done: 0 });
-
-  // Combined ref: store internally + report to parent collection.
-  function combinedRef(el) {
-    stageRef.current = el;
-    if (typeof refSetter === "function") refSetter(el);
-  }
-
-  // Run typewriter when state flips to "running".
-  useEffect2(function runTyper() {
-    if (state !== "running") return undefined;
-    const cmd = step.cmd;
-    let cursor = 0;
-    timersRef.current.typer = window.setInterval(function step1() {
-      cursor++;
-      setTyped(cmd.slice(0, cursor));
-      if (cursor >= cmd.length) {
-        window.clearInterval(timersRef.current.typer);
-        timersRef.current.typer = 0;
-      }
-    }, PROC_TYPE_INTERVAL_MS);
-    return function cleanup() {
-      if (timersRef.current.typer) {
-        window.clearInterval(timersRef.current.typer);
-        timersRef.current.typer = 0;
-      }
-    };
-  }, [state, step.cmd]);
-
-  // Progress bar fills 0 → 100 over PROC_RUN_MIN_MS + variance.
-  useEffect2(function runProgress() {
-    if (state !== "running") return undefined;
-    const totalMs = PROC_RUN_MIN_MS + (index % 5) * (PROC_RUN_VAR_MS / 5);
-    const startedAt = performance.now();
-    function tick(now) {
-      const t = Math.min(1, (now - startedAt) / totalMs);
-      setProgress(t);
-      if (t < 1) {
-        timersRef.current.prog = window.requestAnimationFrame(tick);
-      } else {
-        timersRef.current.prog = 0;
-        timersRef.current.done = window.setTimeout(function flipDone() {
-          setState("done");
-        }, 120);
-      }
-    }
-    timersRef.current.prog = window.requestAnimationFrame(tick);
-    return function cleanup() {
-      if (timersRef.current.prog) {
-        window.cancelAnimationFrame(timersRef.current.prog);
-        timersRef.current.prog = 0;
-      }
-      if (timersRef.current.done) {
-        window.clearTimeout(timersRef.current.done);
-        timersRef.current.done = 0;
-      }
-    };
-  }, [state, index]);
-
-  // IntersectionObserver — flip queued → running when the row is in view.
-  useEffect2(function watchViewport() {
-    if (!stageRef.current) return undefined;
-    const io = new IntersectionObserver(function onSeen(entries) {
-      entries.forEach(function check(e) {
-        if (e.isIntersecting && e.intersectionRatio > PROC_VIEWPORT_TRIGGER_RATIO) {
-          setState(function (prev) { return prev === "queued" ? "running" : prev; });
-          io.unobserve(e.target);
-        }
-      });
-    }, { threshold: [PROC_VIEWPORT_TRIGGER_RATIO, 0.55, 0.7] });
-    io.observe(stageRef.current);
-    return function () { io.disconnect(); };
-  }, []);
-
-  // Scroll-based fallback for environments where IO is unreliable.
-  useEffect2(function scrollFallback() {
-    if (state !== "queued") return undefined;
-    let raf = 0;
-    function check() {
-      raf = 0;
-      const el = stageRef.current;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      const vh = window.innerHeight;
-      if (r.top < vh * 0.7 && r.bottom > vh * 0.15) {
-        setState("running");
-      }
-    }
-    function onScroll() { if (!raf) raf = window.requestAnimationFrame(check); }
-    window.addEventListener("scroll", onScroll, { passive: true });
-    check();
-    return function () {
-      window.removeEventListener("scroll", onScroll);
-      if (raf) window.cancelAnimationFrame(raf);
-    };
-  }, [state]);
-
+function ProcStage({ step, index }) {
+  // Static, honest pipeline stage. The old version simulated a live CI run
+  // (queued → running → done with an invented completion time + a random CI
+  // output line) that read as fake — and, worse, got stuck on "queued" wherever
+  // the scroll animation didn't fire, i.e. "nothing ran". Now each stage is a
+  // confident, stable line: the command, the phase → what it covers, and the
+  // concrete artifact it yields. Terminal look kept; the fakery is gone.
   return (
     <li
-      ref={combinedRef}
-      className={`proc-stage proc-stage--${state}`}
+      className="proc-stage proc-stage--ready"
       data-reveal-delay={(index * 0.06).toFixed(2)}
     >
       <span className="proc-stage-gutter mono">{String(index + 1).padStart(2, "0")}</span>
       <div className="proc-stage-main">
-        <div className="proc-stage-cmd mono">
-          {state === "queued" ? (
-            <span className="proc-stage-cmd-ghost">{step.cmd}</span>
-          ) : (
-            <>
-              <span>{typed}</span>
-              {state === "running" && <span className="proc-stage-caret" />}
-            </>
-          )}
-        </div>
+        <div className="proc-stage-cmd mono">{step.cmd}</div>
         <div className="proc-stage-meta">
           <span className="proc-stage-k">{step.k}</span>
           <span className="proc-stage-arrow">→</span>
           <span className="proc-stage-v">{step.v}</span>
         </div>
-        {state === "running" && (
-          <div className="proc-stage-progress" aria-hidden="true">
-            <div className="proc-stage-progress-fill" style={{ transform: `scaleX(${progress.toFixed(3)})` }} />
-          </div>
-        )}
-        {state === "done" && (
+        {step.out ? (
           <div className="proc-stage-output mono">
             <span className="proc-stage-output-prompt">›</span>
-            <span>{step.output}</span>
+            <span>{step.out}</span>
           </div>
-        )}
+        ) : null}
       </div>
-      <span className="proc-stage-status mono">
-        {state === "queued" && <span className="proc-stage-pill proc-stage-pill--queued">queued</span>}
-        {state === "running" && (
-          <span className="proc-stage-pill proc-stage-pill--running">
-            <span className="proc-stage-spin" aria-hidden="true" />running
-          </span>
-        )}
-        {state === "done" && (
-          <span className="proc-stage-pill proc-stage-pill--done">
-            <span className="proc-stage-check" aria-hidden="true">✓</span>{step.ms}
-          </span>
-        )}
+      <span className="proc-stage-status mono" aria-hidden="true">
+        <span className="proc-stage-pill proc-stage-pill--ready">ready</span>
       </span>
     </li>
   );
@@ -706,15 +599,13 @@ function Process({ t }) {
   const ref = useRevealRoot([t]);
 
   const steps = useMemoFromComponents1(function buildSteps() {
-    return t.process.steps.map(function buildStep(s, i) {
+    return t.process.steps.map(function buildStep(s) {
       const slug = String(s.k || "step").toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      const ms = 120 + ((i * 41) % 230);
       return {
         k: s.k,
         v: s.v,
+        out: s.out,
         cmd: `$ ./pipeline run --stage ${slug}`,
-        ms: `${String(ms).padStart(3, "0")}ms`,
-        output: PROC_OUTPUT_SAMPLES[i % PROC_OUTPUT_SAMPLES.length],
       };
     });
   }, [t]);
@@ -1187,26 +1078,32 @@ function Trust({ t }) {
 
         <div className="proof-grid" data-reveal>
           {proof.map(function renderProof(p, i) {
-            return (
-              <a
-                key={i}
-                className="proof-card"
-                href={p.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-cursor="link"
-                data-cursor-label={`open: ${p.k}`}
-                data-reveal
-                data-reveal-from="translateY(18px) scale(.98)"
-                data-reveal-delay={(i * 0.06).toFixed(2)}
-              >
+            // Quality practices are mostly not "things to open" — only the ones
+            // with a real url (e.g. public CI) render as a link; the rest are
+            // static cards (no ↗, no clickable affordance).
+            const inner = (
+              <>
                 <div className="proof-card-top">
                   <span className={`proof-tag mono proof-tag--${(p.tag || "").toLowerCase()}`}>{p.tag}</span>
-                  <span className="arrow" aria-hidden="true">↗</span>
+                  {p.url ? <span className="arrow" aria-hidden="true">↗</span> : null}
                 </div>
                 <div className="proof-card-k">{p.k}</div>
                 <div className="proof-card-v">{p.v}</div>
+              </>
+            );
+            const shared = {
+              key: i,
+              className: `proof-card${p.url ? "" : " proof-card--static"}`,
+              "data-reveal": true,
+              "data-reveal-from": "translateY(18px) scale(.98)",
+              "data-reveal-delay": (i * 0.06).toFixed(2),
+            };
+            return p.url ? (
+              <a {...shared} href={p.url} target="_blank" rel="noopener noreferrer" data-cursor="link" data-cursor-label={`open: ${p.k}`}>
+                {inner}
               </a>
+            ) : (
+              <div {...shared}>{inner}</div>
             );
           })}
         </div>

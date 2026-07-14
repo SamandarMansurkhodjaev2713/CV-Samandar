@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 112" role="img" aria-label="Sentinel Edge IoT: sensor to bridge to dashboard node graph with a gauge and telemetry waveform">
+  <rect width="320" height="112" fill="#0c1310"/>
+  <line x1="46" y1="38" x2="128" y2="38" stroke="#2f5f3f" stroke-width="1.5"/>
+  <line x1="150" y1="38" x2="232" y2="38" stroke="#2f5f3f" stroke-width="1.5"/>
+  <circle cx="34" cy="38" r="10" fill="none" stroke="#7CE38B" stroke-width="2"/>
+  <circle cx="34" cy="38" r="3" fill="#7CE38B"/>
+  <rect x="129" y="28" width="20" height="20" rx="4" fill="none" stroke="#7CE38B" stroke-width="2"/>
+  <rect x="233" y="24" width="34" height="28" rx="4" fill="#12261a" stroke="#7CE38B" stroke-width="1.5"/>
+  <circle cx="92" cy="38" r="2.6" fill="#4FD0E0"/>
+  <path d="M20 98 a32 32 0 0 1 64 0" fill="none" stroke="#1d3226" stroke-width="4"/>
+  <path d="M20 98 a32 32 0 0 1 46 -23" fill="none" stroke="#4FD0E0" stroke-width="4" stroke-linecap="round"/>
+  <line x1="52" y1="98" x2="66" y2="80" stroke="#7CE38B" stroke-width="2" stroke-linecap="round"/>
+  <polyline points="150,90 162,90 168,80 174,98 180,86 186,90 214,90 220,82 226,94 232,90 300,90" fill="none" stroke="#7CE38B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

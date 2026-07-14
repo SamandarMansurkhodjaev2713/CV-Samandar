@@ -526,7 +526,7 @@
 }
 .hero-marquee-group > span:not(.hero-marquee-sep):first-child::after { display: none; }
 @media (max-width: 600px) {
-  .hero-marquee { height: 38px; margin-top: 44px; }
+  .hero-marquee { height: 38px; margin-top: 16px; }
   .hero-marquee-group { font-size: 9.5px; gap: 26px; padding-right: 26px; letter-spacing: 0.18em; }
   .hero-marquee-group > span:not(.hero-marquee-sep)::after { left: -16px; }
 }
@@ -538,13 +538,29 @@
      child while the section itself spans the full viewport height. */
   .hero {
     position: relative;
-    min-height: 100svh;
-    min-height: 100vh; /* fallback for browsers without svh */
+    /* FAST CURTAIN (mobile): the Hero→Signal curtain is pure position:sticky —
+       Signal rises 1:1 with scroll, so the scroll distance to cover Hero EQUALS
+       this section's height. At the old 100vh, Hero (1101px of content on a
+       375px phone) overflowed the screen AND forced ~1.4 screens of "frozen
+       Hero, Signal creeping" dead scroll (the client's exact complaint). Sizing
+       the section to ~0.82 of the small viewport does both fixes at once: the
+       compressed content (shrunk robot below) now fits, and the curtain resolves
+       in ~one comfortable swipe with a deliberate warm peek of Signal at the
+       bottom edge cueing "scroll". Desktop keeps the full-height takeover +
+       full-length curtain — untouched (this rule is inside max-width:900px). */
+    min-height: 84svh;
+    min-height: 84vh; /* fallback for browsers without svh */
     display: flex;
     flex-direction: column;
     align-items: stretch;
     justify-content: center;
   }
+  /* The section-level bottom padding (styles.css `section[data-section]{padding:
+     var(--gap-section) 0}`, ~80px on mobile) outweighs a plain `.hero` rule on
+     specificity, so it kept pushing the hero back over one screen and killing
+     the peek. Match the existing `section[data-section="hero"]{padding-top:0}`
+     pattern to win cleanly. The grid carries its own 24px bottom breathing. */
+  section[data-section="hero"] { padding-bottom: 0; }
   /* The shell is the flex child — it MUST take the full width or the grid
      inside collapses to content-size (a known flex gotcha). */
   .hero > .shell {
@@ -564,29 +580,48 @@
      (title is still what a screen reader hits first), order:-1 only moves
      it visually. */
   .hero-right { order: -1; display: grid; gap: 14px; }
-  .hero-marquee { margin: 30px calc(-1 * var(--gutter)) 0; }
-  .hero-meta { flex-direction: column; align-items: flex-start; gap: 12px; padding-top: 16px; }
-  .hero-links { margin-left: 0; }
+  .hero-marquee { margin: 16px calc(-1 * var(--gutter)) 0; }
+  /* Focus the first mobile screen so it fits the URL-bar-visible viewport
+     (~small-vh) and leaves a warm peek of Signal cueing scroll:
+     • Meta collapses to just the availability status line. The GitHub / Telegram
+       / Email quick-links are redundant on mobile (nav drawer + bottom dock +
+       contact section all expose them, and the hero's own "Обсудить проект" CTA
+       is the primary action), so they're hidden here to reclaim ~60px above the
+       fold.
+     • The tech marquee is hidden on mobile: it duplicates the STACK RADAR
+       section, overflowed horizontally, and cost ~54px + GPU on the one screen
+       that most needs to be lean. */
+  .hero-meta { flex-direction: row; align-items: center; flex-wrap: wrap; gap: 8px 16px; padding-top: 10px; }
+  .hero-meta .hero-links { display: none; }
+  .hero-marquee { display: none; }
+  /* Line 14 forces the scroll chevron in-flow (position:relative) site-wide,
+     which on the compact mobile hero dropped it mid-content, colliding with the
+     status line. Float it at the hero's bottom edge instead — no layout cost,
+     and it now points down at the Signal peek as intended. */
+  .hero > .hero-scroll-hint { position: absolute; bottom: 12px; top: auto; z-index: 4; }
   /* The first mobile screen has to fit eyebrow + 3-line headline + tagline +
      2 CTAs + meta + a ~400px robot — desktop's spacing (28/40/56px margins)
      was inherited as-is and pushed the meta row + scroll-hint well below the
      fold, with the CTAs sitting right at the fold's edge. Tightened here;
      the 480px block below trims further for the smallest phones. */
-  .hero-h1 { margin: 14px 0 16px; }
-  .hero-tagline { margin-bottom: 22px; }
-  .hero-ctas { margin-bottom: 28px; }
-  /* v48 mobile robot — bigger (440px) than v47's 380px; centred horizontally
-     with explicit max-width so the robot doesn't get cropped by the
-     watermark cover on narrow phones. */
-  .hero-robot { height: 440px; max-width: 560px; margin: 0 auto; }
+  .hero-h1 { margin: 12px 0 10px; }
+  .hero-tagline { margin-bottom: 12px; }
+  .hero-ctas { margin-bottom: 14px; }
+  /* Mobile robot height is now viewport-relative and capped, not a fixed 440px.
+     On a 375px phone the old fixed height ate ~47% of the first screen and was
+     the main reason the hero overflowed + the curtain ran long (curtain
+     distance = hero height — see .hero above). min(300px, 34svh) keeps the
+     robot a strong focal point while leaving room for title + tagline + CTA
+     above the fold and letting the whole hero fit ~0.82 screen. */
+  .hero-robot { height: min(360px, 44svh); max-width: 560px; margin: 0 auto; }
   .hero-terminal { font-size: 11px; }
   .term-body { min-height: 160px; }
 }
 @media (max-width: 480px) {
-  /* Compact mobile (<480px): height 380px (was 340px) so the robot's head
-     fits comfortably even after the watermark patch. */
-  .hero-robot { height: 380px; max-width: 100%; }
-  .hero-grid { padding-top: clamp(18px, 3vh, 36px); gap: 16px; padding-bottom: 64px; }
+  /* Compact mobile (<480px): viewport-relative, capped smaller than the 900bp
+     value so the smallest phones keep the hero to ~one screen. */
+  .hero-robot { height: min(320px, 42svh); max-width: 100%; }
+  .hero-grid { padding-top: clamp(18px, 3vh, 36px); gap: 14px; padding-bottom: 24px; }
   .hero-ctas { width: 100%; gap: 10px; }
   .hero-ctas .btn { flex: 1; justify-content: center; min-height: 50px; }
   .hero-line { font-size: clamp(36px, 10vw, 52px); }
@@ -595,6 +630,27 @@
 @media (pointer: coarse) {
   /* Disable parallax tilt on touch — it just looks broken without hover. */
   .proj-card { transform: none !important; }
+}
+
+/* Touch ergonomics — grow interactive hit targets to ~44px on mobile viewports.
+   Where the visual must stay small (pager / dock dots), the tap area is grown
+   with padding + background-clip:content-box + box-sizing:content-box so the
+   paint stays tiny while the hittable box reaches 44px. */
+@media (max-width: 900px) {
+  .proj-cta { min-height: 44px; padding: 11px 2px; align-items: center; }
+  .brand { min-height: 44px; display: inline-flex; align-items: center; }
+  /* Higher-specificity (…-dots …-dot) so these win over the dots' own base
+     rules, which appear LATER in this file. */
+  .proj-chapters-dots .proj-chapters-dot {
+    box-sizing: content-box;
+    padding: 20px 4px;
+    background-clip: content-box;
+  }
+  .mobile-dock .mobile-dock-dot {
+    box-sizing: content-box;
+    padding: 10px 5px;
+    background-clip: content-box;
+  }
 }
 
 /* Signal 2.0 (editorial rows) CSS lives in features.css — see "Signal 2.0". */
@@ -1017,11 +1073,17 @@
 .proj-card {
   perspective: 1200px;
   transform: rotateX(var(--rx, 0)) rotateY(var(--ry, 0)) translateZ(0);
-  transition: transform var(--d-mid) var(--ease-out), border-color var(--d-mid);
+  transition: transform var(--d-mid) var(--ease-out), border-color var(--d-mid), box-shadow var(--d-mid);
   transform-style: preserve-3d;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  /* Denser panel than the base .card (which is only 2.5%→0.5% white and dissolved
+     into the WebGL/grid backdrop — the "сливается" complaint). A solid warm-dark
+     fill + stronger border make each project read as a distinct, readable card. */
+  background: linear-gradient(180deg, rgba(23,20,17,0.74), rgba(13,12,10,0.86));
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 8px 30px -14px rgba(0,0,0,0.55);
 }
 .proj-glow {
   position: absolute;
@@ -1068,6 +1130,7 @@
 }
 .proj-status-prod { color: var(--accent); border-color: rgba(var(--accent-rgb) / 0.5); }
 .proj-status-live { color: var(--accent); border-color: rgba(var(--accent-rgb) / 0.5); }
+.proj-status-demo { color: var(--accent-2); border-color: rgba(200, 155, 94, .4); }
 .proj-status-beta { color: var(--accent-2); border-color: rgba(200, 155, 94, .4); }
 .proj-status-proto { color: var(--text-dim); }
 /* Confidential/NDA work — deliberately the most understated treatment (no
@@ -1121,6 +1184,21 @@
   gap: 6px;
   position: relative; z-index: 1;
 }
+/* Brand mini-interface card inside the monitor. object-fit:contain shows the
+   whole designed SVG (no crop) at any card width; the body background (set
+   inline per project to the SVG's own fill) fills the letterbox seamlessly, so
+   the mini-UI reads as centred on a solid brand field. Full saturation/opacity
+   — the whole point is the brand colour, not an Ember-tinted screenshot. A gentle
+   lift on hover. The scanlines sibling stays on top for shared monitor texture. */
+.proj-screen-body--img { padding: 0; }
+.proj-screen-img {
+  width: 100%; height: 100%;
+  object-fit: contain; object-position: center;
+  display: block;
+  transition: transform var(--d-mid) var(--ease-out);
+}
+.proj-card:hover .proj-screen-img { transform: scale(1.02); }
+
 .proj-screen-row {
   height: 6px;
   background: linear-gradient(90deg, var(--accent), transparent);
@@ -2046,8 +2124,11 @@ html[data-motion-lite] .svc-tab.is-active .svc-tab-mark { clip-path: inset(19% 0
   font-size: 11.5px;
   color: var(--text-dim);
   display: flex; align-items: baseline; gap: 8px;
-  opacity: 0;
-  animation: procOutputIn 0.4s var(--ease-out) forwards;
+  /* Always visible now (the deliverable line is permanent, not a "done" reveal).
+     opacity:1 default keeps it shown under prefers-reduced-motion; the animation
+     is a one-shot entrance that also ends at 1. */
+  opacity: 1;
+  animation: procOutputIn 0.4s var(--ease-out);
 }
 .proc-stage-output-prompt { color: var(--accent); }
 @keyframes procOutputIn { to { opacity: 1; transform: translateY(0); } from { opacity: 0; transform: translateY(-4px); } }
@@ -2090,6 +2171,14 @@ html[data-motion-lite] .svc-tab.is-active .svc-tab-mark { clip-path: inset(19% 0
   color: rgba(var(--accent-rgb) / 0.9);
   color: var(--accent);
 }
+/* Static "ready" marker — calm, honest (this step is a ready, standard part of
+   the pipeline), replacing the old queued/running/done churn + fake timings. */
+.proc-stage-pill--ready {
+  background: rgba(var(--accent-rgb) / 0.05);
+  border-color: rgba(var(--accent-rgb) / 0.3);
+  color: var(--accent);
+}
+.proc-stage--ready { border-left-color: rgba(var(--accent-rgb) / 0.28); }
 .proc-stage-spin {
   width: 8px; height: 8px;
   border: 1.5px solid currentColor;
@@ -2692,6 +2781,15 @@ html[data-motion-lite] .builder-chip { animation: none; }
 .proof-tag--live { color: var(--accent); border-color: rgba(var(--accent-rgb) / 0.5); }
 .proof-tag--demo { color: var(--accent-2); border-color: rgba(200, 155, 94, .4); }
 .proof-tag--code { color: var(--text-dim); }
+/* Quality-block tags — all accent-tinted so the section reads as one consistent
+   set of proven practices (TESTS · CI · REGRESS · TYPES · OBSERV · REVIEW). */
+.proof-tag--tests, .proof-tag--ci, .proof-tag--regress,
+.proof-tag--types, .proof-tag--observ, .proof-tag--review {
+  color: var(--accent); border-color: rgba(var(--accent-rgb) / 0.35);
+}
+/* Static quality cards (no url) — keep a gentle border/bg highlight but drop the
+   lift so they don't imply a clickable link (the ↗ is already omitted). */
+.proof-card--static:hover { transform: none; }
 .proof-card .arrow { color: var(--text-mute); transition: transform var(--d-fast), color var(--d-fast); }
 .proof-card:hover .arrow { color: var(--accent); transform: translate(3px, -3px); }
 .proof-card-k { font-size: 17px; font-weight: 500; margin-top: 4px; }

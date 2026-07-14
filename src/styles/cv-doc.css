@@ -224,18 +224,29 @@
   .cv-edu-y { color: #777 !important; font-size: 10px !important; }
   .cv-edu-k { color: #1A1614 !important; font-size: 11px !important; line-height: 1.35 !important; }
 
-  /* Strengths list */
+  /* Strengths list — printed with every proof expanded (details are force-opened
+     in onPrint; these rules hard-show the proof text and neutralise the now-
+     static chevron so the PDF reads as a complete résumé, not a collapsed UI). */
   .cv-strengths li {
     color: #2A2520 !important;
     font-size: 11px !important;
     line-height: 1.35 !important;
     padding: 5px 0 !important;
     border-bottom: 1px solid #eee !important;
-    display: flex !important;
-    gap: 6px !important;
+    display: block !important;
   }
   .cv-strengths li:last-child { border-bottom: 0 !important; }
-  .cv-bullet-mark { color: #B45C2E !important; }
+  .cv-strength-head, .cv-strength-static { display: flex !important; gap: 6px !important; cursor: default !important; }
+  .cv-bullet-mark { color: #B45C2E !important; transform: none !important; }
+  .cv-strength-proof {
+    display: block !important;
+    color: #4A443C !important;
+    font-size: 10px !important;
+    margin: 3px 0 0 13px !important;
+    padding-left: 9px !important;
+    border-left: 1px solid #ddd !important;
+    animation: none !important;
+  }
 
   /* Languages list */
   .cv-langs { list-style: none !important; padding: 0 !important; margin: 0 !important; }
@@ -627,6 +638,41 @@
   color: var(--accent, #D97757);
   font-family: var(--f-mono, monospace);
   flex-shrink: 0;
+}
+
+/* Expandable strengths — the › chevron now honestly discloses a concrete proof
+   line (the earlier bug: it *looked* clickable but did nothing). Native <details>
+   = accessible, keyboard-operable, zero JS state. */
+.cv-strengths li { display: block; }
+.cv-strength-static { display: flex; gap: 8px; }
+.cv-strength-head {
+  display: flex; gap: 8px; align-items: baseline;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.cv-strength-head::-webkit-details-marker { display: none; }
+.cv-strength-head::marker { content: ""; }
+.cv-strength-t { flex: 1; transition: color var(--d-fast, .2s); }
+.cv-strength .cv-bullet-mark {
+  transition: transform var(--d-fast, .2s) var(--ease-out, ease), color var(--d-fast, .2s);
+}
+.cv-strength[open] > .cv-strength-head .cv-bullet-mark { transform: rotate(90deg); color: var(--accent, #D97757); }
+.cv-strength-head:hover .cv-strength-t,
+.cv-strength[open] > .cv-strength-head .cv-strength-t { color: var(--text, #f4f1ea); }
+.cv-strength-proof {
+  margin: 8px 0 4px 15px;
+  padding-left: 11px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-dim, rgba(244,241,234,0.6));
+  border-left: 1px solid rgba(var(--accent-rgb, 217,119,87) / 0.35);
+  animation: cvStrengthIn .3s var(--ease-out, ease) both;
+}
+@keyframes cvStrengthIn { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .cv-strength .cv-bullet-mark { transition: none; }
+  .cv-strength-proof { animation: none; }
 }
 
 /* Languages */

@@ -385,11 +385,11 @@ function App() {
       ru: {
         id: {
           name: "Самандар",
-          role: "Full-Stack · AI Automation · Product Engineer",
+          role: "Full-Stack · AI Automation · QA",
           meta: ["Ташкент · UTC+5", "Открыт к проектам", "3 курс · Software Engineering"],
           stats: [{
             k: "опыт",
-            v: "11 мес."
+            v: "1.5+ года"
           }, {
             k: "проектов",
             v: "10+"
@@ -404,30 +404,42 @@ function App() {
         exp_title: "опыт",
         langs_title: "языки",
         strengths_title: "сильные стороны",
-        strengths: ["Системное мышление от прод-идеи до прод-деплоя", "AI-интеграции уровня продакшна, не демки", "Тёплая коммуникация с клиентами — проверено на горячей линии", "Самостоятельный темп, без надзора"],
+        strengths: [{
+          t: "Системное мышление от прод-идеи до прод-деплоя",
+          p: "TTYL Platform — от архитектуры и API до деплоя и багфиксов в проде: весь цикл на одном человеке."
+        }, {
+          t: "AI-интеграции уровня продакшна, не демки",
+          p: "Klawis (klawis.uz): RAG, гибридный поиск и цитирование источников в живом юридическом AI-продукте."
+        }, {
+          t: "Качество как часть разработки, а не отдельный этап",
+          p: "QA на TTYL: test plans, Playwright E2E со скриншотами и traces, контроль регрессий перед релизом."
+        }, {
+          t: "Тёплая коммуникация с клиентами — проверено на практике",
+          p: "UniCall: специалист по работе с клиентами, лучший сотрудник месяца за качество коммуникации."
+        }],
         langs: [{
           k: "Русский",
           lv: 100,
           label: "native"
         }, {
           k: "Oʻzbek",
-          lv: 95,
-          label: "fluent"
+          lv: 92,
+          label: "свободный"
         }, {
           k: "English",
-          lv: 35,
-          label: "базовый"
+          lv: 85,
+          label: "C1 · продвинутый"
         }],
         foot: "сгенерировано 2026 · подписанная версия по запросу"
       },
       en: {
         id: {
           name: "Samandar",
-          role: "Full-Stack · AI Automation · Product Engineer",
+          role: "Full-Stack · AI Automation · QA",
           meta: ["Tashkent · UTC+5", "Open to projects", "3rd-year · Software Engineering"],
           stats: [{
             k: "experience",
-            v: "11 mo."
+            v: "1.5+ yr"
           }, {
             k: "projects",
             v: "10+"
@@ -442,30 +454,42 @@ function App() {
         exp_title: "experience",
         langs_title: "languages",
         strengths_title: "strengths",
-        strengths: ["End-to-end ownership from product idea to prod deploy", "Production AI integrations, not demos", "Warm client communication — earned on a support hotline", "Async-first; runs without supervision"],
+        strengths: [{
+          t: "End-to-end ownership from product idea to prod deploy",
+          p: "TTYL Platform — from architecture and API to deploy and prod bugfixes: the whole cycle on one person."
+        }, {
+          t: "Production AI integrations, not demos",
+          p: "Klawis (klawis.uz): RAG, hybrid search and source citation in a live legal AI product."
+        }, {
+          t: "Quality baked into building, not a separate stage",
+          p: "QA at TTYL: test plans, Playwright E2E with screenshots and traces, regression control before release."
+        }, {
+          t: "Warm client communication — proven in practice",
+          p: "UniCall: customer support specialist, employee of the month for communication quality."
+        }],
         langs: [{
           k: "Russian",
           lv: 100,
           label: "native"
         }, {
           k: "Uzbek",
-          lv: 95,
+          lv: 92,
           label: "fluent"
         }, {
           k: "English",
-          lv: 35,
-          label: "basic"
+          lv: 85,
+          label: "C1 · advanced"
         }],
         foot: "generated 2026 · signed copy on request"
       },
       uz: {
         id: {
           name: "Samandar",
-          role: "Full-Stack · AI Automation · Product Engineer",
+          role: "Full-Stack · AI Automation · QA",
           meta: ["Toshkent · UTC+5", "Loyihalarga ochiq", "3-kurs · Software Engineering"],
           stats: [{
             k: "tajriba",
-            v: "11 oy"
+            v: "1.5+ yil"
           }, {
             k: "loyiha",
             v: "10+"
@@ -480,19 +504,31 @@ function App() {
         exp_title: "tajriba",
         langs_title: "tillar",
         strengths_title: "kuchli tomonlar",
-        strengths: ["Mahsulot g'oyasidan prod-deploygacha to'liq egalik", "Production darajadagi AI integratsiyalar", "Mijozlar bilan iliq muloqot — ishonch telefonida sinalgan", "Mustaqil sur'at, nazoratsiz ishlash"],
+        strengths: [{
+          t: "Mahsulot g'oyasidan prod-deploygacha to'liq egalik",
+          p: "TTYL Platform — arxitektura va API'dan deploy va prod-bagfikslargacha: butun sikl bitta odamda."
+        }, {
+          t: "Production darajadagi AI integratsiyalar",
+          p: "Klawis (klawis.uz): jonli yuridik AI-mahsulotda RAG, gibrid qidiruv va manba iqtiboslari."
+        }, {
+          t: "Sifat — bosqich emas, ishlab chiqishning bir qismi",
+          p: "TTYL'da QA: test-rejalar, Playwright E2E skrinshot va traces bilan, relizdan oldin regressiya nazorati."
+        }, {
+          t: "Mijozlar bilan iliq muloqot — amaliyotda sinalgan",
+          p: "UniCall: mijozlar bilan ishlash bo'yicha mutaxassis, muloqot sifati uchun oyning eng yaxshi xodimi."
+        }],
         langs: [{
           k: "Ruscha",
           lv: 100,
           label: "native"
         }, {
           k: "Oʻzbek",
-          lv: 100,
-          label: "ona tili"
+          lv: 92,
+          label: "erkin"
         }, {
           k: "English",
-          lv: 35,
-          label: "boshlang'ich"
+          lv: 85,
+          label: "C1 · ilg'or"
         }],
         foot: "2026 yil · imzolangan nusxa so'rov asosida"
       }

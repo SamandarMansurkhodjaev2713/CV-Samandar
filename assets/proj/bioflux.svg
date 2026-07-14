@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 112" role="img" aria-label="BioFlux Observer: an industrial flow gauge, telemetry area chart and a KPI with status">
+  <rect width="320" height="112" fill="#14130d"/>
+  <rect x="12" y="14" width="86" height="84" rx="7" fill="#1e1c12"/>
+  <path d="M28 78 a26 26 0 0 1 52 0" fill="none" stroke="#33301e" stroke-width="5"/>
+  <path d="M28 78 a26 26 0 0 1 40 -22" fill="none" stroke="#E0A45C" stroke-width="5" stroke-linecap="round"/>
+  <line x1="54" y1="78" x2="68" y2="62" stroke="#E0A45C" stroke-width="2.4" stroke-linecap="round"/>
+  <text x="54" y="92" font-family="ui-monospace,monospace" font-size="8" fill="#8a7f5f" text-anchor="middle">FLOW</text>
+  <rect x="106" y="14" width="128" height="84" rx="7" fill="#1e1c12"/>
+  <path d="M116 84 L128 70 L140 76 L152 58 L164 64 L176 46 L188 54 L200 40 L212 48 L224 38 L224 90 L116 90 Z" fill="#4FB06A" opacity="0.18"/>
+  <polyline points="116,84 128,70 140,76 152,58 164,64 176,46 188,54 200,40 212,48 224,38" fill="none" stroke="#4FB06A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="242" y="14" width="66" height="38" rx="7" fill="#1e1c12"/>
+  <text x="252" y="40" font-family="ui-monospace,monospace" font-size="17" font-weight="700" fill="#E0A45C">98%</text>
+  <rect x="242" y="60" width="66" height="38" rx="7" fill="#1e1c12"/>
+  <circle cx="258" cy="79" r="5" fill="#4FB06A"/>
+  <rect x="270" y="76" width="30" height="5" rx="2.5" fill="#33301e"/>
+</svg>

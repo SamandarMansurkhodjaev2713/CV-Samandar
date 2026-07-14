@@ -1015,6 +1015,69 @@ function formatTashkentTime(date) {
 // ─────────────────────────────────────────────────────────────────────────────
 // PROJECTS — floating product screens
 // ─────────────────────────────────────────────────────────────────────────────
+
+// Per-project brand cards — a purpose-designed "stylized mini-interface" SVG for
+// EACH project, keyed by projects[].name (identical across locales, so one
+// language-independent map — same pattern as SERVICE_RELATED). Each card is a
+// flat mini-UI in the project's own brand palette (legal navy+gold, health
+// coral+teal, IoT lime…), living inside the shared monitor chrome so the grid
+// still reads as one system while every screen is unmistakably that product.
+// `bg` matches the SVG's own background fill: the body paints it so object-fit:
+// contain letterboxes seamlessly at any card width (no crop, no distortion).
+const PROJ_CARD = {
+  "Klawis — Legal AI Assistant": {
+    src: "assets/proj/klawis.svg",
+    bg: "#0f1830"
+  },
+  "CoupleOS / Softly": {
+    src: "assets/proj/softly.svg",
+    bg: "#241628"
+  },
+  "TTYL Platform": {
+    src: "assets/proj/ttyl.svg",
+    bg: "#0f1822"
+  },
+  "Task-manager / Task Manage Bot": {
+    src: "assets/proj/task-manager.svg",
+    bg: "#17110c"
+  },
+  "Marketbot": {
+    src: "assets/proj/marketbot.svg",
+    bg: "#0e1613"
+  },
+  "Sentinel Edge": {
+    src: "assets/proj/sentinel.svg",
+    bg: "#0c1310"
+  },
+  "Forge / Learning OS": {
+    src: "assets/proj/forge.svg",
+    bg: "#151020"
+  },
+  "BelfProctor": {
+    src: "assets/proj/belfproctor.svg",
+    bg: "#14161b"
+  },
+  "VFS Killer": {
+    src: "assets/proj/vfs-killer.svg",
+    bg: "#0a0f12"
+  },
+  "med-exe": {
+    src: "assets/proj/med-exe.svg",
+    bg: "#101619"
+  },
+  "3D Landing": {
+    src: "assets/proj/3d-landing.svg",
+    bg: "#0c0a16"
+  },
+  "CardioGuard": {
+    src: "assets/proj/cardioguard.svg",
+    bg: "#15181d"
+  },
+  "BioFlux Observer": {
+    src: "assets/proj/bioflux.svg",
+    bg: "#14130d"
+  }
+};
 function ProjectCard({
   p,
   i,
@@ -1076,7 +1139,18 @@ function ProjectCard({
     className: "proj-screen-dots"
   }, /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null)), /*#__PURE__*/React.createElement("span", {
     className: "mono"
-  }, "/", p.name.toLowerCase().replace(/\s+/g, "-"))), /*#__PURE__*/React.createElement("div", {
+  }, "/", p.name.toLowerCase().replace(/\s+/g, "-"))), PROJ_CARD[p.name] ? /*#__PURE__*/React.createElement("div", {
+    className: "proj-screen-body proj-screen-body--img",
+    style: {
+      background: PROJ_CARD[p.name].bg
+    }
+  }, /*#__PURE__*/React.createElement("img", {
+    className: "proj-screen-img",
+    src: PROJ_CARD[p.name].src,
+    alt: "",
+    loading: "lazy",
+    decoding: "async"
+  })) : /*#__PURE__*/React.createElement("div", {
     className: "proj-screen-body"
   }, /*#__PURE__*/React.createElement("div", {
     className: "proj-screen-row",
