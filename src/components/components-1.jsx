@@ -889,21 +889,27 @@ function formatTashkentTime(date) {
 // graph, ECG, orbit, node graph…). `bg` is the same warm near-black across all
 // 13 (matches every SVG's own fill), so object-fit:contain letterboxes
 // seamlessly at any card width with zero seam.
-const PROJ_CARD_BG = "#15130F";
+// v3: each card carries its OWN thoughtful, domain-tuned palette (legal navy+
+// gold, health coral+teal, IoT lime, couples rose…) instead of the uniform
+// Ember. Cohesion is held by the SHARED structural DNA in every SVG — the
+// grid-paper texture, corner register marks, mono micro-labels, soft glow and
+// schematic line-art — plus this monitor chrome. So the grid reads as one system
+// while every screen is unmistakably that product. `bg` matches each SVG's own
+// fill so object-fit:contain letterboxes seamlessly at any card width.
 const PROJ_CARD = {
-  "Klawis — Legal AI Assistant":     { src: "assets/proj/klawis.svg",       bg: PROJ_CARD_BG },
-  "CoupleOS / Softly":               { src: "assets/proj/softly.svg",       bg: PROJ_CARD_BG },
-  "TTYL Platform":                   { src: "assets/proj/ttyl.svg",         bg: PROJ_CARD_BG },
-  "Task-manager / Task Manage Bot":  { src: "assets/proj/task-manager.svg", bg: PROJ_CARD_BG },
-  "Marketbot":                       { src: "assets/proj/marketbot.svg",    bg: PROJ_CARD_BG },
-  "Sentinel Edge":                   { src: "assets/proj/sentinel.svg",     bg: PROJ_CARD_BG },
-  "Forge / Learning OS":             { src: "assets/proj/forge.svg",        bg: PROJ_CARD_BG },
-  "BelfProctor":                     { src: "assets/proj/belfproctor.svg",  bg: PROJ_CARD_BG },
-  "VFS Killer":                      { src: "assets/proj/vfs-killer.svg",   bg: PROJ_CARD_BG },
-  "med-exe":                         { src: "assets/proj/med-exe.svg",      bg: PROJ_CARD_BG },
-  "3D Landing":                      { src: "assets/proj/3d-landing.svg",   bg: PROJ_CARD_BG },
-  "CardioGuard":                     { src: "assets/proj/cardioguard.svg",  bg: PROJ_CARD_BG },
-  "BioFlux Observer":                { src: "assets/proj/bioflux.svg",      bg: PROJ_CARD_BG },
+  "Klawis — Legal AI Assistant":     { src: "assets/proj/klawis.svg",       bg: "#0E1A33" },
+  "CoupleOS / Softly":               { src: "assets/proj/softly.svg",       bg: "#241426" },
+  "TTYL Platform":                   { src: "assets/proj/ttyl.svg",         bg: "#0E1C24" },
+  "Task-manager / Task Manage Bot":  { src: "assets/proj/task-manager.svg", bg: "#1A130C" },
+  "Marketbot":                       { src: "assets/proj/marketbot.svg",    bg: "#0C1A12" },
+  "Sentinel Edge":                   { src: "assets/proj/sentinel.svg",     bg: "#0A140E" },
+  "Forge / Learning OS":             { src: "assets/proj/forge.svg",        bg: "#150F28" },
+  "BelfProctor":                     { src: "assets/proj/belfproctor.svg",  bg: "#111520" },
+  "VFS Killer":                      { src: "assets/proj/vfs-killer.svg",   bg: "#08131A" },
+  "med-exe":                         { src: "assets/proj/med-exe.svg",      bg: "#0A1618" },
+  "3D Landing":                      { src: "assets/proj/3d-landing.svg",   bg: "#0C0A1E" },
+  "CardioGuard":                     { src: "assets/proj/cardioguard.svg",  bg: "#15161E" },
+  "BioFlux Observer":                { src: "assets/proj/bioflux.svg",      bg: "#17140A" },
 };
 
 function ProjectCard({ p, i, cta }) {

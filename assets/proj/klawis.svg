@@ -1,25 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 112" role="img" aria-label="Klawis legal AI: a cited passage in a document connected to a sourced answer node">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 112" role="img" aria-label="Klawis legal AI: a cited passage in a document linked to a sourced answer node">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D97757"/><stop offset="1" stop-color="#C89B5E"/></linearGradient>
-    <radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#D97757" stop-opacity="0.35"/><stop offset="1" stop-color="#D97757" stop-opacity="0"/></radialGradient>
-    <pattern id="grid" width="14" height="14" patternUnits="userSpaceOnUse"><path d="M14 0H0V14" fill="none" stroke="#F5F0E6" stroke-opacity="0.035"/></pattern>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D8B45A"/><stop offset="1" stop-color="#6FA0D8"/></linearGradient>
+    <radialGradient id="gl" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#D8B45A" stop-opacity="0.42"/><stop offset="1" stop-color="#D8B45A" stop-opacity="0"/></radialGradient>
+    <pattern id="gr" width="14" height="14" patternUnits="userSpaceOnUse"><path d="M14 0H0V14" fill="none" stroke="#F5F0E6" stroke-opacity="0.05"/></pattern>
   </defs>
-  <rect width="320" height="112" fill="#15130F"/>
-  <rect width="320" height="112" fill="url(#grid)"/>
-  <path d="M18 14 L18 22 M18 14 L26 14 M302 98 L302 90 M302 98 L294 98" stroke="#6B6353" stroke-width="1"/>
-  <rect x="34" y="24" width="104" height="66" rx="3" fill="none" stroke="#4A4438" stroke-width="1"/>
-  <path d="M34 24 l14 -8 h90 v8" fill="none" stroke="#4A4438" stroke-width="1"/>
-  <line x1="46" y1="40" x2="118" y2="40" stroke="#6B6353" stroke-width="1.2"/>
-  <line x1="46" y1="49" x2="126" y2="49" stroke="#6B6353" stroke-width="1.2"/>
-  <line x1="46" y1="64" x2="70" y2="64" stroke="#D97757" stroke-width="1.6"/>
-  <line x1="46" y1="72" x2="122" y2="72" stroke="url(#g)" stroke-width="2"/>
-  <text x="46" y="66" font-family="Georgia,serif" font-size="13" fill="#D97757" opacity="0.85">"</text>
-  <line x1="46" y1="80" x2="100" y2="80" stroke="#4A4438" stroke-width="1.2"/>
-  <path d="M138 72 C 175 72, 175 42, 210 42" fill="none" stroke="#D97757" stroke-width="1" stroke-dasharray="1.5 4" opacity="0.7"/>
-  <circle cx="222" cy="42" r="19" fill="url(#glow)"/>
-  <circle cx="222" cy="42" r="13" fill="#1D1B15" stroke="url(#g)" stroke-width="1.3"/>
-  <path d="M216 36h8l3 3v9h-14v-9z" fill="none" stroke="#C89B5E" stroke-width="1.1"/>
-  <line x1="217.5" y1="41" x2="225.5" y2="41" stroke="#C89B5E" stroke-width="0.9"/>
-  <line x1="217.5" y1="44.5" x2="223" y2="44.5" stroke="#C89B5E" stroke-width="0.9"/>
-  <text x="302" y="102" text-anchor="end" font-family="ui-monospace,monospace" font-size="7.5" letter-spacing="0.5" fill="#8A7F6B">RAG · SOURCED</text>
+  <rect width="320" height="112" fill="#0E1A33"/>
+  <rect width="320" height="112" fill="url(#gr)"/>
+  <path d="M18 14 L18 22 M18 14 L26 14 M302 98 L302 90 M302 98 L294 98" stroke="#F5F0E6" stroke-opacity="0.24" stroke-width="1"/>
+  <rect x="30" y="22" width="132" height="72" rx="4" fill="#172542" stroke="#F5F0E6" stroke-opacity="0.10"/>
+  <path d="M30 22 l14 -8 h118 v8" fill="none" stroke="#F5F0E6" stroke-opacity="0.10"/>
+  <line x1="44" y1="38" x2="118" y2="38" stroke="#6FA0D8" stroke-width="1.3" opacity="0.55"/>
+  <line x1="44" y1="47" x2="140" y2="47" stroke="#F5F0E6" stroke-opacity="0.16" stroke-width="1.2"/>
+  <rect x="36" y="56" width="3.5" height="20" rx="1.5" fill="#D8B45A"/>
+  <text x="46" y="64" font-family="Georgia,serif" font-size="14" fill="#D8B45A">"</text>
+  <line x1="46" y1="61" x2="132" y2="61" stroke="#D8B45A" stroke-width="2"/>
+  <line x1="46" y1="70" x2="104" y2="70" stroke="#D8B45A" stroke-width="1.5" opacity="0.6"/>
+  <line x1="44" y1="84" x2="120" y2="84" stroke="#F5F0E6" stroke-opacity="0.14" stroke-width="1.2"/>
+  <path d="M162 66 C 196 66, 196 44, 224 44" fill="none" stroke="#6FA0D8" stroke-width="1.2" stroke-dasharray="1.5 4"/>
+  <circle cx="240" cy="44" r="21" fill="url(#gl)"/>
+  <circle cx="240" cy="44" r="14" fill="#172542" stroke="url(#g)" stroke-width="1.5"/>
+  <path d="M233 37h9l4 4v10h-16v-14z" fill="none" stroke="#6FA0D8" stroke-width="1.3"/>
+  <line x1="235" y1="43" x2="245" y2="43" stroke="#D8B45A" stroke-width="1.1"/>
+  <line x1="235" y1="47" x2="243" y2="47" stroke="#D8B45A" stroke-width="1.1" opacity="0.7"/>
+  <text x="302" y="102" text-anchor="end" font-family="ui-monospace,monospace" font-size="7.5" letter-spacing="0.5" fill="#F5F0E6" fill-opacity="0.42">RAG · SOURCED</text>
 </svg>

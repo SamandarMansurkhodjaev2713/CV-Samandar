@@ -78,6 +78,94 @@ function compileFile(babel, jsxName) {
   return { outName: outName, bytes: Buffer.byteLength(result.code, "utf8") };
 }
 
+// ── Product landings ────────────────────────────────────────────────────────
+// Generate a static /projects/<slug>/index.html for each product that a visitor
+// can't see live (they used to link straight to a GitHub card). Content +
+// template come from src/projects/{landings-data,render}.js — the SAME render()
+// the page loads client-side, so the baked HTML and the language switcher never
+// drift. Real files → clean shareable URLs, own <title>/OG, indexable, instant.
+const SITE_BASE = "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/";
+
+function readLandingVersion() {
+  try {
+    const idx = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
+    const m = idx.match(/\?v=(\d+)/);
+    return m ? m[1] : "";
+  } catch (e) { return ""; }
+}
+
+function htmlAttr(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function renderLandingPage(p, R, version) {
+  const ru = (p.i18n && p.i18n.ru) || {};
+  const v = version ? "?v=" + version : "";
+  const title = p.name + (ru.tag ? " — " + ru.tag.replace(/ · /g, " / ") : "");
+  const desc = ru.signal || "";
+  const ogUrl = SITE_BASE + "projects/" + p.slug + "/";
+  const ogImg = SITE_BASE + "og-image.png"; // raster, so social crawlers render it
+  const fonts =
+    "https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700" +
+    "&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap";
+  const body = R.LP_render(p, "ru");
+  return [
+    "<!doctype html>",
+    '<html lang="ru">',
+    "<head>",
+    '<meta charset="utf-8">',
+    '<meta name="viewport" content="width=device-width, initial-scale=1">',
+    "<title>" + htmlAttr(title) + "</title>",
+    '<meta name="description" content="' + htmlAttr(desc) + '">',
+    '<meta name="robots" content="index,follow">',
+    '<link rel="canonical" href="' + htmlAttr(ogUrl) + '">',
+    '<meta property="og:type" content="website">',
+    '<meta property="og:title" content="' + htmlAttr(title) + '">',
+    '<meta property="og:description" content="' + htmlAttr(desc) + '">',
+    '<meta property="og:url" content="' + htmlAttr(ogUrl) + '">',
+    '<meta property="og:image" content="' + htmlAttr(ogImg) + '">',
+    '<meta name="twitter:card" content="summary_large_image">',
+    '<link rel="icon" href="../../favicon.svg">',
+    '<link rel="preconnect" href="https://fonts.googleapis.com">',
+    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',
+    '<link rel="stylesheet" href="' + fonts + '">',
+    '<link rel="stylesheet" href="../../src/projects/landing.css' + v + '">',
+    "</head>",
+    "<body>",
+    '<div id="lp-root">' + body + "</div>",
+    "<script>window.__LP_SLUG__=" + JSON.stringify(p.slug) + ";</script>",
+    '<script src="../../src/projects/landings-data.js' + v + '"></script>',
+    '<script src="../../src/projects/render.js' + v + '"></script>',
+    '<script src="../../src/projects/landing.js' + v + '"></script>',
+    "</body>",
+    "</html>",
+    "",
+  ].join("\n");
+}
+
+function buildLandings() {
+  const dataPath = path.join(__dirname, "src", "projects", "landings-data.js");
+  const renderPath = path.join(__dirname, "src", "projects", "render.js");
+  if (!fs.existsSync(dataPath) || !fs.existsSync(renderPath)) return 0;
+  // Fresh load so a `node build.js` re-run picks up edits within one process.
+  delete require.cache[require.resolve(dataPath)];
+  delete require.cache[require.resolve(renderPath)];
+  const LANDINGS = require(dataPath);
+  const R = require(renderPath);
+  const version = readLandingVersion();
+  const slugs = Object.keys(LANDINGS);
+  slugs.forEach(function (slug) {
+    const p = LANDINGS[slug];
+    const dir = path.join(__dirname, "projects", slug);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, "index.html"), renderLandingPage(p, R, version), "utf8");
+    process.stdout.write("[build] landing -> projects/" + slug + "/index.html\n");
+  });
+  return slugs.length;
+}
+
 function main() {
   let babel;
   try {
@@ -101,7 +189,18 @@ function main() {
       return;
     }
   }
-  process.stdout.write("[build] done — " + JSX_FILES.length + " files, " + totalBytes + " bytes total.\n");
+  let landingCount = 0;
+  try {
+    landingCount = buildLandings();
+  } catch (err) {
+    process.stderr.write("[build] landings FAILED: " + err.message + "\n");
+    process.exit(1);
+    return;
+  }
+  process.stdout.write(
+    "[build] done — " + JSX_FILES.length + " files, " + totalBytes +
+    " bytes total; " + landingCount + " landing(s).\n"
+  );
 }
 
 main();

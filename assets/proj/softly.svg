@@ -1,19 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 112" role="img" aria-label="Softly: two partner nodes on an orbit converging into a shared heart">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D97757"/><stop offset="1" stop-color="#C89B5E"/></linearGradient>
-    <radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#D97757" stop-opacity="0.45"/><stop offset="1" stop-color="#D97757" stop-opacity="0"/></radialGradient>
-    <pattern id="grid" width="14" height="14" patternUnits="userSpaceOnUse"><path d="M14 0H0V14" fill="none" stroke="#F5F0E6" stroke-opacity="0.035"/></pattern>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#EE7C93"/><stop offset="1" stop-color="#F0C29A"/></linearGradient>
+    <radialGradient id="gl" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#EE7C93" stop-opacity="0.5"/><stop offset="1" stop-color="#EE7C93" stop-opacity="0"/></radialGradient>
+    <pattern id="gr" width="14" height="14" patternUnits="userSpaceOnUse"><path d="M14 0H0V14" fill="none" stroke="#F5F0E6" stroke-opacity="0.05"/></pattern>
   </defs>
-  <rect width="320" height="112" fill="#15130F"/>
-  <rect width="320" height="112" fill="url(#grid)"/>
-  <path d="M18 14 L18 22 M18 14 L26 14 M302 98 L302 90 M302 98 L294 98" stroke="#6B6353" stroke-width="1"/>
-  <ellipse cx="160" cy="56" rx="92" ry="34" fill="none" stroke="#4A4438" stroke-width="1" stroke-dasharray="1.5 4"/>
-  <path d="M95 56 C 95 40, 225 40, 225 56" fill="none" stroke="url(#g)" stroke-width="1.3"/>
-  <path d="M95 56 C 95 72, 225 72, 225 56" fill="none" stroke="url(#g)" stroke-width="1.3" opacity="0.5"/>
-  <circle cx="95" cy="56" r="17" fill="url(#glow)"/>
-  <circle cx="95" cy="56" r="6.5" fill="#1D1B15" stroke="#D97757" stroke-width="1.3"/>
-  <circle cx="225" cy="56" r="17" fill="url(#glow)"/>
-  <circle cx="225" cy="56" r="6.5" fill="#1D1B15" stroke="#C89B5E" stroke-width="1.3"/>
-  <path d="M160 49 c-3.6,-4.4 -10.4,-0.8 -10.4,3.4 c0,5 10.4,10 10.4,10 c0,0 10.4,-5 10.4,-10 c0,-4.2 -6.8,-7.8 -10.4,-3.4 z" fill="url(#g)"/>
-  <text x="302" y="102" text-anchor="end" font-family="ui-monospace,monospace" font-size="7.5" letter-spacing="0.5" fill="#8A7F6B">TWO · SYNC</text>
+  <rect width="320" height="112" fill="#241426"/>
+  <rect width="320" height="112" fill="url(#gr)"/>
+  <path d="M18 14 L18 22 M18 14 L26 14 M302 98 L302 90 M302 98 L294 98" stroke="#F5F0E6" stroke-opacity="0.24" stroke-width="1"/>
+  <ellipse cx="160" cy="56" rx="94" ry="36" fill="none" stroke="#EE7C93" stroke-opacity="0.3" stroke-width="1" stroke-dasharray="1.5 4"/>
+  <path d="M93 56 C 93 39, 227 39, 227 56" fill="none" stroke="url(#g)" stroke-width="1.4"/>
+  <path d="M93 56 C 93 73, 227 73, 227 56" fill="none" stroke="url(#g)" stroke-width="1.4" opacity="0.5"/>
+  <circle cx="93" cy="56" r="18" fill="url(#gl)"/>
+  <circle cx="93" cy="56" r="7" fill="#331f3a" stroke="#EE7C93" stroke-width="1.4"/>
+  <circle cx="227" cy="56" r="18" fill="url(#gl)"/>
+  <circle cx="227" cy="56" r="7" fill="#331f3a" stroke="#F0C29A" stroke-width="1.4"/>
+  <path d="M160 48 c-4,-5 -11.5,-0.9 -11.5,3.8 c0,5.5 11.5,11 11.5,11 c0,0 11.5,-5.5 11.5,-11 c0,-4.7 -7.5,-8.8 -11.5,-3.8 z" fill="url(#g)"/>
+  <text x="302" y="102" text-anchor="end" font-family="ui-monospace,monospace" font-size="7.5" letter-spacing="0.5" fill="#F5F0E6" fill-opacity="0.42">TWO · SYNC</text>
 </svg>
