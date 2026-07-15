@@ -412,6 +412,12 @@ const CONTENT = {
       verdictTail: { speed: "заточен под быстрый запуск, меньше слоёв — больше скорости", design: "с упором на дизайн и анимацию интерфейса", ai: "с глубоким AI-слоем: эвалы, векторный поиск, контроль качества", scale: "рассчитан на нагрузку: очереди, кэш, горизонтальное масштабирование" },
       layerNote: { client: "то, что видит пользователь", logic: "правила, API, бизнес-логика", ai: "LLM, поиск по смыслу, эвалы", data: "хранение и состояние", infra: "деплой, доступ, мониторинг" },
       metric: { layers: "слоёв", modules: "модулей" },
+      status: { building: "Сборка архитектуры…", ready: "Система собрана" },
+      priorityDeliverable: {
+        design: "Премиум-интерфейс: микроанимации и выверенные переходы",
+        scale: "Готовность к нагрузке: очереди, кэш и CDN",
+        ai: "Эвалы и контроль качества AI-ответов",
+      },
       deliverables: {
         client: "Интерфейс и адаптив под все экраны",
         logic: "API и бизнес-логика",
@@ -919,6 +925,12 @@ const CONTENT = {
       verdictTail: { speed: "tuned for a fast launch — fewer layers, more speed", design: "with a focus on design and interface motion", ai: "with a deep AI layer: evals, vector search, quality control", scale: "built for load: queues, cache, horizontal scaling" },
       layerNote: { client: "what the user sees", logic: "rules, API, business logic", ai: "LLM, semantic search, evals", data: "storage and state", infra: "deploy, access, monitoring" },
       metric: { layers: "layers", modules: "modules" },
+      status: { building: "Assembling architecture…", ready: "System assembled" },
+      priorityDeliverable: {
+        design: "Premium interface: micro-animations and considered transitions",
+        scale: "Load-ready: queues, cache and CDN",
+        ai: "Evals and AI answer-quality control",
+      },
       deliverables: {
         client: "Interface, responsive on every screen",
         logic: "API and business logic",
@@ -1426,6 +1438,12 @@ const CONTENT = {
       verdictTail: { speed: "tez ishga tushirishga moslangan — kamroq qatlam, ko'proq tezlik", design: "dizayn va interfeys animatsiyasiga urg'u bilan", ai: "chuqur AI qatlami bilan: evallar, vektor qidiruv, sifat nazorati", scale: "yuklamaga mo'ljallangan: navbatlar, kesh, gorizontal masshtab" },
       layerNote: { client: "foydalanuvchi ko'radigan narsa", logic: "qoidalar, API, biznes-mantiq", ai: "LLM, ma'noli qidiruv, evallar", data: "saqlash va holat", infra: "deploy, kirish, monitoring" },
       metric: { layers: "qatlam", modules: "modul" },
+      status: { building: "Arxitektura yig'ilmoqda…", ready: "Tizim yig'ildi" },
+      priorityDeliverable: {
+        design: "Premium interfeys: mikro-animatsiyalar va puxta o'tishlar",
+        scale: "Yuklamaga tayyor: navbatlar, kesh va CDN",
+        ai: "Evallar va AI javob sifatini nazorati",
+      },
       deliverables: {
         client: "Interfeys va barcha ekranlarga moslashuv",
         logic: "API va biznes-mantiq",

@@ -1113,6 +1113,23 @@ function ProjectCard({
     el.style.setProperty("--ry", `0deg`);
   }
 
+  // Cards that open an in-site landing get a stable anchor (id="proj-<slug>") so
+  // returning from that landing lands the reader back on THIS exact card (see
+  // Projects' deep-link effect + App's scroll-to-hash). onClick also drops a
+  // history entry with that anchor so the browser Back button restores here too.
+  const landingSlug = p.url && p.url.indexOf("projects/") === 0 ? p.url.replace(/^projects\//, "").replace(/\/+$/, "") : null;
+  function onCtaClick(e) {
+    if (!p.url) {
+      e.preventDefault();
+      return;
+    }
+    if (landingSlug) {
+      try {
+        history.replaceState(null, "", "#proj-" + landingSlug);
+      } catch (err) {/* opportunistic */}
+    }
+  }
+
   // No per-card scroll-reveal here: these cards live in a desktop collapse
   // (display:none until expanded) and a mobile peek-carousel (off-screen
   // siblings), where the reveal system's `opacity:0 !important` hidden pose
@@ -1122,6 +1139,7 @@ function ProjectCard({
   // cards get their own projExpandIn animation.
   return /*#__PURE__*/React.createElement("article", {
     ref: cardRef,
+    id: landingSlug ? "proj-" + landingSlug : undefined,
     className: "proj-card card",
     style: {
       "--proj-i": i
@@ -1207,7 +1225,7 @@ function ProjectCard({
     className: "proj-cta mono",
     target: p.url && p.url.indexOf("http") === 0 ? "_blank" : undefined,
     rel: p.url && p.url.indexOf("http") === 0 ? "noopener noreferrer" : undefined,
-    onClick: p.url ? undefined : e => e.preventDefault()
+    onClick: onCtaClick
   }, cta, " ", /*#__PURE__*/React.createElement("span", {
     className: "arrow"
   }, "\u2192")));
@@ -1302,6 +1320,17 @@ function Projects({
   const [expanded, setExpanded] = useState(false);
   const items = t.projects.items;
   const hiddenCount = Math.max(0, items.length - 2);
+
+  // Deep-link: arriving at #proj-<slug> (returning from that product's landing)
+  // for a card the collapsed desktop grid hides (index >= 2) → expand the grid
+  // so App's scroll-to-hash can actually reach it. Runs once on mount.
+  useEffect(() => {
+    const id = (window.location.hash || "").replace(/^#/, "");
+    if (id.indexOf("proj-") !== 0) return;
+    const slug = id.slice(5);
+    const idx = items.findIndex(p => p.url && p.url.indexOf("projects/") === 0 && p.url.replace(/^projects\//, "").replace(/\/+$/, "") === slug);
+    if (idx >= 2) setExpanded(true);
+  }, []);
   return /*#__PURE__*/React.createElement("section", {
     "data-section": "projects",
     id: "projects",

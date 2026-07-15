@@ -870,8 +870,23 @@ function ProjectBuilder({
   }).map(function (L) {
     return b.deliverables && b.deliverables[L.id] || "";
   }).filter(Boolean);
+  // Priority also produces a concrete deliverable, so "что входит" reflects ALL
+  // three choices (design/scale/ai), not just the layers — except AI-depth,
+  // which is already spoken for by the active intelligence layer.
+  const aiLayerActive = layers.some(function (L) {
+    return L.id === "ai" && L.active;
+  });
+  const prioDeliverable = b.priorityDeliverable && b.priorityDeliverable[priorityKey] || "";
+  const includesFull = prioDeliverable && !(priorityKey === "ai" && aiLayerActive) ? includes.concat(prioDeliverable) : includes;
   const stages = Array.isArray(b.stages) ? b.stages : [];
   const scopeNote = b.scopeNote && b.scopeNote[scaleKey] || "";
+
+  // Build-status HUD: turns the silent layer cascade into a legible "machine
+  // computing" — a progress track fills as active layers drop in, and the
+  // status flips from "assembling…" to "assembled" on completion.
+  const building = shown < activeCount;
+  const buildPct = activeCount ? Math.round(shown / activeCount * 100) : 0;
+  const status = b.status || {};
   useEffect2(function runAssembly() {
     const reduce = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.hasAttribute("data-motion-lite");
     if (reduce) {
@@ -1045,10 +1060,24 @@ function ProjectBuilder({
     className: "builder-stage",
     "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "builder-metric mono"
+    className: `builder-hud ${building ? "is-building" : "is-ready"}`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "builder-hud-top mono"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "builder-metric-dot"
-  }), activeCount, " ", b.metric.layers, " \xB7 ", moduleCount, " ", b.metric.modules), /*#__PURE__*/React.createElement("div", {
+    className: "builder-hud-status"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "builder-hud-dot",
+    "aria-hidden": "true"
+  }), building ? status.building || "…" : status.ready || "ok"), /*#__PURE__*/React.createElement("span", {
+    className: "builder-hud-count"
+  }, activeCount, " ", b.metric.layers, " \xB7 ", moduleCount, " ", b.metric.modules)), /*#__PURE__*/React.createElement("div", {
+    className: "builder-hud-track"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "builder-hud-fill",
+    style: {
+      width: buildPct + "%"
+    }
+  }))), /*#__PURE__*/React.createElement("div", {
     className: "builder-layers"
   }, /*#__PURE__*/React.createElement("span", {
     className: "builder-backbone"
@@ -1110,13 +1139,13 @@ function ProjectBuilder({
     className: "builder-readout-v mono"
   }, scaleMeta.budget))), /*#__PURE__*/React.createElement("div", {
     className: `builder-spec ${shown >= activeCount ? "is-in" : ""}`
-  }, includes.length && b.lbl ? /*#__PURE__*/React.createElement("div", {
+  }, includesFull.length && b.lbl ? /*#__PURE__*/React.createElement("div", {
     className: "builder-spec-group"
   }, /*#__PURE__*/React.createElement("div", {
     className: "builder-spec-h mono"
   }, b.lbl.includes), /*#__PURE__*/React.createElement("ul", {
     className: "builder-includes"
-  }, includes.map(function renderInclude(d, i) {
+  }, includesFull.map(function renderInclude(d, i) {
     return /*#__PURE__*/React.createElement("li", {
       key: i,
       className: "builder-include",

@@ -384,6 +384,30 @@ function App() {
     }
   }, [tweaks.theme]);
   useE(() => { window.applyFontStack(tweaks.font); }, [tweaks.font]);
+
+  // Deep-link scroll — on a fresh load carrying a #section or #proj-<slug> hash
+  // (returning from a product landing, or any shared section link), jump to that
+  // target once it has rendered AND become visible. The collapsed projects grid
+  // may need a frame to expand (Projects has its own effect for that), so we
+  // retry across frames until the element is on-screen. Cards centre in view;
+  // sections align to their top (scroll-margin-top clears the fixed nav). The
+  // intro loader is already skipped for hashed loads (index.html head-boot), so
+  // this lands cleanly instead of after a curtain + top-of-page.
+  useE(() => {
+    const id = (window.location.hash || "").replace(/^#/, "");
+    if (!id) return;
+    if ("scrollRestoration" in history) { try { history.scrollRestoration = "manual"; } catch (e) { /* opportunistic */ } }
+    let tries = 0;
+    function tryScroll() {
+      const el = document.getElementById(id);
+      if (el && el.offsetParent !== null) {
+        el.scrollIntoView({ behavior: "auto", block: id.indexOf("proj-") === 0 ? "center" : "start" });
+        return;
+      }
+      if (tries++ < 40) requestAnimationFrame(tryScroll);
+    }
+    requestAnimationFrame(tryScroll);
+  }, []);
   useE(() => {
     document.documentElement.setAttribute("data-density", tweaks.density);
     document.documentElement.setAttribute("lang", lang);

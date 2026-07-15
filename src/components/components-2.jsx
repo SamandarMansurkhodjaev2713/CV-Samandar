@@ -768,8 +768,23 @@ function ProjectBuilder({ t, links }) {
     .filter(function (L) { return L.active; })
     .map(function (L) { return (b.deliverables && b.deliverables[L.id]) || ""; })
     .filter(Boolean);
+  // Priority also produces a concrete deliverable, so "что входит" reflects ALL
+  // three choices (design/scale/ai), not just the layers — except AI-depth,
+  // which is already spoken for by the active intelligence layer.
+  const aiLayerActive = layers.some(function (L) { return L.id === "ai" && L.active; });
+  const prioDeliverable = (b.priorityDeliverable && b.priorityDeliverable[priorityKey]) || "";
+  const includesFull = (prioDeliverable && !(priorityKey === "ai" && aiLayerActive))
+    ? includes.concat(prioDeliverable)
+    : includes;
   const stages = Array.isArray(b.stages) ? b.stages : [];
   const scopeNote = (b.scopeNote && b.scopeNote[scaleKey]) || "";
+
+  // Build-status HUD: turns the silent layer cascade into a legible "machine
+  // computing" — a progress track fills as active layers drop in, and the
+  // status flips from "assembling…" to "assembled" on completion.
+  const building = shown < activeCount;
+  const buildPct = activeCount ? Math.round((shown / activeCount) * 100) : 0;
+  const status = b.status || {};
 
   useEffect2(function runAssembly() {
     const reduce =
@@ -882,9 +897,19 @@ function ProjectBuilder({ t, links }) {
 
           {/* STAGE — the assembling blueprint */}
           <div className="builder-stage" aria-hidden="true">
-            <div className="builder-metric mono">
-              <span className="builder-metric-dot" />
-              {activeCount} {b.metric.layers} · {moduleCount} {b.metric.modules}
+            <div className={`builder-hud ${building ? "is-building" : "is-ready"}`}>
+              <div className="builder-hud-top mono">
+                <span className="builder-hud-status">
+                  <span className="builder-hud-dot" aria-hidden="true" />
+                  {building ? (status.building || "…") : (status.ready || "ok")}
+                </span>
+                <span className="builder-hud-count">
+                  {activeCount} {b.metric.layers} · {moduleCount} {b.metric.modules}
+                </span>
+              </div>
+              <div className="builder-hud-track">
+                <span className="builder-hud-fill" style={{ width: buildPct + "%" }} />
+              </div>
             </div>
             <div className="builder-layers">
               <span className="builder-backbone" />
@@ -936,11 +961,11 @@ function ProjectBuilder({ t, links }) {
                 Resolves once the system is fully assembled (shown ≥ activeCount),
                 staggered by CSS so it reads as the machine "printing the spec". */}
             <div className={`builder-spec ${shown >= activeCount ? "is-in" : ""}`}>
-              {includes.length && b.lbl ? (
+              {includesFull.length && b.lbl ? (
                 <div className="builder-spec-group">
                   <div className="builder-spec-h mono">{b.lbl.includes}</div>
                   <ul className="builder-includes">
-                    {includes.map(function renderInclude(d, i) {
+                    {includesFull.map(function renderInclude(d, i) {
                       return (
                         <li key={i} className="builder-include" style={{ "--si": i }}>
                           <span className="builder-include-tick" aria-hidden="true">✓</span>

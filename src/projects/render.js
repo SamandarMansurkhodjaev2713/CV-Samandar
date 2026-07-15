@@ -182,7 +182,9 @@
     return (
       // ── top bar ──
       '<header class="lp-bar">' +
-        '<a class="lp-back mono" href="' + base + '">' +
+        // Back to the exact card this landing was opened from (App scroll-to-hash
+        // centres #proj-<slug>; the intro is skipped for hashed loads).
+        '<a class="lp-back mono" href="' + base + "#proj-" + esc(p.slug) + '">' +
           '<span class="lp-back-arr">←</span> SAMANDAR' +
         "</a>" +
         '<div class="lp-bar-right">' +

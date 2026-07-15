@@ -82,10 +82,80 @@
     var a2 = readRGB("--accent-2-rgb", [200, 155, 94]);
 
     var elPct, elLine, elLabelState, smBoot, particleCv, particleCtx;
+    var elLog, elClock, logIdx = -1;
     var particles = null, pW = 0, pH = 0, pDpr = 1;
     var start = 0, raf = 0, resizeHandler = null;
     var exitFrom = 0, finished = false, revealing = false;
     var displayed = -1;
+
+    // Boot-log lines: reuse the hero's real boot readout (technical, language-
+    // independent) so the loader narrates the same "system coming online" story
+    // the hero implies. Content.js loads before this script (see index.html), so
+    // window.CONTENT is available; fall back to a built-in list if not.
+    var BOOT_LINES = (function () {
+      try {
+        var b = window.CONTENT && window.CONTENT.ru && window.CONTENT.ru.hero && window.CONTENT.ru.hero.boot_lines;
+        if (b && b.length) return b.slice();
+      } catch (e) { /* fall through to default */ }
+      return [
+        "init core.engine ... ok",
+        "load /modules/full-stack ... ok",
+        "load /modules/ai-automation ... ok",
+        "compile build ... ok",
+        "deploy READY",
+      ];
+    })();
+    // Real build tag — pulled from the ?v= cache-buster on any app script so the
+    // telemetry version tracks deploys automatically instead of drifting.
+    var BUILD_TAG = (function () {
+      try {
+        var s = document.querySelector('script[src*="?v="]');
+        var m = s && String(s.src).match(/[?&]v=(\w+)/);
+        return m ? ("BUILD " + m[1]) : "BUILD 2026";
+      } catch (e) { return "BUILD 2026"; }
+    })();
+
+    function esc(s) {
+      return String(s == null ? "" : s)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+    // Colour the trailing status token (ok / READY / done) so each line reads
+    // like a real console echo.
+    function fmtLogLine(s) {
+      var str = String(s == null ? "" : s);
+      var m = str.match(/^(.*?)(ok|READY|done)\s*$/);
+      if (m) return esc(m[1]) + '<span class="sm-boot-ok">' + esc(m[2]) + "</span>";
+      return esc(str);
+    }
+    function fmtClock(ms) {
+      var sec = Math.floor((ms < 0 ? 0 : ms) / 1000);
+      var mm = String(Math.floor(sec / 60) % 100).padStart(2, "0");
+      var ss = String(sec % 60).padStart(2, "0");
+      return "T+00:" + mm + ":" + ss;
+    }
+    function renderLog() {
+      if (!elLog) return;
+      var startI = Math.max(0, logIdx - 2); // rolling window of the last 3 lines
+      var html = "";
+      for (var i = startI; i <= logIdx; i++) {
+        html += '<div class="' + (i === logIdx ? "cur" : "on") + '">' + fmtLogLine(BOOT_LINES[i]) + "</div>";
+      }
+      elLog.innerHTML = html;
+    }
+    function revealLogTo(idx) {
+      if (idx <= logIdx) return;
+      logIdx = Math.min(idx, BOOT_LINES.length - 1);
+      renderLog();
+    }
+    // Reveal lines 0..n-2 spread across 0..90%; the final line (usually
+    // "deploy READY") is held back and revealed at ONLINE for the payoff.
+    function setLog(pct) {
+      var n = BOOT_LINES.length;
+      if (n < 2) return;
+      var idx = Math.floor(clamp01(pct / 90) * (n - 1));
+      if (idx > n - 2) idx = n - 2;
+      revealLogTo(idx);
+    }
 
     function buildDom() {
       panel.style.background =
@@ -98,6 +168,15 @@
         particleCv.style.cssText = "position:absolute;inset:0;width:100%;height:100%;display:block;";
         panel.appendChild(particleCv);
         setupParticles();
+
+        // Core pulse — reactor rings breathing from the focal point, behind the
+        // readout (rich path only; reduced-motion skips it and CSS hides it).
+        var core = document.createElement("div");
+        core.className = "sm-boot-core";
+        core.style.top = (CFG.CORE_Y * 100).toFixed(1) + "%";
+        core.setAttribute("aria-hidden", "true");
+        core.innerHTML = "<b></b><i></i><i></i>";
+        panel.appendChild(core);
       }
 
       var wrap = document.createElement("div");
@@ -106,12 +185,31 @@
       wrap.innerHTML =
         '<div class="sm-boot-label mono">CORE.AI <span class="sm-boot-state">INITIALIZING</span></div>' +
         '<div class="sm-boot-pct"><span class="sm-boot-pct-n">00</span><span class="sm-boot-pct-sign">%</span></div>' +
-        '<div class="sm-boot-line"><i></i></div>';
+        '<div class="sm-boot-line"><i></i></div>' +
+        '<div class="sm-boot-log mono" aria-hidden="true"></div>';
       panel.appendChild(wrap);
       smBoot = wrap;
       elPct = wrap.querySelector(".sm-boot-pct-n");
       elLine = wrap.querySelector(".sm-boot-line > i");
       elLabelState = wrap.querySelector(".sm-boot-state");
+      elLog = wrap.querySelector(".sm-boot-log");
+
+      // Telemetry corners — coordinates (Tashkent) + build tag + live T+ clock.
+      // Both modes (static, cheap); the clock ticks from the frame loop.
+      var teleL = document.createElement("div");
+      teleL.className = "sm-boot-tele sm-boot-tele--l mono";
+      teleL.setAttribute("aria-hidden", "true");
+      teleL.innerHTML = "<div><b>TASHKENT</b> · UZ</div><div>41.31°N · 69.24°E · UTC+5</div>";
+      panel.appendChild(teleL);
+
+      var teleR = document.createElement("div");
+      teleR.className = "sm-boot-tele sm-boot-tele--r mono";
+      teleR.setAttribute("aria-hidden", "true");
+      teleR.innerHTML =
+        "<div>SM · " + esc(BUILD_TAG) + "</div>" +
+        '<div class="sm-boot-clock"><b>T+00:00:00</b></div>';
+      panel.appendChild(teleR);
+      elClock = teleR.querySelector(".sm-boot-clock b");
     }
 
     function setupParticles() {
@@ -200,6 +298,7 @@
       if (elLabelState) elLabelState.textContent = "ONLINE";
       if (smBoot) smBoot.classList.add("is-online");
       setPercent(100);
+      revealLogTo(BOOT_LINES.length - 1); // release the held final line ("deploy READY")
       setTimeout(function () {
         panel.style.transition = "opacity " + (CFG.REVEAL_MS / 1000) + "s cubic-bezier(.2,.6,.18,1)";
         if (reduced) {
@@ -220,6 +319,7 @@
       if (revealing) return;
 
       if (!reduced) drawParticles(now);
+      if (elClock) elClock.textContent = fmtClock(now - start);
 
       if (exitFrom) { startReveal(); return; }
 
@@ -232,6 +332,7 @@
         visualPct = CFG.EASE_TARGET + (99 - CFG.EASE_TARGET) * (1 - Math.pow(1 - creepT, 2));
       }
       setPercent(visualPct);
+      setLog(visualPct);
 
       var pastCeiling = t >= CFG.CEILING_MS;
       if (pastCeiling || (visualPct >= CFG.EASE_TARGET - 0.01 && robotSettled())) {
