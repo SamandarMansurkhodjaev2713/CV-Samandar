@@ -1,20 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 112" role="img" aria-label="Task manager Telegram bot: checklist with completed tasks, a Telegram plane and a gear">
-  <rect width="320" height="112" fill="#17110c"/>
-  <rect x="12" y="14" width="196" height="84" rx="7" fill="#211812"/>
-  <rect x="24" y="26" width="14" height="14" rx="3" fill="#D9743F"/>
-  <path d="M27 33 l2.6 2.6 l4.6 -5" fill="none" stroke="#17110c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="46" y="30" width="120" height="5" rx="2.5" fill="#7a5c48"/>
-  <rect x="24" y="48" width="14" height="14" rx="3" fill="#D9743F"/>
-  <path d="M27 55 l2.6 2.6 l4.6 -5" fill="none" stroke="#17110c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="46" y="52" width="96" height="5" rx="2.5" fill="#7a5c48"/>
-  <rect x="24" y="70" width="14" height="14" rx="3" fill="none" stroke="#8a6a52" stroke-width="2"/>
-  <rect x="46" y="74" width="132" height="5" rx="2.5" fill="#c98a63"/>
-  <rect x="216" y="14" width="92" height="50" rx="7" fill="#211812"/>
-  <path d="M232 40 l60 -18 l-14 40 l-16 -12 l-8 10 l-2 -16 z" fill="#E08A54" opacity="0.92"/>
-  <path d="M240 39 l38 -11 l-28 19 z" fill="#17110c" opacity="0.35"/>
-  <rect x="216" y="70" width="92" height="28" rx="7" fill="#211812"/>
-  <circle cx="234" cy="84" r="7" fill="none" stroke="#D9743F" stroke-width="2"/>
-  <circle cx="234" cy="84" r="2.4" fill="#D9743F"/>
-  <rect x="250" y="80" width="46" height="4" rx="2" fill="#7a5c48"/>
-  <rect x="250" y="87" width="30" height="4" rx="2" fill="#5c4636"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 112" role="img" aria-label="Task-manager bot: a queue of tasks resolving to a checkmark, dispatched over Telegram">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C89B5E"/><stop offset="1" stop-color="#D97757"/></linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#D97757" stop-opacity="0.4"/><stop offset="1" stop-color="#D97757" stop-opacity="0"/></radialGradient>
+    <pattern id="grid" width="14" height="14" patternUnits="userSpaceOnUse"><path d="M14 0H0V14" fill="none" stroke="#F5F0E6" stroke-opacity="0.035"/></pattern>
+  </defs>
+  <rect width="320" height="112" fill="#15130F"/>
+  <rect width="320" height="112" fill="url(#grid)"/>
+  <path d="M18 14 L18 22 M18 14 L26 14 M302 98 L302 90 M302 98 L294 98" stroke="#6B6353" stroke-width="1"/>
+  <rect x="34" y="26" width="12" height="12" rx="2.5" fill="none" stroke="#8A7F6B" stroke-width="1.2"/>
+  <line x1="52" y1="32" x2="118" y2="32" stroke="#4A4438" stroke-width="1.2"/>
+  <rect x="34" y="46" width="12" height="12" rx="2.5" fill="none" stroke="#C89B5E" stroke-width="1.2"/>
+  <path d="M37 52 l2.4 2.4 l4.4 -4.8" fill="none" stroke="#C89B5E" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="52" y1="52" x2="128" y2="52" stroke="#6B6353" stroke-width="1.2"/>
+  <rect x="34" y="66" width="12" height="12" rx="2.5" fill="#D97757" opacity="0.9"/>
+  <path d="M37 72 l2.4 2.4 l4.4 -4.8" fill="none" stroke="#1D1B15" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="52" y1="72" x2="110" y2="72" stroke="#8A7F6B" stroke-width="1.2"/>
+  <path d="M138 52 C 172 52, 172 52, 200 52" fill="none" stroke="url(#g)" stroke-width="1.2" stroke-dasharray="1.5 4"/>
+  <circle cx="222" cy="52" r="20" fill="url(#glow)"/>
+  <circle cx="222" cy="52" r="14" fill="#1D1B15" stroke="url(#g)" stroke-width="1.3"/>
+  <path d="M215 58 l17 -13 l-6 17 l-4.5 -5 l-3.5 3 z" fill="url(#g)"/>
+  <text x="302" y="102" text-anchor="end" font-family="ui-monospace,monospace" font-size="7.5" letter-spacing="0.5" fill="#8A7F6B">QUEUE · DISPATCHED</text>
 </svg>

@@ -109,7 +109,7 @@ const CONTENT = {
           stack: ["NestJS", "Next.js", "PostgreSQL", "Redis", "MinIO"],
           outcome: "on-prem развёртывание для закрытого контура",
           status: "NDA",
-          url: "#contact",
+          url: "https://github.com/SamandarMansurkhodjaev2713/private-projects-showcase/blob/main/cards/ttyl-platform.md",
         },
         {
           tag: "TELEGRAM · RUST",
@@ -131,7 +131,7 @@ const CONTENT = {
           stack: ["Python", "gRPC", "RabbitMQ", "Telegram"],
           outcome: "операционная панель для бизнеса",
           status: "NDA",
-          url: "#contact",
+          url: "https://github.com/SamandarMansurkhodjaev2713/private-projects-showcase/blob/main/cards/marketbot.md",
         },
         {
           tag: "IOT · EMBEDDED",
@@ -175,7 +175,7 @@ const CONTENT = {
           stack: ["Next.js 15", "React 19", "Prisma", "Auth.js", "Zod"],
           outcome: "сильная доменная модель, product-first",
           status: "NDA",
-          url: "#contact",
+          url: "https://github.com/SamandarMansurkhodjaev2713/private-projects-showcase/blob/main/cards/forge-learning-os.md",
         },
         {
           tag: "PROCTORING · DESKTOP",
@@ -186,7 +186,7 @@ const CONTENT = {
           stack: ["C#", "Node.js", "Express", "PostgreSQL", "React"],
           outcome: "система за пределами web, sensitive-данные",
           status: "NDA",
-          url: "#contact",
+          url: "https://github.com/SamandarMansurkhodjaev2713/private-projects-showcase/blob/main/cards/belfproctor.md",
         },
         {
           tag: "AUTOMATION · BROWSER",
@@ -197,7 +197,7 @@ const CONTENT = {
           stack: ["Python", "Playwright", "aiogram", "Docker"],
           outcome: "надёжная автоматизация в ломких условиях",
           status: "NDA",
-          url: "#contact",
+          url: "https://github.com/SamandarMansurkhodjaev2713/private-projects-showcase/blob/main/cards/vfs-killer-main.md",
         },
         {
           tag: "HEALTH-TECH · DESKTOP",
@@ -208,7 +208,7 @@ const CONTENT = {
           stack: ["Rust", "Tauri", "React", "SQLite"],
           outcome: "offline-first, точность важнее скорости",
           status: "NDA",
-          url: "#contact",
+          url: "https://github.com/SamandarMansurkhodjaev2713/private-projects-showcase/blob/main/cards/med-exe.md",
         },
         {
           tag: "FRONTEND · WEBGL",
@@ -616,7 +616,7 @@ const CONTENT = {
           stack: ["NestJS", "Next.js", "PostgreSQL", "Redis", "MinIO"],
           outcome: "on-prem deployment for a closed environment",
           status: "NDA",
-          url: "#contact",
+          url: "https://github.com/SamandarMansurkhodjaev2713/private-projects-showcase/blob/main/cards/ttyl-platform.md",
         },
         {
           tag: "TELEGRAM · RUST",
@@ -638,7 +638,7 @@ const CONTENT = {
           stack: ["Python", "gRPC", "RabbitMQ", "Telegram"],
           outcome: "operational panel for the business",
           status: "NDA",
-          url: "#contact",
+          url: "https://github.com/SamandarMansurkhodjaev2713/private-projects-showcase/blob/main/cards/marketbot.md",
         },
         {
           tag: "IOT · EMBEDDED",
@@ -682,7 +682,7 @@ const CONTENT = {
           stack: ["Next.js 15", "React 19", "Prisma", "Auth.js", "Zod"],
           outcome: "strong domain model, product-first",
           status: "NDA",
-          url: "#contact",
+          url: "https://github.com/SamandarMansurkhodjaev2713/private-projects-showcase/blob/main/cards/forge-learning-os.md",
         },
         {
           tag: "PROCTORING · DESKTOP",
@@ -693,7 +693,7 @@ const CONTENT = {
           stack: ["C#", "Node.js", "Express", "PostgreSQL", "React"],
           outcome: "a system beyond web, sensitive data",
           status: "NDA",
-          url: "#contact",
+          url: "https://github.com/SamandarMansurkhodjaev2713/private-projects-showcase/blob/main/cards/belfproctor.md",
         },
         {
           tag: "AUTOMATION · BROWSER",
@@ -704,7 +704,7 @@ const CONTENT = {
           stack: ["Python", "Playwright", "aiogram", "Docker"],
           outcome: "reliable automation in brittle conditions",
           status: "NDA",
-          url: "#contact",
+          url: "https://github.com/SamandarMansurkhodjaev2713/private-projects-showcase/blob/main/cards/vfs-killer-main.md",
         },
         {
           tag: "HEALTH-TECH · DESKTOP",
@@ -715,7 +715,7 @@ const CONTENT = {
           stack: ["Rust", "Tauri", "React", "SQLite"],
           outcome: "offline-first, precision over speed",
           status: "NDA",
-          url: "#contact",
+          url: "https://github.com/SamandarMansurkhodjaev2713/private-projects-showcase/blob/main/cards/med-exe.md",
         },
         {
           tag: "FRONTEND · WEBGL",
@@ -1123,7 +1123,7 @@ const CONTENT = {
           stack: ["NestJS", "Next.js", "PostgreSQL", "Redis", "MinIO"],
           outcome: "yopiq muhit uchun on-prem joylashtirish",
           status: "NDA",
-          url: "#contact",
+          url: "https://github.com/SamandarMansurkhodjaev2713/private-projects-showcase/blob/main/cards/ttyl-platform.md",
         },
         {
           tag: "TELEGRAM · RUST",
@@ -1145,7 +1145,7 @@ const CONTENT = {
           stack: ["Python", "gRPC", "RabbitMQ", "Telegram"],
           outcome: "biznes uchun operatsion panel",
           status: "NDA",
-          url: "#contact",
+          url: "https://github.com/SamandarMansurkhodjaev2713/private-projects-showcase/blob/main/cards/marketbot.md",
         },
         {
           tag: "IOT · EMBEDDED",
@@ -1189,7 +1189,7 @@ const CONTENT = {
           stack: ["Next.js 15", "React 19", "Prisma", "Auth.js", "Zod"],
           outcome: "kuchli domen-model, product-first",
           status: "NDA",
-          url: "#contact",
+          url: "https://github.com/SamandarMansurkhodjaev2713/private-projects-showcase/blob/main/cards/forge-learning-os.md",
         },
         {
           tag: "PROCTORING · DESKTOP",
@@ -1200,7 +1200,7 @@ const CONTENT = {
           stack: ["C#", "Node.js", "Express", "PostgreSQL", "React"],
           outcome: "web'dan tashqaridagi tizim, sensitive ma'lumot",
           status: "NDA",
-          url: "#contact",
+          url: "https://github.com/SamandarMansurkhodjaev2713/private-projects-showcase/blob/main/cards/belfproctor.md",
         },
         {
           tag: "AUTOMATION · BROWSER",
@@ -1211,7 +1211,7 @@ const CONTENT = {
           stack: ["Python", "Playwright", "aiogram", "Docker"],
           outcome: "beqaror sharoitda ishonchli avtomatlashtirish",
           status: "NDA",
-          url: "#contact",
+          url: "https://github.com/SamandarMansurkhodjaev2713/private-projects-showcase/blob/main/cards/vfs-killer-main.md",
         },
         {
           tag: "HEALTH-TECH · DESKTOP",
@@ -1222,7 +1222,7 @@ const CONTENT = {
           stack: ["Rust", "Tauri", "React", "SQLite"],
           outcome: "offline-first, aniqlik tezlikdan muhim",
           status: "NDA",
-          url: "#contact",
+          url: "https://github.com/SamandarMansurkhodjaev2713/private-projects-showcase/blob/main/cards/med-exe.md",
         },
         {
           tag: "FRONTEND · WEBGL",
