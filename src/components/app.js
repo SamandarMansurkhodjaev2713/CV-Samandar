@@ -122,6 +122,75 @@ function useScrollEngine(bgFxRef, setActiveSection) {
     };
   }, []);
 }
+
+// Labels for the section COUNTER — sections that live outside t.nav (they are
+// real [data-section] chapters but not primary nav destinations).
+const EXTRA_SECTION_LABELS = {
+  ru: {
+    hero: "Старт",
+    signal: "Сигнал",
+    process: "Метод",
+    trust: "Качество"
+  },
+  en: {
+    hero: "Start",
+    signal: "Signal",
+    process: "Method",
+    trust: "Quality"
+  },
+  uz: {
+    hero: "Boshlanish",
+    signal: "Signal",
+    process: "Metod",
+    trust: "Sifat"
+  }
+};
+
+// "Flight with focus": menu/anchor navigation reads as travel through the
+// site's space, not a page scroll. A vignette closes in (body::after via the
+// html.is-flying class), bg-fx's own scroll-energy does the motion drama for
+// free, and the landing section briefly carries .fly-in so its heading can
+// flash its entrance. Native wheel/touch scrolling is untouched — this runs
+// ONLY on explicit navigation clicks. Reduced-motion falls back to the plain
+// jump (scroll-behavior:auto already handles the scroll itself).
+function flyTo(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const reduced = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  try {
+    history.replaceState(null, "", "#" + id);
+  } catch (e) {/* opportunistic */}
+  if (!reduced) {
+    document.documentElement.classList.add("is-flying");
+    el.classList.add("fly-in");
+    window.clearTimeout(flyTo._t1);
+    window.clearTimeout(flyTo._t2);
+    flyTo._t1 = window.setTimeout(() => document.documentElement.classList.remove("is-flying"), 950);
+    flyTo._t2 = window.setTimeout(() => el.classList.remove("fly-in"), 1600);
+  }
+  try {
+    el.scrollIntoView({
+      behavior: reduced ? "auto" : "smooth",
+      block: "start"
+    });
+  } catch (e) {
+    window.location.hash = id;
+  }
+}
+
+// Odometer-style digit drum for the section counter: remounting .drum-n on a
+// number change (React key) replays the roll-in keyframe — no state to manage.
+function Drum({
+  value
+}) {
+  return /*#__PURE__*/React.createElement("span", {
+    className: "drum",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("span", {
+    key: value,
+    className: "drum-n"
+  }, value));
+}
 function Nav({
   t,
   lang,
@@ -129,45 +198,106 @@ function Nav({
   active
 }) {
   const [open, setOpen] = useS(false);
+  // Capsule state — the bar condenses into a floating pill once the reader
+  // leaves the very top. Passive + rAF-throttled; no layout reads besides scrollY.
+  const [capsule, setCapsule] = useS(false);
+  // Real chapter order straight from the DOM — single source of truth shared
+  // with the dock (same querySelectorAll pattern), so the counter can never
+  // disagree with the actual page.
+  const [secOrder, setSecOrder] = useS([]);
+  const [clock, setClock] = useS("");
+  useE(() => {
+    setSecOrder([...document.querySelectorAll("section[data-section]")].map(el => el.getAttribute("data-section")));
+    let raf = 0;
+    function read() {
+      raf = 0;
+      setCapsule(window.scrollY > 64);
+    }
+    function onScroll() {
+      if (!raf) raf = requestAnimationFrame(read);
+    }
+    window.addEventListener("scroll", onScroll, {
+      passive: true
+    });
+    read();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
 
-  // Lock scroll while drawer open, restore on close/unmount.
+  // Lock scroll while the fullscreen menu is open; Escape closes. The live
+  // Tashkent clock only ticks while the menu is visible (zero idle cost).
   useE(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [open]);
-
-  // Close drawer when section clicked or Escape pressed.
-  useE(() => {
-    if (!open) return;
     const onKey = e => {
       if (e.key === "Escape") setOpen(false);
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    function tick() {
+      const d = new Date(Date.now() + (5 * 60 + new Date().getTimezoneOffset()) * 60000);
+      setClock([d.getHours(), d.getMinutes(), d.getSeconds()].map(n => String(n).padStart(2, "0")).join(":"));
+    }
+    tick();
+    const iv = window.setInterval(tick, 1000);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+      window.clearInterval(iv);
+    };
   }, [open]);
+  const total = secOrder.length || 11;
+  const idx = Math.max(0, secOrder.indexOf(active));
+  const num = String(idx + 1).padStart(2, "0");
+  const extra = EXTRA_SECTION_LABELS[lang] || EXTRA_SECTION_LABELS.ru;
+  const activeLabel = t.nav[active] || extra[active] || "";
+  const progress = total > 1 ? idx / (total - 1) : 0;
+  function go(e, id) {
+    e.preventDefault();
+    setOpen(false);
+    flyTo(id);
+  }
   return /*#__PURE__*/React.createElement("nav", {
-    className: `nav ${open ? "nav-open" : ""}`
+    className: `nav ${open ? "nav-open" : ""} ${capsule ? "is-capsule" : ""}`
   }, /*#__PURE__*/React.createElement("div", {
     className: "nav-inner"
   }, /*#__PURE__*/React.createElement("a", {
     href: "#hero",
     className: "brand",
     "data-cursor": "link",
-    "data-cursor-label": "\u2191 top"
+    "data-cursor-label": "\u2191 top",
+    onClick: e => go(e, "hero")
   }, /*#__PURE__*/React.createElement("span", {
     className: "brand-mark"
-  }), /*#__PURE__*/React.createElement("span", null, "SAMANDAR", /*#__PURE__*/React.createElement("span", {
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "brand-name"
+  }, "SAMANDAR", /*#__PURE__*/React.createElement("span", {
     className: "brand-sub"
-  }, " \xB7 EXEC.AI.LAB"))), /*#__PURE__*/React.createElement("ul", {
+  }, " \xB7 EXEC.AI.LAB"))), /*#__PURE__*/React.createElement("div", {
+    className: "nav-counter mono",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(Drum, {
+    value: num
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "nav-counter-sep"
+  }, "/ ", String(total).padStart(2, "0")), /*#__PURE__*/React.createElement("span", {
+    key: active,
+    className: "nav-counter-name"
+  }, activeLabel), /*#__PURE__*/React.createElement("span", {
+    className: "nav-counter-track"
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      transform: `scaleX(${progress})`
+    }
+  }))), /*#__PURE__*/React.createElement("ul", {
     className: "nav-links"
   }, NAV_SECTIONS.map(k => /*#__PURE__*/React.createElement("li", {
     key: k
   }, /*#__PURE__*/React.createElement("a", {
     href: `#${k}`,
+    onClick: e => go(e, k),
     className: active === k ? "active" : "",
     "data-cursor": "link",
     "data-cursor-label": `→ ${t.nav[k]}`
@@ -186,7 +316,8 @@ function Nav({
     href: "#contact",
     className: "nav-cta",
     "data-cursor": "send",
-    "data-cursor-label": "send \u2192 contact"
+    "data-cursor-label": "send \u2192 contact",
+    onClick: e => go(e, "contact")
   }, /*#__PURE__*/React.createElement("span", {
     className: "nav-cta-dot",
     "aria-hidden": "true"
@@ -200,10 +331,15 @@ function Nav({
       setOpen(o => !o);
     }
   }, /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null)))), /*#__PURE__*/React.createElement("div", {
-    className: `nav-drawer ${open ? "is-open" : ""}`,
+    className: `nav-menu ${open ? "is-open" : ""}`,
     "aria-hidden": !open
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "nav-menu-glow",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "nav-menu-inner"
   }, /*#__PURE__*/React.createElement("ul", {
-    className: "nav-drawer-links"
+    className: "nav-menu-links"
   }, NAV_SECTIONS.map((k, i) => /*#__PURE__*/React.createElement("li", {
     key: k,
     style: {
@@ -211,23 +347,37 @@ function Nav({
     }
   }, /*#__PURE__*/React.createElement("a", {
     href: `#${k}`,
-    onClick: () => setOpen(false),
+    onClick: e => go(e, k),
     className: active === k ? "active" : ""
   }, /*#__PURE__*/React.createElement("span", {
-    className: "nav-drawer-num"
-  }, "/", String(i + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("span", null, t.nav[k]), /*#__PURE__*/React.createElement("span", {
-    className: "nav-drawer-arrow"
+    className: "nav-menu-num mono"
+  }, String(i + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("span", {
+    className: "nav-menu-mask"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "nav-menu-word"
+  }, t.nav[k])), /*#__PURE__*/React.createElement("span", {
+    className: "nav-menu-arrow",
+    "aria-hidden": "true"
   }, "\u2192"))))), /*#__PURE__*/React.createElement("div", {
-    className: "nav-drawer-foot"
+    className: "nav-menu-foot"
   }, /*#__PURE__*/React.createElement("a", {
     href: "#contact",
-    className: "nav-drawer-cta",
-    onClick: () => setOpen(false)
-  }, t.hero.cta_primary, /*#__PURE__*/React.createElement("span", {
+    className: "nav-menu-cta",
+    onClick: e => go(e, "contact")
+  }, t.hero.cta_primary, " ", /*#__PURE__*/React.createElement("span", {
     className: "arrow"
   }, "\u2192")), /*#__PURE__*/React.createElement("div", {
-    className: "nav-drawer-meta mono"
-  }, "EXECUTIVE AI CODE LAB \xB7 v.2026"))));
+    className: "lang nav-menu-lang",
+    role: "group",
+    "aria-label": "language"
+  }, ["ru", "en", "uz"].map(L => /*#__PURE__*/React.createElement("button", {
+    key: L,
+    onClick: () => setLang(L),
+    className: lang === L ? "active" : "",
+    "aria-pressed": lang === L
+  }, L.toUpperCase()))), /*#__PURE__*/React.createElement("div", {
+    className: "nav-menu-tele mono"
+  }, /*#__PURE__*/React.createElement("span", null, "TASHKENT \xB7 41.31\xB0N 69.24\xB0E"), /*#__PURE__*/React.createElement("span", null, "UTC+5 \xB7 ", clock), /*#__PURE__*/React.createElement("span", null, "EXECUTIVE AI CODE LAB \xB7 v.2026"))))));
 }
 
 // ── Mobile UI overlay primitives ──────────────────────────────────────────

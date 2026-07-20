@@ -685,7 +685,8 @@ body.cursor-hover .cursor-dot { opacity: 0; }
 .brand-sub { opacity: 0.45; }
 
 .nav-burger {
-  display: none;
+  /* Visible at every width — it opens the fullscreen menu (desktop included). */
+  display: inline-block;
   width: 40px; height: 40px;
   background: transparent;
   border: 1px solid var(--line-strong);
@@ -712,95 +713,165 @@ body.cursor-hover .cursor-dot { opacity: 0; }
 .nav-open .nav-burger span:nth-child(2) { opacity: 0; transform: translate(-50%, -50%) scaleX(0); }
 .nav-open .nav-burger span:nth-child(3) { transform: translate(-50%, -50%) rotate(-45deg); }
 
-.nav-drawer {
-  position: fixed;
-  top: var(--nav-h);
-  left: 0; right: 0;
-  height: calc(100dvh - var(--nav-h));
-  background: linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 100%);
-  z-index: 99;
-  padding: 24px var(--gutter) 32px;
+/* ═══ Capsule mode ══════════════════════════════════════════════════════════
+   Past the first fold the bar condenses into a floating pill: brand · section
+   counter · CTA · menu button. The full link row lives in the fullscreen menu.
+   Everything transitions on the SAME easing so the morph reads as one motion. */
+.nav-inner { position: relative; z-index: 2; border: 1px solid transparent; border-radius: 0;
+  transition: max-width .55s var(--ease-out), margin .55s var(--ease-out),
+              padding .55s var(--ease-out), background .4s ease,
+              border-color .4s ease, border-radius .55s var(--ease-out), box-shadow .4s ease; }
+.nav { transition: background .4s ease, border-color .4s ease; }
+.nav.is-capsule { background: transparent; border-bottom-color: transparent;
+  backdrop-filter: none; -webkit-backdrop-filter: none; pointer-events: none; }
+.nav.is-capsule .nav-inner {
+  pointer-events: auto;
+  max-width: 760px;
+  margin-top: 10px;
+  padding: 6px 10px 6px 18px;
+  background: rgba(28, 26, 21, 0.78);
+  border-color: var(--line-strong);
+  border-radius: 999px;
+  box-shadow: 0 14px 44px -18px rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+}
+/* Row link list collapses in capsule mode (it lives in the fullscreen menu). */
+.nav-links { overflow: hidden; white-space: nowrap; max-width: 900px;
+  transition: max-width .5s var(--ease-out), opacity .3s ease .1s; }
+.nav.is-capsule .nav-links { max-width: 0; opacity: 0; pointer-events: none; transition: max-width .5s var(--ease-out), opacity .2s ease; }
+
+/* ── Section counter — capsule telemetry: 04 / 11 · Проекты ───────────────── */
+.nav-counter {
+  display: flex; align-items: baseline; gap: 7px;
+  position: relative; padding-bottom: 7px;
+  font-size: 11px; letter-spacing: 0.12em; color: var(--text-dim);
+  white-space: nowrap; overflow: hidden;
+  max-width: 0; opacity: 0;
+  transition: max-width .5s var(--ease-out), opacity .3s ease;
+}
+.nav.is-capsule .nav-counter { max-width: 340px; opacity: 1; transition: max-width .5s var(--ease-out), opacity .35s ease .15s; }
+.drum { display: inline-flex; overflow: hidden; height: 1.25em; }
+.drum-n { display: block; color: var(--accent); font-weight: 600; animation: drumIn .45s var(--ease-out); }
+@keyframes drumIn { from { transform: translateY(108%); } to { transform: translateY(0); } }
+.nav-counter-sep { color: var(--text-mute); }
+.nav-counter-name { color: var(--text); animation: counterName .4s ease; }
+@keyframes counterName { from { opacity: 0; transform: translateX(6px); } to { opacity: 1; transform: none; } }
+.nav-counter-track {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+  border-radius: 2px; background: rgba(var(--accent-rgb) / 0.14); overflow: hidden;
+}
+.nav-counter-track i {
+  display: block; height: 100%; border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transform-origin: left; transition: transform .6s var(--ease-out);
+}
+
+/* ═══ Fullscreen menu — the navigation SCENE (desktop + mobile) ═════════════
+   Opens with a top-down clip reveal; items line-mask in with a stagger; live
+   Tashkent telemetry in the footer. The capsule/bar stays above it (z:2) so
+   the burger doubles as the close control. */
+.nav-menu {
+  position: fixed; inset: 0; z-index: 1;
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  transform: translateY(-12px);
-  opacity: 0;
-  pointer-events: none;
-  transition: transform 0.4s var(--ease-emphasized), opacity 0.3s;
-  border-bottom: 1px solid var(--line);
+  background:
+    radial-gradient(ellipse 85% 60% at 72% 8%, rgba(var(--accent-rgb) / 0.07), transparent 60%),
+    linear-gradient(180deg, #16140F 0%, #1D1B16 100%);
+  clip-path: inset(0 0 100% 0);
+  visibility: hidden;
+  transition: clip-path .65s var(--ease-emphasized, cubic-bezier(.2,.6,.18,1)), visibility 0s linear .65s;
+}
+.nav-menu.is-open {
+  clip-path: inset(0 0 0% 0);
+  visibility: visible;
+  transition: clip-path .65s var(--ease-emphasized, cubic-bezier(.2,.6,.18,1));
+}
+.nav-menu-glow {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 55% 45% at 12% 96%, rgba(var(--accent-2-rgb, 200 155 94) / 0.06), transparent 60%);
+}
+.nav-menu-inner {
+  width: 100%; max-width: var(--max-w); margin: 0 auto;
+  padding: calc(var(--nav-h) + 3vh) var(--gutter) 3.5vh;
+  display: flex; flex-direction: column; justify-content: space-between; gap: 20px;
   overflow-y: auto;
 }
-.nav-drawer.is-open {
-  transform: translateY(0);
-  opacity: 1;
-  pointer-events: auto;
+.nav-menu-links { list-style: none; display: flex; flex-direction: column; }
+.nav-menu-links li { border-bottom: 1px solid var(--line); }
+.nav-menu-links a {
+  display: flex; align-items: baseline; gap: clamp(14px, 3vw, 26px);
+  padding: clamp(9px, 1.7vh, 18px) 0;
+  text-decoration: none; color: var(--text-dim);
+  transition: color .25s ease;
 }
-.nav-drawer-links {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.nav-menu-num { font-size: 12px; letter-spacing: 0.18em; color: var(--text-mute); transition: color .25s ease; }
+.nav-menu-mask { display: block; overflow: hidden; transition: transform .35s var(--ease-out); }
+.nav-menu-word {
+  display: block;
+  font-family: var(--f-display); font-weight: 650;
+  font-size: clamp(34px, 6vh, 66px); line-height: 1.08; letter-spacing: -0.025em;
+  transform: translateY(118%);
+  transition: transform .55s var(--ease-out);
 }
-.nav-drawer-links li {
-  opacity: 0;
-  transform: translateX(-12px);
-  transition: opacity 0.4s var(--ease-out), transform 0.4s var(--ease-out);
-  transition-delay: calc(var(--i) * 60ms + 100ms);
+.nav-menu.is-open .nav-menu-word { transform: translateY(0); transition: transform .7s var(--ease-out) calc(var(--i) * 55ms + 160ms); }
+.nav-menu-links a:hover { color: var(--text); }
+.nav-menu-links a:hover .nav-menu-mask { transform: translateX(12px); }
+.nav-menu-links a.active { color: var(--text); }
+.nav-menu-links a.active .nav-menu-num { color: var(--accent); }
+.nav-menu-arrow {
+  margin-left: auto; font-family: var(--f-mono);
+  font-size: clamp(17px, 2.6vh, 24px); color: var(--accent);
+  opacity: 0; transform: translateX(-14px);
+  transition: opacity .3s ease, transform .3s var(--ease-out);
 }
-.nav-drawer.is-open .nav-drawer-links li { opacity: 1; transform: translateX(0); }
-.nav-drawer-links a {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 16px;
-  padding: 18px 12px;
-  color: var(--text-dim);
-  text-decoration: none;
-  font-family: var(--f-display);
-  font-size: clamp(22px, 6vw, 32px);
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  border-bottom: 1px solid var(--line);
-  transition: color var(--d-fast), padding-left var(--d-fast);
+.nav-menu-links a:hover .nav-menu-arrow,
+.nav-menu-links a.active .nav-menu-arrow { opacity: 1; transform: none; }
+.nav-menu-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 18px; flex-wrap: wrap;
+  border-top: 1px solid var(--line); padding-top: 3vh;
+  opacity: 0; transform: translateY(10px);
+  transition: opacity .5s ease, transform .5s var(--ease-out);
 }
-.nav-drawer-links a:hover,
-.nav-drawer-links a:active,
-.nav-drawer-links a.active { color: var(--text); padding-left: 18px; }
-.nav-drawer-links a.active { color: var(--accent); }
-.nav-drawer-num {
-  font-family: var(--f-mono);
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  color: var(--text-mute);
-}
-.nav-drawer-arrow {
-  font-family: var(--f-mono);
-  color: var(--accent);
-  opacity: 0;
-  transform: translateX(-6px);
-  transition: opacity var(--d-fast), transform var(--d-fast);
-}
-.nav-drawer-links a:hover .nav-drawer-arrow,
-.nav-drawer-links a:active .nav-drawer-arrow,
-.nav-drawer-links a.active .nav-drawer-arrow {
-  opacity: 1; transform: translateX(0);
-}
-.nav-drawer-foot { padding-top: 24px; border-top: 1px solid var(--line); }
-.nav-drawer-cta {
+.nav-menu.is-open .nav-menu-foot { opacity: 1; transform: none; transition-delay: .4s; }
+.nav-menu-cta {
   display: inline-flex; align-items: center; gap: 10px;
-  padding: 14px 24px; border-radius: 999px; margin-bottom: 22px;
+  padding: 14px 26px; border-radius: 999px;
   background: var(--accent); color: var(--bg-0, #1F1E1B);
   font-size: 15px; font-weight: 600; text-decoration: none;
   box-shadow: 0 6px 22px rgba(var(--accent-rgb) / 0.32);
+  transition: transform var(--d-fast), box-shadow var(--d-fast);
 }
-.nav-drawer-cta .arrow { transition: transform var(--d-fast); }
-.nav-drawer-cta:active .arrow { transform: translateX(4px); }
-.nav-drawer-meta {
-  font-size: 10.5px;
-  letter-spacing: 0.18em;
-  color: var(--text-mute);
-  text-transform: uppercase;
+.nav-menu-cta:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(var(--accent-rgb) / 0.45); }
+.nav-menu-cta .arrow { transition: transform var(--d-fast); }
+.nav-menu-cta:hover .arrow { transform: translateX(4px); }
+.nav-menu-tele {
+  display: flex; gap: 18px; flex-wrap: wrap;
+  font-size: 10.5px; letter-spacing: 0.14em;
+  color: var(--text-mute); text-transform: uppercase;
 }
+@media (max-width: 640px) {
+  .nav-menu-tele { flex-direction: column; gap: 6px; }
+  .nav-menu-foot { flex-direction: column; align-items: flex-start; }
+  /* Narrow capsule: numbers-only counter, language switch lives in the menu. */
+  .nav-counter-name { display: none; }
+  .nav.is-capsule .lang { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-menu, .nav-menu.is-open { transition: none; }
+  .nav-menu-word, .nav-menu.is-open .nav-menu-word { transition: none; transform: none; }
+  .drum-n, .nav-counter-name { animation: none; }
+}
+
+/* ── Flight vignette — html.is-flying set by flyTo() during menu navigation.
+   The edges close in slightly while the page travels; bg-fx's scroll energy
+   does the actual motion drama. Cheap: one opacity transition. */
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: 60; pointer-events: none;
+  opacity: 0; transition: opacity .35s ease;
+  background: radial-gradient(ellipse 82% 72% at 50% 50%, transparent 52%, rgba(12, 10, 8, 0.55) 100%);
+}
+html.is-flying body::after { opacity: 1; }
 
 /* — Mobile — */
 @media (max-width: 900px) {
@@ -815,9 +886,6 @@ body.cursor-hover .cursor-dot { opacity: 0; }
   .sec-meta { text-align: left; white-space: normal; }
   h1 { font-size: clamp(40px, 11vw, 64px); }
   h2 { font-size: clamp(28px, 8vw, 44px); }
-}
-@media (min-width: 901px) {
-  .nav-drawer { display: none; }
 }
 
 /* — Touch tap-target boost (44px+ per Apple HIG) — */
