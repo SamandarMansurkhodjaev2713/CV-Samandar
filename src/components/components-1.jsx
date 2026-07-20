@@ -24,10 +24,16 @@ function SecHead({ num, eyebrow, title, meta, em }) {
     );
   }
   return (
-    <header className="sec-head" data-reveal>
+    // data-reveal-from="none": the head itself only FADES in — all the motion
+    // belongs to the line-mask below (title slides out from under an invisible
+    // mask, cinema-titles style). Without this the reveal engine would ALSO
+    // translate the whole block 48px and the two movements would fight.
+    <header className="sec-head" data-reveal data-reveal-from="none">
       <div>
         <div className="num">{num ? <>{num} · </> : null}{eyebrow}</div>
-        <h2 style={{ marginTop: 14 }}>{titleNode}</h2>
+        <h2 style={{ marginTop: 14 }}>
+          <span className="lm"><span className="lm-i">{titleNode}</span></span>
+        </h2>
       </div>
       {meta ? <div className="sec-meta">{meta}</div> : null}
     </header>

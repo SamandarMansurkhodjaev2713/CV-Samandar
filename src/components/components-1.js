@@ -33,18 +33,30 @@ function SecHead({
       className: "em"
     }, em), title.slice(i + em.length));
   }
-  return /*#__PURE__*/React.createElement("header", {
-    className: "sec-head",
-    "data-reveal": true
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "num"
-  }, num ? /*#__PURE__*/React.createElement(React.Fragment, null, num, " \xB7 ") : null, eyebrow), /*#__PURE__*/React.createElement("h2", {
-    style: {
-      marginTop: 14
-    }
-  }, titleNode)), meta ? /*#__PURE__*/React.createElement("div", {
-    className: "sec-meta"
-  }, meta) : null);
+  return (
+    /*#__PURE__*/
+    // data-reveal-from="none": the head itself only FADES in — all the motion
+    // belongs to the line-mask below (title slides out from under an invisible
+    // mask, cinema-titles style). Without this the reveal engine would ALSO
+    // translate the whole block 48px and the two movements would fight.
+    React.createElement("header", {
+      className: "sec-head",
+      "data-reveal": true,
+      "data-reveal-from": "none"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      className: "num"
+    }, num ? /*#__PURE__*/React.createElement(React.Fragment, null, num, " \xB7 ") : null, eyebrow), /*#__PURE__*/React.createElement("h2", {
+      style: {
+        marginTop: 14
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "lm"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "lm-i"
+    }, titleNode)))), meta ? /*#__PURE__*/React.createElement("div", {
+      className: "sec-meta"
+    }, meta) : null)
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

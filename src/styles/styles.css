@@ -629,7 +629,34 @@ body.cursor-hover .cursor-dot { opacity: 0; }
   color: var(--text-mute);
   text-transform: uppercase;
 }
-.sec-head h2 { margin-top: 14px; }
+/* ── Display scale + line-mask entrance (Awwwards stage 3) ─────────────────
+   Section titles are the loudest voice on the page: 1.6–1.75× the old scale,
+   sliding out from under an invisible mask like film titles. Body copy is
+   untouched — only the headline register changes. */
+.sec-head h2 {
+  margin-top: 14px;
+  font-size: clamp(44px, 7vw, 112px);
+  font-weight: 650;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.sec-head .lm { display: block; overflow: hidden; padding-bottom: 0.08em; margin-bottom: -0.08em; }
+.sec-head .lm-i {
+  display: block;
+  transform: translateY(115%) rotate(1.4deg);
+  transform-origin: left bottom;
+  transition: transform 0.95s var(--ease-out) 0.08s;
+  will-change: transform;
+}
+.sec-head.rv-in .lm-i { transform: none; }
+/* Flight landing (flyTo → .fly-in on the target section): the heading's
+   hairline re-runs its sweep so the arrival visibly "focuses". */
+.fly-in .sec-head.rv-in::after { animation: secFlash 0.7s var(--ease-out); }
+@keyframes secFlash { from { width: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .sec-head .lm-i { transform: none; transition: none; }
+}
 .sec-head h2 .em {
   color: var(--accent);
   font-family: var(--f-serif);
@@ -886,6 +913,7 @@ html.is-flying body::after { opacity: 1; }
   .sec-meta { text-align: left; white-space: normal; }
   h1 { font-size: clamp(40px, 11vw, 64px); }
   h2 { font-size: clamp(28px, 8vw, 44px); }
+  .sec-head h2 { font-size: clamp(36px, 11vw, 54px); }
 }
 
 /* — Touch tap-target boost (44px+ per Apple HIG) — */
