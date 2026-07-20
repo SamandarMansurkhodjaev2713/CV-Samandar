@@ -1551,4 +1551,371 @@ const CONTENT = {
   },
 };
 
+// ── Project catalog v2 ──────────────────────────────────────────────────────
+// The original 13 cases stay authored above. New GitHub work is added here as
+// product FAMILIES, not one card per repository: GrowthOps intentionally folds
+// the private platform monorepo plus p03/p04/p06 into one coherent product, and
+// Dostupnoe Pravo supersedes the older `delo` repository. This keeps the public
+// portfolio free of duplicate cards while the source repositories remain
+// independently inspectable.
+const PROJECT_ADDITIONS = [
+  {
+    slug: "growthops-ai",
+    name: "GrowthOps AI",
+    status: "BUILD",
+    url: "projects/growthops-ai/",
+    github: "https://github.com/SamandarMansurkhodjaev2713/growthops-ai",
+    stack: ["TypeScript", "Fastify", "PostgreSQL", "NestJS", "Go", "Python"],
+    i18n: {
+      ru: {
+        tag: "AI AUTOMATION · PLATFORM",
+        problem: "Операционные процессы SMB расползаются между таблицами, чатами и памятью руководителя.",
+        solution: "Фабрика узких автоматизаций: детерминированное ядро, AI только там, где он оправдан, и человек перед необратимым действием.",
+        role: "Product Architect + Lead Engineer",
+        outcome: "31 продукт · 1023 теста · 50 live race-checks",
+      },
+      en: {
+        tag: "AI AUTOMATION · PLATFORM",
+        problem: "SMB operations fragment across spreadsheets, chats and the owner's memory.",
+        solution: "A factory of narrow automations: deterministic cores, AI only where justified, and a human before irreversible action.",
+        role: "Product Architect + Lead Engineer",
+        outcome: "31 products · 1,023 tests · 50 live race checks",
+      },
+      uz: {
+        tag: "AI AUTOMATION · PLATFORM",
+        problem: "SMB jarayonlari jadvallar, chatlar va rahbar xotirasi orasida tarqalib ketadi.",
+        solution: "Tor avtomatlashtirishlar fabrikasi: deterministik yadro, AI faqat asosli joyda va qaytarib bo‘lmas harakatdan oldin inson nazorati.",
+        role: "Product Architect + Lead Engineer",
+        outcome: "31 mahsulot · 1023 test · 50 live race-check",
+      },
+    },
+  },
+  {
+    slug: "dostupnoe-pravo",
+    name: "Доступное Право",
+    status: "LIVE",
+    url: "https://dostupnoe-pravo-alpha.vercel.app/",
+    github: "https://github.com/SamandarMansurkhodjaev2713/dostupnoe-pravo",
+    stack: ["Next.js 16", "TypeScript", "Supabase", "PostgreSQL", "Vitest"],
+    i18n: {
+      ru: {
+        tag: "LEGALTECH · CRM",
+        problem: "Частная юридическая практика теряет контекст между списком клиентов, заметками, статусами дел и следующим шагом.",
+        solution: "Рабочая CRM с таблицей и Kanban, историей статусов, RLS, уведомлениями и изолированной демо-средой.",
+        role: "Full-stack + Product + QA",
+        outcome: "live CRM · 192 теста · CI",
+      },
+      en: {
+        tag: "LEGALTECH · CRM",
+        problem: "A small legal practice loses context between client lists, notes, case status and the next action.",
+        solution: "A working CRM with table and Kanban views, status history, RLS, notifications and an isolated demo workspace.",
+        role: "Full-stack + Product + QA",
+        outcome: "live CRM · 192 tests · CI",
+      },
+      uz: {
+        tag: "LEGALTECH · CRM",
+        problem: "Xususiy yuridik amaliyot mijozlar, qaydlar, ish holati va keyingi qadam orasidagi kontekstni yo‘qotadi.",
+        solution: "Jadval va Kanban, status tarixi, RLS, bildirishnomalar va izolyatsiyalangan demo muhiti bilan ishlaydigan CRM.",
+        role: "Full-stack + Product + QA",
+        outcome: "live CRM · 192 test · CI",
+      },
+    },
+  },
+  {
+    slug: "ai-classroom",
+    name: "AI Classroom Intelligence",
+    status: "BUILD",
+    url: "projects/ai-classroom/",
+    github: null,
+    stack: ["Python", "FastAPI", "PostgreSQL", "MinIO", "OpenCV", "Docker"],
+    i18n: {
+      ru: {
+        tag: "EDTECH · PRIVACY AI",
+        problem: "Оценка занятия превращается в непрозрачный AI-score без доказательств, контекста и права человека пересмотреть вывод.",
+        solution: "Локальная evidence-first платформа: события с таймкодом, confidence, качеством данных и обязательным human review.",
+        role: "AI Systems + Backend + QA",
+        outcome: "on-prem foundation · traceable evidence · review flow",
+      },
+      en: {
+        tag: "EDTECH · PRIVACY AI",
+        problem: "Classroom analytics often collapses into an opaque AI score with no evidence, context or human appeal path.",
+        solution: "A local evidence-first platform: timestamped events, confidence, data-quality state and mandatory human review.",
+        role: "AI Systems + Backend + QA",
+        outcome: "on-prem foundation · traceable evidence · review flow",
+      },
+      uz: {
+        tag: "EDTECH · PRIVACY AI",
+        problem: "Dars tahlili ko‘pincha dalil, kontekst va inson qayta ko‘rishi imkonisiz yopiq AI-bahoga aylanadi.",
+        solution: "Lokal evidence-first platforma: taymkodli voqealar, confidence, ma’lumot sifati va majburiy inson tekshiruvi.",
+        role: "AI Systems + Backend + QA",
+        outcome: "on-prem foundation · kuzatiladigan dalil · review flow",
+      },
+    },
+  },
+  {
+    slug: "car-superapp",
+    name: "CAR Superapp",
+    status: "BUILD",
+    url: "projects/car-superapp/",
+    github: null,
+    stack: ["Next.js", "NestJS", "PostgreSQL", "Prisma", "Redis", "PWA"],
+    i18n: {
+      ru: {
+        tag: "AUTO SERVICE · OPERATIONS",
+        problem: "Автосервису сложно держать заказы, филиалы, согласования, медиа, оплату и клиентский статус в одном надёжном процессе.",
+        solution: "Multi-tenant PWA для СТО Узбекистана с branch-scoped RLS, модульным монолитом и проверяемыми интеграционными границами.",
+        role: "Product Architect + Full-stack + QA",
+        outcome: "production foundation · RLS · CI · BUILD",
+      },
+      en: {
+        tag: "AUTO SERVICE · OPERATIONS",
+        problem: "Auto workshops struggle to keep orders, branches, approvals, media, payments and customer status in one reliable flow.",
+        solution: "A multi-tenant PWA for Uzbekistan workshops with branch-scoped RLS, a modular monolith and verifiable integration boundaries.",
+        role: "Product Architect + Full-stack + QA",
+        outcome: "production foundation · RLS · CI · BUILD",
+      },
+      uz: {
+        tag: "AUTO SERVICE · OPERATIONS",
+        problem: "Avtoservis buyurtma, filial, tasdiq, media, to‘lov va mijoz holatini bitta ishonchli jarayonda ushlashda qiynaladi.",
+        solution: "O‘zbekiston STОlari uchun branch-scoped RLS, modulli monolit va tekshiriladigan integratsiya chegaralariga ega multi-tenant PWA.",
+        role: "Product Architect + Full-stack + QA",
+        outcome: "production foundation · RLS · CI · BUILD",
+      },
+    },
+  },
+  {
+    slug: "helion",
+    name: "Helion",
+    status: "LIVE",
+    url: "https://samandarmansurkhodjaev2713.github.io/helion/",
+    github: "https://github.com/SamandarMansurkhodjaev2713/helion",
+    stack: ["React 18", "TypeScript", "Vite", "Canvas", "Tailwind"],
+    i18n: {
+      ru: {
+        tag: "FRONTEND · SCROLLYTELLING",
+        problem: "Портфолио-проекту сложно передать масштаб и атмосферу, не утопив пользователя в тяжёлых эффектах.",
+        solution: "Кинематографичный сайт космической программы: video scrub, живой starfield, HUD и RU/UZ при контролируемом весе.",
+        role: "Creative Frontend + Motion",
+        outcome: "live GitHub Pages · CI · strict TypeScript",
+      },
+      en: {
+        tag: "FRONTEND · SCROLLYTELLING",
+        problem: "A showcase struggles to communicate scale and atmosphere without burying the visitor under heavy effects.",
+        solution: "A cinematic space-program site with video scrubbing, a live starfield, HUD language and RU/UZ localization at a controlled bundle size.",
+        role: "Creative Frontend + Motion",
+        outcome: "live GitHub Pages · CI · strict TypeScript",
+      },
+      uz: {
+        tag: "FRONTEND · SCROLLYTELLING",
+        problem: "Portfolio loyihasi foydalanuvchini og‘ir effektlarga botirmasdan ko‘lam va atmosferani yetkazishi qiyin.",
+        solution: "Video scrub, jonli starfield, HUD tili va nazoratli bundle bilan RU/UZ kosmik dastur sayti.",
+        role: "Creative Frontend + Motion",
+        outcome: "live GitHub Pages · CI · strict TypeScript",
+      },
+    },
+  },
+  {
+    slug: "stones",
+    name: "Stones",
+    status: "LIVE",
+    url: "https://samandarmansurkhodjaev2713.github.io/stones/",
+    github: "https://github.com/SamandarMansurkhodjaev2713/stones",
+    stack: ["React", "TypeScript", "GSAP", "Canvas", "Vite"],
+    i18n: {
+      ru: {
+        tag: "EDITORIAL · EXPERIENCE",
+        problem: "Обычный лендинг не даёт физического ощущения глубины, времени и материала.",
+        solution: "Скроллителлинг-путешествие через геологические эпохи: монохромный арт-дирекшн, depth rail и RU/UZ.",
+        role: "Product Design + Creative Frontend",
+        outcome: "live GitHub Pages · mobile UX · QA checklist",
+      },
+      en: {
+        tag: "EDITORIAL · EXPERIENCE",
+        problem: "A conventional landing page cannot create a physical sense of depth, time and material.",
+        solution: "A scrollytelling descent through geological eras with monolithic art direction, a depth rail and RU/UZ localization.",
+        role: "Product Design + Creative Frontend",
+        outcome: "live GitHub Pages · mobile UX · QA checklist",
+      },
+      uz: {
+        tag: "EDITORIAL · EXPERIENCE",
+        problem: "Oddiy landing chuqurlik, vaqt va materialning jismoniy hissini bera olmaydi.",
+        solution: "Geologik davrlar bo‘ylab scrollytelling sayohat: monolit art-direction, depth rail va RU/UZ.",
+        role: "Product Design + Creative Frontend",
+        outcome: "live GitHub Pages · mobile UX · QA checklist",
+      },
+    },
+  },
+  {
+    slug: "izatullo",
+    name: "IZATULO / BEL ALMA",
+    status: "LIVE",
+    url: "https://samandarmansurkhodjaev2713.github.io/izatullo-komir-/",
+    github: "https://github.com/SamandarMansurkhodjaev2713/izatullo-komir-",
+    stack: ["HTML", "CSS", "JavaScript", "Playwright", "GitHub Pages"],
+    i18n: {
+      ru: {
+        tag: "B2B · MULTILINGUAL",
+        problem: "Покупателю угля сложно быстро сравнить фракции, характеристики, документы и путь поставки.",
+        solution: "Трёхъязычный B2B-сайт поставщика с каталогом, SEO, заявкой в Telegram и E2E-проверками.",
+        role: "Product Design + Frontend + QA",
+        outcome: "live RU/UZ/EN · SEO · Playwright E2E",
+      },
+      en: {
+        tag: "B2B · MULTILINGUAL",
+        problem: "Coal buyers need a fast way to compare grades, specifications, documents and the delivery process.",
+        solution: "A trilingual supplier site with a catalog, SEO, Telegram inquiry flow and end-to-end checks.",
+        role: "Product Design + Frontend + QA",
+        outcome: "live RU/UZ/EN · SEO · Playwright E2E",
+      },
+      uz: {
+        tag: "B2B · MULTILINGUAL",
+        problem: "Ko‘mir xaridoriga fraksiya, texnik xususiyat, hujjat va yetkazib berish yo‘lini tez taqqoslash qiyin.",
+        solution: "Katalog, SEO, Telegram so‘rovi va E2E tekshiruvlariga ega uch tilli yetkazib beruvchi sayti.",
+        role: "Product Design + Frontend + QA",
+        outcome: "live RU/UZ/EN · SEO · Playwright E2E",
+      },
+    },
+  },
+  {
+    slug: "laplacefx",
+    name: "LaplaceFX",
+    status: "DEMO",
+    url: "projects/laplacefx/",
+    github: null,
+    stack: ["Python", "FastAPI", "TimescaleDB", "Redis", "Prometheus", "Docker"],
+    i18n: {
+      ru: {
+        tag: "FINTECH · RESEARCH",
+        problem: "Торговый сигнал легко выглядит убедительно без измеренного edge, контроля риска и честной статистики.",
+        solution: "Research-система для demo-счёта: объяснимый confluence, risk sizing, backtest, walk-forward и эксплуатационная телеметрия.",
+        role: "Backend + Research Engineering + QA",
+        outcome: "demo trading · risk gates · observability",
+      },
+      en: {
+        tag: "FINTECH · RESEARCH",
+        problem: "A trading signal can look convincing without measured edge, risk control or honest statistics.",
+        solution: "A demo-account research system with explainable confluence, risk sizing, backtests, walk-forward gates and operational telemetry.",
+        role: "Backend + Research Engineering + QA",
+        outcome: "demo trading · risk gates · observability",
+      },
+      uz: {
+        tag: "FINTECH · RESEARCH",
+        problem: "Trading signali o‘lchangan edge, risk nazorati va halol statistikasiz ham ishonchli ko‘rinishi mumkin.",
+        solution: "Demo-hisob uchun izohlanadigan confluence, risk sizing, backtest, walk-forward gate va operatsion telemetriyali research-tizim.",
+        role: "Backend + Research Engineering + QA",
+        outcome: "demo trading · risk gates · observability",
+      },
+    },
+  },
+];
+
+const PROJECT_ORDER = [
+  "Klawis — Legal AI Assistant",
+  "CoupleOS / Softly",
+  "GrowthOps AI",
+  "TTYL Platform",
+  "Доступное Право",
+  "AI Classroom Intelligence",
+  "CAR Superapp",
+  "Helion",
+  "Stones",
+  "Sentinel Edge",
+  "CardioGuard",
+  "Task-manager / Task Manage Bot",
+  "Marketbot",
+  "IZATULO / BEL ALMA",
+  "Forge / Learning OS",
+  "BelfProctor",
+  "LaplaceFX",
+  "BioFlux Observer",
+  "VFS Killer",
+  "med-exe",
+  "3D Landing",
+];
+
+const PROJECT_SLUGS = {
+  "Klawis — Legal AI Assistant": "klawis",
+  "CoupleOS / Softly": "softly",
+  "TTYL Platform": "ttyl",
+  "Task-manager / Task Manage Bot": "task-manager",
+  "Marketbot": "marketbot",
+  "Sentinel Edge": "sentinel-edge",
+  "CardioGuard": "cardioguard",
+  "BioFlux Observer": "bioflux",
+  "Forge / Learning OS": "forge",
+  "BelfProctor": "belfproctor",
+  "VFS Killer": "vfs-killer",
+  "med-exe": "med-exe",
+  "3D Landing": "3d-landing",
+};
+
+const PROJECT_GITHUB = {
+  "Task-manager / Task Manage Bot": "https://github.com/SamandarMansurkhodjaev2713/Task-manager",
+  "Sentinel Edge": "https://github.com/SamandarMansurkhodjaev2713/sentinel-edge-smart-system",
+  "CardioGuard": "https://github.com/SamandarMansurkhodjaev2713/cardioguard",
+  "BioFlux Observer": "https://github.com/SamandarMansurkhodjaev2713/bioflux-observer",
+  "3D Landing": "https://github.com/SamandarMansurkhodjaev2713/3d-landing",
+};
+
+const PROJECT_UI = {
+  ru: {
+    open_live: "Открыть сайт",
+    github: "GitHub",
+    collapse: "Свернуть",
+    more_prefix: "Показать ещё ",
+    more_suffix: "",
+    list_label: "Список проектов",
+  },
+  en: {
+    open_live: "Open live site",
+    github: "GitHub",
+    collapse: "Collapse",
+    more_prefix: "Show ",
+    more_suffix: " more",
+    list_label: "Project list",
+  },
+  uz: {
+    open_live: "Saytni ochish",
+    github: "GitHub",
+    collapse: "Yig‘ish",
+    more_prefix: "Yana ",
+    more_suffix: " ta ko‘rsatish",
+    list_label: "Loyihalar ro‘yxati",
+  },
+};
+
+Object.keys(CONTENT).forEach(function hydrateProjectCatalog(lang) {
+  const section = CONTENT[lang].projects;
+  const byName = new Map();
+
+  section.items.forEach(function addExisting(item) {
+    byName.set(item.name, Object.assign({}, item, {
+      slug: PROJECT_SLUGS[item.name] || item.slug,
+      github: PROJECT_GITHUB[item.name] || item.github || null,
+    }));
+  });
+
+  PROJECT_ADDITIONS.forEach(function addNew(product) {
+    const copy = product.i18n[lang] || product.i18n.ru;
+    byName.set(product.name, {
+      slug: product.slug,
+      tag: copy.tag,
+      name: product.name,
+      problem: copy.problem,
+      solution: copy.solution,
+      role: copy.role,
+      stack: product.stack.slice(),
+      outcome: copy.outcome,
+      status: product.status,
+      url: product.url,
+      github: product.github,
+    });
+  });
+
+  section.items = PROJECT_ORDER.map(function orderedProject(name) {
+    return byName.get(name);
+  }).filter(Boolean);
+  Object.assign(section, PROJECT_UI[lang]);
+});
+
 window.CONTENT = CONTENT;

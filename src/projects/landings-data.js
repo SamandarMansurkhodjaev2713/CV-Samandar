@@ -20,7 +20,7 @@
     // ───────────────────────── TTYL Platform ─────────────────────────
     ttyl: {
       slug: "ttyl",
-      svg: "ttyl.svg",
+      visual: "ttyl.webp",
       name: "TTYL Platform",
       status: "NDA",
       stack: ["NestJS", "Next.js", "PostgreSQL", "Redis", "MinIO", "WebSocket", "RBAC", "Docker"],
@@ -43,6 +43,7 @@
           unique: "Не просто CRUD, а платформа с реальными enterprise-задачами: permissions, realtime, файлы, audit, storage, уведомления, self-hosted-развёртывание и операционная надёжность.",
           employer: "Сильный system design, глубина бэкенда, понимание корпоративных ограничений и способность строить продукт уровня внутренней платформы.",
           quality: "unit, domain, application, infrastructure, integration и E2E-проверки для auth/RBAC, MFA, идемпотентности, CSRF, WebSocket-прокси, файловых операций, MinIO, очередей и сервисных границ. Такая глубина бьёт по главному риску — регрессии на стыке сервисов, прав доступа и асинхронных процессов.",
+          boundary: "Платформа рассчитана на контролируемый on-prem-контур: показатели масштабирования зависят от инфраструктуры заказчика и не заявляются без нагрузочного теста на реальном железе. Федерация с внешними SaaS и нативные мобильные клиенты в объём не входят. Код под NDA — показываю архитектуру и инженерные решения, а не исходники.",
         },
         en: {
           tag: "ENTERPRISE · ON-PREM",
@@ -60,6 +61,7 @@
           unique: "Not a simple CRUD app but a platform with real enterprise concerns: permissions, realtime, files, audit, storage, notifications, self-hosted deployment and operational reliability.",
           employer: "Strong system design, backend depth, an understanding of enterprise constraints and the ability to build internal-platform-grade products.",
           quality: "unit, domain, application, infrastructure, integration and E2E checks for auth/RBAC, MFA, idempotency, CSRF, WebSocket proxying, file operations, MinIO, queues and service boundaries. This depth targets the main risk: regressions across services, permissions and asynchronous flows.",
+          boundary: "The platform targets a controlled on-prem perimeter: scaling figures depend on the customer's infrastructure and are not claimed without a load test on real hardware. Federation with external SaaS and native mobile clients are out of scope. The code is under NDA — I show the architecture and engineering decisions, not the source.",
         },
         uz: {
           tag: "ENTERPRISE · ON-PREM",
@@ -77,6 +79,7 @@
           unique: "Oddiy CRUD emas, balki haqiqiy enterprise vazifalariga ega platforma: permissions, realtime, fayllar, audit, storage, bildirishnomalar, self-hosted joylashtirish va operatsion ishonchlilik.",
           employer: "Kuchli system design, backend chuqurligi, korporativ cheklovlarni tushunish va ichki-platforma darajasidagi mahsulot qura olish qobiliyati.",
           quality: "auth/RBAC, MFA, idempotentlik, CSRF, WebSocket-proksi, fayl operatsiyalari, MinIO, navbatlar va servis chegaralari uchun unit, domain, application, infrastructure, integration va E2E tekshiruvlar. Bu chuqurlik asosiy xavfga qaratilgan — servislar, ruxsatlar va asinxron jarayonlar tutashuvidagi regressiya.",
+          boundary: "Platforma nazorat qilinadigan on-prem kontur uchun mo‘ljallangan: masshtab ko‘rsatkichlari buyurtmachi infratuzilmasiga bog‘liq va real jihozdagi yuklama testisiz da'vo qilinmaydi. Tashqi SaaS bilan federatsiya va native mobil mijozlar hajmga kirmaydi. Kod NDA ostida — arxitektura va muhandislik yechimlarini ko‘rsataman, manba kodini emas.",
         },
       },
     },
@@ -84,7 +87,7 @@
     // ───────────────────────── Task-manager ─────────────────────────
     "task-manager": {
       slug: "task-manager",
-      svg: "task-manager.svg",
+      visual: "task-manager.webp",
       name: "Task-manager",
       status: "PROD",
       stack: ["Rust", "Teloxide", "SQLx", "PostgreSQL", "Docker", "GitHub Actions"],
@@ -106,6 +109,7 @@
           unique: "Сочетание публичного Rust-пруфа, CI, чистой архитектуры бота и приватной AI-автоматизации показывает и reliability, и способность делать реальные workflow-инструменты.",
           employer: "Умение строить операционную автоматизацию: async-jobs, напоминания, state, retries, Telegram UX и backend-дисциплину.",
           quality: "Rust unit-, regression- и repository-integration-тесты для RBAC, онбординга, дедлайнов, уведомлений, обработки голоса, prompt-схем и persistence. Автоматизированы именно повторяемые критичные правила, где дефект ведёт к неверному назначению, статусу или уведомлению.",
+          boundary: "Качество распознавания голоса зависит от записи и языка: на шумном аудио и сильном диалекте точность не гарантирую. Публично открыто Rust-ядро; приватная часть с AI/voice-логикой остаётся закрытой. Интеграции со сторонними трекерами (Jira, Asana) в текущий объём не входят.",
         },
         en: {
           tag: "TELEGRAM · RUST", role: "Lead Developer",
@@ -122,6 +126,7 @@
           unique: "Public Rust proof plus CI, a clean bot architecture and private AI automation shows both reliability and the ability to ship real workflow tools.",
           employer: "The ability to build operational automation: async jobs, reminders, state, retries, Telegram UX and backend discipline.",
           quality: "Rust unit, regression and repository-integration tests for RBAC, onboarding, deadlines, notifications, voice processing, prompt schemas and persistence. The automated cases are exactly the repeatable critical rules where a defect means a wrong assignment, status or notification.",
+          boundary: "Voice recognition quality depends on the recording and the language: on noisy audio or a strong dialect I do not guarantee accuracy. The Rust core is public; the private AI/voice layer stays closed. Integrations with third-party trackers (Jira, Asana) are out of the current scope.",
         },
         uz: {
           tag: "TELEGRAM · RUST", role: "Lead Developer",
@@ -138,6 +143,7 @@
           unique: "Ochiq Rust-pruf, CI, toza bot arxitekturasi va yopiq AI-avtomatlashtirish uyg'unligi ham reliability, ham real workflow-vositalar qura olishni ko'rsatadi.",
           employer: "Operatsion avtomatlashtirish qura olish: async-jobs, eslatmalar, state, retries, Telegram UX va backend-intizom.",
           quality: "RBAC, onboarding, deadline'lar, bildirishnomalar, ovoz qayta ishlash, prompt-sxemalar va persistence uchun Rust unit, regression va repository-integration testlar. Aynan takroriy kritik qoidalar avtomatlashtirilgan — nuqson noto'g'ri tayinlash, status yoki bildirishnomaga olib keladi.",
+          boundary: "Ovozni tanish sifati yozuv va tilga bog‘liq: shovqinli audio yoki kuchli shevada aniqlikni kafolatlamayman. Rust yadrosi ochiq; AI/voice mantig‘i bilan yopiq qism yopiqligicha qoladi. Uchinchi tomon trekerlari (Jira, Asana) bilan integratsiya joriy hajmga kirmaydi.",
         },
       },
     },
@@ -145,7 +151,7 @@
     // ───────────────────────── Marketbot ─────────────────────────
     marketbot: {
       slug: "marketbot",
-      svg: "marketbot.svg",
+      visual: "marketbot.webp",
       name: "Marketbot",
       status: "NDA",
       stack: ["Python", "gRPC", "RabbitMQ", "PostgreSQL", "Telegram", "React"],
@@ -167,6 +173,7 @@
           unique: "Microservice-style мышление, event-driven backend, доставка в Telegram, affiliate-workflow, админ-видимость и продуктовая логика вокруг коммерческого результата.",
           employer: "Умение строить backend-автоматизацию для бизнеса: события, очереди, сервисные контракты, delivery, retries, админка и монетизационная логика.",
           quality: "pytest для доменной логики дедупликации, money/discount-правил и URL; service-level-проверки retries, retention, requeue и Telegram-уведомлений; отдельный load-test отчёт. Это снижает риск дублей офферов, неверной цены и потерянных уведомлений.",
+          boundary: "Система зависит от внешних площадок: изменение их вёрстки или API ломает сбор и требует сопровождения — это заложенная стоимость владения, а не разовая поставка. Актуальность цены в момент покупки не гарантируется. Взаиморасчёты с площадками и налоговая сторона остаются на стороне бизнеса.",
         },
         en: {
           tag: "COMMERCE · EVENTS", role: "Backend Architect",
@@ -183,6 +190,7 @@
           unique: "Microservice-style thinking, an event-driven backend, Telegram delivery, an affiliate workflow, admin visibility and product logic built around the commercial outcome.",
           employer: "The ability to build backend automation for business: events, queues, service contracts, delivery, retries, an admin panel and monetization logic.",
           quality: "pytest for deduplication, money/discount rules and URL domain logic; service-level checks for retries, retention, requeue and Telegram notifications; plus a documented load-test report. This lowers the risk of duplicate offers, wrong prices and lost notifications.",
+          boundary: "The system depends on external marketplaces: a change to their markup or API breaks collection and requires maintenance — that is a built-in cost of ownership, not a one-off delivery. Price accuracy at the moment of purchase is not guaranteed. Settlement with the platforms and the tax side stay with the business.",
         },
         uz: {
           tag: "COMMERCE · EVENTS", role: "Backend-arxitektor",
@@ -199,6 +207,7 @@
           unique: "Microservice-uslubdagi fikrlash, event-driven backend, Telegram'ga yetkazish, affiliate-workflow, admin-ko'rinish va tijorat natijasi atrofidagi mahsulot mantig'i.",
           employer: "Biznes uchun backend-avtomatlashtirish qura olish: hodisalar, navbatlar, servis kontraktlari, delivery, retries, admin-panel va monetizatsiya mantig'i.",
           quality: "dedublikatsiya, money/discount-qoidalar va URL domen mantig'i uchun pytest; retries, retention, requeue va Telegram-bildirishnomalar uchun servis-darajadagi tekshiruvlar; alohida load-test hisobot. Bu takroriy ofertalar, noto'g'ri narx va yo'qolgan bildirishnomalar xavfini kamaytiradi.",
+          boundary: "Tizim tashqi maydonchalarga bog‘liq: ularning qatlami yoki API o‘zgarishi yig‘ishni buzadi va kuzatuvni talab qiladi — bu bir martalik yetkazib berish emas, egalik qiymati. Xarid paytidagi narx dolzarbligi kafolatlanmaydi. Maydonchalar bilan hisob-kitob va soliq tomoni biznes zimmasida qoladi.",
         },
       },
     },
@@ -206,7 +215,7 @@
     // ───────────────────────── Forge / Learning OS ─────────────────────────
     forge: {
       slug: "forge",
-      svg: "forge.svg",
+      visual: "forge.webp",
       name: "Forge / Learning OS",
       status: "NDA",
       stack: ["Next.js 15", "React 19", "Prisma", "Auth.js", "Zod", "Server Actions"],
@@ -228,6 +237,7 @@
           unique: "Founder-style продукт, сильная domain model, связь обучения с портфолио и коммерческими офферами, product-first мышление, архитектура под расширение и внятная логика ценности.",
           employer: "Способность проектировать продукт с нуля: идея, UX, доменная модель, backend, frontend, валидация, route-структура и market-facing результат.",
           quality: "QA-фокус нацелен на приватность пользовательских данных, переходы learning-state, восстановление длинных workflow и качество AI-вывода. Рациональный следующий слой — golden learning scenarios, permission-checks, workflow-recovery и model-evaluation dataset.",
+          boundary: "Это личный продукт и case study, а не методика с проверенной на широкой аудитории эффективностью: педагогический результат не заявляется. Качество AI-вывода зависит от модели и остаётся под наблюдением — golden learning set назван следующим слоем, а не сделанным. Мультиарендность и продажа как SaaS в объём не входят.",
         },
         en: {
           tag: "EDTECH · AI-NATIVE", role: "Founder + Product Engineer",
@@ -244,6 +254,7 @@
           unique: "A founder-style product, a strong domain model, a link between learning, portfolio and commercial offers, product-first thinking, an architecture built to extend and clear value logic.",
           employer: "The ability to design a product from scratch: idea, UX, domain model, backend, frontend, validation, route structure and a market-facing result.",
           quality: "QA focus targets user-data privacy, learning-state transitions, recovery of long workflows and AI-output quality. The rational next layer is golden learning scenarios, permission checks, workflow recovery and a model-evaluation dataset.",
+          boundary: "This is a personal product and case study, not a method with effectiveness validated on a wide audience: no pedagogical outcome is claimed. AI output quality depends on the model and stays under observation — the golden learning set is named as the next layer, not as done. Multi-tenancy and selling it as SaaS are out of scope.",
         },
         uz: {
           tag: "EDTECH · AI-NATIVE", role: "Founder + Product Engineer",
@@ -260,6 +271,7 @@
           unique: "Founder-uslubidagi mahsulot, kuchli domen model, o'qishning portfolio va tijorat ofertalari bilan bog'lanishi, product-first fikrlash, kengaytirishga mo'ljallangan arxitektura va aniq qiymat mantig'i.",
           employer: "Mahsulotni noldan loyihalash qobiliyati: g'oya, UX, domen model, backend, frontend, validatsiya, route-tuzilma va bozorga qaratilgan natija.",
           quality: "QA-fokus foydalanuvchi ma'lumotlari maxfiyligi, learning-state o'tishlari, uzun workflowlarni tiklash va AI-natija sifatiga qaratilgan. Ratsional keyingi qatlam — golden learning scenarios, permission-check'lar, workflow-recovery va model-evaluation dataset.",
+          boundary: "Bu shaxsiy mahsulot va case study, keng auditoriyada samaradorligi tasdiqlangan metodika emas: pedagogik natija da'vo qilinmaydi. AI chiqishi sifati modelga bog‘liq va kuzatuvda qoladi — golden learning set bajarilgan emas, keyingi qatlam sifatida nomlangan. Ko‘p ijarachilik va SaaS sifatida sotish hajmga kirmaydi.",
         },
       },
     },
@@ -267,7 +279,7 @@
     // ───────────────────────── BelfProctor ─────────────────────────
     belfproctor: {
       slug: "belfproctor",
-      svg: "belfproctor.svg",
+      visual: "belfproctor.webp",
       name: "BelfProctor",
       status: "NDA",
       stack: ["C#", "Node.js", "Express", "Prisma", "PostgreSQL", "React"],
@@ -289,6 +301,7 @@
           unique: "Проект показывает работу за пределами обычного web: поведение client-agent, Windows-deployment, sensitive-телеметрия, retries, admin-workflow и security-first мышление.",
           employer: "Умение строить системные продукты с desktop-частью, backend-пайплайном, безопасной передачей данных и административным интерфейсом.",
           quality: "xUnit/Moq integration-проверки сохранения и загрузки политик, генерации отчёта, изолированной работы с файлами и передачи результата в transmission-сервис. Изоляция файловой системы и mocked-transport выбраны, чтобы надёжно тестировать observable behavior без реального сервера и пользовательских данных.",
+          boundary: "Система собирает свидетельства для решения человека, а не выносит автоматический вердикт: полнота обнаружения нарушений не заявляется. Правовые основания, уведомление и согласие участников — зона ответственности заказчика. Клиент реализован под Windows; macOS, Linux и мобильные платформы в объём не входят.",
         },
         en: {
           tag: "PROCTORING · DESKTOP", role: "Backend + Systems",
@@ -305,6 +318,7 @@
           unique: "The project shows work beyond ordinary web: client-agent behavior, Windows deployment, sensitive telemetry, retries, an admin workflow and security-first thinking.",
           employer: "The ability to build systems products with a desktop part, a backend pipeline, secure data transport and an admin interface.",
           quality: "xUnit/Moq integration checks for saving and loading policies, report generation, isolated file handling and passing the result to a transmission service. File-system isolation and mocked transport were chosen to test observable behavior reliably without a real server or user data.",
+          boundary: "The system gathers evidence for a human decision rather than issuing an automatic verdict: completeness of violation detection is not claimed. Legal grounds, notice and participant consent are the customer's responsibility. The client targets Windows; macOS, Linux and mobile platforms are out of scope.",
         },
         uz: {
           tag: "PROCTORING · DESKTOP", role: "Backend + Systems",
@@ -321,6 +335,7 @@
           unique: "Loyiha oddiy web'dan tashqaridagi ishni ko'rsatadi: client-agent xatti-harakati, Windows-deployment, sezgir telemetriya, retries, admin-workflow va security-first fikrlash.",
           employer: "Desktop qismi, backend-payplayn, xavfsiz ma'lumot uzatish va admin interfeysga ega tizim mahsulotlarini qura olish.",
           quality: "Siyosatlarni saqlash va yuklash, hisobot generatsiyasi, izolyatsiyalangan fayl ishlovi va natijani transmission-servisga uzatish uchun xUnit/Moq integration tekshiruvlar. Fayl-tizim izolyatsiyasi va mocked-transport observable behavior'ni real server va foydalanuvchi ma'lumotisiz ishonchli test qilish uchun tanlangan.",
+          boundary: "Tizim avtomatik hukm chiqarmaydi, inson qarori uchun dalil to‘playdi: buzilishlarni aniqlash to‘liqligi da'vo qilinmaydi. Huquqiy asos, xabardor qilish va ishtirokchilar roziligi buyurtmachi javobgarligida. Mijoz Windows uchun ishlangan; macOS, Linux va mobil platformalar hajmga kirmaydi.",
         },
       },
     },
@@ -328,7 +343,7 @@
     // ───────────────────────── VFS Killer ─────────────────────────
     "vfs-killer": {
       slug: "vfs-killer",
-      svg: "vfs-killer.svg",
+      visual: "vfs-killer.webp",
       name: "VFS Killer",
       status: "NDA",
       stack: ["Python", "Playwright", "aiogram", "Docker", "Redis"],
@@ -350,6 +365,7 @@
           unique: "Практическая автоматизация в реальном мире: нестабильные внешние системы, диагностика, Telegram-контроль, container-runtime и умение проектировать не только happy path.",
           employer: "Способность решать сложные automation-задачи, где важны reliability, debugging, observability, security-границы и продуктовый operator-experience.",
           quality: "pytest и async-integration-flow проверяли конфигурацию, worker-сценарий, обнаружение сигнала и его передачу через Redis в следующий этап. Внешний сайт отделён от детерминированной логики, потому что нестабильную третью сторону нельзя делать единственной основой regression-suite.",
+          boundary: "Результат зависит от внешнего сервиса, который может измениться в любой момент: доступность и исход не гарантируются, а сопровождение — часть стоимости владения. Инструмент построен как diagnostics-first наблюдение и уведомление; он не обходит защиты площадки и не гарантирует получение слота.",
         },
         en: {
           tag: "AUTOMATION · BROWSER", role: "Automation Engineer",
@@ -366,6 +382,7 @@
           unique: "Practical real-world automation: unstable external systems, diagnostics, Telegram control, a container runtime and designing for more than the happy path.",
           employer: "The ability to solve hard automation problems where reliability, debugging, observability, security boundaries and a productized operator experience matter.",
           quality: "pytest and async integration flow tested configuration, the worker scenario, signal detection and passing it through Redis to the next stage. The external site is separated from deterministic logic, because an unstable third party can't be the sole basis of a regression suite.",
+          boundary: "The outcome depends on an external service that can change at any time: availability and result are not guaranteed, and maintenance is part of the cost of ownership. The tool is built as diagnostics-first observation and notification; it does not circumvent the site's protections and does not guarantee a slot.",
         },
         uz: {
           tag: "AUTOMATION · BROWSER", role: "Automation Engineer",
@@ -382,6 +399,7 @@
           unique: "Real dunyoda amaliy avtomatlashtirish: beqaror tashqi tizimlar, diagnostika, Telegram-nazorat, container-runtime va faqat happy path emas, ko'proq loyihalash qobiliyati.",
           employer: "Reliability, debugging, observability, xavfsizlik chegaralari va mahsulotlashtirilgan operator tajribasi muhim bo'lgan murakkab automation vazifalarini yecha olish.",
           quality: "pytest va async-integration-flow konfiguratsiya, worker-stsenariy, signal aniqlash va uni Redis orqali keyingi bosqichga uzatishni tekshirdi. Tashqi sayt deterministik mantiqdan ajratilgan, chunki beqaror uchinchi tomonni regression-suite'ning yagona asosi qilib bo'lmaydi.",
+          boundary: "Natija istalgan vaqtda o‘zgarishi mumkin bo‘lgan tashqi servisga bog‘liq: mavjudlik va natija kafolatlanmaydi, kuzatuv esa egalik qiymatining bir qismi. Vosita diagnostics-first kuzatuv va xabarnoma sifatida qurilgan; u maydoncha himoyasini chetlab o‘tmaydi va slot olishni kafolatlamaydi.",
         },
       },
     },
@@ -389,7 +407,7 @@
     // ───────────────────────── med-exe ─────────────────────────
     "med-exe": {
       slug: "med-exe",
-      svg: "med-exe.svg",
+      visual: "med-exe.webp",
       name: "med-exe",
       status: "NDA",
       stack: ["Rust", "Tauri", "React", "TypeScript", "SQLite"],
@@ -411,6 +429,7 @@
           unique: "Desktop-архитектура, Rust domain-modeling, offline-first-приватность, аккуратные границы между слоями и работа с доменом, где точность важнее «накидать UI».",
           employer: "Способность проектировать приложения для чувствительных доменов: стабильность, воспроизводимость, локальное хранение, typed-границы и clean architecture.",
           quality: "React/Vitest-проверки форм, расчётного workspace, локализации и отчётов, а также Rust/SQLite integration-test воспроизводимости результата. Для медицинского расчётного продукта ключевой критерий — одинаковый результат при одинаковом входе и прозрачность формулы.",
+          boundary: "Это расчётный инструмент для специалиста, а не сертифицированное медицинское изделие: продукт не проходил регуляторную сертификацию и не предназначен для постановки диагноза. Ответственность за клиническое решение остаётся за врачом. Работа локальная и офлайн — синхронизация между устройствами и облачное хранение в объём не входят.",
         },
         en: {
           tag: "HEALTH-TECH · DESKTOP", role: "Desktop + Core",
@@ -427,6 +446,7 @@
           unique: "Desktop architecture, Rust domain modeling, offline-first privacy, careful layer boundaries and work in a domain where precision beats “throw a UI together”.",
           employer: "The ability to design apps for sensitive domains: stability, reproducibility, local storage, typed boundaries and clean architecture.",
           quality: "React/Vitest checks for forms, the calculation workspace, localization and reports, plus a Rust/SQLite integration test for result reproducibility. For a medical calculation product the key criterion is the same result for the same input and a transparent formula.",
+          boundary: "This is a calculation tool for a specialist, not a certified medical device: the product has not gone through regulatory certification and is not intended for diagnosis. Responsibility for the clinical decision stays with the physician. It runs locally and offline — cross-device sync and cloud storage are out of scope.",
         },
         uz: {
           tag: "HEALTH-TECH · DESKTOP", role: "Desktop + Core",
@@ -443,6 +463,7 @@
           unique: "Desktop-arxitektura, Rust domain-modeling, offline-first maxfiylik, qatlamlar orasidagi ehtiyotkor chegaralar va aniqlik «UI'ni yig'ish»dan muhimroq bo'lgan domen bilan ishlash.",
           employer: "Sezgir domenlar uchun ilova loyihalash: barqarorlik, takrorlanuvchanlik, lokal saqlash, typed-chegaralar va clean architecture.",
           quality: "Formalar, hisob workspace'i, lokalizatsiya va hisobotlar uchun React/Vitest tekshiruvlari, hamda natija takrorlanuvchanligi uchun Rust/SQLite integration-test. Tibbiy hisob mahsuloti uchun asosiy mezon — bir xil kirishda bir xil natija va formula shaffofligi.",
+          boundary: "Bu mutaxassis uchun hisob-kitob vositasi, sertifikatlangan tibbiy buyum emas: mahsulot regulyativ sertifikatsiyadan o‘tmagan va tashxis qo‘yish uchun mo‘ljallanmagan. Klinik qaror uchun javobgarlik shifokorda qoladi. Ish lokal va oflayn — qurilmalararo sinxronizatsiya va bulutli saqlash hajmga kirmaydi.",
         },
       },
     },
@@ -450,7 +471,7 @@
     // ───────────────────────── BioFlux Observer ─────────────────────────
     bioflux: {
       slug: "bioflux",
-      svg: "bioflux.svg",
+      visual: "bioflux.webp",
       name: "BioFlux Observer",
       status: "PROTO",
       stack: ["React", "Recharts", "TypeScript", "Vite"],
@@ -472,6 +493,7 @@
           unique: "Промышленный контекст, телеметрия в реальном времени, пороговые тревоги и инвестор-ориентированная отчётность в чистом типизированном фронтенде.",
           employer: "Умение превращать сырую телеметрию в понятный операционный и инвесторский дашборд: данные, пороги, тренды и отчёты.",
           quality: "Строгая типизация (TypeScript) и отделение пороговой логики от рендера: тревоги проверяемы отдельно от графики, чтобы срабатывание было детерминированным, а не «на глаз».",
+          boundary: "Статус — прототип, а не промышленная система: работа проверялась на тестовых и смоделированных данных, а не на сертифицированном контуре объекта. Продукт не заменяет промышленную систему безопасности и не имеет SLA. Долговременное хранение истории, отказоустойчивость и интеграция со SCADA — следующий этап, а не сделанное.",
         },
         en: {
           tag: "INDUSTRIAL · TELEMETRY", role: "Frontend + Data",
@@ -488,6 +510,7 @@
           unique: "An industrial context, realtime telemetry, threshold alarms and investor-oriented reporting in a clean, typed frontend.",
           employer: "The ability to turn raw telemetry into a legible operational and investor dashboard: data, thresholds, trends and reports.",
           quality: "Strict typing (TypeScript) and separation of threshold logic from rendering: alarms are testable apart from the charts, so a trigger is deterministic rather than eyeballed.",
+          boundary: "The status is prototype, not an industrial system: it was exercised on test and simulated data, not on a certified plant loop. The product does not replace an industrial safety system and carries no SLA. Long-term history retention, fault tolerance and SCADA integration are the next stage, not something already done.",
         },
         uz: {
           tag: "INDUSTRIAL · TELEMETRY", role: "Frontend + Data",
@@ -504,10 +527,304 @@
           unique: "Sanoat konteksti, real vaqt telemetriya, chegara-alarmlar va investor'ga yo'naltirilgan hisobot — toza, typed frontend'da.",
           employer: "Xom telemetriyani tushunarli operatsion va investor dashboardiga aylantira olish: ma'lumot, chegaralar, trendlar va hisobotlar.",
           quality: "Qat'iy tiplashtirish (TypeScript) va chegara mantig'ini render'dan ajratish: alarmlar grafikadan alohida testlanadi, shunda ishga tushish «ko'z bilan» emas, deterministik bo'ladi.",
+          boundary: "Status — prototip, sanoat tizimi emas: ish test va modellashtirilgan ma'lumotlarda tekshirilgan, sertifikatlangan obyekt konturida emas. Mahsulot sanoat xavfsizlik tizimini almashtirmaydi va SLA ga ega emas. Tarixni uzoq saqlash, nosozlikka chidamlilik va SCADA integratsiyasi — bajarilgan emas, keyingi bosqich.",
         },
       },
     },
   };
+
+  Object.assign(LANDINGS, {
+    "growthops-ai": {
+      slug: "growthops-ai",
+      visual: "growthops-ai.webp",
+      name: "GrowthOps AI",
+      status: "BUILD",
+      private: true,
+      stack: ["TypeScript", "Fastify", "PostgreSQL 16", "NestJS", "Go", "Python", "Redis", "Turborepo"],
+      github: "https://github.com/SamandarMansurkhodjaev2713/growthops-ai",
+      qa: "https://github.com/SamandarMansurkhodjaev2713/qa-engineering-portfolio",
+      i18n: {
+        ru: {
+          tag: "AI AUTOMATION · PRODUCT FACTORY",
+          role: "Product Architect + Lead Engineer",
+          signal: "Фабрика из 50 узких AI-автоматизаций для SMB — с детерминированным ядром, доказанной конкурентностью и человеком перед необратимым действием.",
+          quick: [
+            { v: "31 из 50 продуктов уже построены и протестированы" },
+            { v: "1023 автотеста · 50 live-проверок гонок на PostgreSQL" },
+            { v: "AI предлагает; код проверяет; человек подтверждает рискованное" },
+          ],
+          what: "GrowthOps AI — не один универсальный чат-бот, а каталог продаваемых операционных продуктов: запись, поддержка, лиды, согласования, документы, закупки, качество и другие узкие процессы SMB. Каждый модуль решает одну измеримую точку отказа и может разворачиваться как пилот, self-hosted или управляемое решение.",
+          problem: "В малом и среднем бизнесе заявки, скидки, статусы, документы и исключения часто живут в таблицах и чатах. Универсальный SaaS бывает слишком тяжёлым, а AI-демо без детерминированных правил ломается на деньгах, правах доступа и параллельных запросах.",
+          architecture: "Продукты подключаются к общему Omnichannel Hub, но не общаются с каналами напрямую. Все обращения к моделям идут через AI Gateway с кешем, fallback и учётом затрат. У каждого продукта своё детерминированное доменное ядро и схема PostgreSQL; Redis/BullMQ обслуживают очереди и идемпотентность.",
+          why: "Общие каналы и AI-инфраструктура уменьшают стоимость внедрения, но бизнес-правила остаются изолированными. Поэтому ошибка в одном продукте не превращает всю платформу в монолит, а критические решения можно тестировать без LLM и внешней сети.",
+          unique: "Большинство модулей сознательно обходятся без LLM там, где нужны арифметика, состояния и аудит. Денежные значения хранятся целыми числами, административные поверхности fail-closed, а сомнительный AI-вывод переводится человеку вместо автономного действия.",
+          employer: "Проект показывает продуктовую системность: умение не только интегрировать модель, но и строить вокруг неё продаваемую платформу, границы ответственности, multi-product архитектуру, эксплуатацию и проверяемые гарантии.",
+          quality: "1023 теста покрывают продуктовые ядра, общие пакеты, Hub, Gateway и eval-контур. 50 отдельных сценариев запускают параллельные операции на реальном PostgreSQL и доказывают, что слот, бюджет или согласование получает ровно один победитель. Typecheck, lint, tests и сборка проходят единым Turborepo-графом.",
+          boundary: "Это BUILD-каталог: 31 ядро реализовано, полный план содержит 50. Публичный репозиторий — безопасная витрина без исходного кода продуктов; готовность конкретного внедрения определяется интеграциями и пилотом.",
+        },
+        en: {
+          tag: "AI AUTOMATION · PRODUCT FACTORY",
+          role: "Product Architect + Lead Engineer",
+          signal: "A factory of 50 narrow AI automations for SMBs — deterministic at the core, concurrency-proven and human-controlled before irreversible action.",
+          quick: [
+            { v: "31 of 50 products are already built and tested" },
+            { v: "1,023 automated tests · 50 live PostgreSQL race checks" },
+            { v: "AI proposes; code validates; a human confirms risky action" },
+          ],
+          what: "GrowthOps AI is not one universal chatbot. It is a catalog of sellable operational products for booking, support, leads, approvals, documents, procurement, quality and other narrow SMB processes. Each module targets one measurable failure point and can ship as a pilot, self-hosted deployment or managed solution.",
+          problem: "In an SMB, inquiries, discounts, statuses, documents and exceptions often live in spreadsheets and chats. Universal SaaS can be excessive, while an AI demo without deterministic rules breaks on money, permissions and concurrent requests.",
+          architecture: "Products connect to a shared Omnichannel Hub but never speak to channels directly. Every model call goes through an AI Gateway with caching, fallbacks and a cost ledger. Each product keeps an isolated deterministic domain core and PostgreSQL schema; Redis/BullMQ handles queues and idempotency.",
+          why: "Shared channel and AI infrastructure lowers deployment cost while business rules stay isolated. A fault in one module does not turn the platform into a tangled monolith, and critical decisions remain testable without an LLM or network.",
+          unique: "Most modules deliberately avoid an LLM where arithmetic, state machines and audit are the real job. Money uses integer minor units, admin surfaces fail closed, and uncertain model output routes to a human instead of triggering autonomous action.",
+          employer: "The project demonstrates product-level systems thinking: not merely integrating a model, but shaping a sellable platform around it with ownership boundaries, multi-product architecture, operations and verifiable guarantees.",
+          quality: "1,023 tests cover product cores, shared packages, the Hub, Gateway and evaluation layer. Fifty dedicated scenarios execute competing operations on real PostgreSQL and prove that a slot, budget or approval has exactly one winner. Typecheck, lint, tests and builds run through one Turborepo graph.",
+          boundary: "This is a BUILD catalog: 31 cores are implemented out of a published plan of 50. The public repository is a code-safe showcase; readiness for a specific deployment depends on integrations and a scoped pilot.",
+        },
+        uz: {
+          tag: "AI AUTOMATION · PRODUCT FACTORY",
+          role: "Product Architect + Lead Engineer",
+          signal: "SMB uchun 50 ta tor AI-avtomatlashtirish fabrikasi — deterministik yadro, isbotlangan concurrency va qaytarib bo‘lmas harakatdan oldin inson nazorati.",
+          quick: [
+            { v: "50 mahsulotdan 31 tasi qurilgan va testlangan" },
+            { v: "1023 avtomatik test · PostgreSQL’da 50 live race-check" },
+            { v: "AI taklif qiladi; kod tekshiradi; xavfli harakatni inson tasdiqlaydi" },
+          ],
+          what: "GrowthOps AI bitta universal chatbot emas. Bu booking, support, lead, tasdiq, hujjat, xarid, sifat va boshqa tor SMB jarayonlari uchun sotiladigan mahsulotlar katalogi. Har bir modul bitta o‘lchanadigan nosozlik nuqtasini hal qiladi va pilot, self-hosted yoki managed yechim sifatida joriy etiladi.",
+          problem: "SMB’da so‘rov, chegirma, status, hujjat va istisnolar ko‘pincha jadval hamda chatlarda yashaydi. Universal SaaS ortiqcha og‘ir bo‘lishi mumkin, deterministik qoidalarsiz AI-demo esa pul, ruxsat va parallel so‘rovlarda sinadi.",
+          architecture: "Mahsulotlar umumiy Omnichannel Hub’ga ulanadi, lekin kanallar bilan to‘g‘ridan-to‘g‘ri gaplashmaydi. Model chaqiruvlari cache, fallback va xarajat ledgeriga ega AI Gateway orqali o‘tadi. Har mahsulotda alohida deterministik domen yadrosi va PostgreSQL sxemasi bor; Redis/BullMQ navbat va idempotentlikni boshqaradi.",
+          why: "Umumiy kanal va AI-infratuzilma joriy etish narxini kamaytiradi, biznes qoidalari esa izolyatsiyada qoladi. Bir moduldagi xato butun platformani chalkash monolitga aylantirmaydi, kritik qarorlar LLM va tarmoqsiz testlanadi.",
+          unique: "Ko‘p modullar arifmetika, state machine va audit kerak bo‘lgan joyda ataylab LLM ishlatmaydi. Pul butun birliklarda saqlanadi, admin yuzasi fail-closed, noaniq AI-natija esa avtonom harakat o‘rniga insonga yuboriladi.",
+          employer: "Loyiha modelni ulashdan kengroq mahsulot tizimliligini ko‘rsatadi: sotiladigan platforma, mas’uliyat chegaralari, multi-product arxitektura, ekspluatatsiya va tekshiriladigan kafolatlar.",
+          quality: "1023 test mahsulot yadrolari, umumiy paketlar, Hub, Gateway va eval qatlamini qoplaydi. 50 alohida ssenariy real PostgreSQL’da parallel operatsiyalarni ishga tushirib, slot, budjet yoki tasdiqda aynan bitta g‘olib bo‘lishini isbotlaydi. Typecheck, lint, test va build bitta Turborepo grafigida ishlaydi.",
+          boundary: "Bu BUILD-katalog: 50 rejaning 31 yadrosi amalga oshirilgan. Ochiq repozitoriy kodsiz xavfsiz vitrina; aniq joriy etish tayyorligi integratsiya va chegaralangan pilotga bog‘liq.",
+        },
+      },
+    },
+
+    "car-superapp": {
+      slug: "car-superapp",
+      visual: "car-superapp.webp",
+      name: "CAR Superapp",
+      status: "BUILD",
+      private: true,
+      stack: ["Next.js", "NestJS", "PostgreSQL", "Prisma", "Redis", "BullMQ", "PWA", "Turborepo"],
+      github: null,
+      qa: "https://github.com/SamandarMansurkhodjaev2713/qa-engineering-portfolio",
+      i18n: {
+        ru: {
+          tag: "AUTO SERVICE · OPERATIONS",
+          role: "Product Architect + Full-stack + QA",
+          signal: "Multi-tenant PWA для СТО Узбекистана: от приёмки автомобиля до согласований, медиа, оплаты и клиентского статуса.",
+          quick: [
+            { v: "Заказ-наряд, клиентский портал, филиалы и роли" },
+            { v: "Branch-scoped RLS · модульный монолит · outbox" },
+            { v: "Production foundation в активной разработке" },
+          ],
+          what: "CAR Superapp проектируется как операционная система автосервиса: сотрудники ведут заказ и работы, клиент видит статус и доказательства, а сеть управляет филиалами, ролями, оплатами, документами и аудитом в одной модели.",
+          problem: "Когда приёмка, фотографии, дополнительные работы, согласие клиента и оплата живут в разных чатах, сервис теряет доверие и маржу. Для сети добавляется риск пересечения данных филиалов и неясных полномочий.",
+          architecture: "Responsive PWA и API образуют модульный монолит. PostgreSQL держит tenant/branch границы через принудительный RLS, Prisma обслуживает типизированную модель, Redis/BullMQ — фоновые процессы, а outbox/idempotency защищают интеграции и повторные запросы.",
+          why: "На раннем этапе модульный монолит даёт транзакционную целостность и меньшую эксплуатационную цену, сохраняя доменные границы для будущего выделения сервисов. RLS дублирует проверки приложения там, где ошибка особенно дорога.",
+          unique: "Проект начинается не с красивого dashboard, а с решений по scope, угрозам, состояниям платежей/медиа/расписания, миграциям и эксплуатации. Целевой масштаб — сеть минимум до 50 филиалов на tenant без смешивания данных.",
+          employer: "Кейс показывает способность вести большой продукт до кода: discovery, ADR, UX-информационная архитектура, безопасность, БД, API, CI и измеримые release gates — затем собирать production foundation по этому контракту.",
+          quality: "RLS проверяется на реальном PostgreSQL в Testcontainers, включая cross-tenant и branch-сценарии. CI на чистом Linux уже поймал ошибки, которые не проявлялись локально. В обязательный граф входят lint, strict typecheck, тесты, coverage, audit зависимостей и build.",
+          boundary: "Продукт имеет статус BUILD, а не LIVE: foundation реализуется поэтапно. Платёжные провайдеры, физические устройства, бухгалтерские и налоговые утверждения останутся открытыми до sandbox/device-проверок и экспертизы в Узбекистане.",
+        },
+        en: {
+          tag: "AUTO SERVICE · OPERATIONS",
+          role: "Product Architect + Full-stack + QA",
+          signal: "A multi-tenant PWA for Uzbekistan auto workshops — from vehicle intake to approvals, media, payment and customer-visible status.",
+          quick: [
+            { v: "Work orders, customer portal, branches and roles" },
+            { v: "Branch-scoped RLS · modular monolith · outbox" },
+            { v: "Production foundation under active development" },
+          ],
+          what: "CAR Superapp is designed as an operating system for an auto workshop: staff runs the work order, customers see status and evidence, and a network manages branches, roles, payments, documents and audit in one model.",
+          problem: "When intake, photos, extra work, customer consent and payment live in separate chats, a workshop loses trust and margin. A network adds the risk of branch data leakage and ambiguous authority.",
+          architecture: "A responsive PWA and API form a modular monolith. PostgreSQL enforces tenant and branch boundaries with forced RLS, Prisma owns the typed model, Redis/BullMQ runs background work, and outbox/idempotency patterns protect integrations and retries.",
+          why: "At this stage a modular monolith gives transactional integrity and lower operational cost while preserving domain boundaries for later extraction. RLS duplicates application checks where a mistake would be especially expensive.",
+          unique: "The project starts with scope, threats, payment/media/scheduling state machines, migrations and operations — not a decorative dashboard. Its target is at least 50 branches per tenant without data crossover.",
+          employer: "The case proves the ability to lead a large product before and through code: discovery, ADRs, UX information architecture, security, database, API, CI and measurable release gates, followed by an implementation that follows those contracts.",
+          quality: "RLS is tested against real PostgreSQL in Testcontainers, including cross-tenant and branch scenarios. Clean Linux CI has already caught issues hidden by the local environment. The required graph includes lint, strict typecheck, tests, coverage, dependency audit and build.",
+          boundary: "The product is BUILD, not LIVE. The production foundation is landing incrementally; payment providers, physical devices and Uzbekistan accounting/tax claims remain open until sandbox, device and expert validation.",
+        },
+        uz: {
+          tag: "AUTO SERVICE · OPERATIONS",
+          role: "Product Architect + Full-stack + QA",
+          signal: "O‘zbekiston STОlari uchun multi-tenant PWA — avtomobilni qabul qilishdan tasdiq, media, to‘lov va mijoz ko‘radigan statusgacha.",
+          quick: [
+            { v: "Buyurtma-naryad, mijoz portali, filial va rollar" },
+            { v: "Branch-scoped RLS · modulli monolit · outbox" },
+            { v: "Production foundation faol qurilmoqda" },
+          ],
+          what: "CAR Superapp avtoservis operatsion tizimi sifatida loyihalanadi: xodim buyurtma va ishlarni yuritadi, mijoz status va dalillarni ko‘radi, tarmoq esa filial, rol, to‘lov, hujjat va auditni bitta modelda boshqaradi.",
+          problem: "Qabul, fotosurat, qo‘shimcha ish, mijoz roziligi va to‘lov turli chatlarda bo‘lsa, servis ishonch va marjani yo‘qotadi. Tarmoqda filial ma’lumoti aralashishi va vakolat noaniqligi xavfi ham bor.",
+          architecture: "Responsive PWA va API modulli monolitni tashkil qiladi. PostgreSQL forced RLS bilan tenant/branch chegaralarini ushlaydi, Prisma typed modelni, Redis/BullMQ fon jarayonlarini boshqaradi, outbox/idempotency integratsiya va qayta so‘rovni himoya qiladi.",
+          why: "Hozir modulli monolit tranzaksiya yaxlitligi va past ekspluatatsiya narxini beradi, kelajakda servis ajratish uchun domen chegaralarini saqlaydi. RLS xato ayniqsa qimmat joyda ilova tekshiruvini takrorlaydi.",
+          unique: "Loyiha chiroyli dashboarddan emas, scope, tahdid, payment/media/scheduling holatlari, migratsiya va ekspluatatsiya qarorlaridan boshlanadi. Maqsad — bir tenantda kamida 50 filial, ma’lumot aralashmasdan.",
+          employer: "Keys katta mahsulotni kodgacha va kod davomida boshqarishni ko‘rsatadi: discovery, ADR, UX axborot arxitekturasi, xavfsizlik, DB, API, CI va o‘lchanadigan release gate’lar.",
+          quality: "RLS real PostgreSQL’da Testcontainers orqali cross-tenant va branch ssenariylari bilan tekshiriladi. Toza Linux CI lokal muhit yashirgan xatolarni topgan. Majburiy grafik lint, strict typecheck, test, coverage, dependency audit va buildni o‘z ichiga oladi.",
+          boundary: "Mahsulot LIVE emas, BUILD statusida. Production foundation bosqichma-bosqich qurilmoqda; payment provider, fizik qurilma va O‘zbekiston buxgalteriya/soliq da’volari sandbox, device va ekspert tekshiruvisiz yopilmaydi.",
+        },
+      },
+    },
+
+    "ai-classroom": {
+      slug: "ai-classroom",
+      visual: "ai-classroom.webp",
+      name: "AI Classroom Intelligence",
+      status: "BUILD",
+      private: true,
+      stack: ["Python", "FastAPI", "PostgreSQL", "MinIO", "OpenCV", "MMDetection", "Whisper", "Docker"],
+      github: null,
+      qa: "https://github.com/SamandarMansurkhodjaev2713/qa-engineering-portfolio",
+      i18n: {
+        ru: {
+          tag: "EDTECH · PRIVACY-FIRST AI",
+          role: "AI Systems + Backend + QA",
+          signal: "Локальная аналитика занятий, где каждый вывод ведёт к таймкоду, модели, confidence, качеству данных и решению человека.",
+          quick: [
+            { v: "Evidence events вместо одного непрозрачного score" },
+            { v: "Video + audio workers · local-first · human review" },
+            { v: "On-prem контур для чувствительных данных аудитории" },
+          ],
+          what: "Платформа собирает локальные видео- и аудиосигналы занятия, превращает их в нормализованные evidence events и даёт методисту проверить эпизод, источник и вклад каждого фактора перед итоговым отчётом.",
+          problem: "Один AI-score не объясняет, что произошло на занятии, и опасен при низком качестве камеры, шуме или ошибке модели. Облачная отправка необработанного видео создаёт дополнительный риск приватности.",
+          architecture: "FastAPI управляет каталогом занятий, media assets, заданиями анализа и review. Локальные workers запускают detection, tracking, pose, VAD, diarization и ASR; MinIO хранит медиа и evidence clips, PostgreSQL — события и состояния, dashboard показывает таймлайн и объяснение.",
+          why: "Событие — более устойчивый контракт, чем финальный score модели: его можно переобработать, сопоставить с другим сигналом и проверить человеком. AI workers изолированы от домена, поэтому модель меняется без переписывания правил review и отчёта.",
+          unique: "Высокоimpactные или низкоconfidence события не проходят незаметно: scoring ограничивается качеством данных и review-state. Дубли и временные пересечения объединяются детерминированно, а подавленные события остаются доступными для аудита.",
+          employer: "Проект показывает умение строить AI-систему за пределами inference: ingestion, model registry, очереди, evidence lineage, privacy, auth/RBAC, объяснимый scoring, observability и операторский UX.",
+          quality: "Верификация включает unit и integration tests, golden reports, проверку model-pack manifest, smoke-пайплайн demo-урока, checksum медиа, идемпотентное планирование jobs и runtime-валидацию API. Реальная модель не может попасть в рабочий контур без зарегистрированного артефакта и контрольных проверок.",
+          boundary: "До установки реальных камер продукт использует customer-safe demo dataset. Точность на конкретной аудитории не заявляется без локальной калибровки, разрешённого model pack и validation set из реальных занятий.",
+        },
+        en: {
+          tag: "EDTECH · PRIVACY-FIRST AI",
+          role: "AI Systems + Backend + QA",
+          signal: "Local classroom analytics where every conclusion leads back to a timestamp, source model, confidence, data quality and human decision.",
+          quick: [
+            { v: "Evidence events instead of one opaque score" },
+            { v: "Video + audio workers · local-first · human review" },
+            { v: "An on-prem boundary for sensitive classroom data" },
+          ],
+          what: "The platform processes local video and audio signals into normalized evidence events, then lets a reviewer inspect the episode, source and factor contribution before a final report is accepted.",
+          problem: "A single AI score cannot explain what happened and becomes unsafe under poor camera quality, noise or model error. Sending raw classroom video to the cloud introduces an additional privacy risk.",
+          architecture: "FastAPI owns lessons, media assets, analysis jobs and review. Local workers run detection, tracking, pose, VAD, diarization and ASR; MinIO stores media and evidence clips, PostgreSQL stores events and state, and the dashboard presents timelines and explanations.",
+          why: "An event is a more durable contract than a model's final score: it can be reprocessed, fused with another signal and reviewed by a person. AI workers stay outside the domain so models can change without rewriting review and reporting rules.",
+          unique: "High-impact or low-confidence events cannot slip through silently: scoring is capped by data quality and review state. Temporal overlaps merge deterministically, while suppressed evidence remains available for audit.",
+          employer: "The project demonstrates AI systems work beyond inference: ingestion, model registry, queues, evidence lineage, privacy, auth/RBAC, explainable scoring, observability and operator UX.",
+          quality: "Verification includes unit and integration tests, golden reports, model-pack manifest preflight, a demo-lesson smoke pipeline, media checksums, idempotent job planning and runtime API validation. A real model cannot enter the operating path without a registered artifact and control checks.",
+          boundary: "Before real cameras are installed, the product uses a customer-safe demo dataset. Accuracy for a specific classroom is not claimed without local calibration, an approved model pack and a validation set from real lessons.",
+        },
+        uz: {
+          tag: "EDTECH · PRIVACY-FIRST AI",
+          role: "AI Systems + Backend + QA",
+          signal: "Har bir xulosa taymkod, manba model, confidence, ma’lumot sifati va inson qaroriga bog‘langan lokal dars analitikasi.",
+          quick: [
+            { v: "Bitta yopiq score o‘rniga evidence events" },
+            { v: "Video + audio workers · local-first · human review" },
+            { v: "Sezgir auditoriya ma’lumoti uchun on-prem chegara" },
+          ],
+          what: "Platforma lokal video va audio signallarni normallashgan evidence eventlarga aylantiradi, keyin metodist yakuniy hisobotdan oldin epizod, manba va har omil hissasini tekshiradi.",
+          problem: "Bitta AI-score nima bo‘lganini tushuntirmaydi va kamera sifati past, shovqin yoki model xatosida xavfli bo‘ladi. Xom auditoriya videosini cloud’ga yuborish qo‘shimcha maxfiylik xavfidir.",
+          architecture: "FastAPI dars, media asset, analysis job va review’ni boshqaradi. Lokal worker’lar detection, tracking, pose, VAD, diarization va ASR’ni bajaradi; MinIO media/evidence clip’ni, PostgreSQL event va holatni saqlaydi, dashboard timeline va izohni ko‘rsatadi.",
+          why: "Event modelning yakuniy score’idan barqarorroq kontrakt: uni qayta ishlash, boshqa signal bilan birlashtirish va inson tekshiruvidan o‘tkazish mumkin. AI worker domen tashqarisida, shuning uchun model almashsa review va report qoidalari qayta yozilmaydi.",
+          unique: "High-impact yoki low-confidence event jim o‘tmaydi: scoring ma’lumot sifati va review-state bilan cheklanadi. Vaqt kesishmalari deterministik birlashadi, bostirilgan dalil audit uchun saqlanadi.",
+          employer: "Loyiha inference’dan tashqari AI-system ko‘nikmasini ko‘rsatadi: ingestion, model registry, navbat, evidence lineage, privacy, auth/RBAC, explainable scoring, observability va operator UX.",
+          quality: "Tekshiruv unit/integration test, golden report, model-pack manifest preflight, demo-dars smoke pipeline, media checksum, idempotent job planning va runtime API validationni o‘z ichiga oladi. Real model ro‘yxatdan o‘tgan artefakt va nazorat tekshiruvlarisiz ish konturiga kirmaydi.",
+          boundary: "Real kameralar o‘rnatilguncha customer-safe demo dataset ishlatiladi. Aniq auditoriya uchun accuracy lokal kalibratsiya, tasdiqlangan model pack va real dars validation set’isiz da’vo qilinmaydi.",
+        },
+      },
+    },
+
+    laplacefx: {
+      slug: "laplacefx",
+      visual: "laplacefx.webp",
+      name: "LaplaceFX",
+      status: "DEMO",
+      private: true,
+      stack: ["Python 3.12", "FastAPI", "PostgreSQL", "TimescaleDB", "Redis", "Prometheus", "Docker"],
+      github: null,
+      qa: "https://github.com/SamandarMansurkhodjaev2713/qa-engineering-portfolio",
+      i18n: {
+        ru: {
+          tag: "FINTECH · RESEARCH SYSTEM",
+          role: "Backend + Research Engineering + QA",
+          signal: "Telegram research-система для forex-сигналов и demo-forward testing — с объяснением решения, риском и честной статистикой вместо обещаний доходности.",
+          quick: [
+            { v: "7-factor confluence · risk-based sizing · demo execution" },
+            { v: "Walk-forward · Deflated Sharpe · window-shift checks" },
+            { v: "TimescaleDB · metrics · Grafana · operational controls" },
+          ],
+          what: "LaplaceFX собирает рыночные признаки, формирует объяснимый сигнал, рассчитывает уровни и размер риска, ведёт позиции на demo-счёте и сравнивает фактическое поведение стратегии с исторически измеренным результатом.",
+          problem: "Торговая идея легко переобучается на красивом периоде. Без контроля выборки, проскальзывания, сдвига окна и риска высокая историческая точность превращается в маркетинговую цифру, а не инженерное доказательство.",
+          architecture: "Гексагональное ядро отделяет market data, signal engine, risk, broker execution и Telegram UX. PostgreSQL/TimescaleDB хранит временные ряды и результаты, Redis поддерживает runtime, FastAPI отдаёт health/metrics, Prometheus и Grafana наблюдают сервисы.",
+          why: "Доменная логика не зависит от конкретного брокера или Telegram. Это позволяет прогонять те же правила в backtest, demo-forward и контролируемом исполнении, а смена data provider или broker adapter не меняет расчёт сигнала.",
+          unique: "Предложенная идея не попадает в demo-forward только потому, что улучшила один backtest. Нужны walk-forward, Deflated Sharpe Ratio и устойчивость к сдвигу окна; большинство слабых гипотез сознательно отклоняется и остаётся в decision log.",
+          employer: "Кейс показывает исследовательскую дисциплину и production backend: статистические гейты, риск-модель, async-интеграции, миграции, контейнеры, метрики, recovery и честное описание неопределённости.",
+          quality: "Тесты покрывают signal/risk правила, репозитории, брокерские адаптеры и деградацию стратегии. Изменения проверяются на нескольких временных окнах, demo-forward отделён от backtest, а метрики и health endpoints позволяют заметить пропущенный цикл, drift или инфраструктурный сбой.",
+          boundary: "Только research и demo-account. Это не финансовая рекомендация, не обещание доходности и не доказательство будущего результата; реальный капитал и автоматическое live-исполнение не входят в публично заявленный статус.",
+        },
+        en: {
+          tag: "FINTECH · RESEARCH SYSTEM",
+          role: "Backend + Research Engineering + QA",
+          signal: "A Telegram research system for FX signals and demo forward testing — decision evidence, risk and honest statistics instead of return promises.",
+          quick: [
+            { v: "7-factor confluence · risk-based sizing · demo execution" },
+            { v: "Walk-forward · Deflated Sharpe · window-shift checks" },
+            { v: "TimescaleDB · metrics · Grafana · operational controls" },
+          ],
+          what: "LaplaceFX assembles market features, produces an explainable signal, calculates levels and risk size, tracks demo-account positions and compares real forward behavior with historically measured results.",
+          problem: "A trading idea can overfit a visually attractive period. Without sample-size, slippage, window-shift and risk controls, high historical accuracy is a marketing number rather than engineering evidence.",
+          architecture: "A hexagonal core separates market data, signal engine, risk, broker execution and Telegram UX. PostgreSQL/TimescaleDB stores time series and outcomes, Redis supports runtime state, FastAPI exposes health/metrics, and Prometheus/Grafana observes the system.",
+          why: "Domain logic does not depend on a specific broker or Telegram. The same rules can run in backtests, demo forward tests and controlled execution, while a data-provider or broker-adapter change leaves signal calculation intact.",
+          unique: "An idea does not enter demo forward testing merely because one backtest improved. It must pass walk-forward, Deflated Sharpe Ratio and window-shift robustness; weak hypotheses are deliberately rejected and retained in a decision log.",
+          employer: "The case combines research discipline with production backend engineering: statistical gates, risk models, async integrations, migrations, containers, metrics, recovery and honest uncertainty.",
+          quality: "Tests cover signal and risk rules, repositories, broker adapters and strategy degradation. Changes are evaluated across multiple windows, demo-forward is separated from backtest, and metrics plus health endpoints expose missed cycles, drift and infrastructure failure.",
+          boundary: "Research and demo account only. This is not financial advice, a return promise or proof of future performance; real capital and autonomous live execution are outside the stated public status.",
+        },
+        uz: {
+          tag: "FINTECH · RESEARCH SYSTEM",
+          role: "Backend + Research Engineering + QA",
+          signal: "FX signal va demo-forward testing uchun Telegram research-tizimi — daromad va’dasi o‘rniga qaror dalili, risk va halol statistika.",
+          quick: [
+            { v: "7-factor confluence · risk-based sizing · demo execution" },
+            { v: "Walk-forward · Deflated Sharpe · window-shift checks" },
+            { v: "TimescaleDB · metrics · Grafana · operational controls" },
+          ],
+          what: "LaplaceFX bozor belgilarini yig‘adi, izohlanadigan signal yaratadi, daraja va risk hajmini hisoblaydi, demo-hisob pozitsiyalarini yuritadi va real forward xatti-harakatni tarixiy o‘lchov bilan solishtiradi.",
+          problem: "Trading g‘oyasi chiroyli davrga oson overfit bo‘ladi. Sample size, slippage, window shift va risk nazoratisiz yuqori tarixiy aniqlik muhandislik dalili emas, marketing raqamidir.",
+          architecture: "Geksagonal yadro market data, signal engine, risk, broker execution va Telegram UX’ni ajratadi. PostgreSQL/TimescaleDB time-series va natijani saqlaydi, Redis runtime holatini, FastAPI health/metrics’ni, Prometheus/Grafana kuzatuvni ta’minlaydi.",
+          why: "Domen mantig‘i aniq broker yoki Telegram’ga bog‘liq emas. Shu qoidalar backtest, demo-forward va nazoratli execution’da ishlaydi; data provider yoki broker adapter almashsa signal hisobi o‘zgarmaydi.",
+          unique: "G‘oya faqat bitta backtest yaxshilangani uchun demo-forward’ga kirmaydi. Walk-forward, Deflated Sharpe Ratio va window-shift barqarorligi kerak; zaif gipotezalar ataylab rad etilib, decision log’da qoladi.",
+          employer: "Keys research intizomi va production backend’ni birlashtiradi: statistik gate, risk modeli, async integratsiya, migratsiya, container, metric, recovery va noaniqlikni halol ifodalash.",
+          quality: "Testlar signal/risk qoidalari, repository, broker adapter va strategiya degradatsiyasini qoplaydi. O‘zgarishlar bir necha oynada baholanadi, demo-forward backtestdan ajratiladi, metric va health endpoint o‘tkazib yuborilgan sikl, drift yoki infra xatosini ko‘rsatadi.",
+          boundary: "Faqat research va demo-account. Bu moliyaviy maslahat, daromad va’dasi yoki kelajak natijasi isboti emas; real kapital va avtonom live execution ochiq statusga kirmaydi.",
+        },
+      },
+    },
+  });
+
+  // Every case page gets a small, code-native system map. Labels are technical
+  // layer names rather than marketing copy, so they remain useful in RU/EN/UZ
+  // and cannot drift from the architecture paragraph.
+  var LANDING_FLOWS = {
+    ttyl: ["Client apps", "API + RBAC", "Domain services", "PostgreSQL · Redis · MinIO", "Audit + QA"],
+    "task-manager": ["Telegram", "Bot adapter", "Task domain", "SQLx · Outbox", "CI + regression"],
+    marketbot: ["Offers", "gRPC services", "RabbitMQ events", "PostgreSQL", "Admin + alerts"],
+    forge: ["Learning goal", "Evidence engine", "Portfolio cases", "Client offers", "Review + QA"],
+    belfproctor: ["Exam client", "Desktop guard", "Session API", "PostgreSQL", "Review console"],
+    "vfs-killer": ["Operator", "Telegram control", "Playwright workers", "Redis state", "Evidence log"],
+    "med-exe": ["React UI", "Typed IPC", "Rust domain", "SQLite", "Reports + tests"],
+    bioflux: ["Telemetry", "Normalize", "Threshold engine", "Dashboard", "Investor report"],
+    "growthops-ai": ["Channels", "Omnichannel Hub", "Product core", "PostgreSQL", "AI Gateway + QA"],
+    "car-superapp": ["PWA", "API modules", "Tenant + branch RLS", "Outbox + workers", "Audit + CI"],
+    "ai-classroom": ["Local media", "AI workers", "Evidence events", "Human review", "Report"],
+    laplacefx: ["Market data", "Signal engine", "Risk gate", "Demo execution", "Metrics + review"],
+  };
+
+
+  Object.keys(LANDINGS).forEach(function enrichLanding(slug) {
+    LANDINGS[slug].flow = LANDING_FLOWS[slug] || [];
+  });
 
   root.LANDINGS = LANDINGS;
   if (typeof module !== "undefined" && module.exports) module.exports = LANDINGS;

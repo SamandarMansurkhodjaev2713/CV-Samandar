@@ -1016,83 +1016,103 @@ function formatTashkentTime(date) {
 // PROJECTS — floating product screens
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Per-project brand cards — a purpose-designed schematic/blueprint SVG for EACH
-// project, keyed by projects[].name (identical across locales, so one
-// language-independent map — same pattern as SERVICE_RELATED). v2: unlike v1
-// (each card in its own arbitrary rainbow palette — read as a mismatched pile
-// of generic app-mockup clipart, not part of this site), every card now shares
-// ONE system: the site's own accent gradient (--accent #D97757 → --accent-2
-// #C89B5E), a fine grid-paper texture, corner register marks and mono micro-
-// labels borrowed straight from Signal/CV/Process's existing "instrument
-// panel" language — only the SCHEMATIC MOTIF changes per project (citation
-// graph, ECG, orbit, node graph…). `bg` is the same warm near-black across all
-// 13 (matches every SVG's own fill), so object-fit:contain letterboxes
-// seamlessly at any card width with zero seam.
-// v3: each card carries its OWN thoughtful, domain-tuned palette (legal navy+
-// gold, health coral+teal, IoT lime, couples rose…) instead of the uniform
-// Ember. Cohesion is held by the SHARED structural DNA in every SVG — the
-// grid-paper texture, corner register marks, mono micro-labels, soft glow and
-// schematic line-art — plus this monitor chrome. So the grid reads as one system
-// while every screen is unmistakably that product. `bg` matches each SVG's own
-// fill so object-fit:contain letterboxes seamlessly at any card width.
+// Per-project cinematic 3D dioramas — one purpose-generated image per product.
+// Keyed by stable project SLUG (not display name) so a translation or a future
+// title edit can never break the visual link. `bg` matches each image's own
+// dominant dark tone, so the monitor chrome never shows a seam while the image
+// is still lazy-loading.
+// (Superseded the earlier hand-drawn SVG blueprint set, which was keyed by
+// display name — that map and its 13 .svg files were removed with this change.)
 const PROJ_CARD = {
-  "Klawis — Legal AI Assistant": {
-    src: "assets/proj/klawis.svg",
-    bg: "#0E1A33"
+  "klawis": {
+    src: "assets/proj/klawis.webp",
+    bg: "#07111F"
   },
-  "CoupleOS / Softly": {
-    src: "assets/proj/softly.svg",
-    bg: "#241426"
+  "softly": {
+    src: "assets/proj/softly.webp",
+    bg: "#241428"
   },
-  "TTYL Platform": {
-    src: "assets/proj/ttyl.svg",
-    bg: "#0E1C24"
+  "growthops-ai": {
+    src: "assets/proj/growthops-ai.webp",
+    bg: "#06122D"
   },
-  "Task-manager / Task Manage Bot": {
-    src: "assets/proj/task-manager.svg",
-    bg: "#1A130C"
+  "ttyl": {
+    src: "assets/proj/ttyl.webp",
+    bg: "#04171B"
   },
-  "Marketbot": {
-    src: "assets/proj/marketbot.svg",
-    bg: "#0C1A12"
+  "dostupnoe-pravo": {
+    src: "assets/proj/dostupnoe-pravo.webp",
+    bg: "#210B0D"
   },
-  "Sentinel Edge": {
-    src: "assets/proj/sentinel.svg",
-    bg: "#0A140E"
+  "ai-classroom": {
+    src: "assets/proj/ai-classroom.webp",
+    bg: "#11102B"
   },
-  "Forge / Learning OS": {
-    src: "assets/proj/forge.svg",
-    bg: "#150F28"
+  "car-superapp": {
+    src: "assets/proj/car-superapp.webp",
+    bg: "#03090F"
   },
-  "BelfProctor": {
-    src: "assets/proj/belfproctor.svg",
-    bg: "#111520"
+  "helion": {
+    src: "assets/proj/helion.webp",
+    bg: "#020711"
   },
-  "VFS Killer": {
-    src: "assets/proj/vfs-killer.svg",
-    bg: "#08131A"
+  "stones": {
+    src: "assets/proj/stones.webp",
+    bg: "#14120F"
+  },
+  "sentinel-edge": {
+    src: "assets/proj/sentinel.webp",
+    bg: "#06110A"
+  },
+  "cardioguard": {
+    src: "assets/proj/cardioguard.webp",
+    bg: "#071014"
+  },
+  "task-manager": {
+    src: "assets/proj/task-manager.webp",
+    bg: "#160E08"
+  },
+  "marketbot": {
+    src: "assets/proj/marketbot.webp",
+    bg: "#06170F"
+  },
+  "izatullo": {
+    src: "assets/proj/izatullo.webp",
+    bg: "#15110B"
+  },
+  "forge": {
+    src: "assets/proj/forge.webp",
+    bg: "#110A24"
+  },
+  "belfproctor": {
+    src: "assets/proj/belfproctor.webp",
+    bg: "#091123"
+  },
+  "laplacefx": {
+    src: "assets/proj/laplacefx.webp",
+    bg: "#03130D"
+  },
+  "bioflux": {
+    src: "assets/proj/bioflux.webp",
+    bg: "#181504"
+  },
+  "vfs-killer": {
+    src: "assets/proj/vfs-killer.webp",
+    bg: "#020B15"
   },
   "med-exe": {
-    src: "assets/proj/med-exe.svg",
-    bg: "#0A1618"
+    src: "assets/proj/med-exe.webp",
+    bg: "#031416"
   },
-  "3D Landing": {
-    src: "assets/proj/3d-landing.svg",
-    bg: "#0C0A1E"
-  },
-  "CardioGuard": {
-    src: "assets/proj/cardioguard.svg",
-    bg: "#15161E"
-  },
-  "BioFlux Observer": {
-    src: "assets/proj/bioflux.svg",
-    bg: "#17140A"
+  "3d-landing": {
+    src: "assets/proj/3d-landing.webp",
+    bg: "#0E0723"
   }
 };
 function ProjectCard({
   p,
   i,
-  cta
+  labels
 }) {
   const cardRef = useRef(null);
   function onMove(e) {
@@ -1118,6 +1138,8 @@ function ProjectCard({
   // Projects' deep-link effect + App's scroll-to-hash). onClick also drops a
   // history entry with that anchor so the browser Back button restores here too.
   const landingSlug = p.url && p.url.indexOf("projects/") === 0 ? p.url.replace(/^projects\//, "").replace(/\/+$/, "") : null;
+  const isExternal = Boolean(p.url && p.url.indexOf("http") === 0);
+  const primaryLabel = isExternal ? labels.open_live || labels.cta : labels.cta;
   function onCtaClick(e) {
     if (!p.url) {
       e.preventDefault();
@@ -1139,7 +1161,7 @@ function ProjectCard({
   // cards get their own projExpandIn animation.
   return /*#__PURE__*/React.createElement("article", {
     ref: cardRef,
-    id: landingSlug ? "proj-" + landingSlug : undefined,
+    id: p.slug ? "proj-" + p.slug : landingSlug ? "proj-" + landingSlug : undefined,
     className: "proj-card card",
     style: {
       "--proj-i": i
@@ -1156,7 +1178,7 @@ function ProjectCard({
   }, /*#__PURE__*/React.createElement("span", {
     className: "mono proj-tag"
   }, p.tag), /*#__PURE__*/React.createElement("span", {
-    className: `proj-status proj-status-${p.status.toLowerCase()}`
+    className: `proj-status proj-status-${String(p.status || "").toLowerCase()}`
   }, p.status)), /*#__PURE__*/React.createElement("h3", {
     className: "proj-name"
   }, p.name), /*#__PURE__*/React.createElement("div", {
@@ -1168,14 +1190,14 @@ function ProjectCard({
     className: "proj-screen-dots"
   }, /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null)), /*#__PURE__*/React.createElement("span", {
     className: "mono"
-  }, "/", p.name.toLowerCase().replace(/\s+/g, "-"))), PROJ_CARD[p.name] ? /*#__PURE__*/React.createElement("div", {
+  }, "/", p.slug || p.name.toLowerCase().replace(/\s+/g, "-"))), PROJ_CARD[p.slug] ? /*#__PURE__*/React.createElement("div", {
     className: "proj-screen-body proj-screen-body--img",
     style: {
-      background: PROJ_CARD[p.name].bg
+      background: PROJ_CARD[p.slug].bg
     }
   }, /*#__PURE__*/React.createElement("img", {
     className: "proj-screen-img",
-    src: PROJ_CARD[p.name].src,
+    src: PROJ_CARD[p.slug].src,
     alt: "",
     loading: "lazy",
     decoding: "async"
@@ -1220,15 +1242,25 @@ function ProjectCard({
   }, p.stack.map((s, k) => /*#__PURE__*/React.createElement("span", {
     key: k,
     className: "proj-chip mono"
-  }, s))), /*#__PURE__*/React.createElement("a", {
+  }, s))), /*#__PURE__*/React.createElement("div", {
+    className: "proj-actions"
+  }, /*#__PURE__*/React.createElement("a", {
     href: p.url || "#",
     className: "proj-cta mono",
-    target: p.url && p.url.indexOf("http") === 0 ? "_blank" : undefined,
-    rel: p.url && p.url.indexOf("http") === 0 ? "noopener noreferrer" : undefined,
+    target: isExternal ? "_blank" : undefined,
+    rel: isExternal ? "noopener noreferrer" : undefined,
     onClick: onCtaClick
-  }, cta, " ", /*#__PURE__*/React.createElement("span", {
+  }, primaryLabel, " ", /*#__PURE__*/React.createElement("span", {
     className: "arrow"
-  }, "\u2192")));
+  }, "\u2192")), p.github ? /*#__PURE__*/React.createElement("a", {
+    href: p.github,
+    className: "proj-repo mono",
+    target: "_blank",
+    rel: "noopener noreferrer",
+    "aria-label": `${labels.github || "GitHub"} · ${p.name}`
+  }, labels.github || "GitHub", " ", /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true"
+  }, "\u2197")) : null));
 }
 
 // Mobile chapter-indicator: shows N dots above the project grid, highlights
@@ -1236,14 +1268,16 @@ function ProjectCard({
 // on small screens where the grid collapses to one column.
 function ProjectChapterDots({
   items,
-  gridRef
+  gridRef,
+  label
 }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const cardRefs = useRef([]);
   useEffect(() => {
-    const cards = gridRef.current ? gridRef.current.querySelectorAll(".proj-card") : [];
+    const cards = gridRef.current ? Array.from(gridRef.current.querySelectorAll(".proj-card")).filter(card => getComputedStyle(card).display !== "none") : [];
     if (!cards.length) return undefined;
-    cardRefs.current = Array.from(cards);
+    cardRefs.current = cards;
+    setActiveIdx(current => Math.min(current, cards.length - 1));
     // Track each card's intersection ratio; pick the largest.
     const ratios = new Array(cards.length).fill(0);
     const io = new IntersectionObserver(entries => {
@@ -1267,7 +1301,7 @@ function ProjectChapterDots({
     return function cleanup() {
       io.disconnect();
     };
-  }, [gridRef]);
+  }, [gridRef, items]);
   function onDot(i) {
     const el = cardRefs.current[i];
     // Horizontal peek-carousel: scroll the carousel sideways to center the
@@ -1278,19 +1312,26 @@ function ProjectChapterDots({
       block: "nearest"
     });
   }
+  const dotWindow = 7;
+  const maxStart = Math.max(0, items.length - dotWindow);
+  const windowStart = Math.max(0, Math.min(maxStart, activeIdx - Math.floor(dotWindow / 2)));
+  const visibleItems = items.slice(windowStart, windowStart + dotWindow);
   return /*#__PURE__*/React.createElement("nav", {
     className: "proj-chapters",
-    "aria-label": "project list"
+    "aria-label": label || "project list"
   }, /*#__PURE__*/React.createElement("ol", {
     className: "proj-chapters-dots"
-  }, items.map((p, i) => /*#__PURE__*/React.createElement("li", {
-    key: i
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: `proj-chapters-dot ${i === activeIdx ? "is-active" : ""}`,
-    "aria-label": p.name,
-    onClick: () => onDot(i)
-  })))), /*#__PURE__*/React.createElement("div", {
+  }, visibleItems.map((p, localIndex) => {
+    const i = windowStart + localIndex;
+    return /*#__PURE__*/React.createElement("li", {
+      key: p.slug || i
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: `proj-chapters-dot ${i === activeIdx ? "is-active" : ""}`,
+      "aria-label": p.name,
+      onClick: () => onDot(i)
+    }));
+  })), /*#__PURE__*/React.createElement("div", {
     className: "proj-chapters-label mono"
   }, /*#__PURE__*/React.createElement("span", {
     className: "proj-chapters-num"
@@ -1300,26 +1341,19 @@ function ProjectChapterDots({
     className: "proj-chapters-name"
   }, items[activeIdx]?.name || "")));
 }
-
-// Russian plural for "проект": 1 проект, 2-4 проекта, 5+ проектов.
-function pluralProjects(n) {
-  const mod10 = n % 10,
-    mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return "проект";
-  if (mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) return "проекта";
-  return "проектов";
-}
 function Projects({
   t
 }) {
   const ref = useRevealRoot([t]);
   const gridRef = useRef(null);
-  // Desktop shows the first 2 cases; the rest expand on request (keeps the
-  // section short + signals there's more). Mobile ignores this and shows all
-  // via a horizontal peek-carousel (CSS), paged by the dots below.
+  // Four strongest product families lead the section on every viewport. The
+  // complete catalog expands on intent; mobile keeps its swipe carousel, but
+  // nobody has to swipe through 21 cards just to leave the block.
+  const FEATURED_PROJECT_COUNT = 4;
   const [expanded, setExpanded] = useState(false);
   const items = t.projects.items;
-  const hiddenCount = Math.max(0, items.length - 2);
+  const hiddenCount = Math.max(0, items.length - FEATURED_PROJECT_COUNT);
+  const chapterItems = expanded ? items : items.slice(0, FEATURED_PROJECT_COUNT);
 
   // Deep-link: arriving at #proj-<slug> (returning from that product's landing)
   // for a card the collapsed desktop grid hides (index >= 2) → expand the grid
@@ -1328,9 +1362,9 @@ function Projects({
     const id = (window.location.hash || "").replace(/^#/, "");
     if (id.indexOf("proj-") !== 0) return;
     const slug = id.slice(5);
-    const idx = items.findIndex(p => p.url && p.url.indexOf("projects/") === 0 && p.url.replace(/^projects\//, "").replace(/\/+$/, "") === slug);
-    if (idx >= 2) setExpanded(true);
-  }, []);
+    const idx = items.findIndex(p => p.slug === slug);
+    if (idx >= FEATURED_PROJECT_COUNT) setExpanded(true);
+  }, [items]);
   return /*#__PURE__*/React.createElement("section", {
     "data-section": "projects",
     id: "projects",
@@ -1347,10 +1381,10 @@ function Projects({
     className: `proj-grid ${expanded ? "is-expanded" : "is-collapsed"}`,
     ref: gridRef
   }, items.map((p, i) => /*#__PURE__*/React.createElement(ProjectCard, {
-    key: i,
+    key: p.slug || i,
     p: p,
     i: i,
-    cta: t.projects.cta
+    labels: t.projects
   }))), hiddenCount > 0 ? /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "proj-expand mono",
@@ -1360,12 +1394,13 @@ function Projects({
     "data-cursor-label": expanded ? "collapse" : "show all"
   }, /*#__PURE__*/React.createElement("span", {
     className: "proj-expand-txt"
-  }, expanded ? "Свернуть" : `Ещё ${hiddenCount} ${pluralProjects(hiddenCount)}`), /*#__PURE__*/React.createElement("span", {
+  }, expanded ? t.projects.collapse || "Collapse" : `${t.projects.more_prefix != null ? t.projects.more_prefix : "Show "}${hiddenCount}${t.projects.more_suffix != null ? t.projects.more_suffix : " more"}`), /*#__PURE__*/React.createElement("span", {
     className: "proj-expand-ico",
     "aria-hidden": "true"
   }, expanded ? "↑" : "↓")) : null, /*#__PURE__*/React.createElement(ProjectChapterDots, {
-    items: items,
-    gridRef: gridRef
+    items: chapterItems,
+    gridRef: gridRef,
+    label: t.projects.list_label
   })));
 }
 

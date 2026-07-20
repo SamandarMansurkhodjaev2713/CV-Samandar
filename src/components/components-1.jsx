@@ -877,42 +877,38 @@ function formatTashkentTime(date) {
 // PROJECTS — floating product screens
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Per-project brand cards — a purpose-designed schematic/blueprint SVG for EACH
-// project, keyed by projects[].name (identical across locales, so one
-// language-independent map — same pattern as SERVICE_RELATED). v2: unlike v1
-// (each card in its own arbitrary rainbow palette — read as a mismatched pile
-// of generic app-mockup clipart, not part of this site), every card now shares
-// ONE system: the site's own accent gradient (--accent #D97757 → --accent-2
-// #C89B5E), a fine grid-paper texture, corner register marks and mono micro-
-// labels borrowed straight from Signal/CV/Process's existing "instrument
-// panel" language — only the SCHEMATIC MOTIF changes per project (citation
-// graph, ECG, orbit, node graph…). `bg` is the same warm near-black across all
-// 13 (matches every SVG's own fill), so object-fit:contain letterboxes
-// seamlessly at any card width with zero seam.
-// v3: each card carries its OWN thoughtful, domain-tuned palette (legal navy+
-// gold, health coral+teal, IoT lime, couples rose…) instead of the uniform
-// Ember. Cohesion is held by the SHARED structural DNA in every SVG — the
-// grid-paper texture, corner register marks, mono micro-labels, soft glow and
-// schematic line-art — plus this monitor chrome. So the grid reads as one system
-// while every screen is unmistakably that product. `bg` matches each SVG's own
-// fill so object-fit:contain letterboxes seamlessly at any card width.
+// Per-project cinematic 3D dioramas — one purpose-generated image per product.
+// Keyed by stable project SLUG (not display name) so a translation or a future
+// title edit can never break the visual link. `bg` matches each image's own
+// dominant dark tone, so the monitor chrome never shows a seam while the image
+// is still lazy-loading.
+// (Superseded the earlier hand-drawn SVG blueprint set, which was keyed by
+// display name — that map and its 13 .svg files were removed with this change.)
 const PROJ_CARD = {
-  "Klawis — Legal AI Assistant":     { src: "assets/proj/klawis.svg",       bg: "#0E1A33" },
-  "CoupleOS / Softly":               { src: "assets/proj/softly.svg",       bg: "#241426" },
-  "TTYL Platform":                   { src: "assets/proj/ttyl.svg",         bg: "#0E1C24" },
-  "Task-manager / Task Manage Bot":  { src: "assets/proj/task-manager.svg", bg: "#1A130C" },
-  "Marketbot":                       { src: "assets/proj/marketbot.svg",    bg: "#0C1A12" },
-  "Sentinel Edge":                   { src: "assets/proj/sentinel.svg",     bg: "#0A140E" },
-  "Forge / Learning OS":             { src: "assets/proj/forge.svg",        bg: "#150F28" },
-  "BelfProctor":                     { src: "assets/proj/belfproctor.svg",  bg: "#111520" },
-  "VFS Killer":                      { src: "assets/proj/vfs-killer.svg",   bg: "#08131A" },
-  "med-exe":                         { src: "assets/proj/med-exe.svg",      bg: "#0A1618" },
-  "3D Landing":                      { src: "assets/proj/3d-landing.svg",   bg: "#0C0A1E" },
-  "CardioGuard":                     { src: "assets/proj/cardioguard.svg",  bg: "#15161E" },
-  "BioFlux Observer":                { src: "assets/proj/bioflux.svg",      bg: "#17140A" },
+  "klawis":           { src: "assets/proj/klawis.webp",           bg: "#07111F" },
+  "softly":           { src: "assets/proj/softly.webp",           bg: "#241428" },
+  "growthops-ai":     { src: "assets/proj/growthops-ai.webp",     bg: "#06122D" },
+  "ttyl":             { src: "assets/proj/ttyl.webp",             bg: "#04171B" },
+  "dostupnoe-pravo":  { src: "assets/proj/dostupnoe-pravo.webp",  bg: "#210B0D" },
+  "ai-classroom":     { src: "assets/proj/ai-classroom.webp",     bg: "#11102B" },
+  "car-superapp":     { src: "assets/proj/car-superapp.webp",     bg: "#03090F" },
+  "helion":           { src: "assets/proj/helion.webp",           bg: "#020711" },
+  "stones":           { src: "assets/proj/stones.webp",           bg: "#14120F" },
+  "sentinel-edge":    { src: "assets/proj/sentinel.webp",         bg: "#06110A" },
+  "cardioguard":      { src: "assets/proj/cardioguard.webp",      bg: "#071014" },
+  "task-manager":     { src: "assets/proj/task-manager.webp",     bg: "#160E08" },
+  "marketbot":        { src: "assets/proj/marketbot.webp",        bg: "#06170F" },
+  "izatullo":         { src: "assets/proj/izatullo.webp",         bg: "#15110B" },
+  "forge":            { src: "assets/proj/forge.webp",            bg: "#110A24" },
+  "belfproctor":      { src: "assets/proj/belfproctor.webp",      bg: "#091123" },
+  "laplacefx":        { src: "assets/proj/laplacefx.webp",        bg: "#03130D" },
+  "bioflux":          { src: "assets/proj/bioflux.webp",          bg: "#181504" },
+  "vfs-killer":       { src: "assets/proj/vfs-killer.webp",       bg: "#020B15" },
+  "med-exe":          { src: "assets/proj/med-exe.webp",          bg: "#031416" },
+  "3d-landing":       { src: "assets/proj/3d-landing.webp",       bg: "#0E0723" },
 };
 
-function ProjectCard({ p, i, cta }) {
+function ProjectCard({ p, i, labels }) {
   const cardRef = useRef(null);
   function onMove(e) {
     const el = cardRef.current;
@@ -939,6 +935,8 @@ function ProjectCard({ p, i, cta }) {
   const landingSlug = (p.url && p.url.indexOf("projects/") === 0)
     ? p.url.replace(/^projects\//, "").replace(/\/+$/, "")
     : null;
+  const isExternal = Boolean(p.url && p.url.indexOf("http") === 0);
+  const primaryLabel = isExternal ? (labels.open_live || labels.cta) : labels.cta;
   function onCtaClick(e) {
     if (!p.url) { e.preventDefault(); return; }
     if (landingSlug) { try { history.replaceState(null, "", "#proj-" + landingSlug); } catch (err) { /* opportunistic */ } }
@@ -954,7 +952,7 @@ function ProjectCard({ p, i, cta }) {
   return (
     <article
       ref={cardRef}
-      id={landingSlug ? "proj-" + landingSlug : undefined}
+      id={p.slug ? "proj-" + p.slug : (landingSlug ? "proj-" + landingSlug : undefined)}
       className="proj-card card"
       style={{ "--proj-i": i }}
       onMouseMove={onMove}
@@ -964,27 +962,26 @@ function ProjectCard({ p, i, cta }) {
       <span className="proj-num mono" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
       <div className="proj-head">
         <span className="mono proj-tag">{p.tag}</span>
-        <span className={`proj-status proj-status-${p.status.toLowerCase()}`}>{p.status}</span>
+        <span className={`proj-status proj-status-${String(p.status || "").toLowerCase()}`}>{p.status}</span>
       </div>
       <h3 className="proj-name">{p.name}</h3>
 
       <div className="proj-screen" aria-hidden="true">
         <div className="proj-screen-bar">
           <div className="proj-screen-dots"><i></i><i></i><i></i></div>
-          <span className="mono">/{p.name.toLowerCase().replace(/\s+/g, "-")}</span>
+          <span className="mono">/{p.slug || p.name.toLowerCase().replace(/\s+/g, "-")}</span>
         </div>
-        {PROJ_CARD[p.name] ? (
+        {PROJ_CARD[p.slug] ? (
           <div
             className="proj-screen-body proj-screen-body--img"
-            style={{ background: PROJ_CARD[p.name].bg }}
+            style={{ background: PROJ_CARD[p.slug].bg }}
           >
-            {/* Purpose-built brand mini-interface (SVG) inside the monitor
-                chrome. alt="" — the frame is aria-hidden decoration; the card's
-                text already names the project. The body background matches the
-                SVG's own fill so object-fit:contain letterboxes seamlessly. */}
+            {/* Purpose-built 3D product diorama inside the shared monitor
+                chrome. alt="" because the frame is aria-hidden decoration and
+                the card's visible content already names and explains it. */}
             <img
               className="proj-screen-img"
-              src={PROJ_CARD[p.name].src}
+              src={PROJ_CARD[p.slug].src}
               alt=""
               loading="lazy"
               decoding="async"
@@ -1016,15 +1013,28 @@ function ProjectCard({ p, i, cta }) {
         {p.stack.map((s, k) => <span key={k} className="proj-chip mono">{s}</span>)}
       </div>
 
-      <a
-        href={p.url || "#"}
-        className="proj-cta mono"
-        target={p.url && p.url.indexOf("http") === 0 ? "_blank" : undefined}
-        rel={p.url && p.url.indexOf("http") === 0 ? "noopener noreferrer" : undefined}
-        onClick={onCtaClick}
-      >
-        {cta} <span className="arrow">→</span>
-      </a>
+      <div className="proj-actions">
+        <a
+          href={p.url || "#"}
+          className="proj-cta mono"
+          target={isExternal ? "_blank" : undefined}
+          rel={isExternal ? "noopener noreferrer" : undefined}
+          onClick={onCtaClick}
+        >
+          {primaryLabel} <span className="arrow">→</span>
+        </a>
+        {p.github ? (
+          <a
+            href={p.github}
+            className="proj-repo mono"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`${labels.github || "GitHub"} · ${p.name}`}
+          >
+            {labels.github || "GitHub"} <span aria-hidden="true">↗</span>
+          </a>
+        ) : null}
+      </div>
     </article>
   );
 }
@@ -1032,14 +1042,18 @@ function ProjectCard({ p, i, cta }) {
 // Mobile chapter-indicator: shows N dots above the project grid, highlights
 // whichever card is most-in-view, taps scroll to that card. Only meaningful
 // on small screens where the grid collapses to one column.
-function ProjectChapterDots({ items, gridRef }) {
+function ProjectChapterDots({ items, gridRef, label }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const cardRefs = useRef([]);
 
   useEffect(() => {
-    const cards = (gridRef.current ? gridRef.current.querySelectorAll(".proj-card") : []);
+    const cards = gridRef.current
+      ? Array.from(gridRef.current.querySelectorAll(".proj-card"))
+          .filter((card) => getComputedStyle(card).display !== "none")
+      : [];
     if (!cards.length) return undefined;
-    cardRefs.current = Array.from(cards);
+    cardRefs.current = cards;
+    setActiveIdx((current) => Math.min(current, cards.length - 1));
     // Track each card's intersection ratio; pick the largest.
     const ratios = new Array(cards.length).fill(0);
     const io = new IntersectionObserver((entries) => {
@@ -1056,7 +1070,7 @@ function ProjectChapterDots({ items, gridRef }) {
     }, { threshold: [0.1, 0.4, 0.7, 0.95] });
     cards.forEach((c) => io.observe(c));
     return function cleanup() { io.disconnect(); };
-  }, [gridRef]);
+  }, [gridRef, items]);
 
   function onDot(i) {
     const el = cardRefs.current[i];
@@ -1065,11 +1079,18 @@ function ProjectChapterDots({ items, gridRef }) {
     if (el) el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   }
 
+  const dotWindow = 7;
+  const maxStart = Math.max(0, items.length - dotWindow);
+  const windowStart = Math.max(0, Math.min(maxStart, activeIdx - Math.floor(dotWindow / 2)));
+  const visibleItems = items.slice(windowStart, windowStart + dotWindow);
+
   return (
-    <nav className="proj-chapters" aria-label="project list">
+    <nav className="proj-chapters" aria-label={label || "project list"}>
       <ol className="proj-chapters-dots">
-        {items.map((p, i) => (
-          <li key={i}>
+        {visibleItems.map((p, localIndex) => {
+          const i = windowStart + localIndex;
+          return (
+          <li key={p.slug || i}>
             <button
               type="button"
               className={`proj-chapters-dot ${i === activeIdx ? "is-active" : ""}`}
@@ -1077,7 +1098,8 @@ function ProjectChapterDots({ items, gridRef }) {
               onClick={() => onDot(i)}
             />
           </li>
-        ))}
+          );
+        })}
       </ol>
       <div className="proj-chapters-label mono">
         <span className="proj-chapters-num">{String(activeIdx + 1).padStart(2, "0")}</span>
@@ -1088,23 +1110,17 @@ function ProjectChapterDots({ items, gridRef }) {
   );
 }
 
-// Russian plural for "проект": 1 проект, 2-4 проекта, 5+ проектов.
-function pluralProjects(n) {
-  const mod10 = n % 10, mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return "проект";
-  if (mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) return "проекта";
-  return "проектов";
-}
-
 function Projects({ t }) {
   const ref = useRevealRoot([t]);
   const gridRef = useRef(null);
-  // Desktop shows the first 2 cases; the rest expand on request (keeps the
-  // section short + signals there's more). Mobile ignores this and shows all
-  // via a horizontal peek-carousel (CSS), paged by the dots below.
+  // Four strongest product families lead the section on every viewport. The
+  // complete catalog expands on intent; mobile keeps its swipe carousel, but
+  // nobody has to swipe through 21 cards just to leave the block.
+  const FEATURED_PROJECT_COUNT = 4;
   const [expanded, setExpanded] = useState(false);
   const items = t.projects.items;
-  const hiddenCount = Math.max(0, items.length - 2);
+  const hiddenCount = Math.max(0, items.length - FEATURED_PROJECT_COUNT);
+  const chapterItems = expanded ? items : items.slice(0, FEATURED_PROJECT_COUNT);
 
   // Deep-link: arriving at #proj-<slug> (returning from that product's landing)
   // for a card the collapsed desktop grid hides (index >= 2) → expand the grid
@@ -1113,18 +1129,16 @@ function Projects({ t }) {
     const id = (window.location.hash || "").replace(/^#/, "");
     if (id.indexOf("proj-") !== 0) return;
     const slug = id.slice(5);
-    const idx = items.findIndex((p) =>
-      p.url && p.url.indexOf("projects/") === 0 &&
-      p.url.replace(/^projects\//, "").replace(/\/+$/, "") === slug);
-    if (idx >= 2) setExpanded(true);
-  }, []);
+    const idx = items.findIndex((p) => p.slug === slug);
+    if (idx >= FEATURED_PROJECT_COUNT) setExpanded(true);
+  }, [items]);
 
   return (
     <section data-section="projects" id="projects" data-enter="rise" ref={ref}>
       <div className="shell">
         <SecHead num="03" eyebrow={t.projects.eyebrow} title={t.projects.title} meta={`${items.length} cases · 2024–26`} />
         <div className={`proj-grid ${expanded ? "is-expanded" : "is-collapsed"}`} ref={gridRef}>
-          {items.map((p, i) => <ProjectCard key={i} p={p} i={i} cta={t.projects.cta} />)}
+          {items.map((p, i) => <ProjectCard key={p.slug || i} p={p} i={i} labels={t.projects} />)}
         </div>
 
         {hiddenCount > 0 ? (
@@ -1137,14 +1151,20 @@ function Projects({ t }) {
             data-cursor-label={expanded ? "collapse" : "show all"}
           >
             <span className="proj-expand-txt">
-              {expanded ? "Свернуть" : `Ещё ${hiddenCount} ${pluralProjects(hiddenCount)}`}
+              {/* `!= null` rather than `||`: the RU suffix is deliberately an
+                  EMPTY string ("Показать ещё 17"), and `"" || " more"` falls
+                  through to the English fallback — which is exactly how the
+                  button ended up reading "Показать ещё 17 more" in Russian. */}
+              {expanded
+                ? (t.projects.collapse || "Collapse")
+                : `${t.projects.more_prefix != null ? t.projects.more_prefix : "Show "}${hiddenCount}${t.projects.more_suffix != null ? t.projects.more_suffix : " more"}`}
             </span>
             <span className="proj-expand-ico" aria-hidden="true">{expanded ? "↑" : "↓"}</span>
           </button>
         ) : null}
 
         {/* Mobile-only carousel pager (CSS hides it on desktop). */}
-        <ProjectChapterDots items={items} gridRef={gridRef} />
+        <ProjectChapterDots items={chapterItems} gridRef={gridRef} label={t.projects.list_label} />
       </div>
     </section>
   );

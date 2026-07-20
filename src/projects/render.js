@@ -40,10 +40,12 @@
       problem: "Какую проблему решает",
       stack: "Технический стек",
       architecture: "Архитектура",
+      systemMap: "Карта системы",
       why: "Почему именно так",
       unique: "Сильные стороны",
       employer: "Что это доказывает",
       quality: "Как обеспечивалось качество",
+      boundary: "Честные границы",
       qaMatrix: "Полная матрица QA-доказательств",
       backHome: "К портфолио",
       footNote: "Часть портфолио Samandar · Full-Stack · AI Automation · QA",
@@ -66,10 +68,12 @@
       problem: "The problem it solves",
       stack: "Technical stack",
       architecture: "Architecture",
+      systemMap: "System map",
       why: "Why this architecture",
       unique: "Strengths",
       employer: "What it proves",
       quality: "How quality was engineered",
+      boundary: "Honest boundaries",
       qaMatrix: "Full QA evidence matrix",
       backHome: "Back to portfolio",
       footNote: "Part of Samandar's portfolio · Full-Stack · AI Automation · QA",
@@ -92,10 +96,12 @@
       problem: "Qanday muammoni yechadi",
       stack: "Texnik stek",
       architecture: "Arxitektura",
+      systemMap: "Tizim xaritasi",
       why: "Nega aynan shunday",
       unique: "Kuchli tomonlari",
       employer: "Bu nimani isbotlaydi",
       quality: "Sifat qanday ta'minlangan",
+      boundary: "Halol chegaralar",
       qaMatrix: "To'liq QA-dalillar matritsasi",
       backHome: "Portfolioga qaytish",
       footNote: "Samandar portfoliosining bir qismi · Full-Stack · AI Automation · QA",
@@ -136,13 +142,35 @@
     );
   }
 
+  function flowMap(flow, title) {
+    if (!flow || !flow.length) return "";
+    return (
+      '<section class="lp-flow">' +
+        '<div class="lp-flow-head">' +
+          '<span class="lp-eyebrow mono">SYSTEM · 0' + esc(flow.length) + "</span>" +
+          '<h2 class="lp-h2">' + esc(title) + "</h2>" +
+        "</div>" +
+        '<ol class="lp-flow-track">' +
+          flow.map(function (node, i) {
+            return (
+              '<li class="lp-flow-node">' +
+                '<span class="lp-flow-index mono">' + String(i + 1).padStart(2, "0") + "</span>" +
+                '<span class="lp-flow-name">' + esc(node) + "</span>" +
+              "</li>"
+            );
+          }).join("") +
+        "</ol>" +
+      "</section>"
+    );
+  }
+
   // Build the full <body> inner HTML for one product in one language.
   // `p` is the whole product record (with .i18n); `lang` selects the copy.
   function LP_render(p, lang) {
     var ui = UI[lang] || UI.ru;
     var c = (p.i18n && p.i18n[lang]) || (p.i18n && p.i18n.ru) || {};
     var base = "../../";               // pages live at /projects/<slug>/
-    var svg = base + "assets/proj/" + esc(p.svg);
+    var visual = base + "assets/proj/" + esc(p.visual);
     var langs = ["ru", "en", "uz"];
 
     var langBtns = langs
@@ -162,14 +190,14 @@
     // than looping back to a GitHub card. Public code-bearing products link to
     // their real repo instead.
     var githubBtn;
-    if (p.status === "NDA") {
-      githubBtn =
-        '<a class="lp-btn lp-btn-ghost" href="' + base + '#contact">' +
-        esc(ui.requestAccess) + ' <span class="lp-arr">→</span></a>';
-    } else if (p.github) {
+    if (p.github) {
       githubBtn =
         '<a class="lp-btn lp-btn-ghost" href="' + esc(p.github) + '" target="_blank" rel="noopener noreferrer">' +
         esc(ui.viewGithub) + ' <span class="lp-arr">↗</span></a>';
+    } else if (p.private || p.status === "NDA") {
+      githubBtn =
+        '<a class="lp-btn lp-btn-ghost" href="' + base + '#contact">' +
+        esc(ui.requestAccess) + ' <span class="lp-arr">→</span></a>';
     } else {
       githubBtn = "";
     }
@@ -218,7 +246,7 @@
           '<div class="lp-hero-visual" aria-hidden="true">' +
             '<div class="lp-screen">' +
               '<div class="lp-screen-bar"><i></i><i></i><i></i><span class="mono">/' + esc(p.slug) + "</span></div>" +
-              '<div class="lp-screen-body"><img src="' + svg + '" alt="" loading="eager" decoding="async"></div>' +
+              '<div class="lp-screen-body"><img src="' + visual + '" alt="" loading="eager" decoding="async" width="1536" height="512"></div>' +
             "</div>" +
           "</div>" +
         "</section>" +
@@ -248,6 +276,9 @@
           block(ui.why, c.why) +
         "</section>" +
 
+        // ── architecture map ──
+        flowMap(p.flow, ui.systemMap) +
+
         // ── strengths + proof ──
         '<section class="lp-grid2">' +
           block(ui.unique, c.unique) +
@@ -265,6 +296,15 @@
             "</section>"
           : "") +
 
+        // ── honest boundary / residual risk ──
+        (c.boundary
+          ? '<section class="lp-boundary">' +
+              '<span class="lp-boundary-mark mono" aria-hidden="true">!</span>' +
+              '<div><div class="lp-eyebrow mono">' + esc(ui.boundary) + "</div>" +
+              '<p class="lp-p">' + esc(c.boundary) + "</p></div>" +
+            "</section>"
+          : "") +
+
         // ── closing conversion block (the selling climax) ──
         '<section class="lp-final">' +
           '<div class="lp-final-glow" aria-hidden="true"></div>' +
@@ -279,6 +319,9 @@
         "</section>" +
 
         // ── footer ──
+        // Footer goes to the full list — matching its own label ("Все проекты").
+        // Returning to the exact card is already covered by the top-bar
+        // "← SAMANDAR" link, so both exits exist and neither label lies.
         '<footer class="lp-foot">' +
           '<a class="lp-foot-back mono" href="' + base + '#projects"><span class="lp-back-arr">←</span> ' + esc(ui.allProjects) + "</a>" +
           '<span class="lp-foot-note mono">' + esc(ui.footNote) + "</span>" +

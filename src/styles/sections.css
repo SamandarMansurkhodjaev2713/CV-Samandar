@@ -1132,6 +1132,7 @@
 .proj-status-live { color: var(--accent); border-color: rgba(var(--accent-rgb) / 0.5); }
 .proj-status-demo { color: var(--accent-2); border-color: rgba(200, 155, 94, .4); }
 .proj-status-beta { color: var(--accent-2); border-color: rgba(200, 155, 94, .4); }
+.proj-status-build { color: var(--accent-2); border-color: rgba(200, 155, 94, .4); }
 .proj-status-proto { color: var(--text-dim); }
 /* Confidential/NDA work — deliberately the most understated treatment (no
    accent color), reading as "quiet, handled discreetly" rather than muted
@@ -1184,20 +1185,20 @@
   gap: 6px;
   position: relative; z-index: 1;
 }
-/* Brand mini-interface card inside the monitor. object-fit:contain shows the
-   whole designed SVG (no crop) at any card width; the body background (set
-   inline per project to the SVG's own fill) fills the letterbox seamlessly, so
-   the mini-UI reads as centred on a solid brand field. Full saturation/opacity
-   — the whole point is the brand colour, not an Ember-tinted screenshot. A gentle
-   lift on hover. The scanlines sibling stays on top for shared monitor texture. */
+/* Cinematic product diorama inside the shared monitor. Every source is authored
+   at the same 3:1 ratio, so cover remains crop-safe across responsive card
+   widths while keeping the illustration edge-to-edge and fully saturated. */
 .proj-screen-body--img { padding: 0; }
 .proj-screen-img {
   width: 100%; height: 100%;
-  object-fit: contain; object-position: center;
+  object-fit: cover; object-position: center;
   display: block;
-  transition: transform var(--d-mid) var(--ease-out);
+  transition: transform .7s var(--ease-out), filter .7s var(--ease-out);
 }
-.proj-card:hover .proj-screen-img { transform: scale(1.02); }
+.proj-card:hover .proj-screen-img {
+  transform: scale(1.025);
+  filter: saturate(1.04) contrast(1.02);
+}
 
 .proj-screen-row {
   height: 6px;
@@ -1255,8 +1256,15 @@
   color: var(--text-dim);
   letter-spacing: 0.04em;
 }
-.proj-cta {
+.proj-actions {
   margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+}
+.proj-cta {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -1269,16 +1277,32 @@
   align-self: flex-start;
 }
 .proj-cta:hover .arrow { transform: translateX(4px); }
+.proj-repo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 0;
+  color: var(--text-mute);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: color var(--d-fast);
+}
+.proj-repo:hover { color: var(--text); }
+.proj-repo:focus-visible,
+.proj-cta:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 
-/* ── DESKTOP: collapse to the first 2 cases + "show more" ─────────────── */
+/* Four portfolio-defining cases lead the section on every viewport. */
+.proj-grid.is-collapsed > .proj-card:nth-child(n+5) { display: none; }
+
+/* ── DESKTOP: collapse to the first 4 cases + "show more" ─────────────── */
 @media (min-width: 901px) {
-  .proj-grid.is-collapsed > .proj-card:nth-child(n+3) { display: none; }
   /* Newly-shown cards fade+rise in. fill:backwards (not both) so it fills the
      hidden pose only DURING the run and then hands the card back to its base
      styles — critical because the card's base `transform` carries the live
      hover-tilt (rotateX/rotateY var); a `both` fill would freeze transform:none
      and permanently kill the tilt. */
-  .proj-grid.is-expanded > .proj-card:nth-child(n+3) {
+  .proj-grid.is-expanded > .proj-card:nth-child(n+5) {
     animation: projExpandIn .5s var(--e-entrance, cubic-bezier(.2,.6,.18,1)) backwards;
   }
 }
@@ -1289,9 +1313,9 @@
   to   { transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .proj-grid.is-expanded > .proj-card:nth-child(n+3) { animation: none; }
+  .proj-grid.is-expanded > .proj-card:nth-child(n+5) { animation: none; }
 }
-html[data-motion-lite] .proj-grid.is-expanded > .proj-card:nth-child(n+3) { animation: none; }
+html[data-motion-lite] .proj-grid.is-expanded > .proj-card:nth-child(n+5) { animation: none; }
 .proj-expand {
   margin: 24px auto 0;
   display: flex;
@@ -1319,8 +1343,8 @@ html[data-motion-lite] .proj-grid.is-expanded > .proj-card:nth-child(n+3) { anim
 
 /* ── MOBILE (≤900px): horizontal peek-carousel + dots pager ──────────── */
 @media (max-width: 900px) {
-  /* Flex overrides the desktop grid; grid-template-columns is ignored. All
-     cards shown (swipe through them) — the desktop collapse does nothing here. */
+  /* Flex overrides the desktop grid. The first four form the initial swipe
+     chapter; expanding reveals the complete catalog in the same carousel. */
   .proj-grid {
     display: flex;
     grid-template-columns: none;
@@ -1342,7 +1366,7 @@ html[data-motion-lite] .proj-grid.is-expanded > .proj-card:nth-child(n+3) { anim
     transform: none !important;
     opacity: 1 !important;   /* carousel cards are always visible (override reveal) */
   }
-  .proj-expand { display: none; }  /* mobile pages via swipe + dots, not a button */
+  .proj-expand { display: flex; }  /* full carousel only after explicit intent */
 }
 
 /* ── SKILLS ────────────────────────────────────────────────── */
