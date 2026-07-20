@@ -274,6 +274,10 @@
   flex-direction: column;
   gap: 20px;
 }
+/* `display:flex` above outranks the `hidden` attribute's UA `display:none`, so
+   the stage needs this to actually disappear when Spline fails to load (Hero
+   sets `hidden` — there is no fallback robot to put in its place). */
+.hero-right[hidden] { display: none !important; }
 .hero-robot {
   position: relative;
   width: 100%;

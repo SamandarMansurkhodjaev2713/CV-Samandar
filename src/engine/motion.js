@@ -498,7 +498,33 @@
   // transition:none so the browser commits the hidden state instantly.
   const REVEAL_TRANSITION =
     "opacity .85s cubic-bezier(.2,.6,.18,1), transform .85s cubic-bezier(.2,.6,.18,1)";
-  const REVEAL_OFFSET_PX = 60; // reveal slightly before fully entering viewport
+  // Flick-scroll variant. During a fast scroll the reader outruns an .85s fade,
+  // so content lands already-scrolled-past and reads as "the text didn't load".
+  // Same easing, ~4x quicker, no stagger delay — the designed motion is intact
+  // at reading speed and simply gets out of the way when nobody can see it.
+  const REVEAL_TRANSITION_FAST =
+    "opacity .22s cubic-bezier(.2,.6,.18,1), transform .22s cubic-bezier(.2,.6,.18,1)";
+  const REVEAL_OFFSET_PX = 220; // start the reveal well before the element is on screen
+
+  // ── Scroll velocity, sampled on a cheap passive listener (two reads + some
+  // arithmetic; no layout is touched). Feeds the fast-path decision above.
+  const FAST_SCROLL_PX_PER_MS = 1.6; // ≈ a deliberate flick, not normal reading
+  let velLastY = window.pageYOffset || 0;
+  let velLastT = 0;
+  let scrollVel = 0;
+  function sampleScrollVelocity() {
+    const now = (window.performance && performance.now) ? performance.now() : Date.now();
+    const y = window.pageYOffset || 0;
+    const dt = now - velLastT;
+    if (velLastT && dt > 0) {
+      // Light smoothing so a single jumpy frame can't flip the mode.
+      scrollVel = scrollVel * 0.6 + (Math.abs(y - velLastY) / dt) * 0.4;
+    }
+    velLastY = y;
+    velLastT = now;
+  }
+  function isFastScroll() { return scrollVel > FAST_SCROLL_PX_PER_MS; }
+  window.addEventListener("scroll", sampleScrollVelocity, { passive: true });
 
   const pendingReveals = new Set();
   let pendingRaf = 0;
@@ -510,8 +536,11 @@
   }
 
   function revealTarget(el) {
-    el.style.transition = REVEAL_TRANSITION;
-    const delay = parseFloat(el.getAttribute("data-reveal-delay") || "0");
+    // Flick-scrolling → snap it in. Also drop the authored stagger delay: a
+    // 0.15s head start is a nice beat while reading and pure latency mid-flick.
+    const fast = isFastScroll();
+    el.style.transition = fast ? REVEAL_TRANSITION_FAST : REVEAL_TRANSITION;
+    const delay = fast ? 0 : parseFloat(el.getAttribute("data-reveal-delay") || "0");
     if (delay) el.style.transitionDelay = `${delay}s`;
     // Force a reflow so the browser sees the new transition before the value
     // change, otherwise it batches both and the animation is skipped.
@@ -556,6 +585,10 @@
   function triggerReveal(el) {
     if (el.classList.contains("rv-in")) { pendingReveals.delete(el); return; }
     if (el.hasAttribute("data-reveal-words") || el.hasAttribute("data-reveal-chars")) {
+      // Per-word/char delays are CSS-driven (calc(var(--rv-i) * 36ms)), so a
+      // long heading's last word can land ~1s late — invisible mid-flick.
+      // `.rv-fast` collapses the stagger to a single quick pass (see cursor.css).
+      if (isFastScroll()) el.classList.add("rv-fast");
       el.classList.add("rv-in");
     } else {
       revealTarget(el);
@@ -608,7 +641,12 @@
           pendingReveals.delete(e.target);
           obs.unobserve(e.target);
         }
-      }, { rootMargin: "0px 0px -8% 0px", threshold: 0.01 })
+        // Pre-trigger: the old `-8%` bottom inset meant an element had to be
+        // 8% INTO the viewport before its .85s fade even started, so at speed
+        // it was still fading when it left again. A positive bottom margin
+        // starts the reveal ~300px BEFORE the element scrolls into view, so it
+        // is already settled by the time it is actually looked at.
+      }, { rootMargin: "0px 0px 300px 0px", threshold: 0.01 })
     : null;
 
   function bindReveals() {

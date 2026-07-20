@@ -200,6 +200,14 @@
   will-change: opacity, transform;
 }
 [data-reveal-words].rv-in .rv-w { opacity: 1; transform: translateY(0); }
+/* Flick-scroll: motion.js adds .rv-fast when scroll velocity is high. The
+   per-word cascade is a reading-speed flourish; mid-flick it just means the
+   tail of a heading arrives after the heading has already left the screen. */
+[data-reveal-words].rv-fast .rv-w,
+[data-reveal-chars].rv-fast .rv-c {
+  transition-duration: .2s;
+  transition-delay: 0s;
+}
 
 /* Chars (subtle) */
 .rv-c {

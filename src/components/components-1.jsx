@@ -41,11 +41,12 @@ function Hero({ t, links }) {
   const ref = useRevealRoot([t]);
   const robotCanvasRef = useRef(null);
   const robotRef = useRef(null);
-  // robotMood retained for the fallback robot's label, but the Spline robot
-  // doesn't actually cycle moods — we leave the mood permanently "idle/online"
-  // there and only update if the legacy fallback factory reports otherwise.
+  // The Spline robot doesn't cycle moods — the plate stays "idle/online".
   // eslint-disable-next-line no-unused-vars
   const [robotMood, setRobotMood] = useState("idle");
+  // Spline is the ONLY robot. If it can't load we drop the whole stage rather
+  // than substituting anything — see the note on the loading strategy below.
+  const [robotDown, setRobotDown] = useState(false);
 
   // Robot loading strategy:
   //   1. ALWAYS try the Spline runtime (community asset "GENKUB - Greeting
@@ -59,25 +60,23 @@ function Hero({ t, links }) {
   //   2. We poll every ROBOT_POLL_MS for TWO global flags that robot-spline.js
   //      sets when the load resolves:
   //        - `window.__splineRobotLoaded = true`  → success, KEEP Spline,
-  //          tear down the poll + watchdog so we never swap to legacy.
-  //        - `window.__splineRobotFailed = <reason>` → load failed, swap to
-  //          the hand-built robot.js so the hero is never empty.
+  //          tear down the poll + watchdog.
+  //        - `window.__splineRobotFailed = <reason>` → load failed.
   //   3. ROBOT_FALLBACK_MS is the "truly stuck" watchdog: if neither flag
   //      has fired by then (e.g. runtime fetched but `app.load` never
-  //      resolves), assume the load is wedged and force the legacy robot.
+  //      resolves), assume the load is wedged and stop waiting.
   //      This MUST be generous enough that a normal load on slow 3G still
   //      wins — Spline's .splinecode bundles are 1–3 MB.
   //   4. A decisive failure (`__splineRobotFailed`, e.g. a blocked/erroring
   //      request) gets ONE fast retry — cheap insurance against a transient
-  //      network blip. An ambiguous silent-hang (the watchdog firing with
-  //      neither flag set) does NOT retry, since doubling a 12s wait for a
-  //      case that's already ambiguous is a worse trade than just showing
-  //      the legacy robot. If Spline is blocked outright (e.g. an ad-blocker
-  //      extension blocking unpkg.com/prod.spline.design), retrying the same
-  //      URL fails the same way — no client-side logic can force that
-  //      through; this only helps genuinely transient failures. Now that
-  //      Spline always runs, this legacy path is a true last resort, not a
-  //      routine occurrence on any particular class of device.
+  //      network blip. An ambiguous silent-hang does NOT retry: doubling a
+  //      12s wait on an already-ambiguous case isn't worth it.
+  //   4b. WHEN THE ROBOT CANNOT LOAD, WE SHOW NOTHING. There used to be a
+  //      hand-built canvas robot (robot.js) standing in here, but a crude
+  //      stand-in reads far worse than its absence — it made the hero look
+  //      broken rather than degraded, and it shipped 1k lines to do it. The
+  //      whole stage now unmounts instead, leaving the (already strong)
+  //      text hero to stand alone. Do not reintroduce a substitute robot.
   //   5. The dynamic import starts immediately here (below) so the network
   //      fetch is well underway before the ~3s intro ends — but robot-spline.js
   //      itself holds the actual `new Application()` + `app.load()` (the part
@@ -119,21 +118,18 @@ function Hero({ t, links }) {
       if (retryTimer) { window.clearTimeout(retryTimer); retryTimer = 0; }
     }
 
-    function swapToLegacy() {
+    // Spline is unavailable → retire the stage entirely (no substitute robot).
+    function giveUpOnRobot() {
       if (swapped) return;
       swapped = true;
       clearTimers();
-      // Dispose whatever Spline created (or partial controller).
+      // Dispose whatever Spline created (or the partial controller).
       if (active && active.dispose) {
         try { active.dispose(); } catch (e) { /* opportunistic */ }
       }
-      const legacy = window.RobotHead || window.Brain;
-      if (!legacy || !legacy.create) return;
-      active = legacy.create(canvas, {
-        accent: a1, accent2: a2, motion: 1,
-        onExpressionChange: function (n) { setRobotMood(n); },
-      });
-      robotRef.current = active;
+      active = null;
+      robotRef.current = null;
+      setRobotDown(true);
     }
 
     // Kicks off (or re-kicks off, for a retry) one Spline load attempt with
@@ -176,7 +172,7 @@ function Hero({ t, links }) {
         if (swapped) return;
         if (window.__splineRobotLoaded) return; // success raced the timer
         if (pollTimer) { window.clearInterval(pollTimer); pollTimer = 0; }
-        swapToLegacy();
+        giveUpOnRobot();
       }, watchdogMs);
     }
 
@@ -193,7 +189,7 @@ function Hero({ t, links }) {
           trySpline(ROBOT_RETRY_FALLBACK_MS);
         }, ROBOT_RETRY_DELAY_MS);
       } else {
-        swapToLegacy();
+        giveUpOnRobot();
       }
     }
 
@@ -208,8 +204,8 @@ function Hero({ t, links }) {
       trySpline(ROBOT_FALLBACK_MS);
     } else {
       // The robot-spline.js bundle never registered (blocked/failed to load
-      // outright) — go straight to the lightweight legacy robot.
-      swapToLegacy();
+      // outright) — retire the stage; there is no substitute robot.
+      giveUpOnRobot();
     }
 
     return function disposeRobot() {
@@ -353,7 +349,9 @@ function Hero({ t, links }) {
           </div>
         </div>
 
-        <aside className="hero-right" data-reveal data-reveal-delay="0.15">
+        {/* Stage unmounts wholesale if Spline never loads — an empty frame
+            captioned "CORE.AI · ONLINE" would be worse than no frame at all. */}
+        <aside className="hero-right" data-reveal data-reveal-delay="0.15" hidden={robotDown}>
           <div className="hero-robot" onClick={onRobotClick}>
             <canvas ref={robotCanvasRef} className="hero-robot-canvas" data-cursor="link" data-cursor-label="follow · interact" />
             {/* Instrument plate — Spline's free-tier "Built with Spline" badge
