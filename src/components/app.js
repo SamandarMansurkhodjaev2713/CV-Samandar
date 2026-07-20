@@ -100,6 +100,15 @@ function useScrollEngine(bgFxRef, setActiveSection) {
           const id = e.target.getAttribute("data-section");
           setActiveSection(id);
           if (bgFxRef.current && bgFxRef.current.setSection) bgFxRef.current.setSection(id);
+          // Single source of truth for "which section is the reader in" —
+          // acts.js (colour dramaturgy) and future engines subscribe to this.
+          try {
+            window.dispatchEvent(new CustomEvent("sm:section", {
+              detail: {
+                id
+              }
+            }));
+          } catch (err) {/* opportunistic */}
         }
       });
     }, {

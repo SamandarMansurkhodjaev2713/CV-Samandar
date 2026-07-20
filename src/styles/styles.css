@@ -152,7 +152,11 @@ html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
 body {
-  background: var(--bg-0);
+  /* Colour dramaturgy (acts.js): --act-bg carries the per-act undertone and
+     the transition smooths act changes — no JS animation loop involved.
+     Falls back to the static token when acts.js hasn't run. */
+  background: var(--act-bg, var(--bg-0));
+  transition: background-color 1.4s ease;
   color: var(--text);
   font-family: var(--f-body);
   /* 16px/1.62 — bumped from 15/1.55 for comfortable long-form reading (the
