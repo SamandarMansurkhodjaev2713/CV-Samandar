@@ -831,6 +831,29 @@
   // which detach nodes on language switches). Reveal's inline transform wins
   // while an element is still entering; once reveal cleans itself up the
   // parallax rule takes over seamlessly.
+  // ── Centre-stage (stage 6, touch only). Hover is dead on phones, so the
+  // feed breathes a different way: the card passing through the middle band
+  // of the viewport carries .in-focus — light, status, depth — and hands it
+  // to the next card as you scroll. IntersectionObserver with a symmetric
+  // ±38% inset ≈ "the middle 24% of the screen".
+  function initCenterStage() {
+    let coarse = false;
+    try { coarse = window.matchMedia("(pointer: coarse)").matches; } catch (e) { /* opportunistic */ }
+    if (!coarse || reduceMotion || !("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver(function (entries) {
+      for (const e of entries) e.target.classList.toggle("in-focus", e.isIntersecting);
+    }, { rootMargin: "-38% 0px -38% 0px", threshold: 0 });
+    function bind() {
+      document.querySelectorAll(".proj-card:not(.cs-bound)").forEach(function (el) {
+        el.classList.add("cs-bound");
+        io.observe(el);
+      });
+    }
+    bind();
+    // Language re-renders replace the cards — re-bind opportunistically.
+    window.addEventListener("sm:section", bind);
+  }
+
   let plxFrame = null; // exposed via Motion.plxTick() — headless verification + manual kicks
   function initParallax() {
     if (reduceMotion) return;
@@ -864,6 +887,7 @@
       bindPins();
       bindSpotlight();
       initParallax();
+      initCenterStage();
     },
     refresh() {
       rebuildMagnets();

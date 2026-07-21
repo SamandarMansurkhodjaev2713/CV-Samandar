@@ -618,6 +618,14 @@
      robot a strong focal point while leaving room for title + tagline + CTA
      above the fold and letting the whole hero fit ~0.82 screen. */
   .hero-robot { height: min(360px, 44svh); max-width: 560px; margin: 0 auto; }
+  /* Scrim: the robot stage melts into the text below instead of ending on a
+     hard edge. Bottom fades to the CURRENT act background (var from acts.js),
+     so the seam tracks the colour dramaturgy automatically. */
+  .hero-robot::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 34%;
+    pointer-events: none; z-index: 2;
+    background: linear-gradient(180deg, transparent, var(--act-bg, #1D1E20) 96%);
+  }
   .hero-terminal { font-size: 11px; }
   .term-body { min-height: 160px; }
 }
@@ -632,9 +640,28 @@
   .hero-tagline { font-size: 14.5px; line-height: 1.5; }
 }
 @media (pointer: coarse) {
-  /* Disable parallax tilt on touch — it just looks broken without hover. */
-  .proj-card { transform: none !important; }
+  /* Disable parallax tilt on touch — it just looks broken without hover.
+     (:not(.in-focus) so the centre-stage lift below can still move the card.) */
+  .proj-card:not(.in-focus) { transform: none !important; }
 }
+
+/* ── Centre-stage (touch) — motion.js sets .in-focus on the card crossing the
+   middle band of the viewport: the feed breathes as you scroll. This is the
+   touch answer to desktop hover, not a copy of it. */
+/* `.proj-grid >` matches the mobile carousel's own `transform:none !important`
+   reset at HIGHER specificity — equal-specificity importants resolve by source
+   order, and the carousel rule sits later in this file. */
+.proj-grid > .proj-card.in-focus,
+.proj-card.in-focus {
+  border-color: rgba(var(--accent-rgb) / 0.42);
+  box-shadow:
+    0 18px 44px -16px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(var(--accent-rgb) / 0.16),
+    0 0 36px -10px rgba(var(--accent-rgb) / 0.28);
+  transform: translateY(-3px) !important;
+}
+.proj-card.in-focus .proj-screen-img { filter: saturate(1.07) contrast(1.03); }
+.proj-card.in-focus .proj-glow { opacity: 0.55; }
 
 /* Touch ergonomics — grow interactive hit targets to ~44px on mobile viewports.
    Where the visual must stay small (pager / dock dots), the tap area is grown

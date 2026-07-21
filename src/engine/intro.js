@@ -25,7 +25,7 @@
 (function () {
   "use strict";
 
-  var CFG = {
+  let CFG = {
     EASE_MS: 2200,       // percentage animates 0 → EASE_TARGET over this window
     EASE_TARGET: 92,
     CREEP_MS: 3200,      // then creeps EASE_TARGET → 99 while waiting on the robot
@@ -68,6 +68,22 @@
 
     var panel = intent.panel;
     var reduced = intent.mode === "fade"; // reuses the existing head-boot flag
+
+    // Mobile pacing (user-approved): same aesthetic, ~half the wait. A phone
+    // visitor is more impatient AND the mobile robot is lighter — the desktop
+    // ceiling exists to cover a 1–3MB Spline download that mobile doesn't
+    // need as much headroom for. Swipe still skips instantly.
+    var isMobile = false;
+    try { isMobile = window.matchMedia("(max-width: 900px)").matches; } catch (e) { /* opportunistic */ }
+    if (isMobile) {
+      CFG = Object.assign({}, CFG, {
+        EASE_MS: 850,      // 0 → 92% in .85s
+        CREEP_MS: 450,     // brief 92 → 99 creep
+        CEILING_MS: 2400,  // absolute cap — off the reader's back fast
+        HOLD_MS: 140,
+        REVEAL_MS: 450,
+      });
+    }
 
     var forcedTimer = setTimeout(forceRemove, CFG.CEILING_MS + 1200);
     function forceRemove() {
