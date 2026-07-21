@@ -823,6 +823,37 @@
   }
 
   // ── Public API
+  // ── Parallax drift (stage 4). Elements carrying data-plx="0.05" get a CSS
+  // var --plx proportional to their offset from the viewport centre; the
+  // companion rule `[data-plx] { transform: translate3d(0, var(--plx), 0) }`
+  // applies it. One rAF-throttled handler; elements are re-queried per frame
+  // (11 nodes — cheaper than keeping a cache coherent across React re-renders,
+  // which detach nodes on language switches). Reveal's inline transform wins
+  // while an element is still entering; once reveal cleans itself up the
+  // parallax rule takes over seamlessly.
+  let plxFrame = null; // exposed via Motion.plxTick() — headless verification + manual kicks
+  function initParallax() {
+    if (reduceMotion) return;
+    let raf = 0;
+    function frame() {
+      raf = 0;
+      const vh = window.innerHeight;
+      const els = document.querySelectorAll("[data-plx]");
+      for (let i = 0; i < els.length; i++) {
+        const el = els[i];
+        const r = el.getBoundingClientRect();
+        if (r.bottom < -80 || r.top > vh + 80) continue;
+        const speed = parseFloat(el.getAttribute("data-plx")) || 0.05;
+        const fromCentre = r.top + r.height / 2 - vh / 2;
+        el.style.setProperty("--plx", (-fromCentre * speed).toFixed(1) + "px");
+      }
+    }
+    window.addEventListener("scroll", function () { if (!raf) raf = requestAnimationFrame(frame); }, { passive: true });
+    window.addEventListener("resize", function () { if (!raf) raf = requestAnimationFrame(frame); }, { passive: true });
+    plxFrame = frame;
+    frame();
+  }
+
   window.Motion = {
     init() {
       buildCursor();
@@ -832,6 +863,7 @@
       bindSectionEnters();
       bindPins();
       bindSpotlight();
+      initParallax();
     },
     refresh() {
       rebuildMagnets();
@@ -841,6 +873,8 @@
     },
     // Force-check any pending reveal — useful for tests and odd webview environments.
     checkVisible() { scheduleCheck(); },
+    // Synchronous parallax pass — same rationale (headless rAF is frozen).
+    plxTick() { if (plxFrame) plxFrame(); },
     setLabel(text) { setMode(currentMode === "default" ? "link" : currentMode, text); },
     clearLabel() { setMode("default", ""); },
   };

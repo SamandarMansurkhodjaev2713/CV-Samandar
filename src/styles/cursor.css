@@ -451,8 +451,62 @@ section[data-enter="assemble"].sec-in { animation: secAssemble .9s var(--sec-eas
   to   { opacity: 1; transform: none; filter: brightness(1); }
 }
 
+/* ---- Meaning signatures (stage 4) — a second voice ON TOP of the base
+   entrance, each drawn from what the section IS. Only where it adds a real
+   beat: the skills radar sweeps, the process terminal powers on with a CRT
+   scanline, project statuses stamp themselves onto the cards. ------------- */
+
+/* skills — one radar revolution over the section as it enters */
+section[data-section="skills"].sec-in::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background: conic-gradient(from 0deg at 50% 40%, rgba(var(--accent-rgb) / 0.12) 0deg, transparent 75deg);
+  animation: sigRadar 1.6s var(--sec-ease) 0.2s both;
+}
+@keyframes sigRadar {
+  from { transform: rotate(-110deg); opacity: 0; }
+  20%  { opacity: 1; }
+  to   { transform: rotate(250deg); opacity: 0; }
+}
+
+/* process — CRT power-on: a bright scanline sweeps down the terminal */
+section[data-section="process"].sec-in::before {
+  content: ""; position: absolute; left: 8%; right: 8%; top: 40px; height: 2px;
+  pointer-events: none; z-index: 1; border-radius: 2px;
+  background: linear-gradient(90deg, transparent, rgba(var(--accent-rgb) / 0.75), transparent);
+  box-shadow: 0 0 18px rgba(var(--accent-rgb) / 0.5);
+  animation: sigScan 1.1s cubic-bezier(.3,.6,.2,1) 0.15s both;
+}
+@keyframes sigScan {
+  from { transform: translateY(0); opacity: 0; }
+  12%  { opacity: 1; }
+  85%  { opacity: 1; }
+  to   { transform: translateY(min(62vh, 560px)); opacity: 0; }
+}
+
+/* projects — the first four status pills STAMP onto their cards after the
+   card cascade lands (delays run past the base rise) */
+section[data-section="projects"].sec-in .proj-card:nth-child(-n+4) .proj-status {
+  animation: sigStamp 0.5s var(--sec-ease) both;
+}
+section[data-section="projects"].sec-in .proj-card:nth-child(1) .proj-status { animation-delay: 0.55s; }
+section[data-section="projects"].sec-in .proj-card:nth-child(2) .proj-status { animation-delay: 0.68s; }
+section[data-section="projects"].sec-in .proj-card:nth-child(3) .proj-status { animation-delay: 0.81s; }
+section[data-section="projects"].sec-in .proj-card:nth-child(4) .proj-status { animation-delay: 0.94s; }
+@keyframes sigStamp {
+  0%   { transform: scale(1.7); opacity: 0; }
+  55%  { transform: scale(0.92); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ---- Parallax drift companion rule (motion.js initParallax) ------------- */
+[data-plx] { transform: translate3d(0, var(--plx, 0px), 0); }
+
 /* ---- FALLBACKS: reduced-motion → plain opacity fade, never stuck hidden -- */
 @media (prefers-reduced-motion: reduce) {
+  section[data-section="skills"].sec-in::before,
+  section[data-section="process"].sec-in::before { display: none; }
+  section[data-section="projects"].sec-in .proj-status { animation: none !important; }
+  [data-plx] { transform: none; }
   section[data-enter] { animation: none !important; }
   .pin-host > section[data-enter] > .shell {
     animation: none !important;
@@ -476,6 +530,9 @@ html[data-motion-lite] .pin-host > section[data-enter].sec-in > .shell {
   filter: none !important;
   clip-path: none !important;
 }
+html[data-motion-lite] section[data-section="skills"].sec-in::before,
+html[data-motion-lite] section[data-section="process"].sec-in::before { display: none; }
+html[data-motion-lite] [data-plx] { transform: none; }
 html[data-motion-lite] .pin-host > section[data-enter].sec-bound:not(.sec-in) > .shell {
   clip-path: none !important;
   transform: none !important;

@@ -42,7 +42,8 @@ function SecHead({
     React.createElement("header", {
       className: "sec-head",
       "data-reveal": true,
-      "data-reveal-from": "none"
+      "data-reveal-from": "none",
+      "data-plx": "0.045"
     }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
       className: "num"
     }, num ? /*#__PURE__*/React.createElement(React.Fragment, null, num, " \xB7 ") : null, eyebrow), /*#__PURE__*/React.createElement("h2", {

@@ -28,7 +28,7 @@ function SecHead({ num, eyebrow, title, meta, em }) {
     // belongs to the line-mask below (title slides out from under an invisible
     // mask, cinema-titles style). Without this the reveal engine would ALSO
     // translate the whole block 48px and the two movements would fight.
-    <header className="sec-head" data-reveal data-reveal-from="none">
+    <header className="sec-head" data-reveal data-reveal-from="none" data-plx="0.045">
       <div>
         <div className="num">{num ? <>{num} · </> : null}{eyebrow}</div>
         <h2 style={{ marginTop: 14 }}>
