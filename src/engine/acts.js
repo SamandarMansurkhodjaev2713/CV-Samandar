@@ -65,6 +65,42 @@
 
   var veilA, veilB, frontIsA = false, light;
   var current = null;
+  var currentId = null;
+
+  // ── Shutters — the "instrument hatch" beat at the two MAJOR act changes
+  // (entering the projects heart, arriving at contact). Two thin plates blink
+  // in from the screen edges and retreat, brass seam first. Deliberately rare:
+  // an event on every joint would read as a metronome. Non-blocking overlay
+  // (pointer-events:none), pure CSS animation, skipped on reduced-motion.
+  var SHUTTER_AT = { projects: 1, contact: 1 };
+  var shutterTop = null, shutterBot = null, shutterTimer = 0;
+
+  function makeShutters() {
+    function plate(pos) {
+      var p = document.createElement("div");
+      p.className = "act-shutter act-shutter--" + pos;
+      p.setAttribute("aria-hidden", "true");
+      document.body.appendChild(p);
+      return p;
+    }
+    shutterTop = plate("top");
+    shutterBot = plate("bot");
+  }
+
+  function runShutter() {
+    if (reduced || !shutterTop) return;
+    // Restart cleanly even if a previous run is mid-flight.
+    shutterTop.classList.remove("is-run");
+    shutterBot.classList.remove("is-run");
+    void shutterTop.offsetWidth;
+    shutterTop.classList.add("is-run");
+    shutterBot.classList.add("is-run");
+    window.clearTimeout(shutterTimer);
+    shutterTimer = window.setTimeout(function () {
+      shutterTop.classList.remove("is-run");
+      shutterBot.classList.remove("is-run");
+    }, 950);
+  }
 
   function makeVeil() {
     var v = document.createElement("div");
@@ -79,6 +115,10 @@
 
   function apply(id) {
     var act = ACTS[id] || ACTS[DEFAULT_ACT];
+    // Shutter fires on a real TRANSITION into a marked act (never on the
+    // initial paint — currentId is still null then).
+    if (currentId !== null && currentId !== id && SHUTTER_AT[id]) runShutter();
+    currentId = id;
     if (current === act) return;
     current = act;
     document.documentElement.style.setProperty("--act-bg", act.bg);
@@ -122,6 +162,7 @@
     if (!document.body) return; // scripts load at end of <body>; this is belt-and-braces
     veilA = makeVeil();
     veilB = makeVeil();
+    makeShutters();
     initLight();
     apply(DEFAULT_ACT);
     window.addEventListener("sm:section", function (e) {

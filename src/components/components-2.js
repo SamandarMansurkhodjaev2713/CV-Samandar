@@ -1189,6 +1189,7 @@ function ProjectBuilder({
     className: "builder-cta"
   }, /*#__PURE__*/React.createElement("a", {
     className: "btn btn-primary builder-cta-tg",
+    "data-magnetic": true,
     href: `https://${links.telegram}`,
     target: "_blank",
     rel: "noopener noreferrer"

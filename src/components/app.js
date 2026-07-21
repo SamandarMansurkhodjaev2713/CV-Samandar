@@ -315,6 +315,7 @@ function Nav({
   }, L.toUpperCase()))), /*#__PURE__*/React.createElement("a", {
     href: "#contact",
     className: "nav-cta",
+    "data-magnetic": true,
     "data-cursor": "send",
     "data-cursor-label": "send \u2192 contact",
     onClick: e => go(e, "contact")
@@ -363,10 +364,18 @@ function Nav({
   }, /*#__PURE__*/React.createElement("a", {
     href: "#contact",
     className: "nav-menu-cta",
+    "data-magnetic": true,
     onClick: e => go(e, "contact")
   }, t.hero.cta_primary, " ", /*#__PURE__*/React.createElement("span", {
     className: "arrow"
-  }, "\u2192")), /*#__PURE__*/React.createElement("div", {
+  }, "\u2192")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "sound-toggle mono",
+    "aria-label": "Toggle UI sound"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sound-toggle-dot",
+    "aria-hidden": "true"
+  }), "SOUND"), /*#__PURE__*/React.createElement("div", {
     className: "lang nav-menu-lang",
     role: "group",
     "aria-label": "language"

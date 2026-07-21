@@ -1005,7 +1005,7 @@ function ProjectBuilder({ t, links }) {
           {/* CTA */}
           <div className="builder-cta-block">
             <div className="builder-cta">
-              <a className="btn btn-primary builder-cta-tg" href={`https://${links.telegram}`} target="_blank" rel="noopener noreferrer">
+              <a className="btn btn-primary builder-cta-tg" data-magnetic href={`https://${links.telegram}`} target="_blank" rel="noopener noreferrer">
                 <span>{b.cta_tg}</span>
                 <span className="arrow">→</span>
               </a>

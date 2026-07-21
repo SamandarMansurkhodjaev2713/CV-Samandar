@@ -210,7 +210,7 @@ function Nav({ t, lang, setLang, active }) {
             ))}
           </div>
           {/* Persistent primary CTA — always one click from a conversation. */}
-          <a href="#contact" className="nav-cta" data-cursor="send" data-cursor-label="send → contact" onClick={(e) => go(e, "contact")}>
+          <a href="#contact" className="nav-cta" data-magnetic data-cursor="send" data-cursor-label="send → contact" onClick={(e) => go(e, "contact")}>
             <span className="nav-cta-dot" aria-hidden="true" />
             {t.hero.cta_primary}
           </a>
@@ -243,9 +243,15 @@ function Nav({ t, lang, setLang, active }) {
             ))}
           </ul>
           <div className="nav-menu-foot">
-            <a href="#contact" className="nav-menu-cta" onClick={(e) => go(e, "contact")}>
+            <a href="#contact" className="nav-menu-cta" data-magnetic onClick={(e) => go(e, "contact")}>
               {t.hero.cta_primary} <span className="arrow">→</span>
             </a>
+            {/* Sound layer opt-in — state lives on html.sm-sound (sound.js),
+                so a language re-render can never show a stale label. */}
+            <button type="button" className="sound-toggle mono" aria-label="Toggle UI sound">
+              <span className="sound-toggle-dot" aria-hidden="true" />
+              SOUND
+            </button>
             <div className="lang nav-menu-lang" role="group" aria-label="language">
               {["ru", "en", "uz"].map((L) => (
                 <button key={L} onClick={() => setLang(L)} className={lang === L ? "active" : ""} aria-pressed={lang === L}>{L.toUpperCase()}</button>
