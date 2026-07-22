@@ -1066,6 +1066,14 @@ function ProjectCard({ p, i, labels }) {
 function ProjectChapterDots({ items, gridRef, label }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const cardRefs = useRef([]);
+  const dotsRef = useRef(null);
+  // How many dots actually FIT. A fixed window of 7 overflowed the row on the
+  // most common phone widths once the catalog expanded to 21 projects: each
+  // dot carries a 44px tap area (12px pill + 2×16px padding, see the mobile
+  // tap-target block in sections.css) plus an 8px gap, and the active dot is
+  // 16px wider — so n dots need 52n + 8 px. At 390px that made 7 dots 372px
+  // wide inside a 350px row and the last one was clipped off-screen.
+  const [dotWindow, setDotWindow] = useState(5);
 
   useEffect(() => {
     const cards = gridRef.current
@@ -1093,6 +1101,23 @@ function ProjectChapterDots({ items, gridRef, label }) {
     return function cleanup() { io.disconnect(); };
   }, [gridRef, items]);
 
+  // Re-measure on mount and on resize/orientation change. Derived from the
+  // row's own clientWidth rather than a viewport breakpoint, so it stays
+  // correct whatever the gutter is at that width.
+  useEffect(() => {
+    function measure() {
+      const el = dotsRef.current;
+      if (!el) return;
+      const avail = el.clientWidth;
+      if (!avail) return;
+      const fit = Math.floor((avail - 8) / 52); // 52n + 8 <= avail
+      setDotWindow(Math.max(3, Math.min(9, fit)));
+    }
+    measure();
+    window.addEventListener("resize", measure, { passive: true });
+    return function cleanup() { window.removeEventListener("resize", measure); };
+  }, []);
+
   function onDot(i) {
     const el = cardRefs.current[i];
     // Horizontal peek-carousel: scroll the carousel sideways to center the
@@ -1105,14 +1130,13 @@ function ProjectChapterDots({ items, gridRef, label }) {
     onDot(next);
   }
 
-  const dotWindow = 7;
   const maxStart = Math.max(0, items.length - dotWindow);
   const windowStart = Math.max(0, Math.min(maxStart, activeIdx - Math.floor(dotWindow / 2)));
   const visibleItems = items.slice(windowStart, windowStart + dotWindow);
 
   return (
     <nav className="proj-chapters" aria-label={label || "project list"}>
-      <ol className="proj-chapters-dots">
+      <ol className="proj-chapters-dots" ref={dotsRef}>
         {visibleItems.map((p, localIndex) => {
           const i = windowStart + localIndex;
           return (
