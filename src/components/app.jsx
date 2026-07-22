@@ -26,6 +26,12 @@ class ErrorBoundary extends React.Component {
 
 const LINKS = { github: "github.com/SamandarMansurkhodjaev2713", telegram: "t.me/killallofthem13", email: "sam4k27@gmail.com" };
 const NAV_SECTIONS = ["about", "projects", "skills", "services", "cv", "faq", "contact"];
+const FULL_MENU_SECTIONS = ["hero", "signal", "about", "projects", "skills", "services", "cv", "process", "builder", "faq", "trust", "contact"];
+const FULL_MENU_LABELS = {
+  ru: { hero: "Старт", signal: "Почему со мной", process: "Метод", builder: "Конструктор", trust: "Гарантия качества" },
+  en: { hero: "Start", signal: "Why me", process: "Method", builder: "Project builder", trust: "Quality proof" },
+  uz: { hero: "Boshlanish", signal: "Nega men", process: "Jarayon", builder: "Konstruktor", trust: "Sifat kafolati" },
+};
 
 // ── Haptic helper.
 // `navigator.vibrate` is supported on Android Chrome and ~most Android browsers.
@@ -86,9 +92,9 @@ function useScrollEngine(bgFxRef, setActiveSection) {
 // Labels for the section COUNTER — sections that live outside t.nav (they are
 // real [data-section] chapters but not primary nav destinations).
 const EXTRA_SECTION_LABELS = {
-  ru: { hero: "Старт", signal: "Сигнал", process: "Метод", trust: "Качество" },
-  en: { hero: "Start", signal: "Signal", process: "Method", trust: "Quality" },
-  uz: { hero: "Boshlanish", signal: "Signal", process: "Metod", trust: "Sifat" },
+  ru: { hero: "Старт", signal: "Сигнал", process: "Метод", builder: "Конструктор", trust: "Качество" },
+  en: { hero: "Start", signal: "Signal", process: "Method", builder: "Builder", trust: "Quality" },
+  uz: { hero: "Boshlanish", signal: "Signal", process: "Metod", builder: "Konstruktor", trust: "Sifat" },
 };
 
 // "Flight with focus": menu/anchor navigation reads as travel through the
@@ -101,6 +107,10 @@ const EXTRA_SECTION_LABELS = {
 function flyTo(id) {
   const el = document.getElementById(id);
   if (!el) return;
+  if (window.SceneCinema && typeof window.SceneCinema.navigate === "function") {
+    window.SceneCinema.navigate(id);
+    return;
+  }
   const reduced = typeof window.matchMedia === "function" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   try { history.replaceState(null, "", "#" + id); } catch (e) { /* opportunistic */ }
@@ -232,11 +242,11 @@ function Nav({ t, lang, setLang, active }) {
         <div className="nav-menu-glow" aria-hidden="true" />
         <div className="nav-menu-inner">
           <ul className="nav-menu-links">
-            {NAV_SECTIONS.map((k, i) => (
+            {FULL_MENU_SECTIONS.map((k, i) => (
               <li key={k} style={{ "--i": i }}>
                 <a href={`#${k}`} onClick={(e) => go(e, k)} className={active === k ? "active" : ""}>
                   <span className="nav-menu-num mono">{String(i + 1).padStart(2, "0")}</span>
-                  <span className="nav-menu-mask"><span className="nav-menu-word">{t.nav[k]}</span></span>
+                  <span className="nav-menu-mask"><span className="nav-menu-word">{t.nav[k] || FULL_MENU_LABELS[lang][k]}</span></span>
                   <span className="nav-menu-arrow" aria-hidden="true">→</span>
                 </a>
               </li>
@@ -355,7 +365,7 @@ function resolveNavIndex(activeSection, order) {
   return 0; // nothing but hero/signal precede us — next landmark is "about"
 }
 
-function MobileScrollDock({ t, activeSection, visible }) {
+function MobileScrollDock({ t, lang, activeSection, visible }) {
   // 6 dots for the main NAV sections. Tap → smooth scroll + light haptic.
   function onDotClick(id) {
     haptic("tap");
@@ -365,7 +375,9 @@ function MobileScrollDock({ t, activeSection, visible }) {
   const order = useSectionOrder();
   const activeIdx = resolveNavIndex(activeSection, order);
   const activeId = NAV_SECTIONS[activeIdx];
-  const activeLabel = (t.nav && t.nav[activeId]) || "";
+  const extra = EXTRA_SECTION_LABELS[lang] || EXTRA_SECTION_LABELS.ru;
+  const activeLabel = (t.nav && t.nav[activeSection]) || extra[activeSection] || (t.nav && t.nav[activeId]) || "";
+  const chapterIdx = Math.max(0, (order || []).indexOf(activeSection));
   return (
     <div className={`mobile-dock ${visible ? "is-visible" : ""}`} role="navigation" aria-label="sections">
       <ol className="mobile-dock-dots">
@@ -381,9 +393,12 @@ function MobileScrollDock({ t, activeSection, visible }) {
         ))}
       </ol>
       <div className="mobile-dock-label mono" aria-live="polite">
-        <span className="mobile-dock-label-num">/{String(activeIdx + 1).padStart(2, "0")}</span>
+        <span className="mobile-dock-label-num">/{String(chapterIdx + 1).padStart(2, "0")}</span>
         <span>{activeLabel}</span>
       </div>
+      <a className="mobile-dock-cta" href="#contact" onClick={() => haptic("toggle")}>
+        <span>{t.hero.cta_primary}</span><span className="arrow" aria-hidden="true">→</span>
+      </a>
     </div>
   );
 }
@@ -507,16 +522,45 @@ function App() {
     const id = (window.location.hash || "").replace(/^#/, "");
     if (!id) return;
     if ("scrollRestoration" in history) { try { history.scrollRestoration = "manual"; } catch (e) { /* opportunistic */ } }
-    let tries = 0;
+    let cancelled = false;
+    const timers = [];
+    function cancelOnIntent() { cancelled = true; }
+    window.addEventListener("wheel", cancelOnIntent, { passive: true, once: true });
+    window.addEventListener("touchstart", cancelOnIntent, { passive: true, once: true });
+    window.addEventListener("pointerdown", cancelOnIntent, { passive: true, once: true });
+    window.addEventListener("keydown", cancelOnIntent, { once: true });
     function tryScroll() {
+      if (cancelled) return;
       const el = document.getElementById(id);
       if (el && el.offsetParent !== null) {
-        el.scrollIntoView({ behavior: "auto", block: id.indexOf("proj-") === 0 ? "center" : "start" });
-        return;
+        // Force an instant jump even though the root stylesheet declares
+        // smooth scrolling. This prevents the delayed two-stage return that
+        // was visible for cards near the end of the 21-item catalog.
+        const root = document.documentElement;
+        const previous = root.style.scrollBehavior;
+        root.style.scrollBehavior = "auto";
+        try {
+          el.scrollIntoView({ behavior: "instant", block: id.indexOf("proj-") === 0 ? "center" : "start" });
+        } finally {
+          root.style.scrollBehavior = previous;
+        }
       }
-      if (tries++ < 40) requestAnimationFrame(tryScroll);
     }
-    requestAnimationFrame(tryScroll);
+    // React mount, project expansion and pin-host binding each change layout at
+    // a different moment. Re-assert the same deterministic target across those
+    // milestones, but stop instantly on any real user intent so the page never
+    // fights manual scrolling.
+    [0, 120, 360, 760, 1280].forEach((delay) => {
+      timers.push(window.setTimeout(tryScroll, delay));
+    });
+    return () => {
+      cancelled = true;
+      timers.forEach((timer) => window.clearTimeout(timer));
+      window.removeEventListener("wheel", cancelOnIntent);
+      window.removeEventListener("touchstart", cancelOnIntent);
+      window.removeEventListener("pointerdown", cancelOnIntent);
+      window.removeEventListener("keydown", cancelOnIntent);
+    };
   }, []);
   useE(() => {
     document.documentElement.setAttribute("data-density", tweaks.density);
@@ -648,8 +692,7 @@ function App() {
       <Footer t={t} links={LINKS} />
 
       {/* Mobile-only overlays — sticky CTA stacks above dock. */}
-      <MobileStickyCta t={t} visible={midScrollVisible} />
-      <MobileScrollDock t={t} activeSection={activeSection} visible={midScrollVisible} />
+      <MobileScrollDock t={t} lang={lang} activeSection={activeSection} visible={midScrollVisible && activeSection !== "contact"} />
 
       <PortfolioTweaks t={tweaks} setTweak={setTweak} />
     </>

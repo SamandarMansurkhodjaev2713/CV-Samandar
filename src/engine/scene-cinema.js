@@ -166,6 +166,7 @@
     }
 
     document.documentElement.classList.add(ACTIVE_CLASS);
+    try { window.dispatchEvent(new CustomEvent("sm:cinema-start")); } catch (eventErr) { /* optional */ }
 
     const transition = document.startViewTransition(function applyMutation() {
       // Inside the callback all DOM mutations are synchronous. The browser
@@ -185,8 +186,11 @@
         console.warn("[SceneCinema] transition rejected:", err && err.message);
       })
       .then(function onTransitionDone() {
-        document.documentElement.classList.remove(ACTIVE_CLASS);
-        if (activeTransition === transition) activeTransition = null;
+        if (activeTransition === transition) {
+          activeTransition = null;
+          document.documentElement.classList.remove(ACTIVE_CLASS);
+          try { window.dispatchEvent(new CustomEvent("sm:cinema-done")); } catch (eventErr) { /* optional */ }
+        }
         // Hold a short cooldown so the next click doesn't immediately start
         // another transition mid-frame — feels less strobed.
         return new Promise(function (resolve) {
@@ -234,6 +238,7 @@
       catch (err) { console.warn("[SceneCinema] popstate skip failed:", err && err.message); }
     }
     document.documentElement.classList.add(ACTIVE_CLASS);
+    try { window.dispatchEvent(new CustomEvent("sm:cinema-start")); } catch (eventErr) { /* optional */ }
     const transition = document.startViewTransition(function () {
       const target = resolveTarget(id);
       if (target) instantScrollIntoView(target);
@@ -243,8 +248,11 @@
     transition.finished
       .catch(function (err) { console.warn("[SceneCinema] popstate transition rejected:", err && err.message); })
       .then(function () {
-        document.documentElement.classList.remove(ACTIVE_CLASS);
-        if (activeTransition === transition) activeTransition = null;
+        if (activeTransition === transition) {
+          activeTransition = null;
+          document.documentElement.classList.remove(ACTIVE_CLASS);
+          try { window.dispatchEvent(new CustomEvent("sm:cinema-done")); } catch (eventErr) { /* optional */ }
+        }
       });
   }
 
@@ -269,7 +277,11 @@
     clickHandler = onAnchorClick;
     popHandler = onPopState;
     motionListener = onMotionChange;
-    document.addEventListener("click", clickHandler, true);
+    // Bubble phase is intentional: React handlers get first refusal. If a
+    // component already called preventDefault() and delegated to navigate(),
+    // onAnchorClick exits via event.defaultPrevented, so one click can never
+    // start two competing scroll/transition transactions.
+    document.addEventListener("click", clickHandler, false);
     window.addEventListener("popstate", popHandler);
     if (motionMedia.addEventListener) motionMedia.addEventListener("change", motionListener);
     else if (motionMedia.addListener) motionMedia.addListener(motionListener);
@@ -283,7 +295,7 @@
   function dispose() {
     if (!bound) return;
     bound = false;
-    if (clickHandler) document.removeEventListener("click", clickHandler, true);
+    if (clickHandler) document.removeEventListener("click", clickHandler, false);
     if (popHandler) window.removeEventListener("popstate", popHandler);
     if (motionListener) {
       if (motionMedia.removeEventListener) motionMedia.removeEventListener("change", motionListener);
@@ -292,12 +304,19 @@
     clickHandler = null;
     popHandler = null;
     motionListener = null;
+    const wasTransitioning = !!activeTransition || document.documentElement.classList.contains(ACTIVE_CLASS);
     if (activeTransition && typeof activeTransition.skipTransition === "function") {
       try { activeTransition.skipTransition(); }
       catch (err) { console.warn("[SceneCinema] dispose skip failed:", err && err.message); }
     }
     activeTransition = null;
     document.documentElement.classList.remove(ACTIVE_CLASS);
+    // Consumers pause expensive rendering on cinema-start. Always balance that
+    // event if teardown interrupts the transition, otherwise a remount can
+    // inherit a permanently paused background or robot.
+    if (wasTransitioning) {
+      try { window.dispatchEvent(new CustomEvent("sm:cinema-done")); } catch (eventErr) { /* optional */ }
+    }
   }
 
   window.SceneCinema = {

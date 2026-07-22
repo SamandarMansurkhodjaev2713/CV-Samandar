@@ -106,10 +106,12 @@ function renderLandingPage(p, R, version) {
   const title = p.name + (ru.tag ? " — " + ru.tag.replace(/ · /g, " / ") : "");
   const desc = ru.signal || "";
   const ogUrl = SITE_BASE + "projects/" + p.slug + "/";
-  const ogImg = SITE_BASE + "og-image.png"; // raster, so social crawlers render it
+  // Each case owns a photographic 3:1 social preview instead of sharing the
+  // portfolio cover. This keeps Telegram/LinkedIn links visually distinct.
+  const ogImg = SITE_BASE + "assets/proj/" + p.visual;
   const fonts =
     "https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700" +
-    "&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap";
+    "&family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap";
   const body = R.LP_render(p, "ru");
   return [
     "<!doctype html>",
@@ -126,7 +128,10 @@ function renderLandingPage(p, R, version) {
     '<meta property="og:description" content="' + htmlAttr(desc) + '">',
     '<meta property="og:url" content="' + htmlAttr(ogUrl) + '">',
     '<meta property="og:image" content="' + htmlAttr(ogImg) + '">',
+    '<meta property="og:image:width" content="1536">',
+    '<meta property="og:image:height" content="512">',
     '<meta name="twitter:card" content="summary_large_image">',
+    '<meta name="theme-color" content="#171713">',
     '<link rel="icon" href="../../favicon.svg">',
     '<link rel="preconnect" href="https://fonts.googleapis.com">',
     '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',

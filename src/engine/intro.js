@@ -10,13 +10,11 @@
 // blades, embers, lock-ring flash) — that was a decorative narrative
 // animation; this is a loader that actually behaves like one.
 //
-// How the percentage works (client-approved synthesis of two answers that
-// look contradictory but aren't): the NUMBER animates on a smooth, engineered
-// curve — not raw byte-progress, which reads as jumpy/stalling and is common
-// but ugly. But the REVEAL is gated on the real critical asset (the Spline
-// robot) actually being ready, with a hard ceiling for slow connections — so
-// "100%" is never a lie by more than a couple of seconds even on bad
-// networks, and a fast/cached load never waits around pretending to be slow.
+// How the percentage works: the number is a calibrated boot timeline, not raw
+// byte progress (which jumps and stalls across many independent assets). The
+// real app, WebGL scene and Spline runtime load concurrently underneath. The
+// curtain has a deterministic 2–3s first-load ceiling and a shorter repeat
+// cadence, so it masks the cold start without ever holding the page hostage.
 //
 // Modes: intent.mode "full" = rich (particles + iris reveal), "fade" =
 // reduced-motion/low-tier (no particle canvas, plain fade reveal instead of
@@ -26,10 +24,10 @@
   "use strict";
 
   let CFG = {
-    EASE_MS: 2200,       // percentage animates 0 → EASE_TARGET over this window
+    EASE_MS: 2200,       // first visit: 0 → EASE_TARGET while the critical shell settles
     EASE_TARGET: 92,
-    CREEP_MS: 3200,      // then creeps EASE_TARGET → 99 while waiting on the robot
-    CEILING_MS: 7500,    // absolute max wait before revealing regardless
+    CREEP_MS: 360,       // short honest settle — the robot is progressive enhancement
+    CEILING_MS: 2400,    // intro itself never blocks the page beyond the approved 2–3s window
     HOLD_MS: 220,        // brief hold at real 100% before the reveal starts
     REVEAL_MS: 550,
     SKIP_GRACE_MS: 500,
@@ -51,17 +49,21 @@
     return fallback;
   }
 
-  // True once Hero's own loading effect has resolved the robot one way or the
-  // other (loaded, or gave up and swapped to the legacy fallback). Both flags
-  // start undefined until that effect actually runs (after React mounts), so
-  // this naturally stays false through the React-mount → Hero-effect →
-  // Spline-create chain, not just "has React rendered yet".
-  function robotSettled() {
-    return window.__splineRobotLoaded === true || !!window.__splineRobotFailed;
-  }
-
   function run() {
+    // The DOM marker is the source of truth. The window hand-off is the fast
+    // path, while the fallback keeps the loader working in hardened browsers
+    // that isolate globals between inline and external script worlds.
     var intent = window.__SM_INTRO;
+    if (!intent || !intent.panel) {
+      var discoveredPanel = document.getElementById("sm-intro");
+      if (discoveredPanel) {
+        intent = {
+          mode: discoveredPanel.getAttribute("data-intro-mode") || "full",
+          panel: discoveredPanel,
+        };
+        try { window.__SM_INTRO = intent; } catch (e) { /* optional hand-off */ }
+      }
+    }
     if (!intent || !intent.panel || !intent.panel.parentNode) return;
     if (intent.__started) return;
     intent.__started = true;
@@ -69,19 +71,33 @@
     var panel = intent.panel;
     var reduced = intent.mode === "fade"; // reuses the existing head-boot flag
 
-    // Mobile pacing (user-approved): same aesthetic, ~half the wait. A phone
-    // visitor is more impatient AND the mobile robot is lighter — the desktop
-    // ceiling exists to cover a 1–3MB Spline download that mobile doesn't
-    // need as much headroom for. Swipe still skips instantly.
+    // The loader appears on every full load. A repeat in the same tab is still
+    // cinematic, but shorter; the first visit keeps the approved 2–3 second
+    // loading window. The Spline scene loads independently underneath and can
+    // never hold this curtain hostage.
+    var repeatVisit = false;
+    try {
+      repeatVisit = sessionStorage.getItem("sm-intro-seen") === "1";
+      sessionStorage.setItem("sm-intro-seen", "1");
+    } catch (e) { /* storage can be unavailable in privacy modes */ }
+
     var isMobile = false;
     try { isMobile = window.matchMedia("(max-width: 900px)").matches; } catch (e) { /* opportunistic */ }
-    if (isMobile) {
+    if (repeatVisit) {
       CFG = Object.assign({}, CFG, {
-        EASE_MS: 850,      // 0 → 92% in .85s
-        CREEP_MS: 450,     // brief 92 → 99 creep
-        CEILING_MS: 2400,  // absolute cap — off the reader's back fast
+        EASE_MS: isMobile ? 1120 : 1280,
+        CREEP_MS: 220,
+        CEILING_MS: isMobile ? 1380 : 1540,
         HOLD_MS: 140,
-        REVEAL_MS: 450,
+        REVEAL_MS: 420,
+      });
+    } else if (isMobile) {
+      CFG = Object.assign({}, CFG, {
+        EASE_MS: 1950,
+        CREEP_MS: 320,
+        CEILING_MS: 2220,
+        HOLD_MS: 180,
+        REVEAL_MS: 500,
       });
     }
 
@@ -291,6 +307,7 @@
     function teardown() {
       if (finished) return;
       finished = true;
+      intent.durationMs = start ? Math.round(performance.now() - start) : 0;
       if (forcedTimer) { clearTimeout(forcedTimer); forcedTimer = 0; }
       if (raf) cancelAnimationFrame(raf);
       detachSkipListeners();
@@ -351,7 +368,7 @@
       setLog(visualPct);
 
       var pastCeiling = t >= CFG.CEILING_MS;
-      if (pastCeiling || (visualPct >= CFG.EASE_TARGET - 0.01 && robotSettled())) {
+      if (pastCeiling || visualPct >= CFG.EASE_TARGET - 0.01) {
         startReveal();
         return;
       }
@@ -380,5 +397,5 @@
   }
 
   window.SMIntro = { run: run };
-  if (window.__SM_INTRO && !window.__SM_INTRO.__started) run();
+  run();
 })();

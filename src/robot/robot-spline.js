@@ -73,38 +73,9 @@
 
   // ── Intro coordination ──────────────────────────────────────────────────
   // The dynamic import above is pure network + module-eval — cheap, and safe
-  // to start immediately (it's what lets the robot be ready by the time the
-  // intro's iris opens). `new Application()` + `app.load()` below are NOT
-  // cheap: a second WebGL context + GPU upload of the whole scene, run as
-  // synchronous continuations. On a cold cache the network download alone
-  // exceeds the ~3s intro, so this never matters — but on a warm cache the
-  // import can resolve in tens of ms, landing that entire GPU burst inside
-  // the intro's own canvas rAF loop and stalling it (bg-fx.js gates its own
-  // WebGL loop on the same signal for the identical reason). Resolves the
-  // instant `sm:intro-done` fires, or after `maxMs` regardless (so a delayed/
-  // missing event — e.g. intro.js failing to load — can't wedge the robot
-  // forever; index.html's own head-boot safety also dispatches the event as
-  // a backstop, so in practice this ceiling is rarely hit).
-  function waitForIntroOrTimeout(maxMs) {
-    return new Promise(function (resolve) {
-      const active = !!(window.__SM_INTRO && window.__SM_INTRO.panel && window.__SM_INTRO.panel.parentNode);
-      if (!active) { resolve(); return; }
-      let settled = false;
-      const timer = setTimeout(function () {
-        if (settled) return;
-        settled = true;
-        window.removeEventListener("sm:intro-done", onDone);
-        resolve();
-      }, maxMs);
-      function onDone() {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        resolve();
-      }
-      window.addEventListener("sm:intro-done", onDone, { once: true });
-    });
-  }
+  // Loading deliberately starts under the intro curtain: the intro is the
+  // loading experience, not a gate in front of it. This keeps the robot ready
+  // for the reveal on warm caches and lets a cold load continue independently.
 
   // ── Watermark safety-net ───────────────────────────────────────────────
   // The runtime itself doesn't inject branding into the DOM, but we sweep
@@ -196,10 +167,25 @@
     let app = null;
     let disposed = false;
     let expressionCurrent = "idle";
+    let sceneActive = true;
+    let cinemaPaused = false;
     let accentHex = options.accent || "#D97757";
     let accent2Hex = options.accent2 || "#C89B5E";
 
     canvas.style.touchAction = "none";
+
+    function applyPlaybackState() {
+      if (!app) return;
+      try {
+        if (sceneActive && !cinemaPaused) {
+          if (typeof app.play === "function") app.play();
+        } else if (typeof app.stop === "function") app.stop();
+      } catch (playErr) { /* runtime versions differ; visual fallback remains */ }
+    }
+    function onCinemaStart() { cinemaPaused = true; applyPlaybackState(); }
+    function onCinemaDone() { cinemaPaused = false; applyPlaybackState(); }
+    window.addEventListener("sm:cinema-start", onCinemaStart);
+    window.addEventListener("sm:cinema-done", onCinemaDone);
 
     // Async load — caller gets a controller back immediately, real scene
     // appears once the runtime + .splinecode have both downloaded. We set
@@ -209,13 +195,12 @@
     // Reset both at start in case create() is called multiple times.
     window.__splineRobotLoaded = false;
     window.__splineRobotFailed = null;
+    // Start the real scene immediately underneath the intro. The intro has a
+    // deterministic duration and does not wait for this promise; conversely,
+    // the robot no longer waits for sm:intro-done. This removes the former
+    // circular dependency while preserving the loader's original purpose:
+    // useful work happens during the 2–3 second opening sequence.
     loadSplineRuntime()
-      .then(function gate(Application) {
-        // Import can resolve mid-intro on a warm cache — hold the actual
-        // WebGL instantiation until the intro signals done (or 3.2s, matching
-        // index.html's own safety-net timing, whichever comes first).
-        return waitForIntroOrTimeout(3200).then(function () { return Application; });
-      })
       .then(function instantiate(Application) {
         if (disposed) return null;
         app = new Application(canvas);
@@ -228,6 +213,7 @@
         hideWatermarks(canvas);
         // Signal success — Hero stops polling for failure.
         window.__splineRobotLoaded = true;
+        applyPlaybackState();
         if (onExpressionChange) {
           try { onExpressionChange(expressionCurrent); }
           catch (cbErr) { console.warn("[RobotSpline] onExpressionChange threw:", cbErr); }
@@ -277,16 +263,8 @@
        * @param {boolean} active
        */
       setActive: function (active) {
-        if (!app) return;
-        try {
-          if (active) {
-            if (typeof app.play === "function") app.play();
-          } else {
-            if (typeof app.stop === "function") app.stop();
-          }
-        } catch (actErr) {
-          console.warn("[RobotSpline] setActive failed:", actErr && actErr.message);
-        }
+        sceneActive = !!active;
+        applyPlaybackState();
       },
       setExpression: function (name) {
         if (EXPRESSION_CYCLE.indexOf(name) === -1) return;
@@ -300,6 +278,8 @@
       cycleExpression: cycleExpression,
       dispose: function () {
         disposed = true;
+        window.removeEventListener("sm:cinema-start", onCinemaStart);
+        window.removeEventListener("sm:cinema-done", onCinemaDone);
         if (app && typeof app.dispose === "function") {
           try { app.dispose(); }
           catch (dispErr) { console.warn("[RobotSpline] dispose threw:", dispErr); }

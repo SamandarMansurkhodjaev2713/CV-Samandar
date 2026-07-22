@@ -841,9 +841,9 @@ function ProjectBuilder({ t, links }) {
   });
 
   return (
-    <section id="builder" className="builder-sec" data-enter="assemble" ref={ref}>
+    <section data-section="builder" id="builder" className="builder-sec" data-enter="assemble" ref={ref}>
       <div className="shell">
-        <SecHead eyebrow={b.eyebrow} title={b.title} meta="build.preview()" />
+        <SecHead num="08" eyebrow={b.eyebrow} title={b.title} meta="build.preview()" />
         <p className="lead-line" data-reveal>{b.lead}</p>
 
         <div className="builder card" data-reveal>
@@ -1065,7 +1065,7 @@ function Faq({ t }) {
   return (
     <section data-section="faq" id="faq" data-enter="assemble" ref={ref}>
       <div className="shell">
-        <SecHead num="08" eyebrow={t.faq.eyebrow} title={t.faq.title} meta={`${items.length} · Q&A`} />
+        <SecHead num="09" eyebrow={t.faq.eyebrow} title={t.faq.title} meta={`${items.length} · Q&A`} />
         <p className="lead-line" data-reveal>{t.faq.lead}</p>
         <div className="faq-list" data-reveal>
           {items.map(function renderFaq(item, i) {
@@ -1098,7 +1098,7 @@ function Trust({ t }) {
   return (
     <section data-section="trust" id="trust" data-enter="slide-right" ref={ref}>
       <div className="shell">
-        <SecHead num="09" eyebrow={t.trust.eyebrow} title={t.trust.title} meta={`${proof.length} · open`} />
+        <SecHead num="10" eyebrow={t.trust.eyebrow} title={t.trust.title} meta={`${proof.length} · open`} />
         <p className="lead-line" data-reveal>{t.trust.lead}</p>
 
         <div className="proof-grid" data-reveal>
@@ -1331,7 +1331,7 @@ function Contact({ t, links }) {
   return (
     <section data-section="contact" id="contact" data-enter="rise-bright" ref={ref}>
       <div className="shell">
-        <SecHead num="10" eyebrow={t.contact.eyebrow} title={t.contact.title} em={t.contact.title.split(" ").pop()} meta="status: receiving" />
+        <SecHead num="11" eyebrow={t.contact.eyebrow} title={t.contact.title} em={t.contact.title.split(" ").pop()} meta="status: receiving" />
         <p className="lead-line" data-reveal>{t.contact.lead}</p>
 
         <div className="contact-layout">
@@ -1343,7 +1343,7 @@ function Contact({ t, links }) {
               </label>
               <label className="ff">
                 <span className="ff-k mono">{t.contact.form.email}</span>
-                <input type="text" name="email" required className="ff-input" autoComplete="email" />
+                <input type="email" name="email" required className="ff-input" autoComplete="email" inputMode="email" />
               </label>
             </div>
 

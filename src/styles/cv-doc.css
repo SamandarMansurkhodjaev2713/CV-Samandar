@@ -371,6 +371,15 @@
 .cv-action:hover { color: var(--accent, #D97757); border-color: rgba(var(--accent-rgb) / 0.4); background: rgba(var(--accent-rgb) / 0.04); }
 .cv-action-ico { color: rgba(244,241,234,0.4); font-size: 10px; }
 
+@media (max-width: 900px) {
+  .cv-doc-tab,
+  .cv-action {
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+  .cv-doc-tab { display: inline-flex; align-items: center; }
+}
+
 /* readme.md view — rendered-markdown-style GitHub-profile info. */
 .cv-readme { padding: 28px 40px 34px; }
 .cv-readme-p { font-size: 15px; line-height: 1.66; color: var(--text-dim, rgba(244,241,234,0.75)); margin: 0 0 14px; max-width: 70ch; }

@@ -105,7 +105,6 @@
   // The O(N²) constellation pair-scan (the single priciest CPU step) runs at
   // half that rate again — its subtle lines don't need per-frame accuracy.
   const BG_TARGET_FPS = 40;
-  const BG_MIN_FRAME_MS = 1000 / BG_TARGET_FPS;
   const CONSTELLATION_EVERY_N_FRAMES = 2;
 
   // ── Section → background shape mapping ──────────────────────────────────
@@ -244,6 +243,16 @@
     // ── State ────────────────────────────────────────────────────────────
     const motionMedia = window.matchMedia(MEDIA_REDUCED_MOTION);
     let prefersReducedMotion = motionMedia.matches;
+    const saveData = !!(navigator.connection && navigator.connection.saveData);
+    const hardwareThreads = navigator.hardwareConcurrency || 4;
+    // Keep motion alive on every tier, but spend the frame budget where the
+    // device can sustain it. Reduced motion remains a designed ambient scene,
+    // not a static fallback.
+    let targetFps = prefersReducedMotion ? 10
+      : (deviceTierLow || saveData || hardwareThreads <= 4) ? 22
+      : (hardwareThreads <= 8 || window.devicePixelRatio > 2) ? 30
+      : BG_TARGET_FPS;
+    let minFrameMs = 1000 / targetFps;
     let motion = typeof options.motion === "number" ? options.motion : 1;
 
     const accentColor = new THREE.Color(options.accent || "#D97757");
@@ -506,24 +515,42 @@
     function onVisibilityChange() {
       isVisible = !document.hidden;
       lastFrame = performance.now();
+      if (isVisible && !introActive && !rafHandle) rafHandle = requestAnimationFrame(tick);
     }
     document.addEventListener("visibilitychange", onVisibilityChange);
 
     // ── Intro gate — while the "Полёт к станции" curtain (src/engine/intro.js)
     // is on screen, this WebGL loop stays paused so it doesn't contend with
     // the intro's own canvas + rAF + React hydration during the first ~2.4s.
-    // window.__SM_INTRO is only ever set by index.html's head-boot script
-    // when the intro is actually about to run (not on repeat navigations in
-    // the same session) — if it's absent, introActive starts false and this
-    // is a no-op, matching pre-intro behavior exactly.
-    let introActive = !!(window.__SM_INTRO && window.__SM_INTRO.panel && window.__SM_INTRO.panel.parentNode);
+    // The DOM marker is authoritative; the global is retained as a fast path.
+    // This also works in hardened browsers that isolate inline-script globals.
+    let introActive = !!document.getElementById("sm-intro") ||
+      !!(window.__SM_INTRO && window.__SM_INTRO.panel && window.__SM_INTRO.panel.parentNode);
+    let cinemaActive = false;
     function onIntroDone() {
       introActive = false;
       lastFrame = performance.now();
+      if (isVisible && !rafHandle) rafHandle = requestAnimationFrame(tick);
     }
     if (introActive) window.addEventListener("sm:intro-done", onIntroDone);
+    function onCinemaStart() { cinemaActive = true; }
+    function onCinemaDone() {
+      cinemaActive = false;
+      lastFrame = performance.now();
+      if (isVisible && !introActive && !rafHandle) rafHandle = requestAnimationFrame(tick);
+    }
+    window.addEventListener("sm:cinema-start", onCinemaStart);
+    window.addEventListener("sm:cinema-done", onCinemaDone);
 
-    function onMotionPrefChange(e) { prefersReducedMotion = e.matches; }
+    function onMotionPrefChange(e) {
+      prefersReducedMotion = e.matches;
+      targetFps = prefersReducedMotion ? 10
+        : (deviceTierLow || saveData || hardwareThreads <= 4) ? 22
+        : (hardwareThreads <= 8 || window.devicePixelRatio > 2) ? 30
+        : BG_TARGET_FPS;
+      minFrameMs = 1000 / targetFps;
+      if (isVisible && !introActive && !rafHandle) rafHandle = requestAnimationFrame(tick);
+    }
     if (motionMedia.addEventListener) motionMedia.addEventListener("change", onMotionPrefChange);
     else if (motionMedia.addListener) motionMedia.addListener(onMotionPrefChange);
 
@@ -550,12 +577,15 @@
     applyAccentToMaterials();
 
     function tick(now) {
+      rafHandle = 0;
+      // Do not keep a dormant rAF loop alive behind the intro or in a hidden
+      // tab. The visibility/intro handlers explicitly restart it.
+      if (!isVisible || introActive || cinemaActive) { lastFrame = now; return; }
       rafHandle = requestAnimationFrame(tick);
-      if (!isVisible || introActive) { lastFrame = now; return; }
       // Frame-rate cap — skip this frame if we rendered too recently.
       // `elapsed` below is measured from the last RENDERED frame, so the
       // motion stays time-correct regardless of how many frames we skip.
-      if (now - lastRenderAt < BG_MIN_FRAME_MS) return;
+      if (now - lastRenderAt < minFrameMs) return;
       lastRenderAt = now;
       frameIndex++;
 
@@ -843,6 +873,8 @@
         window.removeEventListener("mousemove", onPointerMove);
         document.removeEventListener("visibilitychange", onVisibilityChange);
         window.removeEventListener("sm:intro-done", onIntroDone);
+        window.removeEventListener("sm:cinema-start", onCinemaStart);
+        window.removeEventListener("sm:cinema-done", onCinemaDone);
         if (motionMedia.removeEventListener) motionMedia.removeEventListener("change", onMotionPrefChange);
         else if (motionMedia.removeListener) motionMedia.removeListener(onMotionPrefChange);
         SHAPE_KEYS.forEach((k) => {

@@ -33,12 +33,12 @@
 ::view-transition-old(root) { animation: cinema-fade-out 320ms cubic-bezier(0.4, 0, 0.6, 1) both; }
 ::view-transition-new(root) { animation: cinema-fade-in 360ms cubic-bezier(0.16, 1, 0.3, 1) 60ms both; }
 @keyframes cinema-fade-out {
-  0%   { opacity: 1; filter: blur(0) saturate(1); transform: none; }
-  100% { opacity: 0.38; filter: blur(6px) saturate(0.85); transform: scale(0.992); }
+  0%   { opacity: 1; transform: none; clip-path: inset(0); }
+  100% { opacity: 0.28; transform: translateY(-8px) scale(0.996); clip-path: inset(0 0 7% 0); }
 }
 @keyframes cinema-fade-in {
-  0%   { opacity: 0; filter: blur(10px) saturate(0.85); transform: scale(1.014); }
-  100% { opacity: 1; filter: blur(0) saturate(1); transform: none; }
+  0%   { opacity: 0; transform: translateY(13px) scale(1.004); clip-path: inset(7% 0 0 0); }
+  100% { opacity: 1; transform: none; clip-path: inset(0); }
 }
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
@@ -106,6 +106,7 @@
   inset: 0;
   z-index: 3;
   pointer-events: none;
+  display: none;
   background-image: repeating-linear-gradient(
     180deg,
     rgba(0, 0, 0, 0) 0px,

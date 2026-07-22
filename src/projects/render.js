@@ -28,6 +28,10 @@
   var UI = {
     ru: {
       allProjects: "Все проекты",
+      chapters: ["Тезис", "Контекст", "Система", "Доказательства", "Границы"],
+      chapterNav: "Главы кейса",
+      diagramHint: "Схему можно прокручивать по горизонтали",
+      publicCase: "Открыть публичный кейс",
       closed: "Закрытый проект",
       discuss: "Обсудить проект",
       viewGithub: "Смотреть на GitHub",
@@ -56,6 +60,10 @@
     },
     en: {
       allProjects: "All projects",
+      chapters: ["Thesis", "Context", "System", "Evidence", "Boundaries"],
+      chapterNav: "Case chapters",
+      diagramHint: "Swipe horizontally to inspect the system",
+      publicCase: "Open public case",
       closed: "Private project",
       discuss: "Discuss a project",
       viewGithub: "View on GitHub",
@@ -84,6 +92,10 @@
     },
     uz: {
       allProjects: "Barcha loyihalar",
+      chapters: ["Tezis", "Kontekst", "Tizim", "Dalillar", "Chegaralar"],
+      chapterNav: "Keys bo‘limlari",
+      diagramHint: "Tizimni ko‘rish uchun gorizontal suring",
+      publicCase: "Ochiq keysni ko‘rish",
       closed: "Yopiq loyiha",
       discuss: "Loyihani muhokama qilish",
       viewGithub: "GitHub'da ko'rish",
@@ -142,26 +154,221 @@
     );
   }
 
-  function flowMap(flow, title) {
-    if (!flow || !flow.length) return "";
-    return (
-      '<section class="lp-flow">' +
-        '<div class="lp-flow-head">' +
-          '<span class="lp-eyebrow mono">SYSTEM · 0' + esc(flow.length) + "</span>" +
-          '<h2 class="lp-h2">' + esc(title) + "</h2>" +
-        "</div>" +
-        '<ol class="lp-flow-track">' +
-          flow.map(function (node, i) {
-            return (
-              '<li class="lp-flow-node">' +
-                '<span class="lp-flow-index mono">' + String(i + 1).padStart(2, "0") + "</span>" +
-                '<span class="lp-flow-name">' + esc(node) + "</span>" +
-              "</li>"
-            );
-          }).join("") +
-        "</ol>" +
-      "</section>"
-    );
+  function tr(lang, ru, en, uz) {
+    return lang === "en" ? en : lang === "uz" ? uz : ru;
+  }
+
+  function diagramFor(slug, lang, fallback) {
+    function n(id, ru, en, uz, x, y, w) {
+      return { id: id, label: tr(lang, ru, en, uz), x: x, y: y, w: w || 164 };
+    }
+    function e(from, to, label, via) {
+      return { from: from, to: to, label: label || "", via: via || null };
+    }
+    switch (slug) {
+      case "ttyl": return {
+        kind: "boundary",
+        nodes: [
+          n("client", "Клиентские приложения", "Client apps", "Mijoz ilovalari", 38, 112, 170),
+          n("rbac", "API + RBAC", "API + RBAC", "API + RBAC", 260, 112, 150),
+          n("domain", "Доменные сервисы", "Domain services", "Domen servislar", 474, 112, 176),
+          n("data", "Изолированные данные", "Isolated data", "Ajratilgan maʼlumot", 740, 112, 184),
+          n("audit", "Аудит событий", "Audit trail", "Audit izi", 474, 270, 176)
+        ],
+        edges: [e("client","rbac"), e("rbac","domain"), e("domain","data","encrypted"), e("domain","audit","append-only")],
+        zones: [{ x: 238, y: 66, w: 720, h: 188, label: tr(lang,"ЗАКРЫТЫЙ КОНТУР","PRIVATE BOUNDARY","YOPIQ KONTUR") }]
+      };
+      case "task-manager": return {
+        kind: "timeline",
+        nodes: [
+          n("voice", "Голос", "Voice", "Ovoz", 34, 142, 126),
+          n("stt", "Распознавание", "Transcription", "Transkripsiya", 210, 142, 160),
+          n("task", "Нормализация задачи", "Task normalizer", "Vazifa normalizatori", 424, 142, 178),
+          n("outbox", "Outbox + retry", "Outbox + retry", "Outbox + qayta", 654, 142, 154),
+          n("delivery", "Доставка", "Delivery", "Yetkazish", 852, 142, 120)
+        ],
+        edges: [e("voice","stt"), e("stt","task"), e("task","outbox"), e("outbox","delivery"), e("delivery","outbox",tr(lang,"ошибка → повтор","failure → retry","xato → qayta"),[914,326,704,326])]
+      };
+      case "marketbot": return {
+        kind: "fanin",
+        nodes: [
+          n("s1", "Источник A", "Source A", "Manba A", 34, 56, 126),
+          n("s2", "Источник B", "Source B", "Manba B", 34, 166, 126),
+          n("s3", "Источник C", "Source C", "Manba C", 34, 276, 126),
+          n("queue", "Очередь событий", "Event queue", "Voqealar navbati", 306, 166, 170),
+          n("rank", "Фильтр + ранжирование", "Filter + ranking", "Filtr + reyting", 570, 166, 190),
+          n("offer", "Целевой оффер", "Target offer", "Maqsadli taklif", 830, 166, 142)
+        ],
+        edges: [e("s1","queue"),e("s2","queue"),e("s3","queue"),e("queue","rank","dedupe"),e("rank","offer","score")]
+      };
+      case "forge": return {
+        kind: "cycle",
+        nodes: [
+          n("goal", "Цель обучения", "Learning goal", "Taʼlim maqsadi", 410, 34, 180),
+          n("practice", "Практика", "Practice", "Amaliyot", 716, 146, 150),
+          n("evidence", "Артефакт-доказательство", "Evidence artifact", "Dalil artefakti", 624, 306, 204),
+          n("review", "Проверка", "Review", "Tekshiruv", 174, 306, 150),
+          n("adapt", "Адаптация пути", "Path adaptation", "Yoʻlni moslash", 84, 146, 178)
+        ],
+        edges: [e("goal","practice"),e("practice","evidence"),e("evidence","review"),e("review","adapt"),e("adapt","goal",tr(lang,"следующая итерация","next iteration","keyingi iteratsiya"))]
+      };
+      case "belfproctor": return {
+        kind: "chain",
+        nodes: [
+          n("capture", "Фиксация события", "Event capture", "Voqeani qayd etish", 34, 146, 170),
+          n("seal", "Запечатанное доказательство", "Sealed evidence", "Muhrlangan dalil", 254, 146, 188),
+          n("policy", "Проверка политики", "Policy checks", "Siyosat tekshiruvi", 492, 146, 168),
+          n("human", "Решение эксперта", "Human decision", "Ekspert qarori", 710, 146, 170),
+          n("report", "Протокол", "Decision record", "Qaror protokoli", 900, 146, 88)
+        ],
+        edges: [e("capture","seal","hash"),e("seal","policy","immutable"),e("policy","human"),e("human","report")],
+        zones: [{ x: 224, y: 92, w: 472, h: 180, label: tr(lang,"ЦЕПОЧКА СОХРАННОСТИ","CHAIN OF CUSTODY","DALIL ZANJIRI") }]
+      };
+      case "vfs-killer": return {
+        kind: "state",
+        nodes: [
+          n("request", "Запрос", "Request", "Soʻrov", 38, 152, 130),
+          n("gate", "Нестабильный шлюз", "Unstable gateway", "Beqaror shlyuz", 240, 152, 180),
+          n("ok", "Подтверждено", "Confirmed", "Tasdiqlandi", 520, 62, 160),
+          n("fail", "Сбой", "Failure", "Xato", 520, 250, 140),
+          n("recover", "Recovery state", "Recovery state", "Tiklash holati", 758, 250, 174),
+          n("done", "Чистый результат", "Clean result", "Toza natija", 800, 62, 166)
+        ],
+        edges: [e("request","gate"),e("gate","ok","2xx"),e("ok","done"),e("gate","fail","timeout"),e("fail","recover","backoff"),e("recover","gate","retry",[845,366,328,366])]
+      };
+      case "med-exe": return {
+        kind: "trace",
+        nodes: [
+          n("input", "Типизированный ввод", "Typed input", "Tiplashtirilgan kirish", 30, 150, 174),
+          n("ipc", "Граница IPC", "IPC boundary", "IPC chegarasi", 250, 150, 154),
+          n("calc", "Детерминированный расчёт", "Deterministic calc", "Deterministik hisob", 450, 150, 196),
+          n("verify", "Проверка инвариантов", "Invariant checks", "Invariant tekshiruvi", 694, 150, 184),
+          n("output", "Трассируемый вывод", "Traceable output", "Kuzatiladigan chiqish", 916, 150, 72)
+        ],
+        edges: [e("input","ipc","schema"),e("ipc","calc","typed"),e("calc","verify","trace"),e("verify","output","valid")]
+      };
+      case "bioflux": return {
+        kind: "threshold",
+        nodes: [
+          n("sensor", "Датчик потока", "Flow sensor", "Oqim sensori", 34, 150, 154),
+          n("stream", "Телеметрия", "Telemetry stream", "Telemetriya", 244, 150, 160),
+          n("threshold", "Порог + гистерезис", "Threshold + hysteresis", "Chegara + gisterezis", 460, 150, 196),
+          n("alert", "Событие", "Alert event", "Hodisa", 730, 62, 144),
+          n("archive", "История", "Time archive", "Vaqt arxivi", 730, 254, 144)
+        ],
+        edges: [e("sensor","stream"),e("stream","threshold"),e("threshold","alert",tr(lang,"выше порога","above threshold","chegaradan yuqori")),e("stream","archive",tr(lang,"всегда","always","doim"))]
+      };
+      case "growthops-ai": return {
+        kind: "factory",
+        nodes: [
+          n("brief", "Узкий бриф", "Narrow brief", "Aniq brif", 26, 150, 150),
+          n("module", "Модуль продукта", "Product module", "Mahsulot moduli", 226, 150, 164),
+          n("ai", "AI-операция", "AI operation", "AI operatsiya", 438, 58, 154),
+          n("workflow", "Автоматизация", "Workflow", "Avtomatlashtirish", 438, 252, 154),
+          n("verify", "Контур QA", "QA envelope", "QA konturi", 670, 150, 160),
+          n("deploy", "Деплой", "Deploy", "Deploy", 884, 150, 104)
+        ],
+        edges: [e("brief","module"),e("module","ai"),e("module","workflow"),e("ai","verify"),e("workflow","verify"),e("verify","deploy","release gate")]
+      };
+      case "car-superapp": return {
+        kind: "tenant",
+        nodes: [
+          n("client", "Клиент", "Customer", "Mijoz", 30, 68, 130),
+          n("branch", "Филиал", "Branch", "Filial", 30, 262, 130),
+          n("rls", "Auth + tenant RLS", "Auth + tenant RLS", "Auth + tenant RLS", 252, 162, 184),
+          n("order", "Заказ-наряд", "Service order", "Servis buyurtmasi", 506, 162, 174),
+          n("ops", "Операции сервиса", "Service operations", "Servis operatsiyalari", 730, 162, 184),
+          n("ledger", "История", "Ledger", "Tarix", 926, 162, 62)
+        ],
+        edges: [e("client","rls"),e("branch","rls"),e("rls","order","tenant scope"),e("order","ops"),e("ops","ledger")],
+        zones: [{ x: 226, y: 112, w: 752, h: 176, label: tr(lang,"ГРАНИЦА ТЕНАНТА","TENANT BOUNDARY","TENANT CHEGARASI") }]
+      };
+      case "ai-classroom": return {
+        kind: "review",
+        nodes: [
+          n("signal", "Оптический сигнал", "Optical signal", "Optik signal", 28, 150, 168),
+          n("detect", "Детектор событий", "Event detector", "Hodisa detektori", 244, 150, 170),
+          n("evidence", "Пакет доказательств", "Evidence packet", "Dalil paketi", 466, 150, 174),
+          n("human", "Проверка человеком", "Human review", "Inson tekshiruvi", 694, 150, 174),
+          n("decision", "Подтверждённое событие", "Verified event", "Tasdiqlangan hodisa", 916, 150, 74)
+        ],
+        edges: [e("signal","detect"),e("detect","evidence","confidence"),e("evidence","human","provenance"),e("human","decision"),e("human","detect",tr(lang,"коррекция","feedback","tuzatish"),[780,346,330,346])]
+      };
+      case "laplacefx": return {
+        kind: "gates",
+        nodes: [
+          n("data", "Исторические данные", "Historical data", "Tarixiy maʼlumot", 26, 150, 168),
+          n("walk", "Walk-forward окна", "Walk-forward windows", "Walk-forward oynalar", 238, 150, 184),
+          n("risk", "Risk gates", "Risk gates", "Risk gates", 474, 150, 148),
+          n("paper", "Paper execution", "Paper execution", "Paper execution", 674, 62, 166),
+          n("reject", "Отклонено", "Rejected", "Rad etildi", 674, 254, 150),
+          n("report", "Измеримый отчёт", "Measured report", "Oʻlchangan hisobot", 894, 62, 94)
+        ],
+        edges: [e("data","walk"),e("walk","risk","out-of-sample"),e("risk","paper","pass"),e("risk","reject","fail"),e("paper","report","evidence")]
+      };
+      default:
+        return {
+          kind: "pipeline",
+          nodes: (fallback || []).slice(0, 5).map(function (label, i) { return { id: "n" + i, label: label, x: 32 + i * 194, y: 150, w: 154 }; }),
+          edges: (fallback || []).slice(1, 5).map(function (_, i) { return e("n" + i, "n" + (i + 1)); })
+        };
+    }
+  }
+
+  function diagramMap(slug, lang, fallback, title, hint) {
+    var d = diagramFor(slug, lang, fallback);
+    var byId = {};
+    d.nodes.forEach(function (node) { byId[node.id] = node; });
+    var markerId = "lp-arrow-" + slug;
+    function pathFor(edge) {
+      var a = byId[edge.from]; var b = byId[edge.to];
+      if (!a || !b) return "";
+      var ax = a.x + a.w / 2; var ay = a.y + 36;
+      var bx = b.x + b.w / 2; var by = b.y + 36;
+      if (edge.via && edge.via.length === 4) {
+        return "M" + ax + " " + ay + " C" + edge.via[0] + " " + edge.via[1] + "," + edge.via[2] + " " + edge.via[3] + "," + bx + " " + by;
+      }
+      return "M" + ax + " " + ay + " L" + bx + " " + by;
+    }
+    var zones = (d.zones || []).map(function (z) {
+      return '<g class="lp-diagram-zone"><rect x="' + z.x + '" y="' + z.y + '" width="' + z.w + '" height="' + z.h + '" rx="20"></rect><text x="' + (z.x + 16) + '" y="' + (z.y + 24) + '">' + esc(z.label) + '</text></g>';
+    }).join("");
+    var edges = d.edges.map(function (edge) {
+      var a = byId[edge.from]; var b = byId[edge.to];
+      if (!a || !b) return "";
+      var lx = (a.x + a.w / 2 + b.x + b.w / 2) / 2;
+      var ly = (a.y + b.y) / 2 + 22;
+      return '<g class="lp-diagram-edge"><path d="' + pathFor(edge) + '" marker-end="url(#' + markerId + ')"></path>' +
+        (edge.label ? '<text x="' + lx + '" y="' + ly + '">' + esc(edge.label) + '</text>' : '') + '</g>';
+    }).join("");
+    var nodes = d.nodes.map(function (node, i) {
+      return '<g class="lp-diagram-node" style="--node-i:' + i + '" transform="translate(' + node.x + ' ' + node.y + ')">' +
+        '<rect width="' + node.w + '" height="72" rx="14"></rect>' +
+        '<text x="' + (node.w / 2) + '" y="42" text-anchor="middle" textLength="' + Math.max(52, node.w - 24) + '" lengthAdjust="spacingAndGlyphs">' + esc(node.label) + '</text>' +
+      '</g>';
+    }).join("");
+    return '<section class="lp-diagram" data-lp-reveal data-diagram="' + esc(d.kind) + '">' +
+      '<div class="lp-diagram-head"><div><span class="lp-eyebrow mono">SYSTEM · ' + esc(d.kind.toUpperCase()) + '</span><h2 class="lp-h2">' + esc(title) + '</h2></div><span class="lp-diagram-hint mono">' + esc(hint) + '</span></div>' +
+      '<div class="lp-diagram-scroll" tabindex="0"><svg class="lp-diagram-svg" viewBox="0 0 1000 420" role="img" aria-label="' + esc(title) + '"><defs><marker id="' + markerId + '" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z"></path></marker></defs>' + zones + edges + nodes + '</svg></div>' +
+    '</section>';
+  }
+
+  function projectTheme(slug) {
+    var themes = {
+      ttyl: ["#4D9B9B", "77 155 155"],
+      "task-manager": ["#C08A3E", "192 138 62"],
+      marketbot: ["#4F9A68", "79 154 104"],
+      forge: ["#8B72B7", "139 114 183"],
+      belfproctor: ["#6F8EAD", "111 142 173"],
+      "vfs-killer": ["#4D79A8", "77 121 168"],
+      "med-exe": ["#4F9696", "79 150 150"],
+      bioflux: ["#99984F", "153 152 79"],
+      "growthops-ai": ["#5275A8", "82 117 168"],
+      "car-superapp": ["#D47743", "212 119 67"],
+      "ai-classroom": ["#6879BF", "104 121 191"],
+      laplacefx: ["#659575", "101 149 117"]
+    };
+    return themes[slug] || ["#D97757", "217 119 87"];
   }
 
   // Build the full <body> inner HTML for one product in one language.
@@ -190,14 +397,20 @@
     // than looping back to a GitHub card. Public code-bearing products link to
     // their real repo instead.
     var githubBtn;
-    if (p.github) {
+    var isPrivate = p.private === true || p.status === "NDA";
+    var isPublicShowcase = p.status === "NDA" && !!p.github;
+    if (isPublicShowcase) {
       githubBtn =
         '<a class="lp-btn lp-btn-ghost" href="' + esc(p.github) + '" target="_blank" rel="noopener noreferrer">' +
-        esc(ui.viewGithub) + ' <span class="lp-arr">↗</span></a>';
-    } else if (p.private || p.status === "NDA") {
+        esc(ui.publicCase) + ' <span class="lp-arr">↗</span></a>';
+    } else if (isPrivate) {
       githubBtn =
         '<a class="lp-btn lp-btn-ghost" href="' + base + '#contact">' +
         esc(ui.requestAccess) + ' <span class="lp-arr">→</span></a>';
+    } else if (p.github) {
+      githubBtn =
+        '<a class="lp-btn lp-btn-ghost" href="' + esc(p.github) + '" target="_blank" rel="noopener noreferrer">' +
+        esc(ui.viewGithub) + ' <span class="lp-arr">↗</span></a>';
     } else {
       githubBtn = "";
     }
@@ -207,127 +420,68 @@
         esc(ui.qaMatrix) + " →</a>"
       : "";
 
+    var theme = projectTheme(p.slug);
+    var chapterIds = ["thesis", "context", "system", "evidence", "boundary"];
+    var chapterNav = chapterIds.map(function (id, i) {
+      return '<a href="#' + id + '" data-lp-chapter-link="' + id + '"><span class="mono">' + String(i + 1).padStart(2, "0") + '</span><b>' + esc(ui.chapters[i]) + '</b></a>';
+    }).join("");
+
     return (
-      // ── top bar ──
-      '<header class="lp-bar">' +
-        // Back to the exact card this landing was opened from (App scroll-to-hash
-        // centres #proj-<slug>; the intro is skipped for hashed loads).
-        '<a class="lp-back mono" href="' + base + "#proj-" + esc(p.slug) + '">' +
-          '<span class="lp-back-arr">←</span> SAMANDAR' +
-        "</a>" +
-        '<div class="lp-bar-right">' +
-          (p.status ? '<span class="lp-status mono lp-status--' + esc(String(p.status).toLowerCase()) + '">' + esc(p.status) + "</span>" : "") +
-          '<div class="lp-lang" role="group" aria-label="language">' + langBtns + "</div>" +
-        "</div>" +
-      "</header>" +
-
-      '<main class="lp" id="lp-main">' +
-
-        // ── hero ──
-        '<section class="lp-hero">' +
-          '<div class="lp-hero-text">' +
-            '<div class="lp-eyebrow mono">' + esc(c.tag || "") + "</div>" +
-            '<h1 class="lp-title">' + esc(p.name) + "</h1>" +
-            '<p class="lp-signal">' + esc(c.signal || "") + "</p>" +
-            // Credibility line — reinforces the Builder+QA positioning on every
-            // product page: who built it + the fact that one person owned the
-            // whole cycle including quality.
-            '<div class="lp-cred mono">' +
-              '<span class="lp-cred-dot" aria-hidden="true"></span>' +
-              (c.role ? '<b class="lp-cred-role">' + esc(c.role) + "</b> · " : "") +
-              esc(ui.builtBy) +
-            "</div>" +
-            '<div class="lp-cta">' +
-              '<a class="lp-btn lp-btn-primary" href="' + base + '#contact">' +
-                esc(ui.discuss) + ' <span class="lp-arr">→</span></a>' +
-              githubBtn +
-            "</div>" +
+      '<div class="lp-page lp-page--' + esc(p.slug) + '" style="--lp-accent:' + theme[0] + ';--lp-accent-rgb:' + theme[1] + '">' +
+        '<header class="lp-bar">' +
+          '<a class="lp-back mono" href="' + base + "#proj-" + esc(p.slug) + '"><span class="lp-back-arr">←</span><span>SAMANDAR</span></a>' +
+          '<div class="lp-current mono"><span class="lp-current-index">01</span><span class="lp-current-divider">/05</span><b class="lp-current-name">' + esc(ui.chapters[0]) + '</b></div>' +
+          '<div class="lp-bar-right">' +
+            (p.status ? '<span class="lp-status mono lp-status--' + esc(String(p.status).toLowerCase()) + '">' + esc(p.status) + "</span>" : "") +
+            '<div class="lp-lang" role="group" aria-label="language">' + langBtns + "</div>" +
           "</div>" +
-          '<div class="lp-hero-visual" aria-hidden="true">' +
-            '<div class="lp-screen">' +
-              '<div class="lp-screen-bar"><i></i><i></i><i></i><span class="mono">/' + esc(p.slug) + "</span></div>" +
-              '<div class="lp-screen-body"><img src="' + visual + '" alt="" loading="eager" decoding="async" width="1536" height="512"></div>' +
+        "</header>" +
+
+        '<main class="lp" id="lp-main">' +
+          '<section class="lp-hero" id="thesis" data-lp-chapter="thesis">' +
+            '<div class="lp-hero-text" data-lp-reveal>' +
+              '<div class="lp-eyebrow mono">' + esc(c.tag || "") + "</div>" +
+              '<h1 class="lp-title">' + esc(p.name) + "</h1>" +
+              '<p class="lp-signal">' + esc(c.signal || "") + "</p>" +
+              '<div class="lp-cred mono"><span class="lp-cred-dot" aria-hidden="true"></span>' +
+                (c.role ? '<b class="lp-cred-role">' + esc(c.role) + "</b> · " : "") + esc(ui.builtBy) + "</div>" +
+              '<div class="lp-cta"><a class="lp-btn lp-btn-primary" href="' + base + '#contact">' + esc(ui.discuss) + ' <span class="lp-arr">→</span></a>' + githubBtn + "</div>" +
             "</div>" +
-          "</div>" +
-        "</section>" +
+            '<figure class="lp-hero-visual" data-lp-reveal style="--reveal-delay:.08s"><div class="lp-photo"><img src="' + visual + '" alt="" loading="eager" fetchpriority="high" decoding="async" width="1536" height="512"></div><figcaption class="mono"><span>OBJECT / ' + esc(p.slug) + '</span><span>1536 × 512 · EDITORIAL STUDY</span></figcaption></figure>' +
+          "</section>" +
 
-        // ── at a glance ──
-        (c.quick && c.quick.length
-          ? '<section class="lp-quick" aria-label="' + esc(ui.quickView) + '">' + quickItems(c.quick, ui) + "</section>"
-          : "") +
+          '<nav class="lp-chapters" aria-label="' + esc(ui.chapterNav) + '">' + chapterNav + '</nav>' +
 
-        // ── what + problem ──
-        '<section class="lp-grid2">' +
-          block(ui.what, c.what) +
-          block(ui.problem, c.problem) +
-        "</section>" +
+          (c.quick && c.quick.length ? '<section class="lp-quick" aria-label="' + esc(ui.quickView) + '" data-lp-reveal>' + quickItems(c.quick, ui) + "</section>" : "") +
 
-        // ── stack ──
-        (p.stack && p.stack.length
-          ? '<section class="lp-stack">' +
-              '<h2 class="lp-h2">' + esc(ui.stack) + "</h2>" +
-              '<div class="lp-chips">' + chips(p.stack) + "</div>" +
-            "</section>"
-          : "") +
+          '<section class="lp-act lp-act--context" id="context" data-lp-chapter="context">' +
+            '<div class="lp-act-head" data-lp-reveal><span class="lp-act-num mono">02 / 05</span><h2>' + esc(ui.chapters[1]) + '</h2></div>' +
+            '<div class="lp-grid2" data-lp-reveal>' + block(ui.what, c.what) + block(ui.problem, c.problem) + "</div>" +
+          "</section>" +
 
-        // ── architecture + why ──
-        '<section class="lp-grid2">' +
-          block(ui.architecture, c.architecture) +
-          block(ui.why, c.why) +
-        "</section>" +
+          '<section class="lp-act lp-act--system" id="system" data-lp-chapter="system">' +
+            '<div class="lp-act-head" data-lp-reveal><span class="lp-act-num mono">03 / 05</span><h2>' + esc(ui.chapters[2]) + '</h2></div>' +
+            (p.stack && p.stack.length ? '<div class="lp-stack" data-lp-reveal><h2 class="lp-h2">' + esc(ui.stack) + '</h2><div class="lp-chips">' + chips(p.stack) + '</div></div>' : '') +
+            '<div class="lp-grid2" data-lp-reveal>' + block(ui.architecture, c.architecture) + block(ui.why, c.why) + "</div>" +
+            diagramMap(p.slug, lang, p.flow, ui.systemMap, ui.diagramHint) +
+          "</section>" +
 
-        // ── architecture map ──
-        flowMap(p.flow, ui.systemMap) +
+          '<section class="lp-act lp-act--evidence" id="evidence" data-lp-chapter="evidence">' +
+            '<div class="lp-act-head" data-lp-reveal><span class="lp-act-num mono">04 / 05</span><h2>' + esc(ui.chapters[3]) + '</h2></div>' +
+            '<div class="lp-grid2" data-lp-reveal>' + block(ui.unique, c.unique) + block(ui.employer, c.employer) + "</div>" +
+            (c.quality ? '<section class="lp-quality" data-lp-reveal><div class="lp-quality-glow" aria-hidden="true"></div><div class="lp-eyebrow mono lp-quality-eyebrow">Quality · QA</div><h2 class="lp-h2">' + esc(ui.quality) + '</h2><p class="lp-p">' + esc(c.quality) + '</p>' + qaLink + '</section>' : '') +
+          "</section>" +
 
-        // ── strengths + proof ──
-        '<section class="lp-grid2">' +
-          block(ui.unique, c.unique) +
-          block(ui.employer, c.employer) +
-        "</section>" +
+          '<section class="lp-act lp-act--boundary" id="boundary" data-lp-chapter="boundary">' +
+            '<div class="lp-act-head" data-lp-reveal><span class="lp-act-num mono">05 / 05</span><h2>' + esc(ui.chapters[4]) + '</h2></div>' +
+            (c.boundary ? '<div class="lp-boundary" data-lp-reveal><span class="lp-boundary-mark mono" aria-hidden="true">!</span><div><div class="lp-eyebrow mono">' + esc(ui.boundary) + '</div><p class="lp-p">' + esc(c.boundary) + '</p></div></div>' : '') +
+          "</section>" +
 
-        // ── quality / QA (the Builder+QA money shot) ──
-        (c.quality
-          ? '<section class="lp-quality">' +
-              '<div class="lp-quality-glow" aria-hidden="true"></div>' +
-              '<div class="lp-eyebrow mono lp-quality-eyebrow">Quality · QA</div>' +
-              '<h2 class="lp-h2">' + esc(ui.quality) + "</h2>" +
-              '<p class="lp-p">' + esc(c.quality) + "</p>" +
-              qaLink +
-            "</section>"
-          : "") +
+          '<section class="lp-final" data-lp-reveal><div class="lp-final-glow" aria-hidden="true"></div><span class="lp-eyebrow mono">NEXT · BUILD</span><h2 class="lp-final-head">' + esc(ui.ctaHead) + '</h2><p class="lp-final-sub">' + esc(ui.ctaSub) + '</p><div class="lp-cta lp-final-cta"><a class="lp-btn lp-btn-primary" href="' + base + '#contact">' + esc(ui.discuss) + ' <span class="lp-arr">→</span></a><a class="lp-btn lp-btn-ghost" href="' + TG + '" target="_blank" rel="noopener noreferrer">' + esc(ui.telegram) + ' <span class="lp-arr">↗</span></a></div></section>' +
 
-        // ── honest boundary / residual risk ──
-        (c.boundary
-          ? '<section class="lp-boundary">' +
-              '<span class="lp-boundary-mark mono" aria-hidden="true">!</span>' +
-              '<div><div class="lp-eyebrow mono">' + esc(ui.boundary) + "</div>" +
-              '<p class="lp-p">' + esc(c.boundary) + "</p></div>" +
-            "</section>"
-          : "") +
-
-        // ── closing conversion block (the selling climax) ──
-        '<section class="lp-final">' +
-          '<div class="lp-final-glow" aria-hidden="true"></div>' +
-          '<h2 class="lp-final-head">' + esc(ui.ctaHead) + "</h2>" +
-          '<p class="lp-final-sub">' + esc(ui.ctaSub) + "</p>" +
-          '<div class="lp-cta lp-final-cta">' +
-            '<a class="lp-btn lp-btn-primary" href="' + base + '#contact">' +
-              esc(ui.discuss) + ' <span class="lp-arr">→</span></a>' +
-            '<a class="lp-btn lp-btn-ghost" href="' + TG + '" target="_blank" rel="noopener noreferrer">' +
-              esc(ui.telegram) + ' <span class="lp-arr">↗</span></a>' +
-          "</div>" +
-        "</section>" +
-
-        // ── footer ──
-        // Footer goes to the full list — matching its own label ("Все проекты").
-        // Returning to the exact card is already covered by the top-bar
-        // "← SAMANDAR" link, so both exits exist and neither label lies.
-        '<footer class="lp-foot">' +
-          '<a class="lp-foot-back mono" href="' + base + '#projects"><span class="lp-back-arr">←</span> ' + esc(ui.allProjects) + "</a>" +
-          '<span class="lp-foot-note mono">' + esc(ui.footNote) + "</span>" +
-        "</footer>" +
-
-      "</main>"
+          '<footer class="lp-foot"><a class="lp-foot-back mono" href="' + base + '#projects"><span class="lp-back-arr">←</span> ' + esc(ui.allProjects) + '</a><span class="lp-foot-note mono">' + esc(ui.footNote) + '</span></footer>' +
+        "</main>" +
+      "</div>"
     );
   }
 

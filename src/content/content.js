@@ -1749,8 +1749,7 @@ const PROJECT_ADDITIONS = [
     slug: "izatullo",
     name: "IZATULO / BEL ALMA",
     status: "LIVE",
-    url: "https://samandarmansurkhodjaev2713.github.io/izatullo-komir-/",
-    github: "https://github.com/SamandarMansurkhodjaev2713/izatullo-komir-",
+    url: "https://izzatullo.uz/",
     stack: ["HTML", "CSS", "JavaScript", "Playwright", "GitHub Pages"],
     i18n: {
       ru: {

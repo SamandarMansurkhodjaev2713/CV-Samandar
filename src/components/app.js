@@ -50,6 +50,30 @@ const LINKS = {
   email: "sam4k27@gmail.com"
 };
 const NAV_SECTIONS = ["about", "projects", "skills", "services", "cv", "faq", "contact"];
+const FULL_MENU_SECTIONS = ["hero", "signal", "about", "projects", "skills", "services", "cv", "process", "builder", "faq", "trust", "contact"];
+const FULL_MENU_LABELS = {
+  ru: {
+    hero: "Старт",
+    signal: "Почему со мной",
+    process: "Метод",
+    builder: "Конструктор",
+    trust: "Гарантия качества"
+  },
+  en: {
+    hero: "Start",
+    signal: "Why me",
+    process: "Method",
+    builder: "Project builder",
+    trust: "Quality proof"
+  },
+  uz: {
+    hero: "Boshlanish",
+    signal: "Nega men",
+    process: "Jarayon",
+    builder: "Konstruktor",
+    trust: "Sifat kafolati"
+  }
+};
 
 // ── Haptic helper.
 // `navigator.vibrate` is supported on Android Chrome and ~most Android browsers.
@@ -130,18 +154,21 @@ const EXTRA_SECTION_LABELS = {
     hero: "Старт",
     signal: "Сигнал",
     process: "Метод",
+    builder: "Конструктор",
     trust: "Качество"
   },
   en: {
     hero: "Start",
     signal: "Signal",
     process: "Method",
+    builder: "Builder",
     trust: "Quality"
   },
   uz: {
     hero: "Boshlanish",
     signal: "Signal",
     process: "Metod",
+    builder: "Konstruktor",
     trust: "Sifat"
   }
 };
@@ -156,6 +183,10 @@ const EXTRA_SECTION_LABELS = {
 function flyTo(id) {
   const el = document.getElementById(id);
   if (!el) return;
+  if (window.SceneCinema && typeof window.SceneCinema.navigate === "function") {
+    window.SceneCinema.navigate(id);
+    return;
+  }
   const reduced = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   try {
     history.replaceState(null, "", "#" + id);
@@ -341,7 +372,7 @@ function Nav({
     className: "nav-menu-inner"
   }, /*#__PURE__*/React.createElement("ul", {
     className: "nav-menu-links"
-  }, NAV_SECTIONS.map((k, i) => /*#__PURE__*/React.createElement("li", {
+  }, FULL_MENU_SECTIONS.map((k, i) => /*#__PURE__*/React.createElement("li", {
     key: k,
     style: {
       "--i": i
@@ -356,7 +387,7 @@ function Nav({
     className: "nav-menu-mask"
   }, /*#__PURE__*/React.createElement("span", {
     className: "nav-menu-word"
-  }, t.nav[k])), /*#__PURE__*/React.createElement("span", {
+  }, t.nav[k] || FULL_MENU_LABELS[lang][k])), /*#__PURE__*/React.createElement("span", {
     className: "nav-menu-arrow",
     "aria-hidden": "true"
   }, "\u2192"))))), /*#__PURE__*/React.createElement("div", {
@@ -482,6 +513,7 @@ function resolveNavIndex(activeSection, order) {
 }
 function MobileScrollDock({
   t,
+  lang,
   activeSection,
   visible
 }) {
@@ -497,7 +529,9 @@ function MobileScrollDock({
   const order = useSectionOrder();
   const activeIdx = resolveNavIndex(activeSection, order);
   const activeId = NAV_SECTIONS[activeIdx];
-  const activeLabel = t.nav && t.nav[activeId] || "";
+  const extra = EXTRA_SECTION_LABELS[lang] || EXTRA_SECTION_LABELS.ru;
+  const activeLabel = t.nav && t.nav[activeSection] || extra[activeSection] || t.nav && t.nav[activeId] || "";
+  const chapterIdx = Math.max(0, (order || []).indexOf(activeSection));
   return /*#__PURE__*/React.createElement("div", {
     className: `mobile-dock ${visible ? "is-visible" : ""}`,
     role: "navigation",
@@ -516,7 +550,14 @@ function MobileScrollDock({
     "aria-live": "polite"
   }, /*#__PURE__*/React.createElement("span", {
     className: "mobile-dock-label-num"
-  }, "/", String(activeIdx + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("span", null, activeLabel)));
+  }, "/", String(chapterIdx + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("span", null, activeLabel)), /*#__PURE__*/React.createElement("a", {
+    className: "mobile-dock-cta",
+    href: "#contact",
+    onClick: () => haptic("toggle")
+  }, /*#__PURE__*/React.createElement("span", null, t.hero.cta_primary), /*#__PURE__*/React.createElement("span", {
+    className: "arrow",
+    "aria-hidden": "true"
+  }, "\u2192")));
 }
 function MobileStickyCta({
   t,
@@ -770,19 +811,61 @@ function App() {
         history.scrollRestoration = "manual";
       } catch (e) {/* opportunistic */}
     }
-    let tries = 0;
+    let cancelled = false;
+    const timers = [];
+    function cancelOnIntent() {
+      cancelled = true;
+    }
+    window.addEventListener("wheel", cancelOnIntent, {
+      passive: true,
+      once: true
+    });
+    window.addEventListener("touchstart", cancelOnIntent, {
+      passive: true,
+      once: true
+    });
+    window.addEventListener("pointerdown", cancelOnIntent, {
+      passive: true,
+      once: true
+    });
+    window.addEventListener("keydown", cancelOnIntent, {
+      once: true
+    });
     function tryScroll() {
+      if (cancelled) return;
       const el = document.getElementById(id);
       if (el && el.offsetParent !== null) {
-        el.scrollIntoView({
-          behavior: "auto",
-          block: id.indexOf("proj-") === 0 ? "center" : "start"
-        });
-        return;
+        // Force an instant jump even though the root stylesheet declares
+        // smooth scrolling. This prevents the delayed two-stage return that
+        // was visible for cards near the end of the 21-item catalog.
+        const root = document.documentElement;
+        const previous = root.style.scrollBehavior;
+        root.style.scrollBehavior = "auto";
+        try {
+          el.scrollIntoView({
+            behavior: "instant",
+            block: id.indexOf("proj-") === 0 ? "center" : "start"
+          });
+        } finally {
+          root.style.scrollBehavior = previous;
+        }
       }
-      if (tries++ < 40) requestAnimationFrame(tryScroll);
     }
-    requestAnimationFrame(tryScroll);
+    // React mount, project expansion and pin-host binding each change layout at
+    // a different moment. Re-assert the same deterministic target across those
+    // milestones, but stop instantly on any real user intent so the page never
+    // fights manual scrolling.
+    [0, 120, 360, 760, 1280].forEach(delay => {
+      timers.push(window.setTimeout(tryScroll, delay));
+    });
+    return () => {
+      cancelled = true;
+      timers.forEach(timer => window.clearTimeout(timer));
+      window.removeEventListener("wheel", cancelOnIntent);
+      window.removeEventListener("touchstart", cancelOnIntent);
+      window.removeEventListener("pointerdown", cancelOnIntent);
+      window.removeEventListener("keydown", cancelOnIntent);
+    };
   }, []);
   useE(() => {
     document.documentElement.setAttribute("data-density", tweaks.density);
@@ -917,13 +1000,11 @@ function App() {
   }))), /*#__PURE__*/React.createElement(Footer, {
     t: t,
     links: LINKS
-  }), /*#__PURE__*/React.createElement(MobileStickyCta, {
-    t: t,
-    visible: midScrollVisible
   }), /*#__PURE__*/React.createElement(MobileScrollDock, {
     t: t,
+    lang: lang,
     activeSection: activeSection,
-    visible: midScrollVisible
+    visible: midScrollVisible && activeSection !== "contact"
   }), /*#__PURE__*/React.createElement(PortfolioTweaks, {
     t: tweaks,
     setTweak: setTweak

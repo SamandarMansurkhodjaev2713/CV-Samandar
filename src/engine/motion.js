@@ -539,6 +539,10 @@
     // Flick-scrolling → snap it in. Also drop the authored stagger delay: a
     // 0.15s head start is a nice beat while reading and pure latency mid-flick.
     const fast = isFastScroll();
+    // Promote only when the element is actually entering the viewport. The
+    // previous eager promotion kept dozens of off-screen layers alive across
+    // the 17k-pixel page and spent GPU memory for no visible benefit.
+    el.style.willChange = "opacity, transform";
     el.style.transition = fast ? REVEAL_TRANSITION_FAST : REVEAL_TRANSITION;
     const delay = fast ? 0 : parseFloat(el.getAttribute("data-reveal-delay") || "0");
     if (delay) el.style.transitionDelay = `${delay}s`;
@@ -669,7 +673,6 @@
         el.style.transition = "none";
         el.style.setProperty("opacity", "0", "important");
         el.style.setProperty("transform", el.dataset.revealFrom || "translateY(48px) scale(.965)", "important");
-        el.style.willChange = "opacity, transform";
       }
       // Register with BOTH triggers — IntersectionObserver (primary, precise)
       // and the scroll/poll set (fallback). triggerReveal is idempotent, so the

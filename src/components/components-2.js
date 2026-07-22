@@ -969,6 +969,7 @@ function ProjectBuilder({
     };
   });
   return /*#__PURE__*/React.createElement("section", {
+    "data-section": "builder",
     id: "builder",
     className: "builder-sec",
     "data-enter": "assemble",
@@ -976,6 +977,7 @@ function ProjectBuilder({
   }, /*#__PURE__*/React.createElement("div", {
     className: "shell"
   }, /*#__PURE__*/React.createElement(SecHead, {
+    num: "08",
     eyebrow: b.eyebrow,
     title: b.title,
     meta: "build.preview()"
@@ -1263,7 +1265,7 @@ function Faq({
   }, /*#__PURE__*/React.createElement("div", {
     className: "shell"
   }, /*#__PURE__*/React.createElement(SecHead, {
-    num: "08",
+    num: "09",
     eyebrow: t.faq.eyebrow,
     title: t.faq.title,
     meta: `${items.length} · Q&A`
@@ -1313,7 +1315,7 @@ function Trust({
   }, /*#__PURE__*/React.createElement("div", {
     className: "shell"
   }, /*#__PURE__*/React.createElement(SecHead, {
-    num: "09",
+    num: "10",
     eyebrow: t.trust.eyebrow,
     title: t.trust.title,
     meta: `${proof.length} · open`
@@ -1578,7 +1580,7 @@ function Contact({
   }, /*#__PURE__*/React.createElement("div", {
     className: "shell"
   }, /*#__PURE__*/React.createElement(SecHead, {
-    num: "10",
+    num: "11",
     eyebrow: t.contact.eyebrow,
     title: t.contact.title,
     em: t.contact.title.split(" ").pop(),
@@ -1610,11 +1612,12 @@ function Contact({
   }, /*#__PURE__*/React.createElement("span", {
     className: "ff-k mono"
   }, t.contact.form.email), /*#__PURE__*/React.createElement("input", {
-    type: "text",
+    type: "email",
     name: "email",
     required: true,
     className: "ff-input",
-    autoComplete: "email"
+    autoComplete: "email",
+    inputMode: "email"
   }))), /*#__PURE__*/React.createElement("div", {
     className: "ff"
   }, /*#__PURE__*/React.createElement("span", {

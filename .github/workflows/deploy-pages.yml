@@ -36,9 +36,10 @@ jobs:
 
       - name: Prepare static artifact
         run: |
-          mkdir _site
+          mkdir -p _site/vendor
           cp index.html 404.html .nojekyll favicon.svg og-image.png _site/
-          cp -R assets docs projects screenshots src uploads vendor _site/
+          cp -R assets projects src _site/
+          cp vendor/three.min.js vendor/react.production.min.js vendor/react-dom.production.min.js _site/vendor/
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

@@ -568,7 +568,7 @@ function buildContribCells(rows, cols) {
   return out;
 }
 
-function useAnimatedCounter(target, durationMs, runWhen) {
+function useAnimatedCounter(target, durationMs, runWhen, precision) {
   const [value, setValue] = useState(0);
   useEffect(() => {
     if (!runWhen) return;
@@ -579,7 +579,8 @@ function useAnimatedCounter(target, durationMs, runWhen) {
       const t = Math.min(1, elapsed / durationMs);
       // ease-out cubic
       const eased = 1 - Math.pow(1 - t, 3);
-      setValue(Math.round(eased * target));
+      const factor = Math.pow(10, precision || 0);
+      setValue(Math.round(eased * target * factor) / factor);
       if (t < 1) raf = requestAnimationFrame(step);
     }
     raf = requestAnimationFrame(step);
@@ -588,13 +589,15 @@ function useAnimatedCounter(target, durationMs, runWhen) {
   return value;
 }
 
-// Pull numeric "target" out of a string like "6+", "30+", "12", "RU/EN/UZ".
+// Pull numeric "target" out of a string like "1.5+", "30+", "12", "RU/EN/UZ".
 // Non-numeric strings render as-is (RU/EN/UZ).
 function extractCounterTarget(stat) {
   const v = String(stat.v || "");
-  const m = v.match(/(\d+)/);
+  const m = v.match(/(\d+(?:[.,]\d+)?)/);
   if (!m) return { kind: "text", text: v };
-  return { kind: "num", number: parseInt(m[1], 10), suffix: v.slice(m.index + m[1].length) };
+  const normalized = m[1].replace(",", ".");
+  const fraction = normalized.split(".")[1] || "";
+  return { kind: "num", number: Number(normalized), precision: fraction.length, suffix: v.slice(m.index + m[1].length) };
 }
 
 function AboutStat({ stat, runCounters, index }) {
@@ -603,11 +606,12 @@ function AboutStat({ stat, runCounters, index }) {
     parsed.kind === "num" ? parsed.number : 0,
     1100 + index * 90,
     parsed.kind === "num" && runCounters,
+    parsed.kind === "num" ? parsed.precision : 0,
   );
   return (
     <div className="about-stat" data-reveal data-reveal-delay={(index * 0.05).toFixed(2)}>
       <div className="about-stat-v num-tab">
-        {parsed.kind === "num" ? `${counterValue}${parsed.suffix}` : parsed.text}
+        {parsed.kind === "num" ? `${counterValue.toFixed(parsed.precision)}${parsed.suffix}` : parsed.text}
       </div>
       <div className="about-stat-k mono">{stat.k}</div>
     </div>
@@ -889,45 +893,58 @@ function formatTashkentTime(date) {
 // (Superseded the earlier hand-drawn SVG blueprint set, which was keyed by
 // display name — that map and its 13 .svg files were removed with this change.)
 const PROJ_CARD = {
-  "klawis":           { src: "assets/proj/klawis.webp",           bg: "#07111F" },
-  "softly":           { src: "assets/proj/softly.webp",           bg: "#241428" },
-  "growthops-ai":     { src: "assets/proj/growthops-ai.webp",     bg: "#06122D" },
-  "ttyl":             { src: "assets/proj/ttyl.webp",             bg: "#04171B" },
-  "dostupnoe-pravo":  { src: "assets/proj/dostupnoe-pravo.webp",  bg: "#210B0D" },
-  "ai-classroom":     { src: "assets/proj/ai-classroom.webp",     bg: "#11102B" },
-  "car-superapp":     { src: "assets/proj/car-superapp.webp",     bg: "#03090F" },
-  "helion":           { src: "assets/proj/helion.webp",           bg: "#020711" },
-  "stones":           { src: "assets/proj/stones.webp",           bg: "#14120F" },
-  "sentinel-edge":    { src: "assets/proj/sentinel.webp",         bg: "#06110A" },
-  "cardioguard":      { src: "assets/proj/cardioguard.webp",      bg: "#071014" },
-  "task-manager":     { src: "assets/proj/task-manager.webp",     bg: "#160E08" },
-  "marketbot":        { src: "assets/proj/marketbot.webp",        bg: "#06170F" },
-  "izatullo":         { src: "assets/proj/izatullo.webp",         bg: "#15110B" },
-  "forge":            { src: "assets/proj/forge.webp",            bg: "#110A24" },
-  "belfproctor":      { src: "assets/proj/belfproctor.webp",      bg: "#091123" },
-  "laplacefx":        { src: "assets/proj/laplacefx.webp",        bg: "#03130D" },
-  "bioflux":          { src: "assets/proj/bioflux.webp",          bg: "#181504" },
-  "vfs-killer":       { src: "assets/proj/vfs-killer.webp",       bg: "#020B15" },
-  "med-exe":          { src: "assets/proj/med-exe.webp",          bg: "#031416" },
-  "3d-landing":       { src: "assets/proj/3d-landing.webp",       bg: "#0E0723" },
+  "klawis":           { src: "assets/proj/klawis.webp",           bg: "#1F1E1B", accent: "#C89B5E" },
+  "softly":           { src: "assets/proj/softly.webp",           bg: "#1F1E1B", accent: "#C4788A" },
+  "growthops-ai":     { src: "assets/proj/growthops-ai.webp",     bg: "#1F1E1B", accent: "#5879A8" },
+  "ttyl":             { src: "assets/proj/ttyl.webp",             bg: "#1F1E1B", accent: "#4D9295" },
+  "dostupnoe-pravo":  { src: "assets/proj/dostupnoe-pravo.webp",  bg: "#1F1E1B", accent: "#9B4D52" },
+  "ai-classroom":     { src: "assets/proj/ai-classroom.webp",     bg: "#1F1E1B", accent: "#6879BF" },
+  "car-superapp":     { src: "assets/proj/car-superapp.webp",     bg: "#1F1E1B", accent: "#D47743" },
+  "helion":           { src: "assets/proj/helion.webp",           bg: "#1F1E1B", accent: "#89AECB" },
+  "stones":           { src: "assets/proj/stones.webp",           bg: "#1F1E1B", accent: "#A88D6B" },
+  "sentinel-edge":    { src: "assets/proj/sentinel.webp",         bg: "#1F1E1B", accent: "#8FB33E" },
+  "cardioguard":      { src: "assets/proj/cardioguard.webp",      bg: "#1F1E1B", accent: "#D2604F" },
+  "task-manager":     { src: "assets/proj/task-manager.webp",     bg: "#1F1E1B", accent: "#C08A3E" },
+  "marketbot":        { src: "assets/proj/marketbot.webp",        bg: "#1F1E1B", accent: "#4F9A68" },
+  "izatullo":         { src: "assets/proj/izatullo.webp",         bg: "#1F1E1B", accent: "#B5762F" },
+  "forge":            { src: "assets/proj/forge.webp",            bg: "#1F1E1B", accent: "#8B72B7" },
+  "belfproctor":      { src: "assets/proj/belfproctor.webp",      bg: "#1F1E1B", accent: "#6F8EAD" },
+  "laplacefx":        { src: "assets/proj/laplacefx.webp",        bg: "#1F1E1B", accent: "#659575" },
+  "bioflux":          { src: "assets/proj/bioflux.webp",          bg: "#1F1E1B", accent: "#99984F" },
+  "vfs-killer":       { src: "assets/proj/vfs-killer.webp",       bg: "#1F1E1B", accent: "#4D79A8" },
+  "med-exe":          { src: "assets/proj/med-exe.webp",          bg: "#1F1E1B", accent: "#4F9696" },
+  "3d-landing":       { src: "assets/proj/3d-landing.webp",       bg: "#1F1E1B", accent: "#7767AF" },
 };
 
 function ProjectCard({ p, i, labels }) {
   const cardRef = useRef(null);
+  const moveFrameRef = useRef(0);
+  const cardRectRef = useRef(null);
+  const latestPointerRef = useRef({ x: 0, y: 0 });
   function onMove(e) {
     const el = cardRef.current;
     if (!el) return;
-    const r = el.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width - 0.5;
-    const y = (e.clientY - r.top) / r.height - 0.5;
-    el.style.setProperty("--rx", `${(-y * 6).toFixed(2)}deg`);
-    el.style.setProperty("--ry", `${(x * 6).toFixed(2)}deg`);
-    el.style.setProperty("--mx", `${((x + 0.5) * 100).toFixed(1)}%`);
-    el.style.setProperty("--my", `${((y + 0.5) * 100).toFixed(1)}%`);
+    if (!cardRectRef.current) cardRectRef.current = el.getBoundingClientRect();
+    latestPointerRef.current = { x: e.clientX, y: e.clientY };
+    if (moveFrameRef.current) return;
+    moveFrameRef.current = requestAnimationFrame(() => {
+      moveFrameRef.current = 0;
+      const r = cardRectRef.current;
+      if (!r || !r.width || !r.height) return;
+      const x = (latestPointerRef.current.x - r.left) / r.width - 0.5;
+      const y = (latestPointerRef.current.y - r.top) / r.height - 0.5;
+      el.style.setProperty("--rx", `${(-y * 2.8).toFixed(2)}deg`);
+      el.style.setProperty("--ry", `${(x * 2.8).toFixed(2)}deg`);
+      el.style.setProperty("--mx", `${((x + 0.5) * 100).toFixed(1)}%`);
+      el.style.setProperty("--my", `${((y + 0.5) * 100).toFixed(1)}%`);
+    });
   }
   function onLeave() {
     const el = cardRef.current;
     if (!el) return;
+    cardRectRef.current = null;
+    if (moveFrameRef.current) cancelAnimationFrame(moveFrameRef.current);
+    moveFrameRef.current = 0;
     el.style.setProperty("--rx", `0deg`);
     el.style.setProperty("--ry", `0deg`);
   }
@@ -958,7 +975,7 @@ function ProjectCard({ p, i, labels }) {
       ref={cardRef}
       id={p.slug ? "proj-" + p.slug : (landingSlug ? "proj-" + landingSlug : undefined)}
       className="proj-card card"
-      style={{ "--proj-i": i }}
+      style={{ "--proj-i": i, "--proj-accent": (PROJ_CARD[p.slug] && PROJ_CARD[p.slug].accent) || "var(--accent)" }}
       onMouseMove={onMove}
       onMouseLeave={onLeave}
     >
@@ -1083,6 +1100,11 @@ function ProjectChapterDots({ items, gridRef, label }) {
     if (el) el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   }
 
+  function onStep(delta) {
+    const next = Math.max(0, Math.min(cardRefs.current.length - 1, activeIdx + delta));
+    onDot(next);
+  }
+
   const dotWindow = 7;
   const maxStart = Math.max(0, items.length - dotWindow);
   const windowStart = Math.max(0, Math.min(maxStart, activeIdx - Math.floor(dotWindow / 2)));
@@ -1109,6 +1131,10 @@ function ProjectChapterDots({ items, gridRef, label }) {
         <span className="proj-chapters-num">{String(activeIdx + 1).padStart(2, "0")}</span>
         <span className="proj-chapters-of">/ {String(items.length).padStart(2, "0")}</span>
         <span className="proj-chapters-name">{items[activeIdx]?.name || ""}</span>
+      </div>
+      <div className="proj-chapters-controls">
+        <button type="button" onClick={() => onStep(-1)} disabled={activeIdx <= 0} aria-label="Previous project">←</button>
+        <button type="button" onClick={() => onStep(1)} disabled={activeIdx >= items.length - 1} aria-label="Next project">→</button>
       </div>
     </nav>
   );
