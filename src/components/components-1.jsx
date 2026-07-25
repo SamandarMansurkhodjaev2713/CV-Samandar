@@ -995,6 +995,7 @@ function ProjectCard({ p, i, labels }) {
         {PROJ_CARD[p.slug] ? (
           <div
             className="proj-screen-body proj-screen-body--img"
+            data-imgfx
             style={{ background: PROJ_CARD[p.slug].bg }}
           >
             {/* Purpose-built 3D product diorama inside the shared monitor

@@ -942,6 +942,36 @@ body::after {
 }
 html.is-flying body::after { opacity: 1; }
 
+/* ══ Per-act accent (acts.js sets --act-accent / --act-accent-rgb) ══════════
+   The ATMOSPHERIC accent drifts with the journey — steel at the cool start,
+   copper through the projects heart, slate in the engineering blocks, brass at
+   the destination. Applied only to ambient surfaces (eyebrows, hairlines,
+   telemetry, section signatures). The brand tokens --accent/--accent-rgb are
+   deliberately untouched, so the primary CTA and the brand mark stay the same
+   colour on every screen — the page travels, the button you click does not.
+   Every rule falls back to --accent, so a no-JS render is unchanged. */
+.sec-head .num,
+.eyebrow,
+.nav-counter .drum-n,
+.proj-chapters-num,
+.mobile-dock-label-num {
+  color: var(--act-accent, var(--accent));
+  transition: color 1.4s ease;
+}
+.sec-head::after {
+  background: linear-gradient(90deg, var(--act-accent, var(--accent)) 0%, var(--accent-2) 70%, transparent 100%);
+  transition: width var(--d-slow) var(--ease-out), background 1.4s ease;
+}
+.nav-counter-track i {
+  background: linear-gradient(90deg, var(--act-accent, var(--accent)), var(--accent-2));
+  transition: transform .6s var(--ease-out), background 1.4s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sec-head .num, .eyebrow, .nav-counter .drum-n,
+  .proj-chapters-num, .mobile-dock-label-num,
+  .sec-head::after, .nav-counter-track i { transition-duration: .01ms; }
+}
+
 /* ── Act shutters (acts.js) — the instrument-hatch blink at the two major
    act changes (entering projects / contact). Plates live off-screen; .is-run
    plays one close-and-retreat beat. Non-blocking, GPU-only. */

@@ -41,21 +41,31 @@
     return "radial-gradient(ellipse 80% 55% at 50% 112%, rgba(" + rgb + ", " + a + "), transparent 60%)";
   }
 
+  // Per-act accents. These drift with the journey and drive ATMOSPHERIC accent
+  // surfaces only — eyebrows, hairlines, telemetry, signature animations. The
+  // brand tokens (--accent on the CTA, the brand mark) deliberately never move:
+  // a primary button that changes colour every screen stops reading as "the
+  // button" and quietly costs conversions. So the page feels like it travels
+  // while the thing you click stays a constant.
+  var COPPER = "205, 122, 74";  // projects — the warm heart, close to Ember but its own
+  var SLATE  = "122, 145, 168"; // engineering blocks — cool, analytical
+  var SAND   = "196, 160, 108"; // services/faq — warm neutral, between ember and brass
+
   // Section → act preset. --act-bg deltas are ±3–5 per channel around the
   // base #1F1E1B (31,30,27) — felt as atmosphere, never read as a repaint.
   // The glow layer carries the legible part of the journey.
   var ACTS = {
-    hero:     { bg: "#1D1E20", glow: topGlow(STEEL, 0.055) },                             // coolest — the start
-    signal:   { bg: "#1E1E1E", glow: topGlow(STEEL, 0.04) },
-    about:    { bg: "#1F1E1B", glow: topGlow(EMBER, 0.04) },                              // neutral warm (base)
-    projects: { bg: "#211E19", glow: topGlow(EMBER, 0.06) },                              // warm — the heart
-    skills:   { bg: "#1C1D1F", glow: topGlow(STEEL, 0.05) },                              // cool dip — the radar
-    services: { bg: "#201E1A", glow: topGlow(EMBER, 0.05) },
-    cv:       { bg: "#1C1D1E", glow: topGlow(STEEL, 0.045) },                             // cool dip — the document
-    process:  { bg: "#1E1D1B", glow: topGlow(EMBER, 0.035) },
-    faq:      { bg: "#201E1A", glow: topGlow(EMBER, 0.045) },                             // warming back up
-    trust:    { bg: "#221E18", glow: topGlow(EMBER, 0.055) },
-    contact:  { bg: "#231F17", glow: topGlow(EMBER, 0.065) + ", " + duskGlow(BRASS, 0.05) }, // warmest — destination
+    hero:     { bg: "#1D1E20", accent: STEEL,  glow: topGlow(STEEL, 0.055) },              // coolest — the start
+    signal:   { bg: "#1E1E1E", accent: STEEL,  glow: topGlow(STEEL, 0.04) },
+    about:    { bg: "#1F1E1B", accent: EMBER,  glow: topGlow(EMBER, 0.04) },               // neutral warm (base)
+    projects: { bg: "#211E19", accent: COPPER, glow: topGlow(EMBER, 0.06) },               // warm — the heart
+    skills:   { bg: "#1C1D1F", accent: SLATE,  glow: topGlow(STEEL, 0.05) },               // cool dip — the radar
+    services: { bg: "#201E1A", accent: SAND,   glow: topGlow(EMBER, 0.05) },
+    cv:       { bg: "#1C1D1E", accent: SLATE,  glow: topGlow(STEEL, 0.045) },              // cool dip — the document
+    process:  { bg: "#1E1D1B", accent: SLATE,  glow: topGlow(EMBER, 0.035) },
+    faq:      { bg: "#201E1A", accent: SAND,   glow: topGlow(EMBER, 0.045) },              // warming back up
+    trust:    { bg: "#221E18", accent: BRASS,  glow: topGlow(EMBER, 0.055) },
+    contact:  { bg: "#231F17", accent: BRASS,  glow: topGlow(EMBER, 0.065) + ", " + duskGlow(BRASS, 0.05) }, // warmest — destination
   };
   var DEFAULT_ACT = "about"; // the neutral base — what no-JS/unknown ids resolve to
 
@@ -122,6 +132,10 @@
     if (current === act) return;
     current = act;
     document.documentElement.style.setProperty("--act-bg", act.bg);
+    // Atmospheric accent for this act. CSS transitions it (see styles.css), so
+    // eyebrows/hairlines/telemetry drift with the journey rather than snapping.
+    document.documentElement.style.setProperty("--act-accent-rgb", act.accent);
+    document.documentElement.style.setProperty("--act-accent", "rgb(" + act.accent + ")");
     // Crossfade: paint the incoming gradient on the back veil, then swap roles.
     var front = frontIsA ? veilA : veilB;
     var back  = frontIsA ? veilB : veilA;

@@ -844,7 +844,15 @@
     try { coarse = window.matchMedia("(pointer: coarse)").matches; } catch (e) { /* opportunistic */ }
     if (!coarse || reduceMotion || !("IntersectionObserver" in window)) return;
     const io = new IntersectionObserver(function (entries) {
-      for (const e of entries) e.target.classList.toggle("in-focus", e.isIntersecting);
+      for (const e of entries) {
+        e.target.classList.toggle("in-focus", e.isIntersecting);
+        // Touch has no hover, so the centre-stage card is also what the image
+        // shader follows (img-fx.js listens for this).
+        if (e.isIntersecting) {
+          try { window.dispatchEvent(new CustomEvent("sm:focus-card", { detail: { el: e.target } })); }
+          catch (err) { /* opportunistic */ }
+        }
+      }
     }, { rootMargin: "-38% 0px -38% 0px", threshold: 0 });
     function bind() {
       document.querySelectorAll(".proj-card:not(.cs-bound)").forEach(function (el) {

@@ -1244,6 +1244,7 @@ function ProjectCard({
     className: "mono"
   }, "/", p.slug || p.name.toLowerCase().replace(/\s+/g, "-"))), PROJ_CARD[p.slug] ? /*#__PURE__*/React.createElement("div", {
     className: "proj-screen-body proj-screen-body--img",
+    "data-imgfx": true,
     style: {
       background: PROJ_CARD[p.slug].bg
     }

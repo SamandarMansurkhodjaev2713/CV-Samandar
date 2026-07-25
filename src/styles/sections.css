@@ -1250,7 +1250,20 @@
 /* Cinematic product diorama inside the shared monitor. Every source is authored
    at the same 3:1 ratio, so cover remains crop-safe across responsive card
    widths while keeping the illustration edge-to-edge and fully saturated. */
-.proj-screen-body--img { padding: 0; }
+.proj-screen-body--img { padding: 0; position: relative; }
+/* Living imagery (img-fx.js) — the shader canvas is an overlay ON TOP of the
+   real <img>, never a replacement. If WebGL is unavailable, the context is
+   refused, or the frame governor drops to "low", nothing is appended and the
+   sharp still image below is exactly what ships. */
+.imgfx-canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  display: block; pointer-events: none; z-index: 1;
+  opacity: 0; transition: opacity .3s ease;
+}
+.has-imgfx .imgfx-canvas { opacity: 1; }
+/* Hide the still underneath only once the canvas is actually painting, so the
+   swap can never show a gap. */
+.has-imgfx .proj-screen-img { opacity: 0; transition: opacity .3s ease .05s; }
 .proj-screen-img {
   width: 100%; height: 100%;
   object-fit: cover; object-position: center;
