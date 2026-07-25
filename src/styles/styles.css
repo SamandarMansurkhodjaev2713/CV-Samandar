@@ -641,6 +641,14 @@ body.cursor-hover .cursor-dot { opacity: 0; }
   letter-spacing: -0.035em;
   text-wrap: balance;
 }
+/* Variable-weight arrival. Geist ships as a 300..700 variable face, so the
+   heading can gain weight as it lands rather than cutting between two static
+   instances. Paired with the mask reveal it reads as the type settling into
+   place under its own mass. Browsers that only got a static fallback simply
+   render the nearest cut — no layout shift either way, because the mask
+   already reserves the line box. */
+.sec-head h2 { font-weight: 520; transition: font-weight 1.1s var(--ease-out) .1s; }
+.sec-head.rv-in h2 { font-weight: 650; }
 .sec-head .lm { display: block; overflow: hidden; padding-bottom: 0.08em; margin-bottom: -0.08em; }
 .sec-head .lm-i {
   display: block;
@@ -655,6 +663,7 @@ body.cursor-hover .cursor-dot { opacity: 0; }
 @keyframes secFlash { from { width: 0; } }
 @media (prefers-reduced-motion: reduce) {
   .sec-head .lm-i { transform: none; transition: none; }
+  .sec-head h2, .sec-head.rv-in h2 { font-weight: 650; transition: none; }
 }
 .sec-head h2 .em {
   color: var(--accent);

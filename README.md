@@ -1,70 +1,96 @@
 # Samandar — Executive AI Code Lab
 
-Interactive developer portfolio for full-stack, AI automation and product engineering work.
+An interactive portfolio built as a product, not a résumé page.
 
-**Live demo:** [samandarmansurkhodjaev2713.github.io/CV-Samandar](https://samandarmansurkhodjaev2713.github.io/CV-Samandar/)
+**Live:** [samandarmansurkhodjaev2713.github.io/CV-Samandar](https://samandarmansurkhodjaev2713.github.io/CV-Samandar/)
 
-## What It Is
+---
 
-This repository contains a static interactive CV/portfolio experience. It presents my work profile as a product-style interface rather than a plain resume page: visual sections, motion, interactive widgets, localized content, code-lab positioning and a more memorable first impression for recruiters, technical leads and partners.
+## What this is
 
-## Positioning
+A static site that presents full-stack, AI-automation and QA work as a piece of
+software rather than a document: a scored, scroll-driven experience with a
+colour journey, per-section motion signatures, living project imagery and 12
+in-site product case studies — in three languages.
 
-The portfolio is built around the profile I want to communicate:
+No framework, no bundler, no runtime dependencies. React ships as a vendored
+production build, JSX is compiled ahead of time by `build.js`, and the whole
+thing deploys as static files to GitHub Pages.
 
-- full-stack developer;
-- AI automation developer;
-- product-minded engineer;
-- founder-style builder;
-- frontend/design-aware engineer.
+---
+
+## Highlights
+
+| | |
+|---|---|
+| **Colour dramaturgy** | The page ground and the atmospheric accent evolve act by act — cool at the start, warm through the work, cool again in the engineering blocks, warmest at contact. Brand tokens stay fixed, so the primary action never changes colour. |
+| **Living imagery** | One shared WebGL context follows the pointer between project cards: the illustration ripples under the hand and swells with scroll velocity. Degrades to a sharp still image where WebGL is unavailable. |
+| **Frame governor** | Quality tiers come from the frames the device *actually delivers*, not from `navigator.hardwareConcurrency`. Effects are shed in a defined order when the budget is tight. |
+| **Nine section signatures** | Each act announces itself in its own language: a radar sweep, a CRT power-on, modules snapping into a rack, a document passing under a scanner bar. |
+| **12 product case studies** | Every closed project has a full in-site case page with a hand-authored architecture diagram, an evidence section and an honest-limits block — RU / EN / UZ. |
+| **Honest by construction** | Every number on the site is traceable to a public repository; private work states its own boundaries. |
+
+---
 
 ## Stack
 
-- HTML/CSS/JavaScript
-- React production builds loaded as local vendor files
-- Three.js for visual/background effects
-- Spline runtime integration with fallback behavior
-- Ahead-of-time JSX compilation through `build.js`
-- Modular CSS and content files
+- Vanilla HTML / CSS / JavaScript
+- React 18 (vendored production build) + ahead-of-time JSX compilation
+- Three.js — background field and image shaders
+- Spline — the hero robot
+- GitHub Actions → GitHub Pages
 
-## Architecture
+---
 
-```text
-src/
-  content/      profile text and i18n-style content
-  components/   React components and app shell
-  engine/       themes, motion, background effects and scene logic
-  robot/        Spline runtime wrapper and fallback
-  widgets/      interactive portfolio widgets
-  styles/       CSS bundles and section styling
-vendor/         pinned local runtime libraries
-uploads/        portfolio media assets
+## Running locally
+
+```bash
+python -m http.server 3007
 ```
 
-The source JSX files are compiled ahead of time into plain JavaScript. The browser loads production React files and generated JS directly, avoiding in-browser Babel transpilation.
+Open `http://localhost:3007`. There is no install step.
 
-## Why This Architecture
-
-For a portfolio, perceived performance and polish matter. The architecture keeps the experience static and easy to host, while still allowing interactive visual features. Ahead-of-time JSX compilation reduces runtime overhead, and separating content, engine, widgets and components makes the site easier to iterate without mixing visual effects with profile text.
-
-## Development
-
-After editing any `.jsx` source under `src/components`, run:
+After editing any `.jsx`, `landings-data.js` or `render.js`:
 
 ```bash
 node build.js
 ```
 
-Then open `index.html` locally or deploy the static files.
+Bump `?v=` in `index.html` **before** building — the product landings bake that
+number into their asset URLs.
 
-## What It Demonstrates
+---
 
-- personal branding and product presentation;
-- frontend polish and motion/UI detail;
-- performance awareness;
-- interactive/static site architecture;
-- ability to package technical work for recruiters, technical leads and partners.
+## Repository map
+
+```
+index.html              entry point, script order, intro curtain
+build.js                JSX compiler + landing generator
+src/
+  engine/               perf · acts · motion · img-fx · bg-fx · sound · intro · scene-cinema
+  components/           React source (.jsx) and compiled output (.js)
+  content/content.js    all copy, RU / EN / UZ
+  projects/             landing data, renderer and styles
+  robot/                Spline runtime wrapper
+  styles/               design tokens and section styles
+projects/<slug>/        generated case-study pages — do not edit by hand
+docs/DESIGN-SYSTEM.md   engine map, motion grammar, conventions
+```
+
+**Working on this?** Read [`docs/DESIGN-SYSTEM.md`](docs/DESIGN-SYSTEM.md)
+first — it documents the engine contracts and several silent traps that have
+already cost real debugging time.
+
+---
 
 ## Deployment
 
-This repository deploys automatically to GitHub Pages through GitHub Actions on every push to `main`.
+Every push to `main` deploys to GitHub Pages through GitHub Actions.
+
+---
+
+## Contact
+
+- Telegram — [@killallofthem13](https://t.me/killallofthem13)
+- Email — sam4k27@gmail.com
+- Tashkent · UTC+5 · reply within 24 hours
