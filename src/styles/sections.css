@@ -1372,6 +1372,43 @@
    old is-collapsed/is-expanded pair and its "show more" button are gone, which
    also means every project is always deep-linkable and indexable. */
 
+/* ══ HERO AS ONE SCENE ══════════════════════════════════════════════════════
+   Hero.jsx writes --hx/--hy (pointer position, -0.5…0.5) on the section. Every
+   layer below reads the SAME field at its own --hd depth, so the hero behaves
+   like one volume: near lines travel further than far ones, and the robot
+   stage leans the opposite way, which is what separates "a scene" from "two
+   columns that happen to sit next to each other".
+   Transitions (not per-frame writes) carry the return-to-rest, so leaving the
+   hero settles smoothly with no JS animation loop. */
+.hero { --hx: 0; --hy: 0; }
+.hero-line {
+  display: block;
+  transform: translate3d(calc(var(--hx) * var(--hd, 1) * 13px), calc(var(--hy) * var(--hd, 1) * 8px), 0);
+  transition: transform .7s var(--ease-out);
+  will-change: transform;
+}
+.hero-tagline {
+  transform: translate3d(calc(var(--hx) * 7px), calc(var(--hy) * 4px), 0);
+  transition: transform .8s var(--ease-out);
+}
+/* Negative multiplier → the robot moves against the text: parallax between the
+   two halves rather than both sliding together. */
+.hero-robot {
+  transform: translate3d(calc(var(--hx) * -17px), calc(var(--hy) * -10px), 0);
+  transition: transform .9s var(--ease-out), filter .6s ease;
+}
+/* The robot notices the primary action: the stage brightens and lifts a touch
+   toward the CTA. No Spline runtime calls — just the section carrying a class. */
+.hero.cta-live .hero-robot { filter: brightness(1.09) saturate(1.06); }
+.hero.cta-live .hero-robot-plate { border-color: rgba(var(--accent-rgb) / 0.5); }
+@media (pointer: coarse), (max-width: 900px) {
+  /* No pointer to follow — the depth field would just be dead weight. */
+  .hero-line, .hero-tagline, .hero-robot { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-line, .hero-tagline, .hero-robot { transform: none; transition: none; }
+}
+
 /* ══ INTERLUDE — full-screen typographic breath ═════════════════════════════
    Three of these carry the page's rhythm. Deliberately near-empty: the whole
    point of a rest is that nothing competes with it. The type is the largest

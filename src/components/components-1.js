@@ -77,6 +77,58 @@ function Hero({
   // than substituting anything — see the note on the loading strategy below.
   const [robotDown, setRobotDown] = useState(false);
 
+  // ── Hero as ONE scene ────────────────────────────────────────────────────
+  // The old hero was two neighbours: a text column and a robot column. Here the
+  // pointer drives a single depth field — headline lines, tagline and the robot
+  // stage all read the same --hx/--hy, each at its own --hd multiplier, and the
+  // robot leans AGAINST the text (negative depth) so the two halves feel like
+  // near and far objects in one space rather than two boxes side by side.
+  // Written straight to CSS custom properties on the section: no React state,
+  // so pointer movement never triggers a re-render of the most expensive
+  // component on the page. rAF-throttled; skipped entirely on touch (no hover)
+  // and under reduced-motion.
+  const heroFxRef = useRef({
+    raf: 0,
+    x: 0,
+    y: 0
+  });
+  function writeHeroDepth(el, nx, ny) {
+    el.style.setProperty("--hx", nx.toFixed(3));
+    el.style.setProperty("--hy", ny.toFixed(3));
+  }
+  function onHeroMove(e) {
+    if (e.pointerType === "touch") return;
+    const el = e.currentTarget;
+    const st = heroFxRef.current;
+    const r = el.getBoundingClientRect();
+    st.x = (e.clientX - r.left) / r.width - 0.5; // -0.5 … 0.5
+    st.y = (e.clientY - r.top) / r.height - 0.5;
+    if (st.raf) return;
+    st.raf = requestAnimationFrame(() => {
+      st.raf = 0;
+      writeHeroDepth(el, st.x, st.y);
+    });
+  }
+  function onHeroLeave(e) {
+    const el = e.currentTarget;
+    const st = heroFxRef.current;
+    if (st.raf) {
+      cancelAnimationFrame(st.raf);
+      st.raf = 0;
+    }
+    writeHeroDepth(el, 0, 0); // CSS transitions the scene back to rest
+  }
+  // The robot notices the primary action. Purely a class on the section, so the
+  // Spline scene itself is untouched — no runtime calls that could fail.
+  function onCtaFocus(e) {
+    const s = e.currentTarget.closest("section");
+    if (s) s.classList.add("cta-live");
+  }
+  function onCtaBlur(e) {
+    const s = e.currentTarget.closest("section");
+    if (s) s.classList.remove("cta-live");
+  }
+
   // Robot loading strategy:
   //   1. ALWAYS try the Spline runtime (community asset "GENKUB - Greeting
   //      robot") first, on every device — no device-tier skip. Device tier
@@ -372,7 +424,9 @@ function Hero({
     "data-section": "hero",
     id: "hero",
     className: "hero",
-    ref: ref
+    ref: ref,
+    onPointerMove: onHeroMove,
+    onPointerLeave: onHeroLeave
   }, /*#__PURE__*/React.createElement("div", {
     className: "hero-photo-wrap",
     "aria-hidden": "true"
@@ -393,6 +447,9 @@ function Hero({
   }, t.hero.title_lines.map((line, i) => /*#__PURE__*/React.createElement("span", {
     key: i,
     className: `hero-line ${i === 1 ? "italic-display" : ""}`,
+    style: {
+      "--hd": [1, 0.55, 1.4][i % 3]
+    },
     "data-reveal-words": true,
     "data-reveal-delay": i * 0.08
   }, line))), /*#__PURE__*/React.createElement("p", {
@@ -409,7 +466,11 @@ function Hero({
     className: "btn btn-primary",
     "data-magnetic": true,
     "data-cursor": "send",
-    "data-cursor-label": "send \u2192 contact"
+    "data-cursor-label": "send \u2192 contact",
+    onMouseEnter: onCtaFocus,
+    onMouseLeave: onCtaBlur,
+    onFocus: onCtaFocus,
+    onBlur: onCtaBlur
   }, t.hero.cta_primary, /*#__PURE__*/React.createElement("span", {
     className: "arrow"
   }, "\u2192")), /*#__PURE__*/React.createElement("a", {
