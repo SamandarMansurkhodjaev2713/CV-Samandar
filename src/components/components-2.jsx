@@ -1022,6 +1022,54 @@ function ProjectBuilder({ t, links }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// INTERLUDE — a full-screen typographic breath between acts.
+//
+// The page had one density all the way down: heading, cards, heading, cards.
+// These are the rests in the score — three of them, placed where the story
+// actually turns (after the opening, before the work, before the ask).
+//
+// The "sculpture" is built from three cheap, composable ideas rather than one
+// expensive effect:
+//   1. Each line sits at a different parallax depth (data-plx), so scrolling
+//      through separates them in Z and they re-converge as you pass.
+//   2. Lines rise out of a mask on entry, staggered — the same cinema-titles
+//      grammar the section headings use, so this reads as the same voice.
+//   3. The accent phrase is Instrument Serif italic: one warm, human stroke
+//      against the geometric display face.
+// Nothing here is a section — no [data-section], so the nav counter, the dock
+// and the act engine never see these as chapters.
+// ─────────────────────────────────────────────────────────────────────────────
+function Interlude({ data, index }) {
+  if (!data || !data.lines || !data.lines.length) return null;
+  // Alternating depths: odd lines drift against the even ones, which is what
+  // makes the block feel dimensional instead of merely animated.
+  const DEPTH = [0.10, -0.06, 0.14];
+  return (
+    <aside className={`ilude ilude--${data.id || index}`} data-reveal data-reveal-from="none" aria-label={data.eyebrow}>
+      <div className="shell ilude-shell">
+        {data.eyebrow ? <div className="ilude-eyebrow mono">{data.eyebrow}</div> : null}
+        <p className="ilude-type">
+          {data.lines.map((line, i) => (
+            <span className="ilude-lm" key={i} data-plx={DEPTH[i % DEPTH.length]}>
+              <span className="ilude-line" style={{ "--li": i }}>
+                {data.em && line.indexOf(data.em) !== -1 ? (
+                  <>
+                    {line.slice(0, line.indexOf(data.em))}
+                    <em className="ilude-em">{data.em}</em>
+                    {line.slice(line.indexOf(data.em) + data.em.length)}
+                  </>
+                ) : line}
+              </span>
+            </span>
+          ))}
+        </p>
+        {data.meta ? <div className="ilude-meta mono">{data.meta}</div> : null}
+      </div>
+    </aside>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // FAQ — accordion of common client questions. Single-open-at-a-time, click/tap
 // only (no hover-preview — this is a utilitarian Q&A list, not the editorial
 // browsing Signal owns). First question starts open so the interaction pattern

@@ -968,8 +968,14 @@ function App() {
     links: LINKS
   }), /*#__PURE__*/React.createElement(Signal, {
     t: t
-  })), /*#__PURE__*/React.createElement(About, {
+  })), /*#__PURE__*/React.createElement(Interlude, {
+    data: (t.interludes || [])[0],
+    index: 0
+  }), /*#__PURE__*/React.createElement(About, {
     t: t
+  }), /*#__PURE__*/React.createElement(Interlude, {
+    data: (t.interludes || [])[1],
+    index: 1
   }), /*#__PURE__*/React.createElement(Projects, {
     t: t
   }), /*#__PURE__*/React.createElement(Skills, {
@@ -994,6 +1000,9 @@ function App() {
     "data-pin": true
   }, /*#__PURE__*/React.createElement(Trust, {
     t: t
+  }), /*#__PURE__*/React.createElement(Interlude, {
+    data: (t.interludes || [])[2],
+    index: 2
   }), /*#__PURE__*/React.createElement(Contact, {
     t: t,
     links: LINKS

@@ -666,7 +666,9 @@ function App() {
           <Hero t={t} links={LINKS} />
           <Signal t={t} />
         </div>
+        <Interlude data={(t.interludes||[])[0]} index={0} />
         <About t={t} />
+        <Interlude data={(t.interludes||[])[1]} index={1} />
         <Projects t={t} />
         <Skills t={t} />
         {/* Pinned-overlap #1 — Services recedes as CV (the centerpiece) rises.
@@ -685,6 +687,7 @@ function App() {
         {/* Pinned-overlap #2 — Trust recedes as Contact (the closing CTA) rises. */}
         <div className="pin-host" data-pin>
           <Trust t={t} />
+          <Interlude data={(t.interludes||[])[2]} index={2} />
           <Contact t={t} links={LINKS} />
         </div>
       </main>

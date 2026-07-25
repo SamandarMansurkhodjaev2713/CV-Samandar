@@ -1372,6 +1372,75 @@
    old is-collapsed/is-expanded pair and its "show more" button are gone, which
    also means every project is always deep-linkable and indexable. */
 
+/* ══ INTERLUDE — full-screen typographic breath ═════════════════════════════
+   Three of these carry the page's rhythm. Deliberately near-empty: the whole
+   point of a rest is that nothing competes with it. The type is the largest
+   thing on the site, the lines sit at different parallax depths (motion.js
+   writes --plx from data-plx), and one phrase is set in the serif italic so
+   there is a human stroke among the geometry. */
+.ilude {
+  position: relative; z-index: 2;
+  min-height: 82svh;
+  display: flex; align-items: center;
+  padding: clamp(48px, 9vh, 120px) 0;
+}
+.ilude-shell { display: flex; flex-direction: column; gap: clamp(18px, 3vh, 34px); }
+.ilude-eyebrow {
+  font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--act-accent, var(--accent));
+  transition: color 1.4s ease;
+}
+.ilude-type {
+  margin: 0;
+  font-family: var(--f-display);
+  font-size: clamp(38px, 8.2vw, 130px);
+  font-weight: 620;
+  line-height: 0.98;
+  letter-spacing: -0.042em;
+  color: var(--text);
+  text-wrap: balance;
+}
+/* Each line is its own parallax layer AND its own reveal mask. */
+.ilude-lm {
+  display: block; overflow: hidden;
+  padding-bottom: 0.07em; margin-bottom: -0.07em;   /* room for descenders inside the mask */
+  transform: translate3d(0, var(--plx, 0px), 0);
+}
+.ilude-line {
+  display: block;
+  transform: translateY(112%);
+  transition: transform 1.05s var(--ease-out) calc(var(--li) * 90ms);
+  will-change: transform;
+}
+.ilude.rv-in .ilude-line { transform: none; }
+.ilude-em {
+  font-family: var(--f-serif, "Instrument Serif", Georgia, serif);
+  font-style: italic; font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--act-accent, var(--accent));
+  transition: color 1.4s ease;
+}
+.ilude-meta {
+  font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-mute);
+  opacity: 0; transform: translateY(10px);
+  transition: opacity .7s ease .5s, transform .7s var(--ease-out) .5s;
+}
+.ilude.rv-in .ilude-meta { opacity: 1; transform: none; }
+@media (max-width: 900px) {
+  /* Shorter on phones: a rest that costs a full screen twice over stops being
+     a rest and becomes an obstacle between the reader and the work. */
+  .ilude { min-height: 62svh; padding: clamp(36px, 7vh, 72px) 0; }
+  .ilude-type { font-size: clamp(34px, 11vw, 62px); letter-spacing: -0.035em; }
+  .ilude-lm { transform: none; }   /* no parallax depth on touch */
+}
+@media (prefers-reduced-motion: reduce) {
+  .ilude-line { transform: none; transition: none; }
+  .ilude-meta { opacity: 1; transform: none; transition: none; }
+  .ilude-lm { transform: none; }
+}
+html[data-perf="low"] .ilude-lm { transform: none; }
+
 /* ══ PROJECT INDEX ══════════════════════════════════════════════════════════
    The catalogue half. Rows are quiet until touched; the hovered row lifts its
    name to full white, slides right, and pulls a floating preview to the
