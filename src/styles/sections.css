@@ -1367,8 +1367,79 @@
 .proj-repo:focus-visible,
 .proj-cta:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 
-/* Four portfolio-defining cases lead the section on every viewport. */
-.proj-grid.is-collapsed > .proj-card:nth-child(n+5) { display: none; }
+/* Four portfolio-defining cases lead the section as posters; the rest live in
+   the typographic index below (.pidx). Nothing is hidden by CSS any more — the
+   old is-collapsed/is-expanded pair and its "show more" button are gone, which
+   also means every project is always deep-linkable and indexable. */
+
+/* ══ PROJECT INDEX ══════════════════════════════════════════════════════════
+   The catalogue half. Rows are quiet until touched; the hovered row lifts its
+   name to full white, slides right, and pulls a floating preview to the
+   pointer. Reads like a contents page, behaves like a gallery. */
+.pidx { margin-top: clamp(38px, 5vw, 64px); position: relative; }
+.pidx-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding-bottom: 12px; border-bottom: 1px solid var(--line-strong);
+  font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-mute);
+}
+.pidx-count { color: var(--act-accent, var(--accent)); transition: color 1.4s ease; }
+.pidx-list { list-style: none; margin: 0; padding: 0; }
+.pidx-row { border-bottom: 1px solid var(--line); }
+.pidx-link {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) minmax(0, 0.7fr) 76px 24px;
+  align-items: center; gap: 18px;
+  padding: 17px 8px; text-decoration: none;
+  transition: padding-left .45s var(--ease-out), background .45s var(--ease-out);
+}
+.pidx-link:hover { padding-left: 20px; background: rgba(var(--act-accent-rgb, var(--accent-rgb)) / 0.045); }
+.pidx-n { font-size: 11px; letter-spacing: 0.12em; color: var(--text-mute); transition: color .3s; }
+.pidx-link:hover .pidx-n { color: var(--act-accent, var(--accent)); }
+.pidx-name {
+  font-family: var(--f-display); font-size: clamp(17px, 1.9vw, 23px);
+  font-weight: 550; letter-spacing: -0.015em; color: var(--text-dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: color .3s;
+}
+.pidx-link:hover .pidx-name { color: var(--text); }
+.pidx-tag { font-size: 10.5px; letter-spacing: 0.12em; color: var(--text-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pidx-status { font-size: 9.5px; letter-spacing: 0.14em; justify-self: start; }
+.pidx-arrow {
+  font-family: var(--f-mono); color: var(--act-accent, var(--accent));
+  opacity: 0; transform: translateX(-8px);
+  transition: opacity .3s, transform .3s var(--ease-out);
+}
+.pidx-link:hover .pidx-arrow { opacity: 1; transform: none; }
+.pidx-link:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 4px; }
+
+/* Floating preview — one node for the whole list, moved by transform. */
+.pidx-preview {
+  position: fixed; top: 0; left: 0; z-index: 40;
+  width: clamp(200px, 20vw, 300px); aspect-ratio: 3 / 1;
+  margin: -14px 0 0 26px;                 /* offset from the cursor, not under it */
+  border: 1px solid var(--line-strong); border-radius: 10px; overflow: hidden;
+  background: #15130F;
+  box-shadow: 0 24px 60px -22px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  opacity: 0; transform-origin: 0 50%;
+  transition: opacity .28s ease;
+  will-change: transform;
+}
+.pidx-preview.is-on { opacity: 1; }
+.pidx-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Touch has no pointer to follow, and the rows are already tappable. The width
+   query is not redundant: a narrow window on a desktop still reports
+   `pointer: fine`, and a cursor-tracking panel that wide has nowhere to live. */
+@media (pointer: coarse), (max-width: 760px) { .pidx-preview { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .pidx-link, .pidx-arrow, .pidx-preview { transition-duration: .01ms; }
+}
+@media (max-width: 760px) {
+  /* Narrow: drop the tag column, keep name + status + arrow legible. */
+  .pidx-link { grid-template-columns: 32px minmax(0, 1fr) 64px 18px; gap: 12px; padding: 15px 4px; }
+  .pidx-tag { display: none; }
+}
 
 /* ── DESKTOP: collapse to the first 4 cases + "show more" ─────────────── */
 @media (min-width: 901px) {

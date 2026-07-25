@@ -1439,30 +1439,112 @@ function ProjectChapterDots({
     "aria-label": "Next project"
   }, "\u2192")));
 }
+
+// ── Index row — the catalogue half of the projects section ──────────────────
+// 21 identically-weighted cards read as a database dump, not a curated body of
+// work. So the section splits: a few hero projects get poster treatment, and
+// everything else becomes a dense typographic index — the way a studio's work
+// page or a book's contents actually behaves. Nothing is hidden behind a
+// "show more" button any more: every project is in the DOM, indexable and
+// reachable by deep link, which also makes the return-to-card flow trivial.
+function ProjectIndexRow({
+  p,
+  n,
+  labels,
+  onPreview
+}) {
+  const landingSlug = p.url && p.url.indexOf("projects/") === 0 ? p.url.replace(/^projects\//, "").replace(/\/+$/, "") : null;
+  const isExternal = Boolean(p.url && p.url.indexOf("http") === 0);
+  function onClick(e) {
+    if (!p.url) {
+      e.preventDefault();
+      return;
+    }
+    if (landingSlug) {
+      try {
+        history.replaceState(null, "", "#proj-" + landingSlug);
+      } catch (err) {/* opportunistic */}
+    }
+  }
+  const card = PROJ_CARD[p.slug];
+  return /*#__PURE__*/React.createElement("li", {
+    className: "pidx-row",
+    id: p.slug ? "proj-" + p.slug : undefined,
+    onMouseEnter: () => onPreview(card ? card.src : null, p.name),
+    onMouseLeave: () => onPreview(null, "")
+  }, /*#__PURE__*/React.createElement("a", {
+    className: "pidx-link",
+    href: p.url || "#projects",
+    target: isExternal ? "_blank" : undefined,
+    rel: isExternal ? "noopener noreferrer" : undefined,
+    onClick: onClick,
+    "data-cursor": "link",
+    "data-cursor-label": isExternal ? labels.open_live || "open" : "open case"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pidx-n mono"
+  }, String(n).padStart(2, "0")), /*#__PURE__*/React.createElement("span", {
+    className: "pidx-name"
+  }, p.name), /*#__PURE__*/React.createElement("span", {
+    className: "pidx-tag mono"
+  }, p.tag), /*#__PURE__*/React.createElement("span", {
+    className: `pidx-status mono proj-status-${String(p.status || "").toLowerCase()}`
+  }, p.status), /*#__PURE__*/React.createElement("span", {
+    className: "pidx-arrow",
+    "aria-hidden": "true"
+  }, isExternal ? "↗" : "→")));
+}
 function Projects({
   t
 }) {
   const ref = useRevealRoot([t]);
   const gridRef = useRef(null);
-  // Four strongest product families lead the section on every viewport. The
-  // complete catalog expands on intent; mobile keeps its swipe carousel, but
-  // nobody has to swipe through 21 cards just to leave the block.
+  // The strongest product families lead as posters; the rest live in the index
+  // below. Everything is always rendered — no expand button, no hidden DOM.
   const FEATURED_PROJECT_COUNT = 4;
-  const [expanded, setExpanded] = useState(false);
   const items = t.projects.items;
-  const hiddenCount = Math.max(0, items.length - FEATURED_PROJECT_COUNT);
-  const chapterItems = expanded ? items : items.slice(0, FEATURED_PROJECT_COUNT);
+  const featured = items.slice(0, FEATURED_PROJECT_COUNT);
+  const rest = items.slice(FEATURED_PROJECT_COUNT);
+  const chapterItems = featured;
 
-  // Deep-link: arriving at #proj-<slug> (returning from that product's landing)
-  // for a card the collapsed desktop grid hides (index >= 2) → expand the grid
-  // so App's scroll-to-hash can actually reach it. Runs once on mount.
+  // Floating preview for the index: ONE element that follows the pointer and
+  // swaps its source on hover, rather than 17 mounted images. The pointer can
+  // only be over one row, so one node is all the DOM this ever needs.
+  const previewRef = useRef(null);
+  const [preview, setPreview] = useState(null);
+  function onPreview(src) {
+    setPreview(src);
+  }
   useEffect(() => {
-    const id = (window.location.hash || "").replace(/^#/, "");
-    if (id.indexOf("proj-") !== 0) return;
-    const slug = id.slice(5);
-    const idx = items.findIndex(p => p.slug === slug);
-    if (idx >= FEATURED_PROJECT_COUNT) setExpanded(true);
-  }, [items]);
+    const el = previewRef.current;
+    if (!el) return undefined;
+    let raf = 0,
+      x = 0,
+      y = 0,
+      tx = 0,
+      ty = 0;
+    function move(e) {
+      tx = e.clientX;
+      ty = e.clientY;
+      if (!raf) raf = requestAnimationFrame(tick);
+    }
+    function tick() {
+      raf = 0;
+      // Lag the pointer slightly — an instantly-glued panel feels like a
+      // tooltip; a trailing one feels like a held object.
+      x += (tx - x) * 0.16;
+      y += (ty - y) * 0.16;
+      el.style.transform = `translate3d(${Math.round(x)}px, ${Math.round(y)}px, 0)`;
+      if (Math.abs(tx - x) > 0.5 || Math.abs(ty - y) > 0.5) raf = requestAnimationFrame(tick);
+    }
+    const list = el.parentElement && el.parentElement.querySelector(".pidx-list");
+    if (list) list.addEventListener("pointermove", move, {
+      passive: true
+    });
+    return function cleanup() {
+      if (list) list.removeEventListener("pointermove", move);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
   return /*#__PURE__*/React.createElement("section", {
     "data-section": "projects",
     id: "projects",
@@ -1476,30 +1558,41 @@ function Projects({
     title: t.projects.title,
     meta: `${items.length} cases · 2024–26`
   }), /*#__PURE__*/React.createElement("div", {
-    className: `proj-grid ${expanded ? "is-expanded" : "is-collapsed"}`,
+    className: "proj-grid is-featured",
     ref: gridRef
-  }, items.map((p, i) => /*#__PURE__*/React.createElement(ProjectCard, {
+  }, featured.map((p, i) => /*#__PURE__*/React.createElement(ProjectCard, {
     key: p.slug || i,
     p: p,
     i: i,
     labels: t.projects
-  }))), hiddenCount > 0 ? /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "proj-expand mono",
-    "aria-expanded": expanded,
-    onClick: () => setExpanded(v => !v),
-    "data-cursor": "link",
-    "data-cursor-label": expanded ? "collapse" : "show all"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "proj-expand-txt"
-  }, expanded ? t.projects.collapse || "Collapse" : `${t.projects.more_prefix != null ? t.projects.more_prefix : "Show "}${hiddenCount}${t.projects.more_suffix != null ? t.projects.more_suffix : " more"}`), /*#__PURE__*/React.createElement("span", {
-    className: "proj-expand-ico",
-    "aria-hidden": "true"
-  }, expanded ? "↑" : "↓")) : null, /*#__PURE__*/React.createElement(ProjectChapterDots, {
+  }))), /*#__PURE__*/React.createElement(ProjectChapterDots, {
     items: chapterItems,
     gridRef: gridRef,
     label: t.projects.list_label
-  })));
+  }), rest.length ? /*#__PURE__*/React.createElement("div", {
+    className: "pidx",
+    "data-reveal": true
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pidx-head mono"
+  }, /*#__PURE__*/React.createElement("span", null, t.projects.list_label || "Project index"), /*#__PURE__*/React.createElement("span", {
+    className: "pidx-count"
+  }, String(rest.length).padStart(2, "0"))), /*#__PURE__*/React.createElement("ul", {
+    className: "pidx-list"
+  }, rest.map((p, i) => /*#__PURE__*/React.createElement(ProjectIndexRow, {
+    key: p.slug || i,
+    p: p,
+    n: FEATURED_PROJECT_COUNT + i + 1,
+    labels: t.projects,
+    onPreview: onPreview
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: `pidx-preview ${preview ? "is-on" : ""}`,
+    ref: previewRef,
+    "aria-hidden": "true"
+  }, preview ? /*#__PURE__*/React.createElement("img", {
+    src: preview,
+    alt: "",
+    decoding: "async"
+  }) : null)) : null));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
