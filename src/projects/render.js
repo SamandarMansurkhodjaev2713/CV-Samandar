@@ -447,7 +447,7 @@
                 (c.role ? '<b class="lp-cred-role">' + esc(c.role) + "</b> · " : "") + esc(ui.builtBy) + "</div>" +
               '<div class="lp-cta"><a class="lp-btn lp-btn-primary" href="' + base + '#contact">' + esc(ui.discuss) + ' <span class="lp-arr">→</span></a>' + githubBtn + "</div>" +
             "</div>" +
-            '<figure class="lp-hero-visual" data-lp-reveal style="--reveal-delay:.08s"><div class="lp-photo"><img src="' + visual + '" alt="" loading="eager" fetchpriority="high" decoding="async" width="1536" height="512"></div><figcaption class="mono"><span>OBJECT / ' + esc(p.slug) + '</span><span>1536 × 512 · EDITORIAL STUDY</span></figcaption></figure>' +
+            '<figure class="lp-hero-visual" data-lp-reveal style="--reveal-delay:.08s"><div class="lp-photo"><img style="view-transition-name:lp-hero-' + esc(p.slug) + '" src="' + visual + '" alt="" loading="eager" fetchpriority="high" decoding="async" width="1536" height="512"></div><figcaption class="mono"><span>OBJECT / ' + esc(p.slug) + '</span><span>1536 × 512 · EDITORIAL STUDY</span></figcaption></figure>' +
           "</section>" +
 
           '<nav class="lp-chapters" aria-label="' + esc(ui.chapterNav) + '">' + chapterNav + '</nav>' +

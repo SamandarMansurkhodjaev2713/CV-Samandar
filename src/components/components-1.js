@@ -1261,6 +1261,23 @@ function ProjectCard({
       try {
         history.replaceState(null, "", "#proj-" + landingSlug);
       } catch (err) {/* opportunistic */}
+      // Cross-document morph: name this card's image the same thing the landing
+      // names ITS hero image, and the browser tweens between them across the
+      // navigation. The name is assigned only at click time so that 21 cards
+      // never carry 21 live transition names at once (duplicate names on one
+      // page abort the transition entirely). Browsers without cross-document
+      // view transitions simply navigate — nothing to detect, nothing to break.
+      try {
+        const img = e.currentTarget.closest(".proj-card, .pidx-row");
+        const target = img && img.querySelector(".proj-screen-body--img, .proj-screen-img");
+        if (target) target.style.viewTransitionName = "lp-hero-" + landingSlug;
+      } catch (err) {/* opportunistic */}
+      // Belt and braces for the browsers that DON'T morph: run the same
+      // instrument-hatch shutter the act changes use, so the jump is never a
+      // bare white flash.
+      try {
+        if (window.__SM_ACTS && window.__SM_ACTS.shutter) window.__SM_ACTS.shutter();
+      } catch (err) {/* opportunistic */}
     }
   }
 

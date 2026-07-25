@@ -1,3 +1,9 @@
+/* Receiving half of the cross-document morph: the main page names the clicked
+   card image `lp-hero-<slug>`, and render.js stamps the same name on this
+   page hero image, so the browser tweens one into the other across the
+   navigation. Unsupported browsers ignore both and navigate normally. */
+@view-transition { navigation: auto; }
+
 /* Product case studies — editorial engineering atelier, 2026. */
 :root {
   color-scheme: dark;

@@ -135,8 +135,20 @@ function Drum({ value }) {
   );
 }
 
+// Per-chapter accents for the menu preview. Deliberately the SAME values
+// acts.js paints when you arrive, so the peek is a promise the page keeps.
+// Kept as a plain map rather than read from acts.js: the menu must render
+// correctly even if that engine failed to load.
+const MENU_ACCENT = {
+  hero: "110, 139, 166", signal: "110, 139, 166", about: "217, 119, 87",
+  projects: "205, 122, 74", skills: "122, 145, 168", services: "196, 160, 108",
+  cv: "122, 145, 168", process: "122, 145, 168", builder: "196, 160, 108",
+  faq: "196, 160, 108", trust: "200, 155, 94", contact: "200, 155, 94",
+};
+
 function Nav({ t, lang, setLang, active }) {
   const [open, setOpen] = useS(false);
+  const [peek, setPeek] = useS(null);
   // Capsule state — the bar condenses into a floating pill once the reader
   // leaves the very top. Passive + rAF-throttled; no layout reads besides scrollY.
   const [capsule, setCapsule] = useS(false);
@@ -241,10 +253,13 @@ function Nav({ t, lang, setLang, active }) {
       <div className={`nav-menu ${open ? "is-open" : ""}`} aria-hidden={!open}>
         <div className="nav-menu-glow" aria-hidden="true" />
         <div className="nav-menu-inner">
-          <ul className="nav-menu-links">
+          <ul className="nav-menu-links" onMouseLeave={() => setPeek(null)}>
             {FULL_MENU_SECTIONS.map((k, i) => (
               <li key={k} style={{ "--i": i }}>
-                <a href={`#${k}`} onClick={(e) => go(e, k)} className={active === k ? "active" : ""}>
+                <a
+                  href={`#${k}`} onClick={(e) => go(e, k)} className={active === k ? "active" : ""}
+                  onMouseEnter={() => setPeek({ k, i })} onFocus={() => setPeek({ k, i })}
+                >
                   <span className="nav-menu-num mono">{String(i + 1).padStart(2, "0")}</span>
                   <span className="nav-menu-mask"><span className="nav-menu-word">{t.nav[k] || FULL_MENU_LABELS[lang][k]}</span></span>
                   <span className="nav-menu-arrow" aria-hidden="true">→</span>
@@ -252,6 +267,23 @@ function Nav({ t, lang, setLang, active }) {
               </li>
             ))}
           </ul>
+
+          {/* Live chapter preview. The menu stops being a list of words and
+              becomes a map: hovering an entry paints the panel in THAT act's
+              colour (the same value acts.js uses when you actually get there)
+              and blows its chapter number up. No invented facts, no thumbnails
+              to keep in sync — just the chapter's own identity, early. */}
+          <div className={`nav-peek ${peek ? "is-on" : ""}`} aria-hidden="true">
+            {/* Comma alpha (`rgba(r, g, b, a)`) — MENU_ACCENT is comma-separated,
+                and the slash form only accepts space-separated channels. */}
+            <div className="nav-peek-wash" style={peek ? { background: `radial-gradient(ellipse 90% 80% at 50% 20%, rgba(${MENU_ACCENT[peek.k] || "217, 119, 87"}, 0.30), transparent 70%)` } : undefined} />
+            <div key={peek ? peek.k : "none"} className="nav-peek-body">
+              <span className="nav-peek-num" style={peek ? { color: `rgb(${MENU_ACCENT[peek.k] || "217, 119, 87"})` } : undefined}>
+                {peek ? String(peek.i + 1).padStart(2, "0") : "00"}
+              </span>
+              <span className="nav-peek-name">{peek ? (t.nav[peek.k] || FULL_MENU_LABELS[lang][peek.k]) : ""}</span>
+            </div>
+          </div>
           <div className="nav-menu-foot">
             <a href="#contact" className="nav-menu-cta" data-magnetic onClick={(e) => go(e, "contact")}>
               {t.hero.cta_primary} <span className="arrow">→</span>

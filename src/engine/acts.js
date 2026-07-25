@@ -134,7 +134,15 @@
     document.documentElement.style.setProperty("--act-bg", act.bg);
     // Atmospheric accent for this act. CSS transitions it (see styles.css), so
     // eyebrows/hairlines/telemetry drift with the journey rather than snapping.
-    document.documentElement.style.setProperty("--act-accent-rgb", act.accent);
+    //
+    // --act-accent-rgb MUST be space-separated to match --accent-rgb, because
+    // the whole stylesheet composes alpha with the modern slash syntax:
+    //     rgba(var(--act-accent-rgb) / 0.3)
+    // With commas that expands to `rgba(217, 119, 87 / 0.3)`, which is invalid,
+    // so the browser silently DROPS the declaration — the rule paints nothing
+    // and no error is reported anywhere. (Found exactly that way: nine section
+    // signatures animated correctly while rendering fully transparent.)
+    document.documentElement.style.setProperty("--act-accent-rgb", act.accent.replace(/,\s*/g, " "));
     document.documentElement.style.setProperty("--act-accent", "rgb(" + act.accent + ")");
     // Crossfade: paint the incoming gradient on the back veil, then swap roles.
     var front = frontIsA ? veilA : veilB;
@@ -185,6 +193,10 @@
     // Sync hook: verification in headless preview (IO frozen) + public API.
     window.__SM_ACTS = {
       set: apply,
+      // Public: play the hatch on demand. Used when leaving for a product
+      // landing in browsers that cannot morph across documents, so the hand-off
+      // is still a designed beat rather than a blank frame.
+      shutter: runShutter,
       current: function () {
         for (var k in ACTS) { if (ACTS[k] === current) return k; }
         return null;

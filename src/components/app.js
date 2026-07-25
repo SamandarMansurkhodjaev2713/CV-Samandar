@@ -222,6 +222,25 @@ function Drum({
     className: "drum-n"
   }, value));
 }
+
+// Per-chapter accents for the menu preview. Deliberately the SAME values
+// acts.js paints when you arrive, so the peek is a promise the page keeps.
+// Kept as a plain map rather than read from acts.js: the menu must render
+// correctly even if that engine failed to load.
+const MENU_ACCENT = {
+  hero: "110, 139, 166",
+  signal: "110, 139, 166",
+  about: "217, 119, 87",
+  projects: "205, 122, 74",
+  skills: "122, 145, 168",
+  services: "196, 160, 108",
+  cv: "122, 145, 168",
+  process: "122, 145, 168",
+  builder: "196, 160, 108",
+  faq: "196, 160, 108",
+  trust: "200, 155, 94",
+  contact: "200, 155, 94"
+};
 function Nav({
   t,
   lang,
@@ -229,6 +248,7 @@ function Nav({
   active
 }) {
   const [open, setOpen] = useS(false);
+  const [peek, setPeek] = useS(null);
   // Capsule state — the bar condenses into a floating pill once the reader
   // leaves the very top. Passive + rAF-throttled; no layout reads besides scrollY.
   const [capsule, setCapsule] = useS(false);
@@ -371,7 +391,8 @@ function Nav({
   }), /*#__PURE__*/React.createElement("div", {
     className: "nav-menu-inner"
   }, /*#__PURE__*/React.createElement("ul", {
-    className: "nav-menu-links"
+    className: "nav-menu-links",
+    onMouseLeave: () => setPeek(null)
   }, FULL_MENU_SECTIONS.map((k, i) => /*#__PURE__*/React.createElement("li", {
     key: k,
     style: {
@@ -380,7 +401,15 @@ function Nav({
   }, /*#__PURE__*/React.createElement("a", {
     href: `#${k}`,
     onClick: e => go(e, k),
-    className: active === k ? "active" : ""
+    className: active === k ? "active" : "",
+    onMouseEnter: () => setPeek({
+      k,
+      i
+    }),
+    onFocus: () => setPeek({
+      k,
+      i
+    })
   }, /*#__PURE__*/React.createElement("span", {
     className: "nav-menu-num mono"
   }, String(i + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("span", {
@@ -391,6 +420,24 @@ function Nav({
     className: "nav-menu-arrow",
     "aria-hidden": "true"
   }, "\u2192"))))), /*#__PURE__*/React.createElement("div", {
+    className: `nav-peek ${peek ? "is-on" : ""}`,
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "nav-peek-wash",
+    style: peek ? {
+      background: `radial-gradient(ellipse 90% 80% at 50% 20%, rgba(${MENU_ACCENT[peek.k] || "217, 119, 87"}, 0.30), transparent 70%)`
+    } : undefined
+  }), /*#__PURE__*/React.createElement("div", {
+    key: peek ? peek.k : "none",
+    className: "nav-peek-body"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "nav-peek-num",
+    style: peek ? {
+      color: `rgb(${MENU_ACCENT[peek.k] || "217, 119, 87"})`
+    } : undefined
+  }, peek ? String(peek.i + 1).padStart(2, "0") : "00"), /*#__PURE__*/React.createElement("span", {
+    className: "nav-peek-name"
+  }, peek ? t.nav[peek.k] || FULL_MENU_LABELS[lang][peek.k] : ""))), /*#__PURE__*/React.createElement("div", {
     className: "nav-menu-foot"
   }, /*#__PURE__*/React.createElement("a", {
     href: "#contact",

@@ -554,7 +554,7 @@ section[data-section="services"].sec-in::before {
 }
 
 /* cv — the document passes under a scanner bar */
-section[data-section="cv"].sec-in::before {
+section[data-section="cv"].sec-in::after {
   content: ""; position: absolute; left: 4%; right: 4%; top: 0; height: 3px;
   pointer-events: none; z-index: 1; border-radius: 3px;
   background: linear-gradient(90deg, transparent, rgba(var(--act-accent-rgb, var(--accent-rgb)) / 0.6), transparent);
@@ -622,7 +622,7 @@ section[data-section="trust"].sec-in::before {
   section[data-section="signal"].sec-in::after,
   section[data-section="about"].sec-in::before,
   section[data-section="services"].sec-in::before,
-  section[data-section="cv"].sec-in::before,
+  section[data-section="cv"].sec-in::after,
   section[data-section="faq"].sec-in::before,
   section[data-section="trust"].sec-in::before,
   #builder.sec-in::before { display: none; }
@@ -659,7 +659,7 @@ html[data-motion-lite] section[data-section="process"].sec-in::before,
 html[data-motion-lite] section[data-section="signal"].sec-in::after,
 html[data-motion-lite] section[data-section="about"].sec-in::before,
 html[data-motion-lite] section[data-section="services"].sec-in::before,
-html[data-motion-lite] section[data-section="cv"].sec-in::before,
+html[data-motion-lite] section[data-section="cv"].sec-in::after,
 html[data-motion-lite] section[data-section="faq"].sec-in::before,
 html[data-motion-lite] section[data-section="trust"].sec-in::before,
 html[data-motion-lite] #builder.sec-in::before,
@@ -668,7 +668,7 @@ html[data-perf="low"] section[data-section="process"].sec-in::before,
 html[data-perf="low"] section[data-section="signal"].sec-in::after,
 html[data-perf="low"] section[data-section="about"].sec-in::before,
 html[data-perf="low"] section[data-section="services"].sec-in::before,
-html[data-perf="low"] section[data-section="cv"].sec-in::before,
+html[data-perf="low"] section[data-section="cv"].sec-in::after,
 html[data-perf="low"] section[data-section="faq"].sec-in::before,
 html[data-perf="low"] section[data-section="trust"].sec-in::before,
 html[data-perf="low"] #builder.sec-in::before { display: none; }

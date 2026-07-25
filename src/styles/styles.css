@@ -865,6 +865,44 @@ body.cursor-hover .cursor-dot { opacity: 0; }
 }
 .nav-menu-links a:hover .nav-menu-arrow,
 .nav-menu-links a.active .nav-menu-arrow { opacity: 1; transform: none; }
+/* ── Menu chapter preview ─────────────────────────────────────────────────
+   Sits behind the link list on the right half of the fullscreen menu. Both
+   halves are keyed by React on the chapter id, so switching entries replays
+   the entrance instead of cross-fading a stale number. */
+.nav-peek {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  opacity: 0; transition: opacity .45s ease;
+}
+.nav-peek.is-on { opacity: 1; }
+.nav-peek-wash { position: absolute; inset: 0; transition: background .55s ease; }
+.nav-peek-body {
+  position: absolute; right: clamp(24px, 6vw, 90px); top: 50%;
+  transform: translateY(-50%);
+  display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+  text-align: right;
+}
+.nav-peek-num {
+  font-family: var(--f-display); font-weight: 700;
+  font-size: clamp(90px, 17vw, 230px); line-height: 0.82; letter-spacing: -0.05em;
+  opacity: 0.20;
+  animation: peekNum .55s var(--ease-out) both;
+}
+@keyframes peekNum { from { opacity: 0; transform: translateY(18px); } to { opacity: 0.20; transform: none; } }
+.nav-peek-name {
+  font-family: var(--f-mono); font-size: 11px;
+  letter-spacing: 0.22em; text-transform: uppercase; color: var(--text-mute);
+  animation: peekName .5s var(--ease-out) .06s both;
+}
+@keyframes peekName { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.nav-menu-links { position: relative; z-index: 1; }
+/* The peek needs room the narrow layout doesn't have, and there is no hover
+   to drive it on touch. */
+@media (max-width: 900px), (pointer: coarse) { .nav-peek { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .nav-peek, .nav-peek-wash { transition: none; }
+  .nav-peek-num, .nav-peek-name { animation: none; }
+}
+
 .nav-menu-foot {
   display: flex; align-items: center; justify-content: space-between;
   gap: 18px; flex-wrap: wrap;
@@ -941,6 +979,12 @@ body::after {
   background: radial-gradient(ellipse 82% 72% at 50% 50%, transparent 52%, rgba(12, 10, 8, 0.55) 100%);
 }
 html.is-flying body::after { opacity: 1; }
+
+/* Opt this document into cross-document view transitions. With the matching
+   rule on the landing pages, clicking a project card morphs its image into the
+   landing's hero instead of blanking the screen. Browsers without support
+   ignore the at-rule and navigate normally. */
+@view-transition { navigation: auto; }
 
 /* ══ Per-act accent (acts.js sets --act-accent / --act-accent-rgb) ══════════
    The ATMOSPHERIC accent drifts with the journey — steel at the cool start,

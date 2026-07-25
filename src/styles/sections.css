@@ -1372,6 +1372,42 @@
    old is-collapsed/is-expanded pair and its "show more" button are gone, which
    also means every project is always deep-linkable and indexable. */
 
+/* ══ FINALE — the contact section as culmination ════════════════════════════
+   The page's warmest, brightest screen. It already arrives behind a shutter
+   and the last interlude states the principle; here the instrument itself
+   comes to life: the form assembles field by field as the section lands, and
+   the primary action carries the strongest presence on the site. */
+section[data-section="contact"].sec-in .contact-form-row,
+section[data-section="contact"].sec-in .contact-form > *:not(.contact-form-row) {
+  animation: finaleAssemble .62s var(--sec-ease) both;
+}
+section[data-section="contact"].sec-in .contact-form > *:nth-child(1) { animation-delay: .10s; }
+section[data-section="contact"].sec-in .contact-form > *:nth-child(2) { animation-delay: .18s; }
+section[data-section="contact"].sec-in .contact-form > *:nth-child(3) { animation-delay: .26s; }
+section[data-section="contact"].sec-in .contact-form > *:nth-child(4) { animation-delay: .34s; }
+section[data-section="contact"].sec-in .contact-form > *:nth-child(5) { animation-delay: .42s; }
+section[data-section="contact"].sec-in .contact-form > *:nth-child(n+6) { animation-delay: .5s; }
+@keyframes finaleAssemble {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+/* The destination's primary action is the loudest control on the site — a
+   deeper glow and a wider magnetic feel than any other button. */
+section[data-section="contact"] .btn-primary {
+  box-shadow: 0 10px 34px -10px rgba(var(--accent-rgb) / 0.55),
+              0 0 0 1px rgba(var(--accent-rgb) / 0.22);
+}
+section[data-section="contact"] .btn-primary:hover {
+  box-shadow: 0 16px 48px -12px rgba(var(--accent-rgb) / 0.75),
+              0 0 0 1px rgba(var(--accent-rgb) / 0.4);
+}
+@media (prefers-reduced-motion: reduce) {
+  section[data-section="contact"].sec-in .contact-form-row,
+  section[data-section="contact"].sec-in .contact-form > * { animation: none; }
+}
+html[data-perf="low"] section[data-section="contact"].sec-in .contact-form-row,
+html[data-perf="low"] section[data-section="contact"].sec-in .contact-form > * { animation: none; }
+
 /* ══ HERO AS ONE SCENE ══════════════════════════════════════════════════════
    Hero.jsx writes --hx/--hy (pointer position, -0.5…0.5) on the section. Every
    layer below reads the SAME field at its own --hd depth, so the hero behaves
