@@ -1157,7 +1157,44 @@ section[data-section="hero"] { padding-block: 0; }
 .proj-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  /* Column gap wider than the row gap: the two columns should read as two
+     separate tracks running down the page, not as cells of one table. */
+  gap: 16px clamp(20px, 3vw, 44px);
+}
+/* THE OFFSET. A 2×N grid of equal cards in equal rows is the single most
+   template-looking arrangement in existence, and no amount of card styling
+   fixes it — the eye reads the ROW, and every row is identical. Dropping the
+   right column by a fixed amount turns the rows into two independent columns,
+   so the eye reads down instead of across and the section stops looking like a
+   product listing. Desktop only: the mobile carousel is a single row. */
+@media (min-width: 901px) {
+  .proj-grid > .proj-card:nth-child(even) { margin-top: clamp(48px, 7vw, 112px); }
+  /* The offset is live, not fixed — see the data-plx note in ProjectCard.
+     TWO SEPARATE PROPERTIES, deliberately. The card transitions `transform`
+     (600ms) so the hover tilt eases back to rest when the pointer leaves — but
+     motion.js rewrites the parallax every scroll frame, and folding the drift
+     into that same transitioned `transform` would put a 600ms ease on every
+     one of those writes: the cards would lag the scroll like syrup and burn a
+     style recalc per frame chasing a target they never reach. The standalone
+     `translate` property composes with `transform` natively (translate runs
+     first) and is NOT in the transition list, so the drift is exact and the
+     tilt is still smooth.
+     The `transform` half is restated here at 0,2,0 purely to outrank the
+     generic `[data-plx] { transform: translate3d(0, var(--plx), 0) }` in
+     cursor.css (0,1,0), which would otherwise replace the tilt outright. */
+  .proj-grid > .proj-card {
+    translate: 0 var(--plx, 0px);
+    transform: rotateX(var(--rx, 0)) rotateY(var(--ry, 0)) translateZ(0);
+  }
+}
+/* Drift off wherever the generic parallax is off — the `translate` half needs
+   its own kill-switch, since these rules only ever spoke about `transform`. */
+@media (prefers-reduced-motion: reduce) {
+  .proj-grid > .proj-card { translate: none; }
+}
+html[data-motion-lite] .proj-grid > .proj-card,
+html[data-perf="low"] .proj-grid > .proj-card { translate: none; }
+@media (min-width: 901px) {
 }
 .proj-card {
   perspective: 1200px;
@@ -1394,10 +1431,17 @@ section[data-section="hero"] { padding-block: 0; }
 .proj-repo:focus-visible,
 .proj-cta:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 
-/* Four portfolio-defining cases lead the section as posters; the rest live in
-   the typographic index below (.pidx). Nothing is hidden by CSS any more — the
-   old is-collapsed/is-expanded pair and its "show more" button are gone, which
-   also means every project is always deep-linkable and indexable. */
+/* Four portfolio-defining cases lead the section; the other seventeen are one
+   click away. They stay in the DOM while collapsed (display:none, not unmounted)
+   so deep links and in-page search still find them, and Projects' mount effect
+   expands the grid when the URL carries a #proj-<slug> that lives past the
+   fourth card.
+   NOT scoped to desktop. The earlier version collapsed the desktop grid only,
+   which left the phone with all 21 cards swipeable behind a pager that was
+   built from the collapsed four — swipe to the seventh card and the dots sat
+   frozen at 4/4 with no way to represent where you were. Same rule on both, so
+   the carousel and its pager always describe the same set. */
+.proj-grid.is-collapsed > .proj-card:nth-child(n+5) { display: none; }
 
 /* ══ FINALE — the contact section as culmination ════════════════════════════
    The page's warmest, brightest screen. It already arrives behind a shutter
@@ -1525,75 +1569,6 @@ html[data-perf="low"] section[data-section="contact"].sec-in .contact-form > * {
 }
 html[data-perf="low"] .ilude-lm { transform: none; }
 
-/* ══ PROJECT INDEX ══════════════════════════════════════════════════════════
-   The catalogue half. Rows are quiet until touched; the hovered row lifts its
-   name to full white, slides right, and pulls a floating preview to the
-   pointer. Reads like a contents page, behaves like a gallery. */
-.pidx { margin-top: clamp(38px, 5vw, 64px); position: relative; }
-.pidx-head {
-  display: flex; align-items: baseline; justify-content: space-between;
-  padding-bottom: 12px; border-bottom: 1px solid var(--line-strong);
-  font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
-  color: var(--text-mute);
-}
-.pidx-count { color: var(--act-accent, var(--accent)); transition: color 1.4s ease; }
-.pidx-list { list-style: none; margin: 0; padding: 0; }
-.pidx-row { border-bottom: 1px solid var(--line); }
-.pidx-link {
-  display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) minmax(0, 0.7fr) 76px 24px;
-  align-items: center; gap: 18px;
-  padding: 17px 8px; text-decoration: none;
-  transition: padding-left .45s var(--ease-out), background .45s var(--ease-out);
-}
-.pidx-link:hover { padding-left: 20px; background: rgba(var(--act-accent-rgb, var(--accent-rgb)) / 0.045); }
-.pidx-n { font-size: 11px; letter-spacing: 0.12em; color: var(--text-mute); transition: color .3s; }
-.pidx-link:hover .pidx-n { color: var(--act-accent, var(--accent)); }
-.pidx-name {
-  font-family: var(--f-display); font-size: clamp(17px, 1.9vw, 23px);
-  font-weight: 550; letter-spacing: -0.015em; color: var(--text-dim);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  transition: color .3s;
-}
-.pidx-link:hover .pidx-name { color: var(--text); }
-.pidx-tag { font-size: 10.5px; letter-spacing: 0.12em; color: var(--text-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pidx-status { font-size: 9.5px; letter-spacing: 0.14em; justify-self: start; }
-.pidx-arrow {
-  font-family: var(--f-mono); color: var(--act-accent, var(--accent));
-  opacity: 0; transform: translateX(-8px);
-  transition: opacity .3s, transform .3s var(--ease-out);
-}
-.pidx-link:hover .pidx-arrow { opacity: 1; transform: none; }
-.pidx-link:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 4px; }
-
-/* Floating preview — one node for the whole list, moved by transform. */
-.pidx-preview {
-  position: fixed; top: 0; left: 0; z-index: 40;
-  width: clamp(200px, 20vw, 300px); aspect-ratio: 3 / 1;
-  margin: -14px 0 0 26px;                 /* offset from the cursor, not under it */
-  border: 1px solid var(--line-strong); border-radius: 10px; overflow: hidden;
-  background: #15130F;
-  box-shadow: 0 24px 60px -22px rgba(0, 0, 0, 0.8);
-  pointer-events: none;
-  opacity: 0; transform-origin: 0 50%;
-  transition: opacity .28s ease;
-  will-change: transform;
-}
-.pidx-preview.is-on { opacity: 1; }
-.pidx-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* Touch has no pointer to follow, and the rows are already tappable. The width
-   query is not redundant: a narrow window on a desktop still reports
-   `pointer: fine`, and a cursor-tracking panel that wide has nowhere to live. */
-@media (pointer: coarse), (max-width: 760px) { .pidx-preview { display: none; } }
-@media (prefers-reduced-motion: reduce) {
-  .pidx-link, .pidx-arrow, .pidx-preview { transition-duration: .01ms; }
-}
-@media (max-width: 760px) {
-  /* Narrow: drop the tag column, keep name + status + arrow legible. */
-  .pidx-link { grid-template-columns: 32px minmax(0, 1fr) 64px 18px; gap: 12px; padding: 15px 4px; }
-  .pidx-tag { display: none; }
-}
-
 /* ── DESKTOP: collapse to the first 4 cases + "show more" ─────────────── */
 @media (min-width: 901px) {
   /* Newly-shown cards fade+rise in. fill:backwards (not both) so it fills the
@@ -1663,6 +1638,7 @@ html[data-motion-lite] .proj-grid.is-expanded > .proj-card:nth-child(n+5) { anim
     scroll-snap-align: center;
     perspective: none;       /* no 3D tilt on touch */
     transform: none !important;
+    translate: none;         /* the desktop scroll-drift has no meaning in a horizontal carousel */
     opacity: 1 !important;   /* carousel cards are always visible (override reveal) */
   }
   .proj-expand { display: flex; }  /* full carousel only after explicit intent */

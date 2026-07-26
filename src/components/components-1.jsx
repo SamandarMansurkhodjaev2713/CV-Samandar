@@ -905,7 +905,7 @@ function ProjectCard({ p, i, labels }) {
       // page abort the transition entirely). Browsers without cross-document
       // view transitions simply navigate — nothing to detect, nothing to break.
       try {
-        const img = e.currentTarget.closest(".proj-card, .pidx-row");
+        const img = e.currentTarget.closest(".proj-card");
         const target = img && img.querySelector(".proj-screen-body--img, .proj-screen-img");
         if (target) target.style.viewTransitionName = "lp-hero-" + landingSlug;
       } catch (err) { /* opportunistic */ }
@@ -928,6 +928,15 @@ function ProjectCard({ p, i, labels }) {
       ref={cardRef}
       id={p.slug ? "proj-" + p.slug : (landingSlug ? "proj-" + landingSlug : undefined)}
       className="proj-card card"
+      // Alternating parallax rates. The two desktop columns are already offset
+      // vertically in CSS; this makes the offset LIVE — the left column lags
+      // the scroll, the right column leads it, so the pair drifts apart and
+      // back as you move instead of sitting in a fixed staggered grid. Signs
+      // are opposite on purpose: same-sign values at different magnitudes read
+      // as "one column is slightly broken", opposite signs read as depth.
+      // motion.js writes --plx from this; the card's own transform composes it
+      // with the hover tilt (see `.proj-grid > .proj-card` in sections.css).
+      data-plx={i % 2 === 0 ? "0.05" : "-0.03"}
       style={{ "--proj-i": i, "--proj-accent": (PROJ_CARD[p.slug] && PROJ_CARD[p.slug].accent) || "var(--accent)" }}
       onMouseMove={onMove}
       onMouseLeave={onLeave}
@@ -1125,119 +1134,67 @@ function ProjectChapterDots({ items, gridRef, label }) {
 // page or a book's contents actually behaves. Nothing is hidden behind a
 // "show more" button any more: every project is in the DOM, indexable and
 // reachable by deep link, which also makes the return-to-card flow trivial.
-function ProjectIndexRow({ p, n, labels, onPreview }) {
-  const landingSlug = (p.url && p.url.indexOf("projects/") === 0)
-    ? p.url.replace(/^projects\//, "").replace(/\/+$/, "")
-    : null;
-  const isExternal = Boolean(p.url && p.url.indexOf("http") === 0);
-  function onClick(e) {
-    if (!p.url) { e.preventDefault(); return; }
-    if (landingSlug) { try { history.replaceState(null, "", "#proj-" + landingSlug); } catch (err) { /* opportunistic */ } }
-  }
-  const card = PROJ_CARD[p.slug];
-  return (
-    <li
-      className="pidx-row"
-      id={p.slug ? "proj-" + p.slug : undefined}
-      onMouseEnter={() => onPreview(card ? card.src : null, p.name)}
-      onMouseLeave={() => onPreview(null, "")}
-    >
-      <a
-        className="pidx-link"
-        href={p.url || "#projects"}
-        target={isExternal ? "_blank" : undefined}
-        rel={isExternal ? "noopener noreferrer" : undefined}
-        onClick={onClick}
-        data-cursor="link"
-        data-cursor-label={isExternal ? (labels.open_live || "open") : "open case"}
-      >
-        <span className="pidx-n mono">{String(n).padStart(2, "0")}</span>
-        <span className="pidx-name">{p.name}</span>
-        <span className="pidx-tag mono">{p.tag}</span>
-        <span className={`pidx-status mono proj-status-${String(p.status || "").toLowerCase()}`}>{p.status}</span>
-        <span className="pidx-arrow" aria-hidden="true">{isExternal ? "↗" : "→"}</span>
-      </a>
-    </li>
-  );
-}
-
+// The typographic index that briefly lived here — 4 poster cards followed by a
+// list of 17 name/tag/status rows with a floating hover preview — is gone. It
+// read as a spreadsheet: seventeen identical rows in a portfolio whose entire
+// argument is that the work is varied. The section is back to ONE presentation
+// for every project (a card), collapsed to the four strongest on desktop and
+// expandable on intent, and a swipe carousel on mobile.
 function Projects({ t }) {
   const ref = useRevealRoot([t]);
   const gridRef = useRef(null);
-  // The strongest product families lead as posters; the rest live in the index
-  // below. Everything is always rendered — no expand button, no hidden DOM.
+  // Four strongest product families lead the section on every viewport. The
+  // complete catalog expands on intent; mobile keeps its swipe carousel, but
+  // nobody has to swipe through 21 cards just to leave the block.
   const FEATURED_PROJECT_COUNT = 4;
+  const [expanded, setExpanded] = useState(false);
   const items = t.projects.items;
-  const featured = items.slice(0, FEATURED_PROJECT_COUNT);
-  const rest = items.slice(FEATURED_PROJECT_COUNT);
-  const chapterItems = featured;
+  const hiddenCount = Math.max(0, items.length - FEATURED_PROJECT_COUNT);
+  const chapterItems = expanded ? items : items.slice(0, FEATURED_PROJECT_COUNT);
 
-  // Floating preview for the index: ONE element that follows the pointer and
-  // swaps its source on hover, rather than 17 mounted images. The pointer can
-  // only be over one row, so one node is all the DOM this ever needs.
-  const previewRef = useRef(null);
-  const [preview, setPreview] = useState(null);
-  function onPreview(src) { setPreview(src); }
-
+  // Deep-link: arriving at #proj-<slug> (returning from that product's landing)
+  // for a card the collapsed desktop grid hides (index >= 4) → expand the grid
+  // so App's scroll-to-hash can actually reach it. Runs once on mount.
   useEffect(() => {
-    const el = previewRef.current;
-    if (!el) return undefined;
-    let raf = 0, x = 0, y = 0, tx = 0, ty = 0;
-    function move(e) { tx = e.clientX; ty = e.clientY; if (!raf) raf = requestAnimationFrame(tick); }
-    function tick() {
-      raf = 0;
-      // Lag the pointer slightly — an instantly-glued panel feels like a
-      // tooltip; a trailing one feels like a held object.
-      x += (tx - x) * 0.16; y += (ty - y) * 0.16;
-      el.style.transform = `translate3d(${Math.round(x)}px, ${Math.round(y)}px, 0)`;
-      if (Math.abs(tx - x) > 0.5 || Math.abs(ty - y) > 0.5) raf = requestAnimationFrame(tick);
-    }
-    const list = el.parentElement && el.parentElement.querySelector(".pidx-list");
-    if (list) list.addEventListener("pointermove", move, { passive: true });
-    return function cleanup() {
-      if (list) list.removeEventListener("pointermove", move);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, []);
+    const id = (window.location.hash || "").replace(/^#/, "");
+    if (id.indexOf("proj-") !== 0) return;
+    const slug = id.slice(5);
+    const idx = items.findIndex((p) => p.slug === slug);
+    if (idx >= FEATURED_PROJECT_COUNT) setExpanded(true);
+  }, [items]);
 
   return (
     <section data-section="projects" id="projects" data-enter="rise" ref={ref}>
       <div className="shell">
         <SecHead num="03" eyebrow={t.projects.eyebrow} title={t.projects.title} meta={`${items.length} cases · 2024–26`} />
-
-        {/* POSTERS — the few projects that carry the section. Two per row on
-            desktop so each image is big enough to be worth the shader. */}
-        <div className="proj-grid is-featured" ref={gridRef}>
-          {featured.map((p, i) => <ProjectCard key={p.slug || i} p={p} i={i} labels={t.projects} />)}
+        <div className={`proj-grid ${expanded ? "is-expanded" : "is-collapsed"}`} ref={gridRef}>
+          {items.map((p, i) => <ProjectCard key={p.slug || i} p={p} i={i} labels={t.projects} />)}
         </div>
 
-        {/* Mobile-only carousel pager for the posters (CSS hides it on desktop). */}
-        <ProjectChapterDots items={chapterItems} gridRef={gridRef} label={t.projects.list_label} />
-
-        {/* INDEX — the rest of the catalogue, in full. */}
-        {rest.length ? (
-          <div className="pidx" data-reveal>
-            <div className="pidx-head mono">
-              <span>{t.projects.list_label || "Project index"}</span>
-              <span className="pidx-count">{String(rest.length).padStart(2, "0")}</span>
-            </div>
-            <ul className="pidx-list">
-              {rest.map((p, i) => (
-                <ProjectIndexRow
-                  key={p.slug || i}
-                  p={p}
-                  n={FEATURED_PROJECT_COUNT + i + 1}
-                  labels={t.projects}
-                  onPreview={onPreview}
-                />
-              ))}
-            </ul>
-            {/* Single floating preview panel — follows the pointer, swaps src. */}
-            <div className={`pidx-preview ${preview ? "is-on" : ""}`} ref={previewRef} aria-hidden="true">
-              {preview ? <img src={preview} alt="" decoding="async" /> : null}
-            </div>
-          </div>
+        {hiddenCount > 0 ? (
+          <button
+            type="button"
+            className="proj-expand mono"
+            aria-expanded={expanded}
+            onClick={() => setExpanded((v) => !v)}
+            data-cursor="link"
+            data-cursor-label={expanded ? "collapse" : "show all"}
+          >
+            <span className="proj-expand-txt">
+              {/* `!= null` rather than `||`: the RU suffix is deliberately an
+                  EMPTY string ("Показать ещё 17"), and `"" || " more"` falls
+                  through to the English fallback — which is exactly how the
+                  button ended up reading "Показать ещё 17 more" in Russian. */}
+              {expanded
+                ? (t.projects.collapse || "Collapse")
+                : `${t.projects.more_prefix != null ? t.projects.more_prefix : "Show "}${hiddenCount}${t.projects.more_suffix != null ? t.projects.more_suffix : " more"}`}
+            </span>
+            <span className="proj-expand-ico" aria-hidden="true">{expanded ? "↑" : "↓"}</span>
+          </button>
         ) : null}
+
+        {/* Mobile-only carousel pager (CSS hides it on desktop). */}
+        <ProjectChapterDots items={chapterItems} gridRef={gridRef} label={t.projects.list_label} />
       </div>
     </section>
   );
