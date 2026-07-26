@@ -1891,17 +1891,14 @@ const PROJECT_UI = {
 const INTERLUDES = {
   ru: [
     { id: "creed",   eyebrow: "Позиция", lines: ["От идеи", "до продукта —", "один инженер"], em: "один инженер", meta: "полный цикл · без агентской наценки" },
-    { id: "body",    eyebrow: "Работы",  lines: ["21 продукт.", "12 кейсов.", "Один оператор."], em: "Один оператор.", meta: "2024 — 2026" },
     { id: "quality", eyebrow: "Принцип", lines: ["Качество —", "не этап,", "а способ работы"], em: "не этап,", meta: "тесты · CI · наблюдаемость" },
   ],
   en: [
     { id: "creed",   eyebrow: "Position", lines: ["From idea", "to product —", "one engineer"], em: "one engineer", meta: "full cycle · no agency markup" },
-    { id: "body",    eyebrow: "Work",     lines: ["21 products.", "12 case studies.", "One operator."], em: "One operator.", meta: "2024 — 2026" },
     { id: "quality", eyebrow: "Principle", lines: ["Quality is", "not a stage —", "it is how I work"], em: "not a stage —", meta: "tests · CI · observability" },
   ],
   uz: [
     { id: "creed",   eyebrow: "Pozitsiya", lines: ["G'oyadan", "mahsulotgacha —", "bitta muhandis"], em: "bitta muhandis", meta: "to'liq sikl · agentlik ustamasisiz" },
-    { id: "body",    eyebrow: "Ishlar",    lines: ["21 mahsulot.", "12 keys.", "Bitta operator."], em: "Bitta operator.", meta: "2024 — 2026" },
     { id: "quality", eyebrow: "Tamoyil",   lines: ["Sifat —", "bosqich emas,", "bu ishlash usuli"], em: "bosqich emas,", meta: "testlar · CI · kuzatuvchanlik" },
   ],
 };

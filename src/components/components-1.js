@@ -61,28 +61,93 @@ function SecHead({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HERO
+// HERO — THE MASTHEAD
+//
+// This used to be a two-column grid: a text column on the left, a Spline 3D
+// robot on the right. The robot went, and not because it misbehaved — it was
+// the single most generic thing on the page. A friendly 3D character next to a
+// left-aligned headline is the house style of every AI-startup template of the
+// last three years; it read as "made from a kit" no matter how well it ran. It
+// also cost a second WebGL context, a 1-3 MB scene download, a CDN runtime we
+// didn't control, and ~220 lines of load/retry/watchdog machinery to hide the
+// fact that it might not arrive at all.
+//
+// What replaced it is the one thing a portfolio can own outright: the name,
+// set as a masthead. Two lines of condensed display type, both spanning the
+// full viewport width edge to edge, the given name dominant and the surname
+// recessive underneath it. Everything else on the screen — eyebrow, status,
+// roles, tagline, actions — is deliberately small, so the page has ONE loud
+// element and a lot of quiet, which is the actual difference between editorial
+// design and a template.
+//
+// Two things keep it from being a static poster:
+//   • Each letter rises out of a bottom mask on its own beat when the intro
+//     curtain clears (see `is-lit`). The word assembles rather than appears.
+//   • The letters sit on different depth planes and lean with the pointer at
+//     different rates (--hd, an arc: outer letters travel most, centre least),
+//     so the word behaves like carved objects in a shallow space instead of
+//     flat artwork. That is the "alive" the robot was there to provide, done
+//     with transforms on 22 spans instead of a GPU scene.
 // ─────────────────────────────────────────────────────────────────────────────
+const HERO_GIVEN = "SAMANDAR";
+const HERO_FAMILY = "MANSURKHODJAEV";
+
+// One masked, depth-planed span per letter. `--l-i` drives the entrance
+// stagger; `--hd` the pointer lean. The arc (0 at the centre of the word, 1 at
+// its ends) is what makes the lean read as a curved surface rather than a
+// uniform slide — a uniform one would just be the whole word moving, which is
+// exactly the "sticker" effect this is avoiding.
+function heroLetters(word, depthScale) {
+  const n = word.length;
+  const mid = (n - 1) / 2;
+  return word.split("").map((ch, i) => /*#__PURE__*/React.createElement("span", {
+    key: i,
+    className: "hn-l",
+    style: {
+      "--l-i": i,
+      "--hd": ((0.3 + (mid > 0 ? Math.abs(i - mid) / mid : 0) * 1.1) * depthScale).toFixed(2)
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "hn-i"
+  }, ch)));
+}
+
+// The role lines get the same per-character treatment, for one reason that has
+// nothing to do with animation: on mobile they are set flush to both margins,
+// and CSS cannot do that to a single word.
+//
+// `text-align-last: justify` was the obvious first answer and it is a trap —
+// justification distributes slack at word boundaries, so "FULL-STACK" (no
+// spaces at all) does not move a pixel, and "AI AUTOMATION" opens one grotesque
+// canyon at its single space instead of spreading. Measured: the first line
+// stopped 12px short of the margin, the others "justified" into two words at
+// opposite ends of the screen.
+//
+// Characters in a `justify-content: space-between` row distribute the slack
+// evenly, which is what tracking-to-fit actually means. No mask or depth plane
+// here — these are supporting lines, and on desktop the spans simply flow back
+// inline as ordinary text.
+function spreadChars(text) {
+  return text.split("").map((ch, i) => ch === " " ? /*#__PURE__*/React.createElement("span", {
+    className: "hr-sp",
+    key: i
+  }, "\xA0") : /*#__PURE__*/React.createElement("span", {
+    className: "hr-c",
+    key: i
+  }, ch));
+}
 function Hero({
   t,
   links
 }) {
   const ref = useRevealRoot([t]);
-  const robotCanvasRef = useRef(null);
-  const robotRef = useRef(null);
-  // The Spline robot doesn't cycle moods — the plate stays "idle/online".
-  // eslint-disable-next-line no-unused-vars
-  const [robotMood, setRobotMood] = useState("idle");
-  // Spline is the ONLY robot. If it can't load we drop the whole stage rather
-  // than substituting anything — see the note on the loading strategy below.
-  const [robotDown, setRobotDown] = useState(false);
+  // The masthead holds its hidden pose until the intro curtain is gone — the
+  // whole point of the letter assembly is that it happens where you can see it.
+  const [lit, setLit] = useState(false);
 
   // ── Hero as ONE scene ────────────────────────────────────────────────────
-  // The old hero was two neighbours: a text column and a robot column. Here the
-  // pointer drives a single depth field — headline lines, tagline and the robot
-  // stage all read the same --hx/--hy, each at its own --hd multiplier, and the
-  // robot leans AGAINST the text (negative depth) so the two halves feel like
-  // near and far objects in one space rather than two boxes side by side.
+  // The pointer drives a single depth field: every letter, the roles rule and
+  // the tagline read the same --hx/--hy, each at its own --hd multiplier.
   // Written straight to CSS custom properties on the section: no React state,
   // so pointer movement never triggers a re-render of the most expensive
   // component on the page. rAF-throttled; skipped entirely on touch (no hover)
@@ -118,8 +183,9 @@ function Hero({
     }
     writeHeroDepth(el, 0, 0); // CSS transitions the scene back to rest
   }
-  // The robot notices the primary action. Purely a class on the section, so the
-  // Spline scene itself is untouched — no runtime calls that could fail.
+  // The masthead notices the primary action: `.cta-live` on the section
+  // tightens the accent hairline under the name while the CTA is hovered or
+  // keyboard-focused, so the two ends of the composition are visibly connected.
   function onCtaFocus(e) {
     const s = e.currentTarget.closest("section");
     if (s) s.classList.add("cta-live");
@@ -129,220 +195,33 @@ function Hero({
     if (s) s.classList.remove("cta-live");
   }
 
-  // Robot loading strategy:
-  //   1. ALWAYS try the Spline runtime (community asset "GENKUB - Greeting
-  //      robot") first, on every device — no device-tier skip. Device tier
-  //      used to gate this out on anything reporting <=4 cores/GB, but
-  //      `navigator.deviceMemory` is bucketed/approximated by Chrome (a huge
-  //      share of real, perfectly capable Android phones report 4 or less),
-  //      so that check was quietly showing the legacy robot on ordinary
-  //      hardware, not just genuinely weak devices. It's an async dynamic
-  //      import + scene download, so it takes time regardless.
-  //   2. We poll every ROBOT_POLL_MS for TWO global flags that robot-spline.js
-  //      sets when the load resolves:
-  //        - `window.__splineRobotLoaded = true`  → success, KEEP Spline,
-  //          tear down the poll + watchdog.
-  //        - `window.__splineRobotFailed = <reason>` → load failed.
-  //   3. ROBOT_FALLBACK_MS is the "truly stuck" watchdog: if neither flag
-  //      has fired by then (e.g. runtime fetched but `app.load` never
-  //      resolves), assume the load is wedged and stop waiting.
-  //      This MUST be generous enough that a normal load on slow 3G still
-  //      wins — Spline's .splinecode bundles are 1–3 MB.
-  //   4. A decisive failure (`__splineRobotFailed`, e.g. a blocked/erroring
-  //      request) gets ONE fast retry — cheap insurance against a transient
-  //      network blip. An ambiguous silent-hang does NOT retry: doubling a
-  //      12s wait on an already-ambiguous case isn't worth it.
-  //   4b. WHEN THE ROBOT CANNOT LOAD, WE SHOW NOTHING. There used to be a
-  //      hand-built canvas robot (robot.js) standing in here, but a crude
-  //      stand-in reads far worse than its absence — it made the hero look
-  //      broken rather than degraded, and it shipped 1k lines to do it. The
-  //      whole stage now unmounts instead, leaving the (already strong)
-  //      text hero to stand alone. Do not reintroduce a substitute robot.
-  //   5. The dynamic import starts immediately here (below) so the network
-  //      fetch is well underway before the ~3s intro ends — but robot-spline.js
-  //      itself holds the actual `new Application()` + `app.load()` (the part
-  //      that opens a second WebGL context and GPU-uploads the scene) until
-  //      `sm:intro-done` fires or 3.2s elapses, same reasoning as bg-fx.js's
-  //      own gate: that GPU burst competing with the intro's canvas rAF loop
-  //      is what was making the intro stutter on real phones. Net effect:
-  //      network prewarm happens during the intro (free), the heavy part
-  //      happens right as/after the intro clears (no contention), and the
-  //      robot is still ready essentially immediately once the hero appears.
-  // The split keeps the page robust against blocked CDNs / offline / 4xx
-  // WITHOUT killing a successful-but-slow Spline load.
+  // Hold the letters in their hidden pose until the intro curtain has actually
+  // cleared, then release them. Three entry paths, all of which must end lit:
+  //   • No curtain at all (deep-link entry, or index.html's inline guard never
+  //     created one) -> light immediately, this frame.
+  //   • Normal boot -> the `sm:intro-done` event.
+  //   • The event never arrives (intro.js blocked, or it fired before this
+  //     component mounted) -> a wall-clock backstop. Every timed thing on this
+  //     page needs one: a hidden or backgrounded tab can stall rAF-driven
+  //     timelines like the intro's indefinitely, and "the name never appears"
+  //     is the worst possible failure mode for the hero.
   useEffect(() => {
-    if (!robotCanvasRef.current) return;
-    const canvas = robotCanvasRef.current;
-    const rootStyles = getComputedStyle(document.documentElement);
-    const a1 = rootStyles.getPropertyValue("--accent").trim() || "#D97757";
-    const a2 = rootStyles.getPropertyValue("--accent-2").trim() || "#C89B5E";
-    // 12s watchdog: covers slow 3G + first-paint blocking on cold caches.
-    // The previous 3.5s value was too aggressive and was killing successful
-    // loads on mid-range mobile. The retry attempt gets a shorter watchdog
-    // (8s) since a second cold 3G load is unlikely — this caps the worst-case
-    // total wait instead of doubling it.
-    const ROBOT_FALLBACK_MS = 12000;
-    const ROBOT_RETRY_FALLBACK_MS = 8000;
-    const ROBOT_POLL_MS = 400;
-    const ROBOT_RETRY_DELAY_MS = 600;
-    let active = null;
-    let fallbackTimer = 0;
-    let pollTimer = 0;
-    let retryTimer = 0;
-    let swapped = false;
-    let retriesLeft = 1;
-    function clearTimers() {
-      if (pollTimer) {
-        window.clearInterval(pollTimer);
-        pollTimer = 0;
-      }
-      if (fallbackTimer) {
-        window.clearTimeout(fallbackTimer);
-        fallbackTimer = 0;
-      }
-      if (retryTimer) {
-        window.clearTimeout(retryTimer);
-        retryTimer = 0;
-      }
+    const curtain = window.__SM_INTRO && window.__SM_INTRO.panel;
+    if (!curtain || !curtain.parentNode) {
+      setLit(true);
+      return undefined;
     }
-
-    // Spline is unavailable → retire the stage entirely (no substitute robot).
-    function giveUpOnRobot() {
-      if (swapped) return;
-      swapped = true;
-      clearTimers();
-      // Dispose whatever Spline created (or the partial controller).
-      if (active && active.dispose) {
-        try {
-          active.dispose();
-        } catch (e) {/* opportunistic */}
-      }
-      active = null;
-      robotRef.current = null;
-      setRobotDown(true);
-    }
-
-    // Kicks off (or re-kicks off, for a retry) one Spline load attempt with
-    // its own poll + watchdog pair.
-    function trySpline(watchdogMs) {
-      // Reset success/failure flags BEFORE creating the controller so a
-      // stale value from a hot-reload or prior attempt doesn't trick us.
-      window.__splineRobotLoaded = false;
-      window.__splineRobotFailed = null;
-      active = window.RobotSpline.create(canvas, {
-        accent: a1,
-        accent2: a2,
-        motion: 1,
-        onExpressionChange: function (n) {
-          setRobotMood(n);
-        }
-      });
-      robotRef.current = active;
-
-      // Poll for either outcome. Success → stop everything and keep Spline.
-      // Decisive failure → retry once (if budget remains), else legacy.
-      pollTimer = window.setInterval(function poll() {
-        if (swapped) {
-          clearTimers();
-          return;
-        }
-        if (window.__splineRobotLoaded) {
-          // Spline succeeded — we're done. Cancel the watchdog so it can't
-          // fire later and clobber a working scene.
-          clearTimers();
-          return;
-        }
-        if (window.__splineRobotFailed) {
-          if (pollTimer) {
-            window.clearInterval(pollTimer);
-            pollTimer = 0;
-          }
-          if (fallbackTimer) {
-            window.clearTimeout(fallbackTimer);
-            fallbackTimer = 0;
-          }
-          retryOrSwap();
-        }
-      }, ROBOT_POLL_MS);
-
-      // Watchdog — ONLY swap if neither flag was set by the deadline,
-      // meaning the load is silently wedged (no success, no error). A normal
-      // success path will have cleared this timer via the poll() above.
-      // Ambiguous hangs go straight to legacy — no retry (see comment above).
-      fallbackTimer = window.setTimeout(function watchdog() {
-        fallbackTimer = 0;
-        if (swapped) return;
-        if (window.__splineRobotLoaded) return; // success raced the timer
-        if (pollTimer) {
-          window.clearInterval(pollTimer);
-          pollTimer = 0;
-        }
-        giveUpOnRobot();
-      }, watchdogMs);
-    }
-    function retryOrSwap() {
-      if (swapped) return;
-      if (retriesLeft > 0 && window.RobotSpline && window.RobotSpline.create) {
-        retriesLeft -= 1;
-        if (active && active.dispose) {
-          try {
-            active.dispose();
-          } catch (e) {/* opportunistic */}
-        }
-        retryTimer = window.setTimeout(function () {
-          retryTimer = 0;
-          if (swapped) return;
-          trySpline(ROBOT_RETRY_FALLBACK_MS);
-        }, ROBOT_RETRY_DELAY_MS);
-      } else {
-        giveUpOnRobot();
-      }
-    }
-
-    // Kick off IMMEDIATELY — the robot must be loaded (or well on its way) by
-    // the time the ~3s intro finishes, so the hero is already alive the moment
-    // the iris opens onto it. That's a core point of the intro: it buys the
-    // heavy Spline runtime + scene download time to arrive behind the opaque
-    // curtain. (An earlier version deferred this until `sm:intro-done`; that
-    // guaranteed the robot only STARTED loading as the intro ended, i.e. popped
-    // in late — the opposite of what we want here.)
-    if (window.RobotSpline && window.RobotSpline.create) {
-      trySpline(ROBOT_FALLBACK_MS);
-    } else {
-      // The robot-spline.js bundle never registered (blocked/failed to load
-      // outright) — retire the stage; there is no substitute robot.
-      giveUpOnRobot();
-    }
-    return function disposeRobot() {
-      clearTimers();
-      if (active && active.dispose) {
-        try {
-          active.dispose();
-        } catch (e) {/* opportunistic */}
-      }
+    let fired = false;
+    const light = () => {
+      if (fired) return;
+      fired = true;
+      setLit(true);
     };
-  }, []);
-
-  // Pause the robot's render loop when the hero scrolls out of view. The
-  // robot (Spline 3D scene, or the canvas fallback) is the single heaviest
-  // animation on the page; rendering it off-screen wastes GPU/CPU and is a
-  // major source of scroll jank. Resume the moment the hero returns.
-  useEffect(() => {
-    const heroEl = document.getElementById("hero");
-    if (!heroEl || !("IntersectionObserver" in window)) return undefined;
-    const io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        const ctrl = robotRef.current;
-        if (ctrl && typeof ctrl.setActive === "function") {
-          ctrl.setActive(e.isIntersecting);
-        }
-      });
-    }, {
-      threshold: 0.01
-    });
-    io.observe(heroEl);
-    return function () {
-      io.disconnect();
+    window.addEventListener("sm:intro-done", light);
+    const backstop = window.setTimeout(light, 4200);
+    return () => {
+      window.removeEventListener("sm:intro-done", light);
+      window.clearTimeout(backstop);
     };
   }, []);
 
@@ -406,24 +285,18 @@ function Hero({
       if (io) io.disconnect();
     };
   }, []);
-  function onRobotClick() {
-    // Light haptic — Android only, iOS no-ops.
-    if (typeof navigator !== "undefined" && navigator.vibrate) {
-      try {
-        navigator.vibrate(8);
-      } catch (e) {/* opportunistic */}
-    }
-    // Trigger Spline's built-in click event ("mouseDown" / "tap" reaction
-    // defined in the source scene). For the legacy fallback robot, this
-    // continues to cycle through expressions.
-    if (robotRef.current && robotRef.current.cycleExpression) {
-      robotRef.current.cycleExpression();
-    }
-  }
+
+  // The roles were an <h1> of three stacked lines ("Full-stack." / "AI
+  // Automation." / "Product Engineer."). The name is the <h1> now, so these
+  // become a single tracked rule under it — one horizontal line of small mono
+  // on desktop, three edge-to-edge display lines on mobile (see .hero-roles).
+  // Trailing full stops are dropped: they belonged to the stacked reading and
+  // read as noise inside a slash-separated rule.
+  const roles = (t.hero.title_lines || []).map(s => s.replace(/\.\s*$/, ""));
   return /*#__PURE__*/React.createElement("section", {
     "data-section": "hero",
     id: "hero",
-    className: "hero",
+    className: `hero${lit ? " is-lit" : ""}`,
     ref: ref,
     onPointerMove: onHeroMove,
     onPointerLeave: onHeroLeave
@@ -436,62 +309,43 @@ function Hero({
     className: "hero-seam",
     "aria-hidden": "true"
   }), /*#__PURE__*/React.createElement("div", {
-    className: "shell hero-grid"
+    className: "hero-stack"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "hero-left"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "eyebrow",
-    "data-reveal": true
-  }, t.hero.eyebrow), /*#__PURE__*/React.createElement("h1", {
-    className: "hero-h1"
-  }, t.hero.title_lines.map((line, i) => /*#__PURE__*/React.createElement("span", {
-    key: i,
-    className: `hero-line ${i === 1 ? "italic-display" : ""}`,
-    style: {
-      "--hd": [1, 0.55, 1.4][i % 3]
-    },
-    "data-reveal-words": true,
-    "data-reveal-delay": i * 0.08
-  }, line))), /*#__PURE__*/React.createElement("p", {
-    className: "hero-tagline",
-    "data-reveal-words": true,
-    "data-reveal-delay": "0.2"
-  }, t.hero.tagline), /*#__PURE__*/React.createElement("div", {
-    className: "hero-ctas",
-    "data-reveal": true,
-    "data-reveal-from": "translateY(22px)",
-    "data-reveal-delay": "0.35"
-  }, /*#__PURE__*/React.createElement("a", {
-    href: "#contact",
-    className: "btn btn-primary",
-    "data-magnetic": true,
-    "data-cursor": "send",
-    "data-cursor-label": "send \u2192 contact",
-    onMouseEnter: onCtaFocus,
-    onMouseLeave: onCtaBlur,
-    onFocus: onCtaFocus,
-    onBlur: onCtaBlur
-  }, t.hero.cta_primary, /*#__PURE__*/React.createElement("span", {
-    className: "arrow"
-  }, "\u2192")), /*#__PURE__*/React.createElement("a", {
-    href: "#projects",
-    className: "btn btn-ghost",
-    "data-magnetic": true,
-    "data-cursor": "link",
-    "data-cursor-label": "\u2192 projects"
-  }, t.hero.cta_secondary, /*#__PURE__*/React.createElement("span", {
-    className: "arrow"
-  }, "\u2198"))), /*#__PURE__*/React.createElement("div", {
-    className: "hero-meta",
-    "data-reveal": true,
-    "data-reveal-delay": "0.45"
-  }, /*#__PURE__*/React.createElement("div", {
+    className: "shell hero-band hero-band--top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "eyebrow"
+  }, t.hero.eyebrow), /*#__PURE__*/React.createElement("span", {
     className: "hero-status"
   }, /*#__PURE__*/React.createElement("span", {
     className: "status-dot"
   }), /*#__PURE__*/React.createElement("span", {
     className: "mono"
-  }, t.hero.status)), /*#__PURE__*/React.createElement("div", {
+  }, t.hero.status))), /*#__PURE__*/React.createElement("h1", {
+    className: "hero-name",
+    "aria-label": `${HERO_GIVEN} ${HERO_FAMILY}`
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "hn-line hn-line--given",
+    "aria-hidden": "true"
+  }, heroLetters(HERO_GIVEN, 1)), /*#__PURE__*/React.createElement("span", {
+    className: "hn-line hn-line--family",
+    "aria-hidden": "true"
+  }, heroLetters(HERO_FAMILY, 0.55))), /*#__PURE__*/React.createElement("div", {
+    className: "shell hero-band hero-band--rule"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "hero-roles"
+  }, roles.map((r, i) => /*#__PURE__*/React.createElement(React.Fragment, {
+    key: i
+  }, i ? /*#__PURE__*/React.createElement("i", {
+    className: "hero-roles-sep",
+    "aria-hidden": "true"
+  }, "/") : null, /*#__PURE__*/React.createElement("span", {
+    className: "hero-role"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "a11y-only"
+  }, r), /*#__PURE__*/React.createElement("span", {
+    className: "hero-role-ink",
+    "aria-hidden": "true"
+  }, spreadChars(r)))))), /*#__PURE__*/React.createElement("div", {
     className: "hero-links"
   }, /*#__PURE__*/React.createElement("a", {
     href: `https://${links.github}`,
@@ -512,39 +366,33 @@ function Hero({
     className: "hero-link",
     "data-cursor": "send",
     "data-cursor-label": "send: email"
-  }, "Email")))), /*#__PURE__*/React.createElement("aside", {
-    className: "hero-right",
-    "data-reveal": true,
-    "data-reveal-delay": "0.15",
-    hidden: robotDown
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "hero-robot",
-    onClick: onRobotClick
-  }, /*#__PURE__*/React.createElement("canvas", {
-    ref: robotCanvasRef,
-    className: "hero-robot-canvas",
+  }, "Email"))), /*#__PURE__*/React.createElement("div", {
+    className: "shell hero-band hero-band--act"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "hero-tagline"
+  }, t.hero.tagline), /*#__PURE__*/React.createElement("div", {
+    className: "hero-ctas"
+  }, /*#__PURE__*/React.createElement("a", {
+    href: "#contact",
+    className: "btn btn-primary",
+    "data-magnetic": true,
+    "data-cursor": "send",
+    "data-cursor-label": "send \u2192 contact",
+    onMouseEnter: onCtaFocus,
+    onMouseLeave: onCtaBlur,
+    onFocus: onCtaFocus,
+    onBlur: onCtaBlur
+  }, t.hero.cta_primary, /*#__PURE__*/React.createElement("span", {
+    className: "arrow"
+  }, "\u2192")), /*#__PURE__*/React.createElement("a", {
+    href: "#projects",
+    className: "btn btn-ghost",
+    "data-magnetic": true,
     "data-cursor": "link",
-    "data-cursor-label": "follow \xB7 interact"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "hero-robot-plate mono",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "hero-robot-plate-l"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "hero-robot-plate-dot"
-  }), "CORE.AI \xB7 ONLINE"), /*#__PURE__*/React.createElement("span", {
-    className: "hero-robot-plate-rail"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "hero-robot-plate-r"
-  }, "UNIT-01")), /*#__PURE__*/React.createElement("div", {
-    className: "hero-robot-meta mono"
-  }, /*#__PURE__*/React.createElement("span", null, "core.ai"), /*#__PURE__*/React.createElement("span", {
-    className: "hero-robot-state"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "hero-robot-dot hero-robot-dot--idle"
-  }), "online")), /*#__PURE__*/React.createElement("div", {
-    className: "hero-robot-hint mono"
-  }, "tracks your cursor \xB7 click to greet")))), /*#__PURE__*/React.createElement("div", {
+    "data-cursor-label": "\u2192 projects"
+  }, t.hero.cta_secondary, /*#__PURE__*/React.createElement("span", {
+    className: "arrow"
+  }, "\u2198"))))), /*#__PURE__*/React.createElement("div", {
     className: "hero-scroll-hint mono",
     "aria-hidden": "true"
   }, "scroll"), /*#__PURE__*/React.createElement("div", {

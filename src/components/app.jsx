@@ -708,8 +708,12 @@ function App() {
         </div>
         <Interlude data={(t.interludes||[])[0]} index={0} />
         <About t={t} />
-        <Interlude data={(t.interludes||[])[1]} index={1} />
         <Projects t={t} />
+        {/* The constructor sits immediately after the work: you have just seen
+            what gets built, so the natural next move is to price your own. It
+            used to be the 9th of 12 sections — the single most distinctive
+            thing on the site, buried where most readers never reached it. */}
+        <ProjectBuilder t={t} links={LINKS} />
         <Skills t={t} />
         {/* Pinned-overlap #1 — Services recedes as CV (the centerpiece) rises.
             Depth handoff via --pin-p (motion.js bindPins); transform/opacity
@@ -719,15 +723,11 @@ function App() {
           <CV t={t} links={LINKS} />
         </div>
         <Process t={t} />
-        {/* Signature interactive — "Живой конструктор проекта". Standalone band
-            between Process and FAQ (no data-section, so it stays out of the nav /
-            scroll-spy). Replaces the old CLI cinema + cursor constellation. */}
-        <ProjectBuilder t={t} links={LINKS} />
         <Faq t={t} />
         {/* Pinned-overlap #2 — Trust recedes as Contact (the closing CTA) rises. */}
         <div className="pin-host" data-pin>
           <Trust t={t} />
-          <Interlude data={(t.interludes||[])[2]} index={2} />
+          <Interlude data={(t.interludes||[])[1]} index={1} />
           <Contact t={t} links={LINKS} />
         </div>
       </main>

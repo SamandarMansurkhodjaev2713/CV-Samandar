@@ -1028,11 +1028,11 @@ function App() {
     index: 0
   }), /*#__PURE__*/React.createElement(About, {
     t: t
-  }), /*#__PURE__*/React.createElement(Interlude, {
-    data: (t.interludes || [])[1],
-    index: 1
   }), /*#__PURE__*/React.createElement(Projects, {
     t: t
+  }), /*#__PURE__*/React.createElement(ProjectBuilder, {
+    t: t,
+    links: LINKS
   }), /*#__PURE__*/React.createElement(Skills, {
     t: t
   }), /*#__PURE__*/React.createElement("div", {
@@ -1045,9 +1045,6 @@ function App() {
     links: LINKS
   })), /*#__PURE__*/React.createElement(Process, {
     t: t
-  }), /*#__PURE__*/React.createElement(ProjectBuilder, {
-    t: t,
-    links: LINKS
   }), /*#__PURE__*/React.createElement(Faq, {
     t: t
   }), /*#__PURE__*/React.createElement("div", {
@@ -1056,8 +1053,8 @@ function App() {
   }, /*#__PURE__*/React.createElement(Trust, {
     t: t
   }), /*#__PURE__*/React.createElement(Interlude, {
-    data: (t.interludes || [])[2],
-    index: 2
+    data: (t.interludes || [])[1],
+    index: 1
   }), /*#__PURE__*/React.createElement(Contact, {
     t: t,
     links: LINKS

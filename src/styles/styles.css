@@ -1062,6 +1062,57 @@ h1, h2, h3,
   transition: background 1.4s ease;
 }
 
+/* ── 4. PLATES ────────────────────────────────────────────────────────────
+   The page stops being a ribbon and becomes a stack. Every section carries its
+   own opaque ground and a shadow along its TOP edge, so scrolling reads as one
+   plate sliding over the one before it — a descent, not a list.
+
+   This extends the sticky mechanic that already existed for Hero→Signal to the
+   whole page. Pure CSS: the ground is per-section, the shadow is static, and
+   nothing is scroll-linked, so there is no per-frame cost and nothing to
+   judder. `position: relative` + `z-index` is the entire trick — later sections
+   naturally paint over earlier ones in DOM order.
+
+   The per-section grounds mirror the ACTS table in acts.js exactly; they are
+   duplicated here rather than driven by a variable because each plate must be
+   opaque with ITS OWN colour at all times, including while the act engine is
+   still crossfading the body underneath. */
+main section[data-section] {
+  position: relative;
+  z-index: 1;
+  background-color: var(--plate, #1A1A19);
+  box-shadow: 0 -34px 64px -34px rgba(0, 0, 0, 0.78);
+}
+section[data-section="hero"]     { --plate: #161719; box-shadow: none; }
+section[data-section="signal"]   { --plate: #18181A; }
+section[data-section="about"]    { --plate: #1A1A19; }
+section[data-section="projects"] { --plate: #1E1B17; }
+section[data-section="skills"]   { --plate: #171819; }
+section[data-section="services"] { --plate: #1B1A17; }
+section[data-section="cv"]       { --plate: #E8E6E1; }   /* light plate */
+section[data-section="process"]  { --plate: #18191A; }
+section[data-section="faq"]      { --plate: #1B1A17; }
+section[data-section="trust"]    { --plate: #E9E7E2; }   /* light plate */
+section[data-section="contact"]  { --plate: #221D16; }
+#builder                         { --plate: #1C1B18; position: relative; z-index: 1;
+                                   background-color: var(--plate);
+                                   box-shadow: 0 -34px 64px -34px rgba(0, 0, 0, 0.78); }
+/* Interludes are the rests BETWEEN plates — they show the act ground itself,
+   which is what makes them read as air rather than as another slab. */
+.ilude { background: transparent; box-shadow: none; }
+
+/* A hairline of the act accent along each plate's leading edge — the seam that
+   makes the stack legible without drawing a border. */
+main section[data-section]::after {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px;
+  pointer-events: none; z-index: 3;
+  background: linear-gradient(90deg,
+    rgba(var(--act-accent-rgb, var(--accent-rgb)) / 0.28),
+    rgba(var(--act-accent-rgb, var(--accent-rgb)) / 0.05) 45%,
+    transparent 75%);
+}
+section[data-section="hero"]::after { display: none; }
+
 /* ── 2. Light acts ────────────────────────────────────────────────────────
    acts.js toggles html.act-light for the two document sections (CV, Quality).
    Tokens flip in ONE place, so every component inherits the inversion without

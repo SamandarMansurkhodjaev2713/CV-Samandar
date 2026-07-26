@@ -158,25 +158,17 @@
   background:
     radial-gradient(ellipse 70% 55% at 15% 0%, rgba(var(--accent-rgb) / 0.07), transparent 62%),
     radial-gradient(ellipse 50% 40% at 100% 100%, rgba(var(--accent-2-rgb) / 0.05), transparent 65%),
-    /* Was a flat var(--bg-0) fill for the section's full height — opaque right
-       up to the last pixel, then About's section starts fully transparent
-       (its own "transparent-over-WebGL" design), so the fixed bg-fx-canvas/
-       bg-grid texture snapped from invisible to fully visible in one frame at
-       the Signal→About boundary (the hard "seam" flagged from a screenshot).
-       By the time this fade starts, the pin-scroll cover of Hero is long
-       finished — Hero unsticks and scrolls away well before Signal's own
-       bottom edge is reached — so nothing is left that still needs opaque
-       covering here. Fading the last stretch to transparent lets the same
-       fixed texture About already shows bleed in gradually, so the two
-       sections read as one continuous backdrop instead of a cut.
-       90px, not the more gradual 240px first tried: measured live, the last
-       signal-row's real content ends only ~112-118px above the section's
-       bottom edge (desktop 1280 and mobile 390 both checked) — a taller fade
-       would have started UNDER the last row's text, fading its own backdrop
-       to transparent behind it and quietly re-breaking the exact contrast
-       problem this whole pass was fixing. 90px sits safely inside that
-       measured dead space on both. */
-    linear-gradient(to bottom, var(--bg-0) 0%, var(--bg-0) calc(100% - 90px), transparent 100%);
+    /* Opaque for the section's full height, and it must stay that way.
+       An earlier version faded the last 90px to transparent, because back then
+       About started fully transparent (a "transparent-over-WebGL" design) and
+       the fixed background texture snapped from hidden to visible in one frame
+       at the Signal→About boundary — a hard seam. The plates architecture
+       removed that whole problem at the source: every section now paints its
+       own opaque ground (--plate), so there is no shared texture to blend into
+       and nothing left to fade toward. Worse, the fade actively broke the new
+       model — Signal is the curtain that covers the pinned Hero, so any
+       transparency in it shows Hero through the plate. Flat fill. */
+    linear-gradient(to bottom, var(--plate, var(--bg-0)), var(--plate, var(--bg-0)));
   box-shadow: 0 -22px 50px -22px rgba(0, 0, 0, 0.6);
 }
 .pin-host--hero > section[data-section]:last-child::after {
@@ -198,68 +190,245 @@
    here, higher-specificity than the generic hidden pose so it wins. */
 .pin-host--hero > section[data-enter].sec-bound:not(.sec-in) { opacity: 1; }
 
-.hero-grid {
-  display: grid;
-  grid-template-columns: 1.15fr 1fr;
-  gap: clamp(40px, 6vw, 96px);
-  align-items: center;
-  min-height: calc(100vh - var(--nav-h) - 80px);
-  /* Generous gap from the fixed nav so the title doesn't crowd the brand mark. */
-  padding-top: clamp(48px, 7vh, 96px);
-}
-.hero-h1 {
-  margin: 20px 0 28px;
+/* ── THE MASTHEAD ─────────────────────────────────────────────────────────
+   Four stacked bands. Three of them are quiet and live inside `.shell`; the
+   second one is the name and runs to the viewport edges.
+
+   The composition rule: ONE loud element, everything else deliberately small.
+   The eyebrow, status, roles, links and tagline are all 10–17px. That ratio —
+   roughly 20:1 between the name and its own supporting text — is what reads as
+   editorial. Softening it (a 28px subhead, a 22px tagline) is exactly how this
+   would slide back into looking like a template.                              */
+/* The hero is exactly one screen. It is also the pin host for the Hero→Signal
+   curtain, and the curtain's scroll distance EQUALS this section's height — so
+   any height above 100vh is bought directly in dead scroll, where Hero is
+   frozen and Signal creeps. The section's own vertical padding is dropped for
+   the same reason; the stack flexes to fill instead, which centres the
+   masthead in the screen rather than in the padding box. */
+section[data-section="hero"] { padding-block: 0; }
+.hero {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  min-height: 100svh;
+  min-height: 100vh; /* fallback for browsers without svh */
 }
-.hero-line {
+.hero-stack {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(14px, 2.1vh, 30px);
+  padding-top: calc(var(--nav-h) + clamp(12px, 2vh, 30px));
+  padding-bottom: clamp(12px, 2vh, 28px);
+}
+/* `width: 100%` is load-bearing, not tidiness. `.shell` carries `margin: 0
+   auto`, and a flex item with an auto cross-axis margin is NOT stretched — it
+   shrinks to fit its content and centres. Inside this flex column that made
+   every band exactly as wide as its own text, so `justify-content:
+   space-between` had nothing to distribute and the whole composition floated
+   in the middle of the screen at a different left edge from the name. With an
+   explicit width the auto margins keep doing their real job (capping at
+   --max-w and centring) with no shrink-to-fit. */
+.hero-stack > .shell { width: 100%; box-sizing: border-box; }
+.hero-band {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: clamp(20px, 4vw, 64px);
+  flex-wrap: wrap;
+}
+.hero-band--top { align-items: center; }
+.hero-band--act { align-items: flex-end; padding-top: clamp(8px, 1.6vh, 22px); }
+
+/* ── The name ─────────────────────────────────────────────────────────────
+   Full-bleed: this element is NOT inside `.shell`, and its padding is a thin
+   optical margin rather than the page gutter.
+
+   Sizing is `min(width-driven, height-driven)`. The width term is what makes
+   the line span the viewport; the height term is the guard that stops a short
+   or landscape window from handing the name more vertical room than the rest
+   of the composition has left. Whichever wins, `justify-content: space-between`
+   absorbs the remainder into the letter gaps, so the line lands flush on both
+   edges at every viewport without measuring a single glyph. That is the whole
+   reason the letters are separate spans in the layout sense — the animation
+   just happens to need them too.                                             */
+.hero-name {
+  position: relative;
+  z-index: 1;
+  /* Auto block margins collect ALL the stack's leftover height around the
+     name: the eyebrow/status row pins to the top of the screen, the roles rule
+     and the action row pin to the bottom above the marquee, and the monument
+     floats in the middle of what is left. Letting `justify-content: center`
+     handle it instead bunched all four bands together in the middle of the
+     screen with ~130px of dead air underneath — the layout of a page that ran
+     out of content, rather than one that placed it. */
+  margin: auto 0;
+  /* A DECISIVE overhang. The content column's gutter is ~58px at 1440; at the
+     first value tried here the name sat at 27px, which is not "full bleed" and
+     not "aligned" — it reads as a 31px mistake. ~17px puts it unmistakably
+     outside the column, which is the whole gesture: the name belongs to the
+     page edge, everything else belongs to the column. */
+  padding-inline: clamp(12px, 1.15vw, 20px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2px, 0.7vh, 12px);
+  font-family: var(--f-head);
+  font-weight: 700;
+  text-transform: uppercase;
+  line-height: 0.76;
+  color: var(--text);
+}
+.hn-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  width: 100%;
+}
+.hn-line--given  { font-size: min(22.4vw, 31vh); }
+/* Sized so BOTH lines land at roughly the same letter tracking, not so the
+   surname is a fixed fraction of the given name. 14 characters against 8 means
+   the smaller line needs a much larger share of the type size than it looks
+   like it should: measured at 1440px, the given name's glyphs occupy 1292 of
+   1377px (12px gaps), and matching that density across 14 narrower glyphs puts
+   the surname at ~0.6 of the given name's size. Anything smaller and
+   `space-between` blows the gaps out to 39px — the word stops reading as a
+   word and starts reading as a dotted rule. */
+.hn-line--family {
+  font-size: min(13.4vw, 18.6vh);
+  color: var(--text-dim);
+  /* The surname is the same gesture at a whisper. Pushing it to --text-dim and
+     easing the weight keeps the eye on the given name while both lines still
+     read as one carved block. */
+  font-weight: 500;
+}
+
+/* Each letter is a bottom-masked window. `clip-path` rather than `overflow`
+   because only the BOTTOM edge should cut — the letter rises from below, and
+   overflow would also clip the cap line and the optical side bearings of round
+   glyphs (S, D, O) at these sizes.
+   ────────────────────────────────────────────────────────────────────────────
+   THE BOTTOM INSET IS NOT ZERO, AND MUST NOT BE. With `line-height: 0.76`, the
+   content box is far shorter than Oswald's natural line box (ascent 1.19em +
+   descent 0.29em = 1.48em), so the glyphs overflow it symmetrically and the
+   BASELINE ends up ~0.09em BELOW the box's own bottom edge — measured live:
+   279px type, 212px box, ink bottom 25px past it. A flush `inset(… 0% …)` was
+   therefore slicing the bottom ~12% off every letter. -15% clears the ink with
+   headroom at both line sizes (both share line-height, so the percentage is
+   the same for each).
+   The hidden pose then has to travel past that widened window — hence 122%,
+   not the 102% a flush mask would need. Undershoot it and the tops of the
+   letters sit visible below the line before the entrance even starts. */
+.hn-l {
   display: block;
-  line-height: 0.95;
+  clip-path: inset(-30% -4% -19% -4%);
+  will-change: transform;
 }
-.hero-line:nth-child(2) { color: var(--accent); }
+.hn-i {
+  display: block;
+  transform: translateY(126%);
+  opacity: 0;
+  transition:
+    transform 1150ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 700ms linear;
+  transition-delay: calc(var(--l-i, 0) * 46ms);
+}
+.hn-line--family .hn-i { transition-delay: calc(320ms + var(--l-i, 0) * 26ms); }
+.hero.is-lit .hn-i { transform: translateY(0); opacity: 1; }
+
+/* Pointer lean. Applied to the outer `.hn-l`, so it composes with the
+   entrance transform on the inner `.hn-i` instead of overwriting it — the two
+   can run at the same time without fighting for the same property. */
+@media (hover: hover) and (pointer: fine) {
+  .hn-l {
+    transform:
+      translate3d(calc(var(--hx, 0) * var(--hd, 1) * 11px),
+                  calc(var(--hy, 0) * var(--hd, 1) * 7px), 0);
+    transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+/* ── The roles rule ───────────────────────────────────────────────────────
+   Small mono, wide tracking, slash-separated: a caption line, not a headline.
+   The hairline above it is the seam between the masthead and the page, and it
+   brightens while the primary CTA is live (`.cta-live`) so the top and bottom
+   of the composition acknowledge each other. */
+.hero-band--rule {
+  align-items: baseline;
+  padding-top: clamp(12px, 2vh, 26px);
+  border-top: 1px solid rgba(var(--accent-rgb) / 0.2);
+  transition: border-color 600ms var(--e-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.hero.cta-live .hero-band--rule { border-top-color: rgba(var(--accent-rgb) / 0.55); }
+.hero-roles {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 clamp(10px, 1.2vw, 18px);
+  font-family: var(--f-mono);
+  font-size: clamp(11px, 0.86vw, 13px);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.hero-roles-sep { font-style: normal; color: rgba(var(--accent-rgb) / 0.75); }
+/* On desktop the per-character spans flow back to being ordinary inline text —
+   the split only matters for the flush-to-margin mobile layout. */
+.hero-role-ink { display: inline; }
+.hr-c, .hr-sp { display: inline; }
+/* Off-screen but readable: carries the role string for assistive tech while
+   the visible characters are aria-hidden. Absolutely positioned so it never
+   becomes a flex item in the layouts below. */
+.a11y-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .hero-tagline {
-  font-size: clamp(16px, 1.4vw, 20px);
+  font-size: clamp(15px, 1.15vw, 18px);
   line-height: 1.55;
   color: var(--text-dim);
-  max-width: 540px;
-  margin-bottom: 40px;
+  max-width: 46ch;
+  margin: 0;
 }
 .hero-ctas {
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
-  margin-bottom: 56px;
-}
-.hero-meta {
-  display: flex;
-  align-items: center;
-  gap: 32px;
-  flex-wrap: wrap;
-  padding-top: 24px;
-  border-top: 1px solid var(--line);
+  margin: 0;
 }
 .hero-status {
   display: flex; align-items: center; gap: 10px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--text-dim);
+  white-space: nowrap;
 }
 .status-dot {
-  width: 8px; height: 8px;
+  width: 7px; height: 7px;
   background: var(--accent);
   border-radius: 50%;
   box-shadow: 0 0 14px var(--accent);
   animation: pulse 1.8s ease-in-out infinite;
+  flex: none;
 }
 .hero-links {
   display: flex; gap: 18px;
-  margin-left: auto;
 }
 .hero-link {
   font-family: var(--f-mono);
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: var(--text-mute);
   text-decoration: none;
   padding-bottom: 2px;
   border-bottom: 1px solid transparent;
@@ -267,225 +436,23 @@
 }
 .hero-link:hover { color: var(--accent); border-color: var(--accent); }
 
-/* Terminal */
-.hero-right {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+/* Reduced motion: the name is present, not performed. No rise, no lean — but
+   it must still be VISIBLE, which means overriding the hidden pose regardless
+   of whether `.is-lit` ever lands. */
+@media (prefers-reduced-motion: reduce) {
+  .hn-i { transform: none; opacity: 1; transition: none; }
+  .hn-l { transform: none; transition: none; }
 }
-/* `display:flex` above outranks the `hidden` attribute's UA `display:none`, so
-   the stage needs this to actually disappear when Spline fails to load (Hero
-   sets `hidden` — there is no fallback robot to put in its place). */
-.hero-right[hidden] { display: none !important; }
-.hero-robot {
-  position: relative;
-  width: 100%;
-  /* v48: bigger on desktop (560px), with a 1.08 horizontal scale so the
-     robot reads as a more dominant focal point. Mobile heights (set in
-     responsive blocks below) keep the robot legible without crowding. */
-  height: 560px;
-  cursor: pointer;
-  touch-action: none;
-  isolation: isolate;
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-  overflow: hidden;
-  /* No mask/cut-out here anymore — the old radial "darkening" cut read as an
-     ugly transparent notch. The Spline free-tier badge (baked into the WebGL
-     frame, pixel-measured at x 18-84% / y 87-94% of the canvas) is instead
-     covered by an OPAQUE telemetry bar (.hero-robot-plate) docked along the
-     bottom, which reads as an intentional instrument readout. */
-}
-/* Scale the Spline canvas slightly larger than its hosting box + shift it
-   right so the robot FIGURE (which the scene places in the left ~40% of the
-   canvas) reads centered in the frame. `translate` composes with `transform`
-   and moves the baked badge along with it — the bar below is sized wide enough
-   to still cover the badge after the shift (verified by pixel measurement). */
-@media (hover: hover) and (min-width: 901px) {
-  .hero-robot-canvas {
-    transform: scale(1.08);
-    transform-origin: 50% 55%;
-  }
-}
-.hero-robot-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-  translate: 13% 0;
-  /* Spline renders to a transparent buffer — leave the background to the
-     parent .hero-robot div. Not masked. */
-  background: transparent;
-}
-
-/* Watermark safety-net — if a future runtime version injects branding,
-   these rules hide it. Robot-spline.js also DOM-sweeps after load. */
-.hero-robot a[href*="spline.design"],
-.hero-robot [class*="spline-watermark"],
-.hero-robot [class*="watermark"] {
-  display: none !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-  opacity: 0 !important;
-}
-.hero-robot-meta {
-  position: absolute;
-  top: 14px; left: 16px; right: 16px;
-  display: flex; justify-content: space-between; align-items: center;
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-mute);
-  pointer-events: none;
-}
-.hero-robot-state {
-  display: inline-flex; align-items: center; gap: 6px;
-  color: var(--text-dim);
-}
-.hero-robot-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 8px var(--accent);
-  animation: heroRobotDot 1.6s ease-in-out infinite;
-}
-.hero-robot-dot--happy     { background: #80E089; box-shadow: 0 0 8px #80E089; }
-.hero-robot-dot--surprised { background: #F2C24E; box-shadow: 0 0 10px #F2C24E; }
-.hero-robot-dot--thinking  { background: #6BB6FF; box-shadow: 0 0 10px #6BB6FF; }
-.hero-robot-dot--sleeping  { background: #888; box-shadow: 0 0 6px #888; animation-duration: 4s; }
-@keyframes heroRobotDot { 50% { opacity: 0.45; transform: scale(0.7); } }
-.hero-robot-hint {
-  position: absolute;
-  /* Lifted above the telemetry bar so it isn't covered by it. */
-  bottom: 17%; left: 16px;
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-mute);
-  opacity: 0.55;
-  pointer-events: none;
-}
-/* ── Spline watermark — instrument plate ─────────────────────────────
-   "Built with Spline" renders directly into the WebGL frame buffer (it's
-   pixels on a texture, NOT a DOM element), so CSS can't hide it directly.
-   The corner is cut out of the (static, untransformed) .hero-robot wrapper
-   above, and this opaque, non-interactive plate sits on top of that cut —
-   it reads as a cockpit ID tag, not a patch, and its position/size don't
-   depend on the canvas's own transform/scale/DPR. */
-/* Telemetry bar — an OPAQUE instrument readout docked along the bottom of the
-   robot frame. Sized to fully cover the baked "Built with Spline" badge (pixel-
-   measured at x 18-84% / y 87-94% of the frame, shifted right ~13% with the
-   canvas), on every device. Reads as the robot's status HUD, not a patch. */
-.hero-robot-plate {
-  position: absolute;
-  /* Spans to the frame's right edge (right:0) where the shifted badge is
-     clipped, with a wide left reach — pixel-verified to fully cover the badge
-     on desktop (badge lands x 18-84% / y 90-94% after the 13% canvas shift). */
-  left: 6%; right: 0;
-  bottom: 1.5%;
-  height: 13%;
-  min-height: 46px;
-  z-index: 4;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0 16px;
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--text-mute);
-  background: linear-gradient(180deg, var(--bg-1, #28251F), var(--bg-0, #1F1E1B));
-  border: 1px solid var(--line-strong);
-  border-radius: 9px;
-  box-shadow: 0 6px 20px -6px rgba(0,0,0,.65), 0 0 0 1px rgba(var(--accent-rgb) / 0.08) inset;
-  pointer-events: none;
-}
-.hero-robot-plate-l { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
-.hero-robot-plate-r { margin-left: auto; color: var(--accent); white-space: nowrap; }
-/* Dashed telemetry divider filling the middle so the wide bar reads as an
-   instrument panel, not an empty box. */
-.hero-robot-plate-rail {
-  flex: 1;
-  height: 1px;
-  min-width: 12px;
-  background: repeating-linear-gradient(90deg, var(--line-strong) 0 6px, transparent 6px 12px);
-  opacity: 0.6;
-}
-.hero-robot-plate-dot {
-  width: 5px; height: 5px; border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 6px var(--accent);
-  flex: none;
-}
-@media (max-width: 900px) {
-  /* Pixel-verified cover on mobile (no canvas scale, same 13% shift). */
-  .hero-robot-plate { left: 4%; right: 0; bottom: 2%; height: 14%; min-height: 42px; font-size: 9.5px; gap: 10px; padding: 0 13px; }
-}
-.hero-terminal {
-  background: linear-gradient(180deg, rgba(20,24,28,.72), rgba(11,14,17,.9));
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;
-  overflow: hidden;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow:
-    0 1px 0 rgba(244,241,234,.04) inset,
-    0 30px 80px -20px rgba(0,0,0,.5),
-    0 0 0 1px rgba(var(--accent-rgb) / 0.1);
-}
-.term-head {
-  display: flex; align-items: center; gap: 12px;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--line);
-  background: rgba(11,14,17,.6);
-}
-.term-dots { display: flex; gap: 6px; }
-.term-dots i {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: rgba(244,241,234,.18);
-}
-.term-dots i:first-child { background: rgba(var(--accent-rgb) / 0.6); }
-.term-title { color: var(--text-dim); font-size: 11px; letter-spacing: .1em; }
-.term-meta { margin-left: auto; color: var(--text-mute); font-size: 10px; }
-.term-body {
-  padding: 22px 18px;
-  min-height: 240px;
-  font-size: 12.5px;
-  line-height: 1.85;
-  color: var(--text-dim);
-}
-.term-line {
-  display: grid;
-  grid-template-columns: 18px 1fr auto;
-  gap: 8px;
-  align-items: baseline;
-  opacity: 0;
-  animation: termIn .4s var(--ease-out) forwards;
-}
-.term-active { opacity: 1; }
-.term-prompt { color: var(--accent); }
-.term-ok { color: var(--accent); font-size: 10px; opacity: .9; letter-spacing: .14em; }
-.term-cursor {
-  color: var(--accent);
-  animation: blink 1s steps(2) infinite;
-}
-.term-deploy {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed var(--line-strong);
-  color: var(--accent);
-}
-@keyframes termIn { from { opacity: 0; transform: translateX(-4px); } to { opacity: 1; transform: translateX(0); } }
-@keyframes blink { 50% { opacity: 0; } }
 
 /* Marquee */
 .hero-marquee {
   position: relative;
-  margin: 72px calc(-1 * var(--gutter)) 0;
+  /* The hero is a fixed-height flex column now, so this margin is taken
+     straight out of the masthead's share of the screen — hence a fraction of
+     the old flat 72px. `flex: none` keeps the band from being squeezed when
+     the stack above wants more room than the viewport has. */
+  margin: clamp(20px, 3.4vh, 48px) calc(-1 * var(--gutter)) 0;
+  flex: none;
   height: 44px;
   overflow: hidden;
   z-index: 3;
@@ -537,136 +504,196 @@
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
 @media (max-width: 900px) {
-  /* Hero takeover — fill the first screen so the robot reads as the hero.
-     The hero is a flex column so we can vertically center its single shell
-     child while the section itself spans the full viewport height. */
+  /* ── Mobile masthead ────────────────────────────────────────────────────
+     The phone gets a MORE typographic hero than the desktop, not a squeezed
+     copy of it. On desktop the name is one loud line with small captions
+     around it; here all five lines are display type — given name, surname, and
+     the three roles — each one set flush to both margins. The first screen is
+     a single solid block of type from edge to edge. That block IS the hero.
+
+     EVERY LINE'S SIZE IS DERIVED FROM ITS CHARACTER COUNT, not chosen. A line
+     set flush across a fixed width can only be as large as its own length
+     allows, so the coefficients below are the measured solution of
+     "glyph advance + tracking = line width" per string (8 / 14 / 10 / 13 / 16
+     characters). Raise one and its letters overlap — the first version of this
+     used a single 22.8vw for the given name and the letters collided at −0.075em.
+     If a string changes, re-measure; do not eyeball the vw.
+
+     Vertical anchoring: `margin-top:auto` on the name and `margin-bottom:auto`
+     on the roles put ALL the slack above and below the type block, so the
+     eyebrow pins to the top of the screen and the CTA to the bottom, with the
+     type floating between them. Centring the whole stack instead (the desktop
+     behaviour) left the CTA hovering in the middle with dead space beneath it. */
   .hero {
     position: relative;
     /* FAST CURTAIN (mobile): the Hero→Signal curtain is pure position:sticky —
        Signal rises 1:1 with scroll, so the scroll distance to cover Hero EQUALS
-       this section's height. At the old 100vh, Hero (1101px of content on a
-       375px phone) overflowed the screen AND forced ~1.4 screens of "frozen
-       Hero, Signal creeping" dead scroll (the client's exact complaint). Sizing
-       the section to ~0.82 of the small viewport does both fixes at once: the
-       compressed content (shrunk robot below) now fits, and the curtain resolves
-       in ~one comfortable swipe with a deliberate warm peek of Signal at the
-       bottom edge cueing "scroll". Desktop keeps the full-height takeover +
-       full-length curtain — untouched (this rule is inside max-width:900px). */
-    min-height: 84svh;
-    min-height: 84vh; /* fallback for browsers without svh */
+       this section's height. At the old 100vh, Hero overflowed the screen AND
+       forced ~1.4 screens of "frozen Hero, Signal creeping" dead scroll (the
+       client's exact complaint). Sizing the section to ~0.86 of the small
+       viewport does both fixes at once: the type block fits, and the curtain
+       resolves in ~one comfortable swipe with a deliberate warm peek of Signal
+       at the bottom edge cueing "scroll". Desktop keeps the full-height
+       takeover + full-length curtain (this rule is inside max-width:900px). */
+    min-height: 86svh;
+    min-height: 86vh; /* fallback for browsers without svh */
+  }
+  /* ONE left margin for the whole composition. The bands carry `.shell`, whose
+     gutter is 30px at 390px, while the full-bleed name sits at its own 12px
+     optical margin — so the roles started 18px inboard of the name they are
+     supposed to continue, and the wall read as two misaligned blocks. On this
+     screen the hero IS the grid: everything lines up on the name's edge. */
+  .hero > .shell { width: 100%; box-sizing: border-box; }
+  .hero-stack > .shell { padding-inline: clamp(12px, 1.9vw, 30px); max-width: none; margin-inline: 0; }
+
+  .hero-stack {
+    gap: 0;
+    padding-top: calc(var(--nav-h) + 10px);
+    padding-bottom: 46px; /* room for the scroll cue */
+  }
+  .hero-band { gap: 10px 16px; }
+  /* The availability line moves under the eyebrow rather than opposite it —
+     at 390px the two on one row wrap into a ragged two-line mess. */
+  .hero-band--top { flex-direction: column; align-items: flex-start; gap: 6px; }
+
+  .hero-name {
+    /* Desktop splits the slack above AND below the name; here the name and the
+       role lines are one wall, so the bottom auto is cancelled and the slack
+       below is collected by `.hero-band--rule` instead. */
+    margin-top: auto;
+    margin-bottom: 0;
+    gap: clamp(1px, 0.4vh, 6px);
+    line-height: 0.78;
+  }
+  /* Solved, not chosen: width = glyphAdvance(string) × fs + (n−1) × 0.025em,
+     measured live per string so all five lines land on the SAME 0.025em
+     tracking. Equal tracking across lines of wildly different sizes is the
+     thing that makes a justified stack read as one carved block instead of
+     five separate headlines that happen to be the same width. */
+  .hn-line--given  { font-size: 19.5vw; }
+  .hn-line--family { font-size: 11.8vw; font-weight: 600; }
+
+  /* Roles stop being a caption and become three more masthead lines. The
+     slashes go — they were separators for a single line and read as debris
+     once the items stack. */
+  .hero-band--rule {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: auto;
+    gap: clamp(2px, 0.5vh, 8px);
+    margin-top: clamp(10px, 1.8vh, 22px);
+    /* Hairlines top AND bottom: the rules close the three role lines into a
+       framed block rather than leaving them trailing off into the page. The
+       top edge is the same seam the desktop uses; the bottom one only exists
+       here, because only here do the roles carry display type worth framing. */
+    padding-top: clamp(8px, 1.4vh, 16px);
+    padding-bottom: clamp(8px, 1.4vh, 16px);
+    border-bottom: 1px solid rgba(var(--accent-rgb) / 0.2);
+  }
+  .hero-roles {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    justify-content: center;
+    gap: clamp(1px, 0.3vh, 5px);
+    font-family: var(--f-head);
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 0.84;
+    color: var(--text-dim);
   }
-  /* The section-level bottom padding (styles.css `section[data-section]{padding:
-     var(--gap-section) 0}`, ~80px on mobile) outweighs a plain `.hero` rule on
-     specificity, so it kept pushing the hero back over one screen and killing
-     the peek. Match the existing `section[data-section="hero"]{padding-top:0}`
-     pattern to win cleanly. The grid carries its own 24px bottom breathing. */
-  section[data-section="hero"] { padding-bottom: 0; }
-  /* The shell is the flex child — it MUST take the full width or the grid
-     inside collapses to content-size (a known flex gotcha). */
-  .hero > .shell {
+  .hero-roles-sep { display: none; }
+  .hero-role { display: block; width: 100%; text-transform: uppercase; }
+  /* Flush by distributing slack between characters — see spreadChars() in
+     components-1.jsx for why `text-align-last: justify` cannot do this. */
+  .hero-role-ink {
+    display: flex;
+    justify-content: space-between;
     width: 100%;
-    box-sizing: border-box;
   }
-  .hero-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-    padding-top: calc(var(--nav-h) + 14px);
-    padding-bottom: 56px; /* room for the scroll-hint chevron */
-    width: 100%;
-    min-height: 0; /* let the grid size to content, not stretch */
+  .hr-sp { flex: 0 0 0.16em; }
+  .hero-role:nth-child(1) { font-size: 18.8vw; color: var(--text); }
+  .hero-role:nth-child(3) { font-size: 14.2vw; }
+  .hero-role:nth-child(5) { font-size: 11.2vw; }
+  /* Roles carry the same rise as the name, one beat behind the surname, so the
+     whole block assembles as a single gesture rather than in two halves. */
+  .hero-role {
+    transform: translateY(24px);
+    opacity: 0;
+    transition:
+      transform 1000ms cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 800ms linear;
   }
-  /* Robot first, text below — the robot is the "wow" focal point of the
-     first screen on mobile; the DOM order stays text-then-robot for a11y
-     (title is still what a screen reader hits first), order:-1 only moves
-     it visually. */
-  .hero-right { order: -1; display: grid; gap: 14px; }
-  .hero-marquee { margin: 16px calc(-1 * var(--gutter)) 0; }
-  /* Focus the first mobile screen so it fits the URL-bar-visible viewport
-     (~small-vh) and leaves a warm peek of Signal cueing scroll:
-     • Meta collapses to just the availability status line. The GitHub / Telegram
-       / Email quick-links are redundant on mobile (nav drawer + bottom dock +
-       contact section all expose them, and the hero's own "Обсудить проект" CTA
-       is the primary action), so they're hidden here to reclaim ~60px above the
-       fold.
-     • The tech marquee is hidden on mobile: it duplicates the STACK RADAR
-       section, overflowed horizontally, and cost ~54px + GPU on the one screen
-       that most needs to be lean. */
-  .hero-meta { flex-direction: row; align-items: center; flex-wrap: wrap; gap: 8px 16px; padding-top: 10px; }
-  .hero-meta .hero-links { display: none; }
+  .hero-role:nth-child(1) { transition-delay: 660ms; }
+  .hero-role:nth-child(3) { transition-delay: 740ms; }
+  .hero-role:nth-child(5) { transition-delay: 820ms; }
+  .hero.is-lit .hero-role { transform: none; opacity: 1; }
+
+  /* Below the type block: the action, and nothing else. The GitHub/Telegram/
+     Email trio is redundant on mobile (nav drawer + bottom dock + the contact
+     section all expose them) and the tagline is a desktop-length paragraph —
+     both are hidden to keep the primary CTA on the first screen, which is the
+     whole point of a hero on a phone. */
+  .hero-links { display: none; }
+  .hero-tagline { display: none; }
+  .hero-band--act { padding-top: clamp(10px, 2vh, 22px); }
+  .hero-ctas { width: 100%; gap: 10px; }
+  .hero-ctas .btn { flex: 1; justify-content: center; min-height: 48px; }
+
+  /* The marquee duplicates the stack section, overflowed horizontally, and
+     cost ~54px + GPU on the one screen that most needs to be lean. */
   .hero-marquee { display: none; }
-  /* Line 14 forces the scroll chevron in-flow (position:relative) site-wide,
-     which on the compact mobile hero dropped it mid-content, colliding with the
-     status line. Float it at the hero's bottom edge instead — no layout cost,
-     and it now points down at the Signal peek as intended. */
+  /* `.hero > .hero-scroll-hint` is position:relative site-wide, which on the
+     compact mobile hero dropped the cue mid-content. Float it at the bottom
+     edge instead — no layout cost, and it points at the Signal peek. */
   .hero > .hero-scroll-hint { position: absolute; bottom: 12px; top: auto; z-index: 4; }
-  /* The first mobile screen has to fit eyebrow + 3-line headline + tagline +
-     2 CTAs + meta + a ~400px robot — desktop's spacing (28/40/56px margins)
-     was inherited as-is and pushed the meta row + scroll-hint well below the
-     fold, with the CTAs sitting right at the fold's edge. Tightened here;
-     the 480px block below trims further for the smallest phones. */
-  .hero-h1 { margin: 12px 0 10px; }
-  .hero-tagline { margin-bottom: 12px; }
-  .hero-ctas { margin-bottom: 14px; }
-  /* Mobile robot height is now viewport-relative and capped, not a fixed 440px.
-     On a 375px phone the old fixed height ate ~47% of the first screen and was
-     the main reason the hero overflowed + the curtain ran long (curtain
-     distance = hero height — see .hero above). min(300px, 34svh) keeps the
-     robot a strong focal point while leaving room for title + tagline + CTA
-     above the fold and letting the whole hero fit ~0.82 screen. */
-  .hero-robot { height: min(360px, 44svh); max-width: 560px; margin: 0 auto; }
-  /* Scrim: the robot stage melts into the text below instead of ending on a
-     hard edge. Bottom fades to the CURRENT act background (var from acts.js),
-     so the seam tracks the colour dramaturgy automatically. */
-  .hero-robot::after {
-    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 34%;
-    pointer-events: none; z-index: 2;
-    background: linear-gradient(180deg, transparent, var(--act-bg, #1D1E20) 96%);
-  }
-  .hero-terminal { font-size: 11px; }
-  .term-body { min-height: 160px; }
 }
 @media (max-width: 480px) {
-  /* Compact mobile (<480px): viewport-relative, capped smaller than the 900bp
-     value so the smallest phones keep the hero to ~one screen. */
-  .hero-robot { height: min(320px, 42svh); max-width: 100%; }
-  .hero-grid { padding-top: clamp(18px, 3vh, 36px); gap: 14px; padding-bottom: 24px; }
-  .hero-ctas { width: 100%; gap: 10px; }
-  .hero-ctas .btn { flex: 1; justify-content: center; min-height: 50px; }
-  .hero-line { font-size: clamp(36px, 10vw, 52px); }
-  .hero-tagline { font-size: 14.5px; line-height: 1.5; }
+  /* Compact phones: the vw coefficients still hold (they are width-relative),
+     but the supporting rows tighten so the type block keeps its share. */
+  .hero-stack { padding-bottom: 40px; gap: clamp(8px, 1.2vh, 14px); }
+  .hero-band--top .eyebrow { font-size: 9.5px; letter-spacing: 0.16em; }
+  .hero-status { font-size: 10px; }
+  .hero-ctas .btn { min-height: 50px; }
 }
 
-/* Short landscape is a separate mobile composition, not the portrait stack
-   squeezed into half the height. Copy and robot share the frame so the first
-   screen still communicates role, personality and an action without a dead
-   300px prelude. The portrait choreography above remains unchanged. */
+/* Short landscape is a separate composition, not the portrait stack squeezed
+   into half the height: at ≤520px tall the five stacked type lines simply do
+   not fit, so the name goes back to desktop behaviour (height-capped, roles as
+   a caption rule) while the section keeps the full viewport. */
 @media (max-width: 900px) and (orientation: landscape) and (max-height: 520px) {
   .hero { min-height: 100svh; min-height: 100vh; justify-content: flex-start; }
-  .hero-grid {
-    grid-template-columns: minmax(0, 1.08fr) minmax(280px, .92fr);
-    align-items: center;
-    gap: clamp(12px, 2.5vw, 28px);
-    padding-top: calc(var(--nav-h) + 10px);
-    padding-bottom: 18px;
+  .hero-stack {
+    padding-top: calc(var(--nav-h) + 8px);
+    padding-bottom: 14px;
+    gap: 8px;
   }
-  .hero-left { min-width: 0; }
-  .hero-right { order: initial; min-width: 0; gap: 8px; }
-  .hero-robot { width: 100%; height: min(270px, 70svh); margin: 0; }
-  .hero-h1 { margin: 6px 0 7px; }
-  .hero-line { font-size: clamp(34px, 5.4vw, 50px); line-height: .94; }
-  .hero-tagline {
-    max-width: 54ch;
-    margin-bottom: 8px;
-    font-size: 12.5px;
-    line-height: 1.38;
+  .hero-band--top { flex-direction: row; align-items: center; }
+  .hn-line--given  { font-size: min(20vw, 30vh); }
+  .hn-line--family { font-size: min(8.4vw, 12vh); }
+  .hero-band--rule { flex-direction: row; align-items: baseline; padding-top: 8px; }
+  .hero-roles {
+    flex-direction: row;
+    flex-wrap: wrap;
+    font-family: var(--f-mono);
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    gap: 0 12px;
+    color: var(--text);
   }
-  .hero-ctas { gap: 8px; margin-bottom: 6px; }
+  .hero-roles-sep { display: inline; }
+  .hero-role,
+  .hero-role:nth-child(1),
+  .hero-role:nth-child(3),
+  .hero-role:nth-child(5) {
+    width: auto;
+    font-size: 10.5px;
+    text-align: left;
+    text-align-last: auto;
+    transform: none;
+    opacity: 1;
+    transition: none;
+  }
   .hero-ctas .btn { min-height: 44px; padding: 10px 16px; font-size: 11px; }
-  .hero-meta { padding-top: 3px; }
   .hero > .hero-scroll-hint { display: none; }
   .nav-burger { width: 44px; height: 44px; }
 }
@@ -1409,40 +1436,24 @@ html[data-perf="low"] section[data-section="contact"].sec-in .contact-form-row,
 html[data-perf="low"] section[data-section="contact"].sec-in .contact-form > * { animation: none; }
 
 /* ══ HERO AS ONE SCENE ══════════════════════════════════════════════════════
-   Hero.jsx writes --hx/--hy (pointer position, -0.5…0.5) on the section. Every
-   layer below reads the SAME field at its own --hd depth, so the hero behaves
-   like one volume: near lines travel further than far ones, and the robot
-   stage leans the opposite way, which is what separates "a scene" from "two
-   columns that happen to sit next to each other".
+   Hero.jsx writes --hx/--hy (pointer position, -0.5…0.5) on the section. The
+   letters of the masthead each read that SAME field at their own --hd depth
+   (see .hn-l), so the word behaves like one shallow volume: the letters at the
+   ends of the line travel further than the ones in the middle, which is what
+   separates "a carved object" from "a sticker being dragged around".
    Transitions (not per-frame writes) carry the return-to-rest, so leaving the
    hero settles smoothly with no JS animation loop. */
 .hero { --hx: 0; --hy: 0; }
-.hero-line {
-  display: block;
-  transform: translate3d(calc(var(--hx) * var(--hd, 1) * 13px), calc(var(--hy) * var(--hd, 1) * 8px), 0);
-  transition: transform .7s var(--ease-out);
-  will-change: transform;
-}
 .hero-tagline {
   transform: translate3d(calc(var(--hx) * 7px), calc(var(--hy) * 4px), 0);
   transition: transform .8s var(--ease-out);
 }
-/* Negative multiplier → the robot moves against the text: parallax between the
-   two halves rather than both sliding together. */
-.hero-robot {
-  transform: translate3d(calc(var(--hx) * -17px), calc(var(--hy) * -10px), 0);
-  transition: transform .9s var(--ease-out), filter .6s ease;
-}
-/* The robot notices the primary action: the stage brightens and lifts a touch
-   toward the CTA. No Spline runtime calls — just the section carrying a class. */
-.hero.cta-live .hero-robot { filter: brightness(1.09) saturate(1.06); }
-.hero.cta-live .hero-robot-plate { border-color: rgba(var(--accent-rgb) / 0.5); }
 @media (pointer: coarse), (max-width: 900px) {
   /* No pointer to follow — the depth field would just be dead weight. */
-  .hero-line, .hero-tagline, .hero-robot { transform: none; }
+  .hero-tagline { transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .hero-line, .hero-tagline, .hero-robot { transform: none; transition: none; }
+  .hero-tagline { transform: none; transition: none; }
 }
 
 /* ══ INTERLUDE — full-screen typographic breath ═════════════════════════════
