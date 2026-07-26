@@ -85,6 +85,8 @@ window.applyTheme = function(themeKey) {
   // from an older build) fall back to the single default theme.
   const resolvedKey = window.THEMES[themeKey] ? themeKey : window.DEFAULT_THEME_KEY;
   const t = window.THEMES[resolvedKey];
+  // Remembered so acts.js can hand ink control back after a light act.
+  window.CURRENT_THEME = resolvedKey;
   const r = document.documentElement.style;
   r.setProperty("--accent", t.accent);
   r.setProperty("--accent-2", t.accent2);
@@ -101,9 +103,12 @@ window.applyTheme = function(themeKey) {
   // Mirror the RESOLVED key to data-theme so CSS that branches on it
   // (e.g. the Ember corner-wash decoration) always matches reality.
   document.documentElement.setAttribute("data-theme", resolvedKey);
-  // Push bg + text onto <body> so the whole page surface uses theme colours.
-  document.body.style.backgroundColor = t.bg0;
-  document.body.style.color = t.text;
+  // Background and ink are deliberately NOT written inline onto <body> any more.
+  // The stylesheet already resolves both from the tokens set above, and an
+  // inline copy beats every rule — which froze the page ink and made the light
+  // acts (CV, Quality) impossible: the ground turned bone while the text stayed
+  // cream. Setting the tokens is enough; <body> follows them, and acts.js can
+  // now invert those same tokens for a light act.
   return t;
 };
 

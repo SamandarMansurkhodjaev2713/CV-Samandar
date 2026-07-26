@@ -203,6 +203,12 @@ function Nav({ t, lang, setLang, active }) {
   }
 
   return (
+    // The fullscreen menu is a SIBLING of <nav>, not a child. <nav> carries a
+    // backdrop-filter, and a filtered element becomes the containing block for
+    // its position:fixed descendants — which trapped the "fullscreen" menu
+    // inside the 60px bar (it opened, but as a 1280x59 sliver). Keeping it
+    // outside is the only robust fix; z-index keeps the burger clickable above it.
+    <>
     <nav className={`nav ${open ? "nav-open" : ""} ${capsule ? "is-capsule" : ""}`}>
       <div className="nav-inner">
         <a href="#hero" className="brand" data-cursor="link" data-cursor-label="↑ top" onClick={(e) => go(e, "hero")}>
@@ -247,6 +253,8 @@ function Nav({ t, lang, setLang, active }) {
           </button>
         </div>
       </div>
+
+    </nav>
 
       {/* Fullscreen menu — the navigation SCENE (desktop + mobile). Huge type,
           chapter numbering, live telemetry. Items line-mask in with a stagger. */}
@@ -307,7 +315,7 @@ function Nav({ t, lang, setLang, active }) {
           </div>
         </div>
       </div>
-    </nav>
+    </>
   );
 }
 

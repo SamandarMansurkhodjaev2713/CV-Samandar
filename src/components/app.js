@@ -310,161 +310,169 @@ function Nav({
     setOpen(false);
     flyTo(id);
   }
-  return /*#__PURE__*/React.createElement("nav", {
-    className: `nav ${open ? "nav-open" : ""} ${capsule ? "is-capsule" : ""}`
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "nav-inner"
-  }, /*#__PURE__*/React.createElement("a", {
-    href: "#hero",
-    className: "brand",
-    "data-cursor": "link",
-    "data-cursor-label": "\u2191 top",
-    onClick: e => go(e, "hero")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "brand-mark"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "brand-name"
-  }, "SAMANDAR", /*#__PURE__*/React.createElement("span", {
-    className: "brand-sub"
-  }, " \xB7 EXEC.AI.LAB"))), /*#__PURE__*/React.createElement("div", {
-    className: "nav-counter mono",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement(Drum, {
-    value: num
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "nav-counter-sep"
-  }, "/ ", String(total).padStart(2, "0")), /*#__PURE__*/React.createElement("span", {
-    key: active,
-    className: "nav-counter-name"
-  }, activeLabel), /*#__PURE__*/React.createElement("span", {
-    className: "nav-counter-track"
-  }, /*#__PURE__*/React.createElement("i", {
-    style: {
-      transform: `scaleX(${progress})`
-    }
-  }))), /*#__PURE__*/React.createElement("ul", {
-    className: "nav-links"
-  }, NAV_SECTIONS.map(k => /*#__PURE__*/React.createElement("li", {
-    key: k
-  }, /*#__PURE__*/React.createElement("a", {
-    href: `#${k}`,
-    onClick: e => go(e, k),
-    className: active === k ? "active" : "",
-    "data-cursor": "link",
-    "data-cursor-label": `→ ${t.nav[k]}`
-  }, t.nav[k])))), /*#__PURE__*/React.createElement("div", {
-    className: "nav-right"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lang",
-    role: "group",
-    "aria-label": "language"
-  }, ["ru", "en", "uz"].map(L => /*#__PURE__*/React.createElement("button", {
-    key: L,
-    onClick: () => setLang(L),
-    className: lang === L ? "active" : "",
-    "aria-pressed": lang === L
-  }, L.toUpperCase()))), /*#__PURE__*/React.createElement("a", {
-    href: "#contact",
-    className: "nav-cta",
-    "data-magnetic": true,
-    "data-cursor": "send",
-    "data-cursor-label": "send \u2192 contact",
-    onClick: e => go(e, "contact")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "nav-cta-dot",
-    "aria-hidden": "true"
-  }), t.hero.cta_primary), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "nav-burger",
-    "aria-label": open ? "Close menu" : "Open menu",
-    "aria-expanded": open,
-    onClick: () => {
-      haptic("toggle");
-      setOpen(o => !o);
-    }
-  }, /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null)))), /*#__PURE__*/React.createElement("div", {
-    className: `nav-menu ${open ? "is-open" : ""}`,
-    "aria-hidden": !open
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "nav-menu-glow",
-    "aria-hidden": "true"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "nav-menu-inner"
-  }, /*#__PURE__*/React.createElement("ul", {
-    className: "nav-menu-links",
-    onMouseLeave: () => setPeek(null)
-  }, FULL_MENU_SECTIONS.map((k, i) => /*#__PURE__*/React.createElement("li", {
-    key: k,
-    style: {
-      "--i": i
-    }
-  }, /*#__PURE__*/React.createElement("a", {
-    href: `#${k}`,
-    onClick: e => go(e, k),
-    className: active === k ? "active" : "",
-    onMouseEnter: () => setPeek({
-      k,
-      i
-    }),
-    onFocus: () => setPeek({
-      k,
-      i
-    })
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "nav-menu-num mono"
-  }, String(i + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("span", {
-    className: "nav-menu-mask"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "nav-menu-word"
-  }, t.nav[k] || FULL_MENU_LABELS[lang][k])), /*#__PURE__*/React.createElement("span", {
-    className: "nav-menu-arrow",
-    "aria-hidden": "true"
-  }, "\u2192"))))), /*#__PURE__*/React.createElement("div", {
-    className: `nav-peek ${peek ? "is-on" : ""}`,
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "nav-peek-wash",
-    style: peek ? {
-      background: `radial-gradient(ellipse 90% 80% at 50% 20%, rgba(${MENU_ACCENT[peek.k] || "217, 119, 87"}, 0.30), transparent 70%)`
-    } : undefined
-  }), /*#__PURE__*/React.createElement("div", {
-    key: peek ? peek.k : "none",
-    className: "nav-peek-body"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "nav-peek-num",
-    style: peek ? {
-      color: `rgb(${MENU_ACCENT[peek.k] || "217, 119, 87"})`
-    } : undefined
-  }, peek ? String(peek.i + 1).padStart(2, "0") : "00"), /*#__PURE__*/React.createElement("span", {
-    className: "nav-peek-name"
-  }, peek ? t.nav[peek.k] || FULL_MENU_LABELS[lang][peek.k] : ""))), /*#__PURE__*/React.createElement("div", {
-    className: "nav-menu-foot"
-  }, /*#__PURE__*/React.createElement("a", {
-    href: "#contact",
-    className: "nav-menu-cta",
-    "data-magnetic": true,
-    onClick: e => go(e, "contact")
-  }, t.hero.cta_primary, " ", /*#__PURE__*/React.createElement("span", {
-    className: "arrow"
-  }, "\u2192")), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "sound-toggle mono",
-    "aria-label": "Toggle UI sound"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sound-toggle-dot",
-    "aria-hidden": "true"
-  }), "SOUND"), /*#__PURE__*/React.createElement("div", {
-    className: "lang nav-menu-lang",
-    role: "group",
-    "aria-label": "language"
-  }, ["ru", "en", "uz"].map(L => /*#__PURE__*/React.createElement("button", {
-    key: L,
-    onClick: () => setLang(L),
-    className: lang === L ? "active" : "",
-    "aria-pressed": lang === L
-  }, L.toUpperCase()))), /*#__PURE__*/React.createElement("div", {
-    className: "nav-menu-tele mono"
-  }, /*#__PURE__*/React.createElement("span", null, "TASHKENT \xB7 41.31\xB0N 69.24\xB0E"), /*#__PURE__*/React.createElement("span", null, "UTC+5 \xB7 ", clock), /*#__PURE__*/React.createElement("span", null, "EXECUTIVE AI CODE LAB \xB7 v.2026"))))));
+  return (
+    /*#__PURE__*/
+    // The fullscreen menu is a SIBLING of <nav>, not a child. <nav> carries a
+    // backdrop-filter, and a filtered element becomes the containing block for
+    // its position:fixed descendants — which trapped the "fullscreen" menu
+    // inside the 60px bar (it opened, but as a 1280x59 sliver). Keeping it
+    // outside is the only robust fix; z-index keeps the burger clickable above it.
+    React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("nav", {
+      className: `nav ${open ? "nav-open" : ""} ${capsule ? "is-capsule" : ""}`
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "nav-inner"
+    }, /*#__PURE__*/React.createElement("a", {
+      href: "#hero",
+      className: "brand",
+      "data-cursor": "link",
+      "data-cursor-label": "\u2191 top",
+      onClick: e => go(e, "hero")
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "brand-mark"
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "brand-name"
+    }, "SAMANDAR", /*#__PURE__*/React.createElement("span", {
+      className: "brand-sub"
+    }, " \xB7 EXEC.AI.LAB"))), /*#__PURE__*/React.createElement("div", {
+      className: "nav-counter mono",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement(Drum, {
+      value: num
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "nav-counter-sep"
+    }, "/ ", String(total).padStart(2, "0")), /*#__PURE__*/React.createElement("span", {
+      key: active,
+      className: "nav-counter-name"
+    }, activeLabel), /*#__PURE__*/React.createElement("span", {
+      className: "nav-counter-track"
+    }, /*#__PURE__*/React.createElement("i", {
+      style: {
+        transform: `scaleX(${progress})`
+      }
+    }))), /*#__PURE__*/React.createElement("ul", {
+      className: "nav-links"
+    }, NAV_SECTIONS.map(k => /*#__PURE__*/React.createElement("li", {
+      key: k
+    }, /*#__PURE__*/React.createElement("a", {
+      href: `#${k}`,
+      onClick: e => go(e, k),
+      className: active === k ? "active" : "",
+      "data-cursor": "link",
+      "data-cursor-label": `→ ${t.nav[k]}`
+    }, t.nav[k])))), /*#__PURE__*/React.createElement("div", {
+      className: "nav-right"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "lang",
+      role: "group",
+      "aria-label": "language"
+    }, ["ru", "en", "uz"].map(L => /*#__PURE__*/React.createElement("button", {
+      key: L,
+      onClick: () => setLang(L),
+      className: lang === L ? "active" : "",
+      "aria-pressed": lang === L
+    }, L.toUpperCase()))), /*#__PURE__*/React.createElement("a", {
+      href: "#contact",
+      className: "nav-cta",
+      "data-magnetic": true,
+      "data-cursor": "send",
+      "data-cursor-label": "send \u2192 contact",
+      onClick: e => go(e, "contact")
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "nav-cta-dot",
+      "aria-hidden": "true"
+    }), t.hero.cta_primary), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "nav-burger",
+      "aria-label": open ? "Close menu" : "Open menu",
+      "aria-expanded": open,
+      onClick: () => {
+        haptic("toggle");
+        setOpen(o => !o);
+      }
+    }, /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null))))), /*#__PURE__*/React.createElement("div", {
+      className: `nav-menu ${open ? "is-open" : ""}`,
+      "aria-hidden": !open
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "nav-menu-glow",
+      "aria-hidden": "true"
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "nav-menu-inner"
+    }, /*#__PURE__*/React.createElement("ul", {
+      className: "nav-menu-links",
+      onMouseLeave: () => setPeek(null)
+    }, FULL_MENU_SECTIONS.map((k, i) => /*#__PURE__*/React.createElement("li", {
+      key: k,
+      style: {
+        "--i": i
+      }
+    }, /*#__PURE__*/React.createElement("a", {
+      href: `#${k}`,
+      onClick: e => go(e, k),
+      className: active === k ? "active" : "",
+      onMouseEnter: () => setPeek({
+        k,
+        i
+      }),
+      onFocus: () => setPeek({
+        k,
+        i
+      })
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "nav-menu-num mono"
+    }, String(i + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("span", {
+      className: "nav-menu-mask"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "nav-menu-word"
+    }, t.nav[k] || FULL_MENU_LABELS[lang][k])), /*#__PURE__*/React.createElement("span", {
+      className: "nav-menu-arrow",
+      "aria-hidden": "true"
+    }, "\u2192"))))), /*#__PURE__*/React.createElement("div", {
+      className: `nav-peek ${peek ? "is-on" : ""}`,
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "nav-peek-wash",
+      style: peek ? {
+        background: `radial-gradient(ellipse 90% 80% at 50% 20%, rgba(${MENU_ACCENT[peek.k] || "217, 119, 87"}, 0.30), transparent 70%)`
+      } : undefined
+    }), /*#__PURE__*/React.createElement("div", {
+      key: peek ? peek.k : "none",
+      className: "nav-peek-body"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "nav-peek-num",
+      style: peek ? {
+        color: `rgb(${MENU_ACCENT[peek.k] || "217, 119, 87"})`
+      } : undefined
+    }, peek ? String(peek.i + 1).padStart(2, "0") : "00"), /*#__PURE__*/React.createElement("span", {
+      className: "nav-peek-name"
+    }, peek ? t.nav[peek.k] || FULL_MENU_LABELS[lang][peek.k] : ""))), /*#__PURE__*/React.createElement("div", {
+      className: "nav-menu-foot"
+    }, /*#__PURE__*/React.createElement("a", {
+      href: "#contact",
+      className: "nav-menu-cta",
+      "data-magnetic": true,
+      onClick: e => go(e, "contact")
+    }, t.hero.cta_primary, " ", /*#__PURE__*/React.createElement("span", {
+      className: "arrow"
+    }, "\u2192")), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "sound-toggle mono",
+      "aria-label": "Toggle UI sound"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "sound-toggle-dot",
+      "aria-hidden": "true"
+    }), "SOUND"), /*#__PURE__*/React.createElement("div", {
+      className: "lang nav-menu-lang",
+      role: "group",
+      "aria-label": "language"
+    }, ["ru", "en", "uz"].map(L => /*#__PURE__*/React.createElement("button", {
+      key: L,
+      onClick: () => setLang(L),
+      className: lang === L ? "active" : "",
+      "aria-pressed": lang === L
+    }, L.toUpperCase()))), /*#__PURE__*/React.createElement("div", {
+      className: "nav-menu-tele mono"
+    }, /*#__PURE__*/React.createElement("span", null, "TASHKENT \xB7 41.31\xB0N 69.24\xB0E"), /*#__PURE__*/React.createElement("span", null, "UTC+5 \xB7 ", clock), /*#__PURE__*/React.createElement("span", null, "EXECUTIVE AI CODE LAB \xB7 v.2026"))))))
+  );
 }
 
 // ── Mobile UI overlay primitives ──────────────────────────────────────────

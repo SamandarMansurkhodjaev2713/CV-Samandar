@@ -41,8 +41,16 @@
   --line-strong: rgba(217, 119, 87, 0.22);
   --line-accent: rgba(var(--accent-rgb) / 0.3);
 
-  /* — Type — */
-  --f-display: "Geist", "Inter", -apple-system, system-ui, sans-serif;
+  /* — Type —
+     Display is a CONDENSED UPPERCASE face. This is the single biggest lever
+     against the "generic AI site" read: a geometric sans like Geist is exactly
+     what gets reached for by default, while a narrow caps face has an author's
+     voice from the first screen. Oswald rather than Bebas Neue because Bebas
+     ships no Cyrillic at all — a Russian-first site would silently fall back
+     and lose the whole point. Geist stays as the fallback and for anything that
+     must not be uppercase; Inter still carries every word of running text, so
+     readability is untouched. */
+  --f-display: "Oswald", "Geist", "Inter", -apple-system, system-ui, sans-serif;
   --f-body: "Inter", "Geist", -apple-system, system-ui, sans-serif;
   --f-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
   --f-serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
@@ -988,6 +996,88 @@ body::after {
   background: radial-gradient(ellipse 82% 72% at 50% 50%, transparent 52%, rgba(12, 10, 8, 0.55) 100%);
 }
 html.is-flying body::after { opacity: 1; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   IDENTITY v2 — condensed caps, material ground, light acts
+   ══════════════════════════════════════════════════════════════════════════
+   Four things made the old page read as a template, and all four are addressed
+   here rather than by adding more effects:
+     1. a default geometric sans          → condensed uppercase display
+     2. uniform darkness end to end       → two fully light acts
+     3. a generative particle field       → material ground (grain + raked light)
+     4. accent on literally everything    → accent held in reserve
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Display voice ─────────────────────────────────────────────────────
+   Oswald is a NARROW face: it wants uppercase, tight tracking and size. Used
+   only where strings are short — headings, names, numbers, nav. Every word of
+   running text stays in Inter, so nothing about readability changes. */
+/* --f-head, NOT --f-display: the tweak panel writes --f-display INLINE on
+   <html> (applyFontStack in themes.js), and an inline custom property beats
+   every stylesheet rule — the display voice would silently revert to Geist.
+   The heading face is identity, not a user preference, so it gets its own
+   token that nothing overwrites. */
+:root { --f-head: "Oswald", "Geist", "Inter", -apple-system, system-ui, sans-serif; }
+h1, h2, h3,
+.sec-head h2,
+.hero-line,
+.ilude-type,
+.nav-menu-word,
+.proj-name,
+.nav-peek-num {
+  font-family: var(--f-head);
+  text-transform: uppercase;
+  letter-spacing: 0.005em;   /* condensed faces need air, not negative tracking */
+  font-weight: 500;
+}
+/* The serif italic accent is the one lowercase voice — the human stroke among
+   the machine caps. It must NOT be uppercased. */
+.em, .ilude-em, .italic-display {
+  text-transform: none;
+  letter-spacing: -0.01em;
+}
+/* Oswald's caps read heavier than Geist's, so the display scale comes DOWN a
+   step while looking larger. Bigger numbers here would shout, not speak. */
+.sec-head h2 { font-size: clamp(40px, 6.2vw, 98px); line-height: 0.94; font-weight: 500; }
+.sec-head.rv-in h2 { font-weight: 600; }
+.ilude-type   { font-size: clamp(36px, 7.4vw, 116px); line-height: 0.92; letter-spacing: 0.004em; font-weight: 500; }
+
+/* ── 3. Material ground ───────────────────────────────────────────────────
+   The WebGL particle/wireframe field is gone (it was the single most
+   recognisable "AI-tech template" element on the page). Atmosphere now comes
+   from material: a dense film grain, one raked light, and depth between
+   plates. All static — zero per-frame cost, works identically on every device. */
+.bg-fx-canvas { display: none !important; }
+.bg-grid { display: none !important; }        /* the blueprint grid read as tech-stock */
+.bg-noise {
+  opacity: 0.055;
+  mix-blend-mode: soft-light;
+}
+.bg-glow {
+  background:
+    /* one raked light from upper-left, like a studio softbox on a surface */
+    radial-gradient(ellipse 70% 55% at 18% -10%, rgba(var(--act-accent-rgb, var(--accent-rgb)) / 0.055), transparent 62%),
+    /* and a deep pool at the opposite corner so the ground has a far side */
+    radial-gradient(ellipse 55% 45% at 92% 108%, rgba(0, 0, 0, 0.45), transparent 60%);
+  transition: background 1.4s ease;
+}
+
+/* ── 2. Light acts ────────────────────────────────────────────────────────
+   acts.js toggles html.act-light for the two document sections (CV, Quality).
+   Tokens flip in ONE place, so every component inherits the inversion without
+   a single per-component override. */
+html.act-light {
+  --text: #1A1A18;
+  --text-dim: #4A473F;
+  --text-mute: #7C776B;
+  --line: rgba(26, 26, 24, 0.12);
+  --line-strong: rgba(26, 26, 24, 0.20);
+  --hair: rgba(26, 26, 24, 0.10);
+}
+html.act-light .bg-noise { opacity: 0.03; mix-blend-mode: multiply; }
+html.act-light .bg-glow {
+  background: radial-gradient(ellipse 70% 55% at 18% -10%, rgba(0, 0, 0, 0.05), transparent 62%);
+}
 
 /* Opt this document into cross-document view transitions. With the matching
    rule on the landing pages, clicking a project card morphs its image into the

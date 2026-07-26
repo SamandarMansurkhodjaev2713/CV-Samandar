@@ -41,31 +41,39 @@
     return "radial-gradient(ellipse 80% 55% at 50% 112%, rgba(" + rgb + ", " + a + "), transparent 60%)";
   }
 
-  // Per-act accents. These drift with the journey and drive ATMOSPHERIC accent
-  // surfaces only — eyebrows, hairlines, telemetry, signature animations. The
-  // brand tokens (--accent on the CTA, the brand mark) deliberately never move:
-  // a primary button that changes colour every screen stops reading as "the
-  // button" and quietly costs conversions. So the page feels like it travels
-  // while the thing you click stays a constant.
-  var COPPER = "205, 122, 74";  // projects — the warm heart, close to Ember but its own
-  var SLATE  = "122, 145, 168"; // engineering blocks — cool, analytical
-  var SAND   = "196, 160, 108"; // services/faq — warm neutral, between ember and brass
+  // Per-act accents — ACCENT HELD IN RESERVE.
+  //
+  // The site used to paint terracotta on essentially every element, and the eye
+  // stops seeing a colour that is always there. So the ATMOSPHERIC accent is now
+  // bone and ash by default — the graphite/paper end of the palette — and the
+  // warm accent appears rarely and deliberately: the primary CTA, live statuses,
+  // and the destination. Less colour makes the colour felt MORE.
+  //
+  // The brand tokens themselves never move: a primary button that changes hue
+  // every screen stops reading as "the button".
+  var BONE   = "232, 230, 225"; // the default atmospheric accent — near-white
+  var ASH    = "150, 146, 138"; // quieter still: analytical blocks
+  var SLATE  = "122, 145, 168"; // one cool note, for the engineering dip
+  var COPPER = "205, 122, 74";  // reserved: the heart of the work
+  var SAND   = "196, 160, 108"; // reserved: warming toward the destination
 
   // Section → act preset. --act-bg deltas are ±3–5 per channel around the
   // base #1F1E1B (31,30,27) — felt as atmosphere, never read as a repaint.
   // The glow layer carries the legible part of the journey.
+  // Light acts (CV, trust) invert the ground entirely — see the .act-light
+  // class applied below and the light-section styles in sections.css.
   var ACTS = {
-    hero:     { bg: "#1D1E20", accent: STEEL,  glow: topGlow(STEEL, 0.055) },              // coolest — the start
-    signal:   { bg: "#1E1E1E", accent: STEEL,  glow: topGlow(STEEL, 0.04) },
-    about:    { bg: "#1F1E1B", accent: EMBER,  glow: topGlow(EMBER, 0.04) },               // neutral warm (base)
-    projects: { bg: "#211E19", accent: COPPER, glow: topGlow(EMBER, 0.06) },               // warm — the heart
-    skills:   { bg: "#1C1D1F", accent: SLATE,  glow: topGlow(STEEL, 0.05) },               // cool dip — the radar
-    services: { bg: "#201E1A", accent: SAND,   glow: topGlow(EMBER, 0.05) },
-    cv:       { bg: "#1C1D1E", accent: SLATE,  glow: topGlow(STEEL, 0.045) },              // cool dip — the document
-    process:  { bg: "#1E1D1B", accent: SLATE,  glow: topGlow(EMBER, 0.035) },
-    faq:      { bg: "#201E1A", accent: SAND,   glow: topGlow(EMBER, 0.045) },              // warming back up
-    trust:    { bg: "#221E18", accent: BRASS,  glow: topGlow(EMBER, 0.055) },
-    contact:  { bg: "#231F17", accent: BRASS,  glow: topGlow(EMBER, 0.065) + ", " + duskGlow(BRASS, 0.05) }, // warmest — destination
+    hero:     { bg: "#161719", accent: BONE,   glow: topGlow(BONE, 0.035) },               // coolest, near-graphite
+    signal:   { bg: "#18181A", accent: BONE,   glow: topGlow(BONE, 0.030) },
+    about:    { bg: "#1A1A19", accent: ASH,    glow: topGlow(BONE, 0.028) },
+    projects: { bg: "#1E1B17", accent: COPPER, glow: topGlow(EMBER, 0.055) },              // reserved warmth — the heart
+    skills:   { bg: "#171819", accent: SLATE,  glow: topGlow(SLATE, 0.040) },              // the one cool dip
+    services: { bg: "#1B1A17", accent: ASH,    glow: topGlow(BONE, 0.030) },
+    cv:       { bg: "#E8E6E1", accent: ASH,    glow: "none", light: true },                // LIGHT — the document
+    process:  { bg: "#18191A", accent: ASH,    glow: topGlow(BONE, 0.028) },
+    faq:      { bg: "#1B1A17", accent: ASH,    glow: topGlow(BONE, 0.030) },
+    trust:    { bg: "#E9E7E2", accent: SLATE,  glow: "none", light: true },                // LIGHT — the protocol
+    contact:  { bg: "#221D16", accent: SAND,   glow: topGlow(EMBER, 0.070) + ", " + duskGlow(BRASS, 0.055) }, // warmest — destination
   };
   var DEFAULT_ACT = "about"; // the neutral base — what no-JS/unknown ids resolve to
 
@@ -144,6 +152,27 @@
     // signatures animated correctly while rendering fully transparent.)
     document.documentElement.style.setProperty("--act-accent-rgb", act.accent.replace(/,\s*/g, " "));
     document.documentElement.style.setProperty("--act-accent", "rgb(" + act.accent + ")");
+    // Light acts invert the entire ground.
+    //
+    // The class alone is NOT enough: themes.js writes --text/--text-dim/
+    // --text-mute inline on <html> (applyTheme), and an inline custom property
+    // beats any stylesheet rule, so `html.act-light { --text: … }` could never
+    // win. The inversion therefore has to be written through the same inline
+    // channel — and cleared again on the way out, or the dark acts after a
+    // light one would keep the dark ink.
+    var root = document.documentElement;
+    root.classList.toggle("act-light", !!act.light);
+    if (act.light) {
+      root.style.setProperty("--text", "#1A1A18");
+      root.style.setProperty("--text-dim", "#4A473F");
+      root.style.setProperty("--text-mute", "#7C776B");
+    } else {
+      root.style.removeProperty("--text");
+      root.style.removeProperty("--text-dim");
+      root.style.removeProperty("--text-mute");
+      // Hand control back to whatever theme the tweak panel had applied.
+      try { if (window.applyTheme && window.CURRENT_THEME) window.applyTheme(window.CURRENT_THEME); } catch (e) { /* opportunistic */ }
+    }
     // Crossfade: paint the incoming gradient on the back veil, then swap roles.
     var front = frontIsA ? veilA : veilB;
     var back  = frontIsA ? veilB : veilA;
