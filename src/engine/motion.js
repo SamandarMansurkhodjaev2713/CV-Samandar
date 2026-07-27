@@ -627,6 +627,41 @@
     // strand the rAF path — but setInterval still fires (clamped to ~1s). This
     // is the last-resort net under IntersectionObserver + the scroll listener.
     setInterval(() => { if (pendingReveals.size) checkPending(); }, 250);
+
+    // ── LAST RESORT: is the page scrollable at all? ────────────────────────
+    // Every fallback above answers "did this element enter the viewport" — the
+    // IntersectionObserver, the scroll listener, the 250ms poll. All three are
+    // useless against the failure that actually shipped: something swallowed
+    // the wheel and the page could not move, so nothing ever entered the
+    // viewport, so nothing ever revealed, and the reader got the hero followed
+    // by eight screens of blank. The reveal layer was working perfectly and the
+    // site looked broken anyway.
+    //
+    // So this checks the assumption the whole layer rests on, rather than
+    // another consequence of it. It is a measurement, not a heuristic: the page
+    // is asked to move one pixel and then asked where it is. A healthy page
+    // moves and this never fires again. A page that cannot move gives up the
+    // entrance animations and shows its content, because un-animated content
+    // beats invisible content by a distance.
+    //
+    // Only runs while the reader is still at the very top (so it can never
+    // interrupt someone mid-page) and only once.
+    window.setTimeout(function scrollSelfTest() {
+      try {
+        if (!pendingReveals.size && !pendingSectionEnters.size) return;
+        var doc = document.documentElement;
+        if (doc.scrollHeight <= window.innerHeight + 200) return;  // nothing to scroll
+        if ((window.pageYOffset || 0) !== 0) return;               // reader has moved: scrolling works
+        window.scrollTo({ top: 1, behavior: "instant" });
+        var moved = (window.pageYOffset || 0) > 0;
+        window.scrollTo({ top: 0, behavior: "instant" });
+        if (moved) return;
+        // Scrolling is broken. Show everything.
+        console.warn("[motion] page cannot scroll — revealing all content without entrances");
+        document.querySelectorAll("section[data-enter]").forEach(function (el) { el.classList.add("sec-in"); });
+        pendingReveals.forEach(function (el) { triggerReveal(el); });
+      } catch (e) { /* opportunistic — a failed self-test must never itself break the page */ }
+    }, 4000);
   }
 
   // Reveal trigger — IntersectionObserver (primary) + scroll/poll (fallback).
