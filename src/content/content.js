@@ -52,7 +52,7 @@ const CONTENT = {
         "AI — не как демо, а как часть продукта: интеграция LLM, агенты, RAG, оценки качества.",
       ],
       stats: [
-        { v: "1.5+ года", k: "в разработке" },
+        { v: "2 года", k: "в разработке" },
         { v: "10+", k: "проектов" },
         { v: "3 курс", k: "Software Engineering" },
         { v: "RU / UZ / EN", k: "языки работы" },
@@ -71,7 +71,17 @@ const CONTENT = {
         { when: "2 д", tag: "feat", msg: "dostupnoe-pravo — legal-платформа на TypeScript" },
         { when: "3 д", tag: "feat", msg: "cardioguard — health-tech, RN + Kotlin" },
       ],
-      contrib_label: "Активность · 12 недель",
+      contrib_label: "Публичная активность · 28 дней",
+      // Deliberately "публичная активность", not "вклад": the strip is built from
+      // the public events feed, which the unauthenticated API can actually give
+      // us — the contribution calendar itself is GraphQL-only and needs a token.
+      // The smaller true claim, not the bigger convenient one. See src/engine/gh.js.
+      // Every word in the live GitHub strip, per locale. The strip mixes
+      // fetched numbers with connective text, so a half-translated version
+      // reads worse than either language alone — the first attempt rendered
+      // "last push 21 ч ago".
+      gh: { repos: "репозиториев", events: "событий / 28 дн", push: "последний пуш",
+            now: "сегодня", h: " ч назад", d: " д назад", mo: " мес назад" },
       gh_stats: "10+ проектов · публичный код и NDA-кейсы · Ташкент",
     },
     projects: {
@@ -565,7 +575,7 @@ const CONTENT = {
         "AI isn't a demo here — it ships in production. LLM integrations, agents, RAG, eval pipelines.",
       ],
       stats: [
-        { v: "1.5+ yr", k: "building" },
+        { v: "2 yrs", k: "building" },
         { v: "10+", k: "projects" },
         { v: "3rd yr", k: "Software Engineering" },
         { v: "RU / UZ / EN", k: "working languages" },
@@ -584,7 +594,9 @@ const CONTENT = {
         { when: "2d", tag: "feat", msg: "dostupnoe-pravo — legal platform in TypeScript" },
         { when: "3d", tag: "feat", msg: "cardioguard — health-tech, RN + Kotlin" },
       ],
-      contrib_label: "contributions · 12 weeks",
+      contrib_label: "Public activity · 28 days",
+      gh: { repos: "public repos", events: "events / 28d", push: "last push",
+            now: "today", h: "h ago", d: "d ago", mo: "mo ago" },
       gh_stats: "10+ projects · public code and NDA case studies · Tashkent",
     },
     projects: {
@@ -1078,7 +1090,7 @@ const CONTENT = {
         "AI — demo emas, mahsulotning bir qismi: LLM integratsiyalari, agentlar, RAG, sifat baholash.",
       ],
       stats: [
-        { v: "1.5+ yil", k: "rivojlanishda" },
+        { v: "2 yil", k: "rivojlanishda" },
         { v: "10+", k: "loyiha" },
         { v: "3-kurs", k: "Software Engineering" },
         { v: "RU / UZ / EN", k: "ish tillari" },
@@ -1097,7 +1109,9 @@ const CONTENT = {
         { when: "2 k", tag: "feat", msg: "dostupnoe-pravo — TypeScript legal platforma" },
         { when: "3 k", tag: "feat", msg: "cardioguard — health-tech, RN + Kotlin" },
       ],
-      contrib_label: "faollik · 12 hafta",
+      contrib_label: "Ochiq faollik · 28 kun",
+      gh: { repos: "repozitoriy", events: "hodisa / 28 kun", push: "oxirgi push",
+            now: "bugun", h: " soat oldin", d: " kun oldin", mo: " oy oldin" },
       gh_stats: "10+ loyiha · ochiq kod va NDA case'lar · Toshkent",
     },
     projects: {

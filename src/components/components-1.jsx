@@ -420,6 +420,20 @@ function SignalRow({ card, index, total, open, onToggle, hasHover }) {
   );
 }
 
+// The section's eyebrow has always read "10-second signal". It was a figure of
+// speech attached to a static accordion — the one thing on the page that made a
+// concrete promise and then didn't keep it. Now it is literal: arriving in the
+// section starts a real ten-second run that opens each of the six reasons in
+// turn, roughly 1.6s apart, with a hairline counting the ten seconds down. Read
+// nothing, do nothing, and you still get every reason inside ten seconds.
+//
+// It yields immediately and permanently to the reader. Any hover, focus or tap
+// cancels the run for good — a timer that fights you for control of what you
+// are reading is worse than no timer. It also only ever runs once, and only
+// while the section is actually on screen (an IntersectionObserver gate), so
+// scrolling back never restarts a show you already sat through.
+const SIGNAL_RUN_MS = 10000;
+
 function Signal({ t }) {
   const ref = useRevealRoot([t]);
   // -1 = nothing open. Hover/focus opens the hovered row and "sticks" (doesn't
@@ -427,18 +441,87 @@ function Signal({ t }) {
   // clicked. Click/tap toggles (accordion behavior on touch — see SignalRow's
   // hasHover branching for why desktop click doesn't use the toggle path).
   const [openIndex, setOpenIndex] = useState(-1);
+  // "idle" before the section is reached, "running" during the ten seconds,
+  // "done" once it finishes or the reader takes over. Drives the countdown
+  // hairline and the state read-out beside it.
+  const [runState, setRunState] = useState("idle");
+  const timersRef = useRef([]);
   const hasHoverRef = useRef(null);
   if (hasHoverRef.current === null) {
     hasHoverRef.current = typeof window.matchMedia === "function"
       && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   }
 
+  const cards = t.signal.cards;
+  const total = cards.length;
+
+  function stopRun() {
+    timersRef.current.forEach(window.clearTimeout);
+    timersRef.current = [];
+  }
+
   const handleToggle = (i, isHover) => {
+    // The reader touched it — the run is over, permanently.
+    stopRun();
+    setRunState("done");
     setOpenIndex((prev) => {
       if (isHover) return i;
       return prev === i ? -1 : i;
     });
   };
+
+  useEffect(() => {
+    const el = document.getElementById("signal");
+    let reduced = false;
+    try { reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { /* opportunistic */ }
+    // Reduced motion gets the whole point without the performance: opening all
+    // six at once is not an option (six expanded rows is a wall), so instead
+    // nothing auto-opens and the countdown never appears. The rows are still
+    // fully readable on hover/tap — the content was never gated on the run.
+    if (!el || reduced) return undefined;
+
+    // ── The trigger is motion.js's `.sec-in`, not an IntersectionObserver of
+    // our own. Two reasons, and the second is the important one:
+    //
+    //   1. A private IO needs its own answer to "how much of this section
+    //      counts as arrived", and both obvious answers are wrong here. A
+    //      ratio threshold is unreachable on a section taller than a couple of
+    //      viewports (this one is 1256px against a 900px window — max possible
+    //      ratio 0.72, so `threshold: 0.35` was one added row away from
+    //      silently never firing). A rootMargin band works, but then two
+    //      different definitions of "in view" live on the same section.
+    //   2. motion.js's version already has a fallback for environments where
+    //      IntersectionObserver callbacks never arrive — measured here: a raw
+    //      IO on this exact element with these exact options delivered ZERO
+    //      entries in 500ms while `.sec-in` was already on the section. IO
+    //      callbacks are delivered on a rendering-lifecycle step, so a tab
+    //      that is not compositing frames never gets them; motion.js's
+    //      scroll/poll path covers that, and this now inherits it for free.
+    //
+    // MutationObserver is used to watch for the class because IT is delivered
+    // on a microtask — no rendering step required, so the observer works in
+    // exactly the situation that broke the IO.
+    let started = false;
+    function begin() {
+      if (started) return;
+      started = true;
+      setRunState("running");
+      const step = SIGNAL_RUN_MS / (total + 1);
+      for (let i = 0; i < total; i++) {
+        timersRef.current.push(window.setTimeout(function () { setOpenIndex(i); }, step * (i + 1)));
+      }
+      // Land on the last reason rather than closing everything: the run ends
+      // with something to read, not with an empty list.
+      timersRef.current.push(window.setTimeout(function () { setRunState("done"); }, SIGNAL_RUN_MS));
+    }
+
+    if (el.classList.contains("sec-in")) { begin(); return function () { stopRun(); }; }
+    const mo = new MutationObserver(function () {
+      if (el.classList.contains("sec-in")) { mo.disconnect(); begin(); }
+    });
+    mo.observe(el, { attributes: true, attributeFilter: ["class"] });
+    return function () { mo.disconnect(); stopRun(); };
+  }, [total]);
 
   return (
     <section data-section="signal" id="signal" data-enter="emerge" ref={ref}>
@@ -448,15 +531,28 @@ function Signal({ t }) {
           eyebrow={t.signal.eyebrow}
           title={t.signal.title}
           em={t.signal.title.split(" ").pop()}
-          meta={`${t.signal.cards.length} · signal`}
+          meta={`${total} · signal`}
         />
+
+        {/* The countdown itself: a hairline that drains left-to-right over the
+            ten seconds, and a read-out that names what is happening. Purely
+            decorative — aria-hidden, because the reasons below are the content
+            and a screen reader has no use for a progress bar on an accordion
+            it can already open directly. */}
+        <div className={`signal-run signal-run--${runState}`} aria-hidden="true">
+          <span className="signal-run-bar" style={{ "--run-ms": `${SIGNAL_RUN_MS}ms` }} />
+          <span className="signal-run-read mono">
+            {runState === "running" ? "10s · signal running" : runState === "done" ? "signal complete" : "10s · signal"}
+          </span>
+        </div>
+
         <div className="signal-rows">
-          {t.signal.cards.map((c, i) => (
+          {cards.map((c, i) => (
             <SignalRow
               key={i}
               card={c}
               index={i}
-              total={t.signal.cards.length}
+              total={total}
               open={openIndex === i}
               onToggle={handleToggle}
               hasHover={hasHoverRef.current}
@@ -480,29 +576,6 @@ function Signal({ t }) {
 //   • Markdown-style paragraphs with left accent border
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Contribution-graph generator. Deterministic per (row, col) — same shape every
-// render so the graph never twitches between mounts.
-function buildContribCells(rows, cols) {
-  const out = [];
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      const seed = (row + 1) * 31 + (col + 1) * 17;
-      const noise = ((seed * 9301 + 49297) % 233280) / 233280;
-      // Cluster around recent weeks (high col = recent).
-      const recency = col / cols;
-      const base = noise * (0.4 + recency * 0.6);
-      // Five intensity buckets like GitHub.
-      let level;
-      if (base < 0.25) level = 0;
-      else if (base < 0.45) level = 1;
-      else if (base < 0.65) level = 2;
-      else if (base < 0.85) level = 3;
-      else level = 4;
-      out.push({ row, col, level });
-    }
-  }
-  return out;
-}
 
 function useAnimatedCounter(target, durationMs, runWhen, precision) {
   const [value, setValue] = useState(0);
@@ -554,12 +627,6 @@ function AboutStat({ stat, runCounters, index }) {
   );
 }
 
-const CONTRIB_ROWS = 7;
-const CONTRIB_COLS = 28;
-const CONTRIB_TOTAL_CELLS = CONTRIB_ROWS * CONTRIB_COLS;
-const CONTRIB_PULSE_INTERVAL_MIN_MS = 1800;
-const CONTRIB_PULSE_INTERVAL_MAX_MS = 3400;
-const CONTRIB_PULSE_DURATION_MS = 900;
 const CURRENTLY_ROTATE_INTERVAL_MS = 5200;
 const CURRENTLY_TYPE_INTERVAL_MS = 30;
 const TECH_CHIPS = ["TypeScript", "React", "Next.js", "Node.js", "Postgres", "OpenAI", "Anthropic", "LangChain", "n8n", "Three.js", "Telegram Bot", "Docker"];
@@ -617,14 +684,32 @@ function useCurrentlyRotator(phrases, active) {
   return text;
 }
 
+// Coarse relative age for the "last push" read-out. Coarse on purpose: a
+// minute-accurate figure invites the reader to watch it tick, which is not what
+// this line is for — it exists to say "the account is alive", once.
+// The unit strings carry their own "ago" per locale (RU " ч назад", EN "h ago"),
+// because appending a hardcoded English "ago" to a localised unit produced
+// exactly the tell it was meant to avoid: "last push 21 ч ago".
+function relativeAge(ts, words) {
+  const w = words || {};
+  const mins = Math.max(0, Math.round((Date.now() - ts) / 60000));
+  if (mins < 60) return w.now || "today";
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours}${w.h || "h ago"}`;
+  const days = Math.round(hours / 24);
+  if (days < 30) return `${days}${w.d || "d ago"}`;
+  return `${Math.round(days / 30)}${w.mo || "mo ago"}`;
+}
+
 function About({ t }) {
   const ref = useRevealRoot([t]);
   const cardRef = useRef(null);
   const [runCounters, setRunCounters] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [clock, setClock] = useState(() => formatTashkentTime(new Date()));
-  const [pulseIndex, setPulseIndex] = useState(-1);
-  const contribCells = useMemo(() => buildContribCells(CONTRIB_ROWS, CONTRIB_COLS), []);
+  // null until the GitHub fetch resolves, and null forever if it fails. The
+  // section renders its static copy in that case — never a synthetic graph.
+  const [gh, setGh] = useState(null);
   const currentlyPhrases = t.about.currently || [];
   const currentlyText = useCurrentlyRotator(currentlyPhrases, isVisible);
 
@@ -652,41 +737,26 @@ function About({ t }) {
     return () => clearInterval(id);
   }, []);
 
-  // Live contribution pulse — periodically flash a random cell to level-4
-  // for ~900ms, then revert. Indices are deterministic via a counter so we
-  // don't pick the same cell twice in a row.
+  // Live GitHub telemetry. Fired on mount rather than on scroll-into-view: the
+  // request is two cached GETs against a CDN, it costs nothing to have the
+  // answer ready before the reader arrives, and deferring it would mean the
+  // activity strip pops in under their eyes instead of already being there.
+  // Resolves to null on any failure — see src/engine/gh.js.
   useEffect(() => {
-    if (!runCounters) return undefined;
-    let cleared = false;
-    let scheduleTimer = 0;
-    let revertTimer = 0;
-    function scheduleNext() {
-      const delay = CONTRIB_PULSE_INTERVAL_MIN_MS + Math.random() * (CONTRIB_PULSE_INTERVAL_MAX_MS - CONTRIB_PULSE_INTERVAL_MIN_MS);
-      scheduleTimer = window.setTimeout(() => {
-        if (cleared) return;
-        const idx = Math.floor(Math.random() * CONTRIB_TOTAL_CELLS);
-        setPulseIndex(idx);
-        revertTimer = window.setTimeout(() => {
-          if (cleared) return;
-          setPulseIndex(-1);
-          scheduleNext();
-        }, CONTRIB_PULSE_DURATION_MS);
-      }, delay);
-    }
-    scheduleNext();
-    return function cleanup() {
-      cleared = true;
-      if (scheduleTimer) window.clearTimeout(scheduleTimer);
-      if (revertTimer) window.clearTimeout(revertTimer);
-    };
-  }, [runCounters]);
+    let alive = true;
+    if (!window.__SM_GH) return undefined;
+    window.__SM_GH.load().then(function (data) { if (alive && data) setGh(data); });
+    return function () { alive = false; };
+  }, []);
+
 
   const recentItems = t.about.recent || [];
   const statusLabel = t.about.status_label || "Available";
   const currentlyLabel = t.about.currently_label || "Currently";
   const recentLabel = t.about.recent_label || "Recent work";
-  const contribLabel = t.about.contrib_label || "contributions · 28 weeks";
+  const contribLabel = t.about.contrib_label || "Public activity · 28 days";
   const ghStats = t.about.gh_stats || "";
+  const ghWords = t.about.gh || {};
 
   return (
     <section data-section="about" id="about" data-enter="develop" ref={ref}>
@@ -763,43 +833,63 @@ function About({ t }) {
             </div>
           )}
 
-          {/* Contribution graph */}
-          <div className="about-contrib">
-            <div className="about-contrib-head mono">
-              <span>{contribLabel}</span>
-              <span className="about-contrib-legend">
-                <span>less</span>
-                <span className="about-contrib-legend-cell" data-level="0" />
-                <span className="about-contrib-legend-cell" data-level="1" />
-                <span className="about-contrib-legend-cell" data-level="2" />
-                <span className="about-contrib-legend-cell" data-level="3" />
-                <span className="about-contrib-legend-cell" data-level="4" />
-                <span>more</span>
-              </span>
-            </div>
-            <div
-              className="about-contrib-grid"
-              style={{ gridTemplateColumns: `repeat(${CONTRIB_COLS}, 1fr)` }}
-              aria-hidden="true"
-            >
-              {contribCells.map((cell, idx) => {
-                const isPulsing = idx === pulseIndex;
-                return (
-                  <span
-                    key={`${cell.row}-${cell.col}`}
-                    className={`about-contrib-cell ${isPulsing ? "is-pulsing" : ""}`}
-                    data-level={isPulsing ? 4 : cell.level}
-                    style={{ animationDelay: `${(cell.col * 35 + cell.row * 25)}ms` }}
-                  />
-                );
-              })}
-            </div>
-          </div>
+          {/* ── LIVE ACTIVITY ────────────────────────────────────────────
+              Real GitHub public events, 28 daily buckets — see src/engine/gh.js
+              for why this is events rather than the contribution calendar, and
+              for the rate-limit / offline behaviour.
 
-          {/* GitHub-style stats footer */}
-          {ghStats && (
-            <div className="about-gh-stats mono">{ghStats}</div>
-          )}
+              The thing that used to be here was a 7×28 grid of deterministic
+              pseudo-random cells with a timer flashing random ones to make it
+              look live. It was decoration in the exact shape of a factual
+              claim. When the fetch fails there is no graph at all — falling
+              back to the synthetic one would reintroduce precisely the problem
+              this replaced. */}
+          {gh && gh.days ? (
+            <div className="about-contrib">
+              <div className="about-contrib-head mono">
+                <span>{contribLabel}</span>
+                <span className="about-contrib-legend">
+                  <span>less</span>
+                  <span className="about-contrib-legend-cell" data-level="0" />
+                  <span className="about-contrib-legend-cell" data-level="1" />
+                  <span className="about-contrib-legend-cell" data-level="2" />
+                  <span className="about-contrib-legend-cell" data-level="3" />
+                  <span className="about-contrib-legend-cell" data-level="4" />
+                  <span>more</span>
+                </span>
+              </div>
+              <div
+                className="about-contrib-grid about-contrib-grid--days"
+                style={{ gridTemplateColumns: `repeat(${gh.days.length}, 1fr)` }}
+                aria-hidden="true"
+              >
+                {gh.days.map((d, idx) => (
+                  <span
+                    key={idx}
+                    className="about-contrib-cell"
+                    data-level={d.level}
+                    style={{ animationDelay: `${idx * 26}ms` }}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Instrument strip — the live read-out under the activity. Every
+              figure here is fetched, not written: repo count, events in the
+              window, and how long ago the last public push landed. */}
+          <div className="about-gh-stats mono">
+            {gh ? (
+              <>
+                <span className="about-gh-live"><span className="about-gh-dot" />github</span>
+                {gh.repos != null ? <span>{gh.repos} {ghWords.repos || "public repos"}</span> : null}
+                <span>{gh.events} {ghWords.events || "events / 28d"}</span>
+                {gh.lastPush ? <span>{ghWords.push || "last push"} {relativeAge(gh.lastPush, ghWords)}</span> : null}
+              </>
+            ) : ghStats ? (
+              <span>{ghStats}</span>
+            ) : null}
+          </div>
         </article>
       </div>
     </section>

@@ -686,7 +686,7 @@ function App() {
           meta: ["Ташкент · UTC+5", "Открыт к проектам", "3 курс · Software Engineering"],
           stats: [{
             k: "опыт",
-            v: "1.5+ года"
+            v: "2 года"
           }, {
             k: "проектов",
             v: "10+"
@@ -736,7 +736,7 @@ function App() {
           meta: ["Tashkent · UTC+5", "Open to projects", "3rd-year · Software Engineering"],
           stats: [{
             k: "experience",
-            v: "1.5+ yr"
+            v: "2 yrs"
           }, {
             k: "projects",
             v: "10+"
@@ -786,7 +786,7 @@ function App() {
           meta: ["Toshkent · UTC+5", "Loyihalarga ochiq", "3-kurs · Software Engineering"],
           stats: [{
             k: "tajriba",
-            v: "1.5+ yil"
+            v: "2 yil"
           }, {
             k: "loyiha",
             v: "10+"

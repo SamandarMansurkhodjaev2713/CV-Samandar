@@ -496,6 +496,55 @@
 .trust-cap-text { flex: 1; min-width: 0; }
 
 /* ── 7. Signal 2.0 — editorial rows, full-width, expand in place ──────── */
+
+/* The ten-second countdown. A hairline that drains across the full width of
+   the block plus a mono read-out — no numerals ticking down, because a running
+   digit is a thing you WATCH, and the point is to read the reasons while it
+   runs, not to watch a clock. */
+.signal-run {
+  position: relative;
+  margin-top: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-bottom: 8px;
+}
+.signal-run-bar {
+  position: absolute;
+  left: 0; bottom: 0;
+  height: 1px;
+  width: 100%;
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg,
+    rgba(var(--act-accent-rgb, var(--accent-rgb)) / 0.75),
+    rgba(var(--act-accent-rgb, var(--accent-rgb)) / 0.18));
+  /* scaleX rather than width: a width animation relayouts every frame for ten
+     seconds straight, a transform does not touch layout at all. */
+  transform: scaleX(0);
+}
+.signal-run--running .signal-run-bar {
+  animation: signalRun var(--run-ms, 10000ms) linear forwards;
+}
+.signal-run--done .signal-run-bar { transform: scaleX(1); opacity: 0.28; transition: opacity .8s ease; }
+@keyframes signalRun { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.signal-run-read {
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  transition: color .6s ease;
+}
+.signal-run--running .signal-run-read { color: var(--act-accent, var(--accent)); }
+/* Idle is the pre-arrival state — nothing has started, so the rule reads as a
+   plain divider rather than an empty progress bar waiting to be noticed. */
+.signal-run--idle .signal-run-bar { transform: scaleX(1); opacity: 0.14; }
+@media (prefers-reduced-motion: reduce) {
+  /* The run never starts under reduced motion (see Signal's effect); the
+     hairline stays a divider so the block doesn't lose its top edge. */
+  .signal-run-bar { animation: none; transform: scaleX(1); opacity: 0.14; }
+}
+
 .signal-rows {
   margin-top: 28px;
   display: flex;

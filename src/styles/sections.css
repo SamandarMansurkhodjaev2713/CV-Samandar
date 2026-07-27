@@ -987,23 +987,50 @@ section[data-section="hero"] { padding-block: 0; }
 .about-recent-tag--docs     { color: #6BB6FF; border-color: rgba(107,182,255,0.35); background: rgba(107,182,255,0.05); }
 .about-recent-msg { color: var(--text); }
 
-/* ── Live contribution pulse ────────────────────────────────── */
-.about-contrib-cell.is-pulsing {
-  animation: contribPulse 0.9s ease-in-out forwards;
-}
-@keyframes contribPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb) / 0); transform: scale(1); }
-  40%      { box-shadow: 0 0 14px 1px rgba(var(--accent-rgb) / 0.8); transform: scale(1.5); }
-}
-
-/* ── GitHub stats footer ────────────────────────────────────── */
+/* ── Instrument strip — live GitHub read-out ────────────────────
+   Was a centred sentence of static copy. Now every figure in it is fetched
+   (repos, events in the window, age of the last push), so it is laid out as a
+   row of instruments with a live indicator rather than as prose. Falls back to
+   the single static sentence when the fetch fails — see src/engine/gh.js. */
 .about-gh-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 18px;
   font-size: 10.5px;
   letter-spacing: 0.14em;
   color: var(--text-mute);
   padding-top: 16px;
   border-top: 1px solid var(--line);
-  text-align: center;
+}
+.about-gh-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--act-accent, var(--accent));
+  transition: color 1.4s ease;
+}
+.about-gh-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+/* The strip is 28 daily buckets in ONE row, not 7×28 cells. A week-by-day
+   matrix is the shape of GitHub's contribution calendar, and the calendar is
+   exactly the thing the unauthenticated API cannot give us — keeping that shape
+   over different data would have been the same false claim in a new wrapper.
+   A single row of days says what it is. */
+.about-contrib-grid--days {
+  grid-auto-rows: auto;
+  gap: 4px;
+}
+.about-contrib-grid--days .about-contrib-cell {
+  aspect-ratio: auto;
+  height: 26px;
+  border-radius: 2px;
 }
 
 .about-md {

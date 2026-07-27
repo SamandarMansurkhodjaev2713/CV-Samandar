@@ -492,7 +492,7 @@ function App() {
       ru: {
         id: { name: "Самандар", role: "Full-Stack · AI Automation · QA",
               meta: ["Ташкент · UTC+5", "Открыт к проектам", "3 курс · Software Engineering"],
-              stats: [{ k: "опыт", v: "1.5+ года" }, { k: "проектов", v: "10+" }, { k: "стек", v: "TS / Py / SQL" }, { k: "ответ", v: "< 24h" }] },
+              stats: [{ k: "опыт", v: "2 года" }, { k: "проектов", v: "10+" }, { k: "стек", v: "TS / Py / SQL" }, { k: "ответ", v: "< 24h" }] },
         exp_title: "опыт", langs_title: "языки", strengths_title: "сильные стороны",
         strengths: [
           { t: "Системное мышление от прод-идеи до прод-деплоя", p: "TTYL Platform — от архитектуры и API до деплоя и багфиксов в проде: весь цикл на одном человеке." },
@@ -506,7 +506,7 @@ function App() {
       en: {
         id: { name: "Samandar", role: "Full-Stack · AI Automation · QA",
               meta: ["Tashkent · UTC+5", "Open to projects", "3rd-year · Software Engineering"],
-              stats: [{ k: "experience", v: "1.5+ yr" }, { k: "projects", v: "10+" }, { k: "stack", v: "TS / Py / SQL" }, { k: "reply", v: "< 24h" }] },
+              stats: [{ k: "experience", v: "2 yrs" }, { k: "projects", v: "10+" }, { k: "stack", v: "TS / Py / SQL" }, { k: "reply", v: "< 24h" }] },
         exp_title: "experience", langs_title: "languages", strengths_title: "strengths",
         strengths: [
           { t: "End-to-end ownership from product idea to prod deploy", p: "TTYL Platform — from architecture and API to deploy and prod bugfixes: the whole cycle on one person." },
@@ -520,7 +520,7 @@ function App() {
       uz: {
         id: { name: "Samandar", role: "Full-Stack · AI Automation · QA",
               meta: ["Toshkent · UTC+5", "Loyihalarga ochiq", "3-kurs · Software Engineering"],
-              stats: [{ k: "tajriba", v: "1.5+ yil" }, { k: "loyiha", v: "10+" }, { k: "stek", v: "TS / Py / SQL" }, { k: "javob", v: "< 24h" }] },
+              stats: [{ k: "tajriba", v: "2 yil" }, { k: "loyiha", v: "10+" }, { k: "stek", v: "TS / Py / SQL" }, { k: "javob", v: "< 24h" }] },
         exp_title: "tajriba", langs_title: "tillar", strengths_title: "kuchli tomonlar",
         strengths: [
           { t: "Mahsulot g'oyasidan prod-deploygacha to'liq egalik", p: "TTYL Platform — arxitektura va API'dan deploy va prod-bagfikslargacha: butun sikl bitta odamda." },
