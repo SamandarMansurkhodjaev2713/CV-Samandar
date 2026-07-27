@@ -531,7 +531,7 @@ const CONTENT = {
       note: "качество по умолчанию, не по запросу",
       proof: [
         { k: "Тесты на критическом пути", v: "Playwright E2E, pytest, xUnit/Moq — со скриншотами и traces", tag: "TESTS" },
-        { k: "CI/CD на каждый пуш", v: "GitHub Actions: сборка, тесты, линт — красный билд не уезжает в прод", tag: "CI", url: "https://github.com/SamandarMansurkhodjaev2713" },
+        { k: "CI/CD на каждый пуш", v: "GitHub Actions: сборка, тесты, линт — красный билд не уезжает в прод", tag: "CI" },
         { k: "Контроль регрессий", v: "Retest фиксов и проверка отсутствия регрессий перед релизом", tag: "REGRESS" },
         { k: "Строгая типизация", v: "TypeScript и типизированные контракты — ошибки ловятся до рантайма", tag: "TYPES" },
         { k: "Наблюдаемость прода", v: "Логи, traces, мониторинг и алерты — вижу прод, а не догадываюсь", tag: "OBSERV" },
@@ -1073,7 +1073,7 @@ const CONTENT = {
       note: "quality by default, not on request",
       proof: [
         { k: "Tests on the critical path", v: "Playwright E2E, pytest, xUnit/Moq — with screenshots and traces", tag: "TESTS" },
-        { k: "CI/CD on every push", v: "GitHub Actions: build, tests, lint — a red build never reaches prod", tag: "CI", url: "https://github.com/SamandarMansurkhodjaev2713" },
+        { k: "CI/CD on every push", v: "GitHub Actions: build, tests, lint — a red build never reaches prod", tag: "CI" },
         { k: "Regression control", v: "Retest of fixes and a no-regression check before every release", tag: "REGRESS" },
         { k: "Strict typing", v: "TypeScript and typed contracts — errors caught before runtime", tag: "TYPES" },
         { k: "Production observability", v: "Logs, traces, monitoring and alerts — I see prod, not guess", tag: "OBSERV" },
@@ -1615,7 +1615,7 @@ const CONTENT = {
       note: "sifat — so'rov bo'yicha emas, standart",
       proof: [
         { k: "Kritik yo'lda testlar", v: "Playwright E2E, pytest, xUnit/Moq — skrinshot va traces bilan", tag: "TESTS" },
-        { k: "Har push'da CI/CD", v: "GitHub Actions: build, testlar, lint — qizil build prodga chiqmaydi", tag: "CI", url: "https://github.com/SamandarMansurkhodjaev2713" },
+        { k: "Har push'da CI/CD", v: "GitHub Actions: build, testlar, lint — qizil build prodga chiqmaydi", tag: "CI" },
         { k: "Regressiya nazorati", v: "Fixlarni retest va relizdan oldin regressiyasizlik tekshiruvi", tag: "REGRESS" },
         { k: "Qat'iy tiplashtirish", v: "TypeScript va tipli kontraktlar — xatolar runtime'gacha ushlanadi", tag: "TYPES" },
         { k: "Prod kuzatuvchanligi", v: "Loglar, traces, monitoring va alertlar — prodni ko'raman, taxmin qilmayman", tag: "OBSERV" },

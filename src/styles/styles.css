@@ -1097,6 +1097,76 @@ section[data-section="contact"]  { --plate: #221D16; }
 #builder                         { --plate: #1C1B18; position: relative; z-index: 1;
                                    background-color: var(--plate);
                                    box-shadow: 0 -34px 64px -34px rgba(0, 0, 0, 0.78); }
+/* ── INK ON THE LIGHT PLATES ───────────────────────────────────────────────
+   The two light sections carry their own ink, declared ON THE SECTION rather
+   than relying on the `html.act-light` flip that acts.js performs.
+
+   The two are not the same thing and conflating them is a bug waiting to
+   happen: the PLATE is light unconditionally (it is a property of the
+   section), while the ACT is scroll-driven and switches on its own schedule
+   with a 1.4s colour transition. Any window where the plate has arrived and
+   the act has not is a window of near-white text on a near-white ground. A
+   declaration on the section itself also outranks the inherited inline value
+   acts.js writes on <html> — inheritance only fills in where the element has
+   no declaration of its own — so this is authoritative whenever these two
+   sections are painted, in any act, at any moment of any transition.
+
+   `--doc-ink-rgb` is the same ink as space-separated channels, for the many
+   CV rules that need it at partial alpha. SPACE-separated, not comma: the
+   alpha is composed with `rgba(var(--x) / a)`, and a comma-separated value
+   there is invalid and silently drops the whole declaration. */
+section[data-section="cv"],
+section[data-section="trust"] {
+  --text: #1A1A18;
+  --text-dim: #4A4740;
+  /* #7A756A measured 3.68:1 here — fine as a mute on a dark ground, one third
+     short of AA on this one, and it is what section meta and footnotes are
+     drawn in. Taken down to 4.99:1. */
+  --text-mute: #655F54;
+  --doc-ink-rgb: 26 26 24;
+  --line: rgba(26 26 24 / 0.13);
+  --line-strong: rgba(26 26 24 / 0.22);
+  /* The accents need darkening too, and this is not a taste call — it is the
+     measured one. The site's amber (#D97757) was built for a #16-1F ground
+     where it sits at ~7:1; against a #E8E6E1 plate the same swatch measures
+     2.5:1, which fails body text (4.5:1) and even large text (3:1). Every
+     eyebrow, stat figure and proof tag in these two sections is drawn in it,
+     so on the light plates they were all technically illegible.
+     These are the same hues taken down until they clear 4.5:1 on the plate
+     (measured: 4.64 and 5.73), not different colours — the section still reads
+     as terracotta-and-slate, it just stops being decorative-only. */
+  --accent: #A44A2E;
+  --accent-rgb: 164 74 46;
+  --act-accent: #46586E;
+  --act-accent-rgb: 70 88 110;
+}
+
+/* On a phone the dark→light plate boundary is a full-width flash: the whole
+   screen goes from #1B1A17 to #E8E6E1 in the space of one scroll frame, and at
+   phone brightness that lands as a strobe rather than as a change of chapter.
+   Desktop is fine — a light plate arriving in a 900px-tall window still has
+   the previous plate visible above it for most of the transit, which reads as
+   one sheet sliding over another. The phone doesn't get that, so it gets a
+   short shadow instead: the top ~72px of the light plate is tinted with the
+   ground it came from, fading out. The plate still arrives light; it just
+   arrives out of the dark rather than replacing it.
+   Painted as a background-IMAGE over `background-color: var(--plate)`, so the
+   plate colour itself is untouched and nothing new enters the DOM. */
+@media (max-width: 900px) {
+  section[data-section="cv"],
+  section[data-section="trust"] {
+    /* Fully resolved by 54px. The sections' mobile top padding is 58px, so the
+       tint is gone before the first line of text — measured at 72px it was
+       still at ~0.14 alpha where Quality's eyebrow sits, which dropped that
+       line from 5.0:1 to 3.9:1. A transition effect is not allowed to cost
+       contrast on the content it is transitioning into. */
+    background-image: linear-gradient(180deg,
+      rgba(27, 26, 23, 0.92) 0,
+      rgba(27, 26, 23, 0.4) 22px,
+      rgba(27, 26, 23, 0) 54px);
+  }
+}
+
 /* Interludes are the rests BETWEEN plates — they show the act ground itself,
    which is what makes them read as air rather than as another slab. */
 .ilude { background: transparent; box-shadow: none; }

@@ -1234,55 +1234,73 @@ function Faq({ t }) {
 // PROOF — replaces placeholder testimonials with verifiable receipts: live
 // products + public code you can open right now. Honest > fake quotes, and it
 // reads as "here are my receipts", which is the actual professional signal.
+// ─────────────────────────────────────────────────────────────────────────────
+// TRUST — THE PROTOCOL
+//
+// Six cards in a grid, one of which was a link out to a GitHub profile. Two
+// problems with that. The grid made six engineering practices look like six
+// product features, and the outbound link sent the reader off the page at the
+// exact moment the page was making its strongest claim — the section's whole
+// job is to be the last thing that convinces, not a doorway to somewhere else.
+//
+// This is the same six items as a signed-off lab protocol: numbered clauses on
+// a light document ground, each with its own check mark, closed by a control
+// line. It is a form the claim can actually take, rather than a card layout
+// borrowed from a pricing page. There are no external links here at all, by
+// design — the proof is the specificity of the clauses.
+// ─────────────────────────────────────────────────────────────────────────────
 function Trust({ t }) {
   const ref = useRevealRoot([t]);
   const proof = (t.trust && Array.isArray(t.trust.proof)) ? t.trust.proof : [];
-  const liveCount = proof.filter(function (p) { return p.tag === "LIVE"; }).length;
 
   return (
     <section data-section="trust" id="trust" data-enter="slide-right" ref={ref}>
       <div className="shell">
-        <SecHead num="10" eyebrow={t.trust.eyebrow} title={t.trust.title} meta={`${proof.length} · open`} />
+        <SecHead num="10" eyebrow={t.trust.eyebrow} title={t.trust.title} meta={`${proof.length} · protocol`} />
         <p className="lead-line" data-reveal>{t.trust.lead}</p>
 
-        <div className="proof-grid" data-reveal>
-          {proof.map(function renderProof(p, i) {
-            // Quality practices are mostly not "things to open" — only the ones
-            // with a real url (e.g. public CI) render as a link; the rest are
-            // static cards (no ↗, no clickable affordance).
-            const inner = (
-              <>
-                <div className="proof-card-top">
-                  <span className={`proof-tag mono proof-tag--${(p.tag || "").toLowerCase()}`}>{p.tag}</span>
-                  {p.url ? <span className="arrow" aria-hidden="true">↗</span> : null}
-                </div>
-                <div className="proof-card-k">{p.k}</div>
-                <div className="proof-card-v">{p.v}</div>
-              </>
-            );
-            const shared = {
-              key: i,
-              className: `proof-card${p.url ? "" : " proof-card--static"}`,
-              "data-reveal": true,
-              "data-reveal-from": "translateY(18px) scale(.98)",
-              "data-reveal-delay": (i * 0.06).toFixed(2),
-            };
-            return p.url ? (
-              <a {...shared} href={p.url} target="_blank" rel="noopener noreferrer" data-cursor="link" data-cursor-label={`open: ${p.k}`}>
-                {inner}
-              </a>
-            ) : (
-              <div {...shared}>{inner}</div>
-            );
-          })}
-        </div>
-
-        {t.trust.note ? (
-          <div className="proof-foot mono" data-reveal>
-            <span className="proof-foot-dot" aria-hidden="true" />
-            {liveCount ? `${liveCount} live · ` : ""}{t.trust.note}
+        <div className="proto" data-reveal>
+          <div className="proto-head mono">
+            <span className="proto-head-id">QA / PROTOCOL</span>
+            <span className="proto-head-rule" aria-hidden="true" />
+            <span className="proto-head-rev">rev. 2026.1</span>
           </div>
-        ) : null}
+
+          <ol className="proto-list">
+            {proof.map(function renderClause(p, i) {
+              return (
+                <li
+                  className="proto-clause"
+                  key={i}
+                  data-reveal
+                  data-reveal-from="translateY(14px)"
+                  data-reveal-delay={(i * 0.05).toFixed(2)}
+                >
+                  <span className="proto-n mono" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="proto-check" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" width="13" height="13" fill="none"
+                      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 8.5l3.4 3.4L13 5" />
+                    </svg>
+                  </span>
+                  <span className="proto-body">
+                    <span className="proto-k">{p.k}</span>
+                    <span className="proto-v">{p.v}</span>
+                  </span>
+                  <span className={`proto-tag mono proto-tag--${(p.tag || "").toLowerCase()}`}>{p.tag}</span>
+                </li>
+              );
+            })}
+          </ol>
+
+          {t.trust.note ? (
+            <div className="proto-foot mono">
+              <span className="proto-foot-dot" aria-hidden="true" />
+              <span>{t.trust.note}</span>
+              <span className="proto-foot-sig">SM</span>
+            </div>
+          ) : null}
+        </div>
       </div>
     </section>
   );

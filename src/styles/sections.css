@@ -755,7 +755,7 @@ section[data-section="hero"] { padding-block: 0; }
   flex-direction: column;
   gap: 28px;
   box-shadow:
-    0 1px 0 rgba(244,241,234,.04) inset,
+    0 1px 0 rgba(var(--doc-ink-rgb, 244 241 234) / .04) inset,
     0 40px 80px -20px rgba(0,0,0,.5),
     0 0 0 1px rgba(var(--accent-rgb) / 0.1);
 }
@@ -1112,7 +1112,7 @@ section[data-section="hero"] { padding-block: 0; }
 .about-contrib-cell, .about-contrib-legend-cell {
   background: rgba(var(--accent-rgb) / 0.08);
 }
-.about-contrib-cell[data-level="0"], .about-contrib-legend-cell[data-level="0"] { background: rgba(244,241,234,0.04); }
+.about-contrib-cell[data-level="0"], .about-contrib-legend-cell[data-level="0"] { background: rgba(var(--doc-ink-rgb, 244 241 234) / 0.04); }
 .about-contrib-cell[data-level="1"], .about-contrib-legend-cell[data-level="1"] { background: rgba(var(--accent-rgb) / 0.18); }
 .about-contrib-cell[data-level="2"], .about-contrib-legend-cell[data-level="2"] { background: rgba(var(--accent-rgb) / 0.38); }
 .about-contrib-cell[data-level="3"], .about-contrib-legend-cell[data-level="3"] { background: rgba(var(--accent-rgb) / 0.65); }
@@ -1311,8 +1311,8 @@ html[data-perf="low"] .proj-grid > .proj-card { translate: none; }
   content: "";
   position: absolute; inset: 0;
   background:
-    linear-gradient(rgba(244,241,234,.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(244,241,234,.025) 1px, transparent 1px);
+    linear-gradient(rgba(var(--doc-ink-rgb, 244 241 234) / .025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--doc-ink-rgb, 244 241 234) / .025) 1px, transparent 1px);
   background-size: 16px 16px;
   pointer-events: none;
 }
@@ -1328,7 +1328,7 @@ html[data-perf="low"] .proj-grid > .proj-card { translate: none; }
 .proj-screen-dots { display: flex; gap: 4px; }
 .proj-screen-dots i {
   width: 6px; height: 6px; border-radius: 50%;
-  background: rgba(244,241,234,.2);
+  background: rgba(var(--doc-ink-rgb, 244 241 234) / .2);
 }
 .proj-screen-body {
   flex: 1;
@@ -1382,7 +1382,7 @@ html[data-perf="low"] .proj-grid > .proj-card { translate: none; }
   flex: 1;
 }
 .proj-screen-cell {
-  background: rgba(244,241,234,.04);
+  background: rgba(var(--doc-ink-rgb, 244 241 234) / .04);
   border-radius: 2px;
   border: 1px solid var(--line);
 }
@@ -2042,7 +2042,7 @@ html[data-motion-lite] .proj-grid.is-expanded > .proj-card:nth-child(n+5) { anim
   min-height: 340px;          /* reserve height → no CLS on crossfade */
   border: 1px solid var(--line-strong);
   border-radius: 14px;
-  /* Was a near-invisible light film (rgba(244,241,234,.025)) → the panel had no
+  /* Was a near-invisible light film (rgba(var(--doc-ink-rgb, 244 241 234) / .025)) → the panel had no
      real surface, so the --text-dim description sat straight on the textured
      section bg and washed out ("сливается с фоном"). Now a solid warm-dark
      panel so content reads with clear contrast. */
@@ -2112,7 +2112,7 @@ html[data-motion-lite] .proj-grid.is-expanded > .proj-card:nth-child(n+5) { anim
 .svc-io-in {
   color: var(--text-dim);
   border: 1px solid var(--line-strong);
-  background: rgba(244,241,234,.02);
+  background: rgba(var(--doc-ink-rgb, 244 241 234) / .02);
 }
 .svc-io-out {
   color: var(--accent);
@@ -2168,7 +2168,7 @@ html[data-motion-lite] .proj-grid.is-expanded > .proj-card:nth-child(n+5) { anim
   padding: 16px 18px;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: rgba(244,241,234,.015);
+  background: rgba(var(--doc-ink-rgb, 244 241 234) / .015);
   text-decoration: none;
   transition: border-color var(--d-mid), background var(--d-mid), transform var(--d-mid);
 }
@@ -2546,7 +2546,7 @@ html[data-motion-lite] .svc-tab.is-active .svc-tab-mark { clip-path: inset(19% 0
   background: linear-gradient(180deg, rgba(20,24,28,.85), rgba(11,14,17,.94));
   border: 1px solid var(--line-strong);
   box-shadow:
-    0 1px 0 rgba(244,241,234,.05) inset,
+    0 1px 0 rgba(var(--doc-ink-rgb, 244 241 234) / .05) inset,
     0 40px 80px -20px rgba(0,0,0,.6),
     0 0 0 1px rgba(var(--accent-rgb) / 0.12);
 }
@@ -2560,7 +2560,7 @@ html[data-motion-lite] .svc-tab.is-active .svc-tab-mark { clip-path: inset(19% 0
 .proc-terminal-dots i {
   width: 11px; height: 11px;
   border-radius: 50%;
-  background: rgba(244,241,234,.18);
+  background: rgba(var(--doc-ink-rgb, 244 241 234) / .18);
 }
 .proc-terminal-dots i:first-child { background: rgba(var(--accent-rgb) / 0.7); box-shadow: 0 0 8px rgba(var(--accent-rgb) / 0.6); }
 .proc-terminal-title {
@@ -2637,7 +2637,7 @@ html[data-motion-lite] .svc-tab.is-active .svc-tab-mark { clip-path: inset(19% 0
 .proc-stage-progress {
   margin-top: 8px;
   height: 3px;
-  background: rgba(244,241,234,.06);
+  background: rgba(var(--doc-ink-rgb, 244 241 234) / .06);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -2685,8 +2685,8 @@ html[data-motion-lite] .svc-tab.is-active .svc-tab-mark { clip-path: inset(19% 0
   border: 1px solid transparent;
 }
 .proc-stage-pill--queued {
-  background: rgba(244,241,234,.04);
-  border-color: rgba(244,241,234,.12);
+  background: rgba(var(--doc-ink-rgb, 244 241 234) / .04);
+  border-color: rgba(var(--doc-ink-rgb, 244 241 234) / .12);
   color: var(--text-mute);
 }
 .proc-stage-pill--running {
@@ -3184,7 +3184,7 @@ html[data-motion-lite] .builder-chip { animation: none; }
   border: 1px solid var(--line);
   border-radius: 14px;
   overflow: hidden;
-  background: linear-gradient(180deg, rgba(244,241,234,.02), rgba(244,241,234,.005));
+  background: linear-gradient(180deg, rgba(var(--doc-ink-rgb, 244 241 234) / .02), rgba(var(--doc-ink-rgb, 244 241 234) / .005));
 }
 .trust-strip-cell {
   display: flex;
@@ -3248,14 +3248,14 @@ html[data-motion-lite] .builder-chip { animation: none; }
   min-height: 320px;
   border-left: 2px solid rgba(var(--accent-rgb) / 0.35);
   border-radius: 0 14px 14px 0;
-  background: linear-gradient(180deg, rgba(244,241,234,.028), rgba(244,241,234,.005));
+  background: linear-gradient(180deg, rgba(var(--doc-ink-rgb, 244 241 234) / .028), rgba(var(--doc-ink-rgb, 244 241 234) / .005));
   transition: transform .4s var(--ease-out), border-color .4s, box-shadow .4s, background .4s;
 }
 .trust-card:hover {
   transform: translateY(-4px);
   border-left-color: var(--accent);
   box-shadow: 0 18px 40px -16px rgba(0,0,0,0.55), 0 0 0 1px rgba(var(--accent-rgb) / 0.18);
-  background: linear-gradient(180deg, rgba(var(--accent-rgb) / 0.05), rgba(244,241,234,.005));
+  background: linear-gradient(180deg, rgba(var(--accent-rgb) / 0.05), rgba(var(--doc-ink-rgb, 244 241 234) / .005));
 }
 /* Stagger the middle card down so the row reads as composed, not lined-up. */
 .trust-grid > .trust-card:nth-child(2) { transform: translateY(36px); }
@@ -3311,56 +3311,121 @@ html[data-motion-lite] .builder-chip { animation: none; }
 }
 
 /* ── PROOF — verifiable receipt cards (replaces placeholder testimonials) ── */
-.proof-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-.proof-card {
-  display: flex; flex-direction: column; gap: 8px;
-  padding: 20px;
+/* ── TRUST — the protocol ───────────────────────────────────────────────────
+   Replaces the six-card grid (see the note above Trust() in components-2.jsx).
+   Sits on the light plate, so it is drawn as a document: a paper-white sheet
+   inside the section's own ground, ruled clauses, a signed control line. All
+   colour comes from the light-plate tokens declared on the section itself, so
+   nothing here needs to know which act is currently running. */
+.proto {
+  margin-top: clamp(24px, 3vw, 40px);
   border: 1px solid var(--line-strong);
-  border-radius: 14px;
-  background: linear-gradient(180deg, rgba(20, 24, 28, .45), rgba(11, 14, 17, .45));
-  text-decoration: none; color: var(--text);
-  transition: border-color var(--d-fast), transform var(--d-fast), background var(--d-fast);
+  background: #F3F1EC;   /* a shade lighter than the plate — a sheet ON the desk */
+  box-shadow: 0 20px 44px -30px rgba(26, 26, 24, 0.4);
 }
-.proof-card:hover {
-  border-color: rgba(var(--accent-rgb) / 0.5);
-  transform: translateY(-3px);
-  background: linear-gradient(180deg, rgba(var(--accent-rgb) / 0.06), rgba(11, 14, 17, .45));
+.proto-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px clamp(16px, 2vw, 26px);
+  border-bottom: 1px solid var(--line-strong);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-mute);
 }
-.proof-card-top { display: flex; align-items: center; justify-content: space-between; }
-.proof-tag {
-  font-size: 9px; letter-spacing: 0.18em; padding: 3px 8px;
-  border-radius: 999px; border: 1px solid var(--line-strong); color: var(--text-mute);
+.proto-head-id { color: var(--text); }
+.proto-head-rule {
+  flex: 1;
+  height: 1px;
+  /* Dashed, not solid: a solid rule reads as a divider, a dashed one reads as
+     the ruled field of a form — which is the whole conceit of the block. */
+  background-image: repeating-linear-gradient(90deg,
+    rgba(26 26 24 / 0.26) 0 4px, transparent 4px 9px);
 }
-.proof-tag--live { color: var(--accent); border-color: rgba(var(--accent-rgb) / 0.5); }
-.proof-tag--demo { color: var(--accent-2); border-color: rgba(200, 155, 94, .4); }
-.proof-tag--code { color: var(--text-dim); }
-/* Quality-block tags — all accent-tinted so the section reads as one consistent
-   set of proven practices (TESTS · CI · REGRESS · TYPES · OBSERV · REVIEW). */
-.proof-tag--tests, .proof-tag--ci, .proof-tag--regress,
-.proof-tag--types, .proof-tag--observ, .proof-tag--review {
-  color: var(--accent); border-color: rgba(var(--accent-rgb) / 0.35);
+.proto-list { list-style: none; margin: 0; padding: 0; }
+.proto-clause {
+  display: grid;
+  grid-template-columns: 40px 24px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: clamp(10px, 1.4vw, 20px);
+  padding: clamp(15px, 1.8vw, 22px) clamp(16px, 2vw, 26px);
+  border-bottom: 1px solid var(--line);
 }
-/* Static quality cards (no url) — keep a gentle border/bg highlight but drop the
-   lift so they don't imply a clickable link (the ↗ is already omitted). */
-.proof-card--static:hover { transform: none; }
-.proof-card .arrow { color: var(--text-mute); transition: transform var(--d-fast), color var(--d-fast); }
-.proof-card:hover .arrow { color: var(--accent); transform: translate(3px, -3px); }
-.proof-card-k { font-size: 17px; font-weight: 500; margin-top: 4px; }
-.proof-card-v { font-size: 13px; color: var(--text-dim); line-height: 1.45; }
-.proof-foot {
-  display: flex; align-items: center; gap: 8px; margin-top: 22px;
-  font-size: 11px; letter-spacing: 0.06em; color: var(--text-mute);
+.proto-clause:last-child { border-bottom: 0; }
+.proto-n {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--text-mute);
+  padding-top: 3px;
 }
-.proof-foot-dot {
-  width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
-  box-shadow: 0 0 8px var(--accent);
+.proto-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 21px; height: 21px;
+  border: 1px solid rgba(var(--accent-rgb) / 0.5);
+  color: var(--accent);
+  flex: none;
 }
-@media (max-width: 900px) { .proof-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 520px) { .proof-grid { grid-template-columns: 1fr; } }
+.proto-body { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.proto-k {
+  font-size: clamp(15px, 1.25vw, 18px);
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--text);
+}
+.proto-v {
+  font-size: clamp(13px, 0.98vw, 15px);
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+.proto-tag {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  padding: 3px 9px;
+  border: 1px solid rgba(var(--accent-rgb) / 0.4);
+  color: var(--accent);
+  white-space: nowrap;
+  margin-top: 2px;
+}
+.proto-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px clamp(16px, 2vw, 26px);
+  border-top: 1px solid var(--line-strong);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--text-mute);
+}
+.proto-foot-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb) / 0.6);
+  flex: none;
+}
+.proto-foot-sig {
+  margin-left: auto;
+  font-family: var(--f-head);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  color: var(--text);
+}
+
+@media (max-width: 700px) {
+  /* Four columns inside 390px left the clause text ~150px wide. The tag drops
+     below the body and the number/check pair stays as the left margin. */
+  .proto-clause {
+    grid-template-columns: 30px 21px minmax(0, 1fr);
+    gap: 8px 10px;
+    padding: 14px 14px;
+  }
+  .proto-tag { grid-column: 3; justify-self: start; margin-top: 6px; }
+  .proto-head { gap: 10px; padding: 12px 14px; font-size: 9px; letter-spacing: 0.16em; }
+  .proto-foot { padding: 12px 14px; }
+}
 
 /* ── CONTACT ───────────────────────────────────────────────── */
 .contact-layout {
@@ -3496,7 +3561,7 @@ html[data-motion-lite] .builder-chip { animation: none; }
 }
 .ff-range-track-mark {
   width: 1px; height: 14px;
-  background: rgba(244,241,234,0.15);
+  background: rgba(var(--doc-ink-rgb, 244 241 234) / 0.15);
   justify-self: center;
   transform: translateY(0);
   transition: background var(--d-fast), height var(--d-fast);
@@ -3519,8 +3584,8 @@ html[data-motion-lite] .builder-chip { animation: none; }
     90deg,
     var(--accent) 0%,
     var(--accent) calc(var(--val-pct, 25%)),
-    rgba(244,241,234,0.10) calc(var(--val-pct, 25%)),
-    rgba(244,241,234,0.10) 100%
+    rgba(var(--doc-ink-rgb, 244 241 234) / 0.10) calc(var(--val-pct, 25%)),
+    rgba(var(--doc-ink-rgb, 244 241 234) / 0.10) 100%
   );
   border-radius: 999px;
   outline: none;
@@ -3752,7 +3817,7 @@ html[data-motion-lite] .builder-chip { animation: none; }
   border: 1px solid var(--line-strong);
   border-radius: 999px;
   box-shadow:
-    0 1px 0 rgba(244,241,234,.05) inset,
+    0 1px 0 rgba(var(--doc-ink-rgb, 244 241 234) / .05) inset,
     0 14px 36px -8px rgba(0,0,0,.55),
     0 0 0 1px rgba(var(--accent-rgb) / 0.10);
   -webkit-backdrop-filter: blur(14px) saturate(160%);
@@ -3780,7 +3845,7 @@ html[data-motion-lite] .builder-chip { animation: none; }
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: rgba(244,241,234,.18);
+  background: rgba(var(--doc-ink-rgb, 244 241 234) / .18);
   cursor: pointer;
   transition: background var(--d-fast), transform var(--d-fast), width var(--d-fast);
 }
@@ -3860,7 +3925,7 @@ html[data-motion-lite] .builder-chip { animation: none; }
   border: 0;
   padding: 0;
   width: 12px; height: 4px;
-  background: rgba(244,241,234,.18);
+  background: rgba(var(--doc-ink-rgb, 244 241 234) / .18);
   border-radius: 999px;
   cursor: pointer;
   transition: background var(--d-fast), width var(--d-fast);
