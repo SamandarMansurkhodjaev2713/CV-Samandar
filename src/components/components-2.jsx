@@ -61,6 +61,8 @@ function Services({ t }) {
   const ref = useRevealRoot([t]);
   const items = (t.services && Array.isArray(t.services.items)) ? t.services.items : [];
   const projects = (t.projects && Array.isArray(t.projects.items)) ? t.projects.items : [];
+  const deliverables = (t.services && Array.isArray(t.services.deliverables)) ? t.services.deliverables : [];
+  const args = (t.services && Array.isArray(t.services.args)) ? t.services.args : [];
 
   // Desktop: selected tab. Mobile: which accordion row is open (-1 = none).
   const [activeIdx, setActiveIdx] = useState2(0);
@@ -251,6 +253,50 @@ function Services({ t }) {
             </div>
           ) : null}
         </div>
+
+        {/* ── WHAT YOU ARE LEFT HOLDING ─────────────────────────────────
+            The tabs above answer "what can he build". They never answered the
+            question a buyer is actually weighing, which is what arrives at the
+            end and who owns it — the question an agency answers with a slide
+            deck and a login to a system it keeps. Four artifacts, each of them
+            a thing that exists after the invoice. */}
+        {deliverables.length ? (
+          <div className="svc-deliver" data-reveal>
+            <div className="svc-deliver-head mono">
+              <span>{t.services.deliver_label || "What you receive"}</span>
+              <span className="svc-deliver-count">{String(deliverables.length).padStart(2, "0")}</span>
+            </div>
+            <ul className="svc-deliver-list">
+              {deliverables.map((d, i) => (
+                <li className="svc-deliver-item" key={i} data-reveal data-reveal-delay={(i * 0.06).toFixed(2)}>
+                  <span className="mono svc-deliver-n">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="svc-deliver-k">{d.k}</span>
+                  <span className="svc-deliver-v">{d.v}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        {/* ── THE TWO ARGUMENTS ─────────────────────────────────────────
+            Price and speed, kept as two separate panels rather than one
+            "fast and affordable" line. They answer different objections, and
+            collapsing them into a single claim is what makes that claim sound
+            like marketing — each one here names the specific mechanism that
+            makes it true (no chain to pay for; no handoffs to wait on). */}
+        {args.length ? (
+          <div className="svc-args">
+            {args.map((a, i) => (
+              <div className="svc-arg" key={i} data-reveal data-reveal-delay={(i * 0.08).toFixed(2)}>
+                <div className="svc-arg-head">
+                  <span className="svc-arg-k">{a.k}</span>
+                  <span className="mono svc-arg-tag">{a.tag}</span>
+                </div>
+                <p className="svc-arg-v">{a.v}</p>
+              </div>
+            ))}
+          </div>
+        ) : null}
       </div>
     </section>
   );
@@ -610,11 +656,61 @@ function Process({ t }) {
     });
   }, [t]);
 
+  // Four frames over the same nine stages. `take` walks the step list in
+  // order, so each frame's artifacts ARE that frame's steps' own `out` fields
+  // — one source, no second copy to fall out of sync. A frame whose `take`
+  // runs past the end simply gets fewer artifacts rather than throwing, so a
+  // content edit that removes a stage degrades instead of breaking the page.
+  const outLabel = (t.process && t.process.phase_out_label) || "you get";
+  const phases = useMemoFromComponents1(function buildPhases() {
+    const src = (t.process && Array.isArray(t.process.phases)) ? t.process.phases : [];
+    let cursor = 0;
+    return src.map(function (ph) {
+      const take = Math.max(0, ph.take | 0);
+      const slice = t.process.steps.slice(cursor, cursor + take);
+      cursor += take;
+      return { k: ph.k, v: ph.v, arts: slice.map((s) => s.out).filter(Boolean) };
+    });
+  }, [t]);
+
   return (
     <section data-section="process" id="process" data-enter="line-stagger" ref={ref}>
       <div className="shell">
         <SecHead num="07" eyebrow={t.process.eyebrow} title={t.process.title} meta="pipeline.run()" />
         <p className="lead-line" data-reveal>{t.process.lead}</p>
+
+        {/* ── FOUR FRAMES ───────────────────────────────────────────────
+            The nine pipeline stages are still below, and still real — but
+            nine equal lines is a process diagram, and a process diagram tells
+            a client the work is thorough while telling them nothing about the
+            shape of the engagement they are buying. These are the four beats
+            they actually experience, each one naming what it hands over. The
+            artifacts are not a second copy of the content: they are the same
+            `out` fields, grouped, so the two can never drift apart. */}
+        {phases.length ? (
+          <ol className="proc-frames">
+            {phases.map((ph, i) => (
+              <li className="proc-frame" key={i} data-reveal data-reveal-delay={(i * 0.07).toFixed(2)}>
+                <span className="proc-frame-n mono" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+                <div className="proc-frame-body">
+                  <h3 className="proc-frame-k">{ph.k}</h3>
+                  <p className="proc-frame-v">{ph.v}</p>
+                </div>
+                <div className="proc-frame-out">
+                  <span className="mono proc-frame-out-label">{outLabel}</span>
+                  <ul className="proc-frame-arts">
+                    {ph.arts.map((a, k) => (
+                      <li key={k} className="proc-frame-art">
+                        <span className="proc-frame-art-mark" aria-hidden="true">→</span>
+                        <span>{a}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </li>
+            ))}
+          </ol>
+        ) : null}
 
         <div className="proc-terminal card" data-reveal>
           <div className="proc-terminal-head">

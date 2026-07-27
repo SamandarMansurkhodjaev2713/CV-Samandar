@@ -235,8 +235,13 @@ const CONTENT = {
       cta: "Смотреть кейс",
     },
     skills: {
-      eyebrow: "Stack radar",
+      eyebrow: "Stack matrix",
       title: "Технический стек",
+      // Rendered as a band ACROSS the matrix rather than as a sixth row — the
+      // list used to put QA next to Frontend and Backend, which quietly said
+      // "one of the six things I do" about the thing that is meant to be the
+      // differentiator. See Skills() in components-1.jsx.
+      qa_note: "слой поверх всего",
       lead: "Не зоопарк логотипов — сетка инструментов, которыми реально работаю: full-stack, AI и QA-инженерия.",
       groups: [
         { k: "Frontend", slug: "frontend", items: ["TypeScript", "React", "Next.js", "Vite", "Tailwind", "Three.js"] },
@@ -259,6 +264,32 @@ const CONTENT = {
         { k: "MVP / Prototype", v: "От идеи до работающего прототипа за недели", io: "idea → demo" },
         { k: "Internal Tools", v: "CRM, кабинеты, инструменты для команды", io: "team → tool" },
         { k: "Tech Consulting", v: "Архитектура, аудит, стек, тех-стратегия", io: "question → plan", covers: ["Архитектура и ревью решений", "Выбор стека и технический аудит", "Техстратегия и план запуска"] },
+      ],
+      // ── What the client is left holding when the work ends. The section
+      // listed eight things I can BUILD but nothing about what arrives, which
+      // is the question a buyer actually has — and the one an agency answers
+      // with a slide and a login to a system they own.
+      deliver_label: "Что вы получаете на выходе",
+      deliverables: [
+        { k: "Репозиторий", v: "Ваш аккаунт, полная история коммитов, без «исходники за доплату»" },
+        { k: "Прод-деплой", v: "Рабочий домен, окружения, CI на каждый пуш" },
+        { k: "Тесты", v: "Тест-план, чек-листы и E2E-прогон — то, чем я проверял сам" },
+        { k: "Передача", v: "Документация, доступы, разбор архитектуры голосом" },
+      ],
+      // Two arguments, both asked for explicitly. They are separate on purpose:
+      // price and speed are different objections, and merging them into one
+      // "fast and cheap" line makes both sound less credible.
+      args: [
+        {
+          k: "Структура цены",
+          v: "Вы платите инженеру, а не цепочке. В счёте агентства — аккаунт-менеджер, продажник, проектный и наценка студии. Здесь этого нет: одна ставка, один исполнитель, тот же уровень исполнения.",
+          tag: "без агентской наценки",
+        },
+        {
+          k: "Скорость",
+          v: "Дизайн, код и тесты не ждут друг друга — их делает один человек, и AI-инструменты снимают рутину. Лендинг — несколько дней, MVP — 1–2 недели, продукт с бэкендом и AI-слоем — от 1.5 месяцев.",
+          tag: "без передач между подрядчиками",
+        },
       ],
     },
     cv: {
@@ -344,6 +375,18 @@ const CONTENT = {
         { k: "Deploy", v: "CI/CD, мониторинг, алерты", out: "прод + пайплайн релизов" },
         { k: "Support", v: "Стабилизация и развитие после релиза", out: "сопровождение и итерации" },
       ],
+      // ── Four frames, not nine terminal lines. Nine stages listed at equal
+      // weight is a process diagram; it tells a client the work is thorough
+      // and nothing about the shape of the engagement. These group the same
+      // nine (in order — `take` is how many each absorbs) into the four beats
+      // a client actually experiences, and each frame names what it hands over.
+      phases: [
+        { k: "Понять", v: "Что мы строим, для кого и по каким признакам поймём, что готово.", take: 2 },
+        { k: "Спроектировать", v: "Сценарии и интерфейс до того, как написана первая строка продакшн-кода.", take: 2 },
+        { k: "Построить", v: "Типизированный код, AI-слой, тесты на критическом пути.", take: 2 },
+        { k: "Выпустить", v: "Прогон, деплой, мониторинг — и сопровождение после релиза.", take: 3 },
+      ],
+      phase_out_label: "на выходе",
       cli_eyebrow: "live · поток деплоев",
       cli_title: "system.live",
       cli_lead: "Реальные события прод-окружения, обновляются каждые ~20 секунд.",
@@ -750,8 +793,9 @@ const CONTENT = {
       cta: "Open case",
     },
     skills: {
-      eyebrow: "Stack radar",
+      eyebrow: "Stack matrix",
       title: "Technical stack",
+      qa_note: "a layer over everything",
       lead: "Not a logo zoo — the toolkit I actually ship with: full-stack, AI and QA engineering.",
       groups: [
         { k: "Frontend", slug: "frontend", items: ["TypeScript", "React", "Next.js", "Vite", "Tailwind", "Three.js"] },
@@ -774,6 +818,25 @@ const CONTENT = {
         { k: "MVP / Prototype", v: "Idea to working prototype in weeks", io: "idea → demo" },
         { k: "Internal Tools", v: "CRM, portals, team-only software", io: "team → tool" },
         { k: "Tech Consulting", v: "Architecture, audit, stack, strategy", io: "question → plan", covers: ["Architecture & solution review", "Stack choice & technical audit", "Tech strategy & launch plan"] },
+      ],
+      deliver_label: "What you are left holding",
+      deliverables: [
+        { k: "Repository", v: "Your account, full commit history, no \"sources cost extra\"" },
+        { k: "Production", v: "Live domain, environments, CI on every push" },
+        { k: "Tests", v: "Test plan, checklists and an E2E run — the same ones I shipped against" },
+        { k: "Handover", v: "Docs, credentials, and an architecture walkthrough out loud" },
+      ],
+      args: [
+        {
+          k: "Price structure",
+          v: "You pay an engineer, not a chain. An agency invoice carries an account manager, a salesperson, a project manager and the studio's markup. None of that exists here: one rate, one builder, the same standard of work.",
+          tag: "no agency markup",
+        },
+        {
+          k: "Speed",
+          v: "Design, code and tests don't queue behind each other — one person does all three, and AI tooling removes the busywork. A landing in days, an MVP in 1–2 weeks, a product with a backend and an AI layer from ~1.5 months.",
+          tag: "no handoffs between vendors",
+        },
       ],
     },
     cv: {
@@ -859,6 +922,13 @@ const CONTENT = {
         { k: "Deploy", v: "CI/CD, monitoring, alerts", out: "prod + release pipeline" },
         { k: "Support", v: "Post-release stabilization & growth", out: "maintenance & iterations" },
       ],
+      phases: [
+        { k: "Understand", v: "What we're building, for whom, and how we'll know it's done.", take: 2 },
+        { k: "Design", v: "Flows and interface settled before the first line of production code.", take: 2 },
+        { k: "Build", v: "Typed code, the AI layer, tests on the critical path.", take: 2 },
+        { k: "Ship", v: "Test run, deploy, monitoring — and support after release.", take: 3 },
+      ],
+      phase_out_label: "you get",
       cli_eyebrow: "live · deploy stream",
       cli_title: "system.live",
       cli_lead: "Production deploy events, refreshed roughly every 20 seconds.",
@@ -1265,8 +1335,9 @@ const CONTENT = {
       cta: "Keysni ochish",
     },
     skills: {
-      eyebrow: "Stek radari",
+      eyebrow: "Stack matrix",
       title: "Texnik stek",
+      qa_note: "hammasi ustidagi qatlam",
       lead: "Logotiplar to'plami emas — haqiqatan ishlatadigan asboblar: full-stack, AI va QA-muhandislik.",
       groups: [
         { k: "Frontend", slug: "frontend", items: ["TypeScript", "React", "Next.js", "Vite", "Tailwind", "Three.js"] },
@@ -1289,6 +1360,25 @@ const CONTENT = {
         { k: "MVP / Prototip", v: "Goyadan ishlovchi prototipgacha", io: "idea → demo" },
         { k: "Ichki asboblar", v: "CRM, kabinetlar, jamoa uchun", io: "team → tool" },
         { k: "Texnik konsalting", v: "Arxitektura, audit, stek, strategiya", io: "question → plan", covers: ["Arxitektura va yechim ko'rigi", "Stek tanlash va texnik audit", "Texnik strategiya va ishga tushirish rejasi"] },
+      ],
+      deliver_label: "Yakunda nima olasiz",
+      deliverables: [
+        { k: "Repozitoriy", v: "Sizning akkauntingizda, to'liq commit tarixi bilan" },
+        { k: "Prod-deploy", v: "Ishlayotgan domen, muhitlar, har push'da CI" },
+        { k: "Testlar", v: "Test-reja, chek-listlar va E2E o'tkazuv — o'zim tekshirgan holda" },
+        { k: "Topshirish", v: "Hujjatlar, kirishlar va arxitektura bo'yicha jonli tushuntirish" },
+      ],
+      args: [
+        {
+          k: "Narx tuzilishi",
+          v: "Siz zanjirga emas, muhandisga to'laysiz. Agentlik hisobida akkaunt-menejer, sotuvchi, loyiha menejeri va studiya ustamasi bor. Bu yerda ular yo'q: bitta stavka, bitta ijrochi, o'sha darajadagi ish.",
+          tag: "agentlik ustamasisiz",
+        },
+        {
+          k: "Tezlik",
+          v: "Dizayn, kod va testlar bir-birini kutmaydi — uchalasini bitta odam qiladi, AI-vositalar esa rutinani olib tashlaydi. Landing — bir necha kun, MVP — 1–2 hafta, backend va AI-qatlamli mahsulot — ~1.5 oydan.",
+          tag: "pudratchilar orasida uzatishsiz",
+        },
       ],
     },
     cv: {
@@ -1374,6 +1464,13 @@ const CONTENT = {
         { k: "Deploy", v: "CI/CD, monitoring, alertlar", out: "prod + reliz pipeline" },
         { k: "Qo'llab-quvvatlash", v: "Reliz keyingi barqarorlik va o'sish", out: "qo'llab-quvvatlash va iteratsiyalar" },
       ],
+      phases: [
+        { k: "Tushunish", v: "Nima quramiz, kim uchun va tayyorligini qanday bilamiz.", take: 2 },
+        { k: "Loyihalash", v: "Ssenariylar va interfeys — birinchi prod-kod satridan oldin.", take: 2 },
+        { k: "Qurish", v: "Tiplangan kod, AI-qatlam, kritik yo'lda testlar.", take: 2 },
+        { k: "Chiqarish", v: "Test o'tkazuv, deploy, monitoring — va reliz keyingi qo'llab-quvvatlash.", take: 3 },
+      ],
+      phase_out_label: "natijada",
       cli_eyebrow: "live · deploy oqimi",
       cli_title: "system.live",
       cli_lead: "Production muhitining haqiqiy hodisalari, har ~20 soniyada yangilanadi.",

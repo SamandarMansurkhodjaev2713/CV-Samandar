@@ -88,6 +88,8 @@ function Services({
   const ref = useRevealRoot([t]);
   const items = t.services && Array.isArray(t.services.items) ? t.services.items : [];
   const projects = t.projects && Array.isArray(t.projects.items) ? t.projects.items : [];
+  const deliverables = t.services && Array.isArray(t.services.deliverables) ? t.services.deliverables : [];
+  const args = t.services && Array.isArray(t.services.args) ? t.services.args : [];
 
   // Desktop: selected tab. Mobile: which accordion row is open (-1 = none).
   const [activeIdx, setActiveIdx] = useState2(0);
@@ -276,7 +278,42 @@ function Services({
     }, "/", String(i + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("h3", {
       className: "svc-panel-k"
     }, s.k)), renderDetails(s, i));
-  })) : null)));
+  })) : null), deliverables.length ? /*#__PURE__*/React.createElement("div", {
+    className: "svc-deliver",
+    "data-reveal": true
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "svc-deliver-head mono"
+  }, /*#__PURE__*/React.createElement("span", null, t.services.deliver_label || "What you receive"), /*#__PURE__*/React.createElement("span", {
+    className: "svc-deliver-count"
+  }, String(deliverables.length).padStart(2, "0"))), /*#__PURE__*/React.createElement("ul", {
+    className: "svc-deliver-list"
+  }, deliverables.map((d, i) => /*#__PURE__*/React.createElement("li", {
+    className: "svc-deliver-item",
+    key: i,
+    "data-reveal": true,
+    "data-reveal-delay": (i * 0.06).toFixed(2)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mono svc-deliver-n"
+  }, String(i + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("span", {
+    className: "svc-deliver-k"
+  }, d.k), /*#__PURE__*/React.createElement("span", {
+    className: "svc-deliver-v"
+  }, d.v))))) : null, args.length ? /*#__PURE__*/React.createElement("div", {
+    className: "svc-args"
+  }, args.map((a, i) => /*#__PURE__*/React.createElement("div", {
+    className: "svc-arg",
+    key: i,
+    "data-reveal": true,
+    "data-reveal-delay": (i * 0.08).toFixed(2)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "svc-arg-head"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "svc-arg-k"
+  }, a.k), /*#__PURE__*/React.createElement("span", {
+    className: "mono svc-arg-tag"
+  }, a.tag)), /*#__PURE__*/React.createElement("p", {
+    className: "svc-arg-v"
+  }, a.v)))) : null));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -645,6 +682,27 @@ function Process({
       };
     });
   }, [t]);
+
+  // Four frames over the same nine stages. `take` walks the step list in
+  // order, so each frame's artifacts ARE that frame's steps' own `out` fields
+  // — one source, no second copy to fall out of sync. A frame whose `take`
+  // runs past the end simply gets fewer artifacts rather than throwing, so a
+  // content edit that removes a stage degrades instead of breaking the page.
+  const outLabel = t.process && t.process.phase_out_label || "you get";
+  const phases = useMemoFromComponents1(function buildPhases() {
+    const src = t.process && Array.isArray(t.process.phases) ? t.process.phases : [];
+    let cursor = 0;
+    return src.map(function (ph) {
+      const take = Math.max(0, ph.take | 0);
+      const slice = t.process.steps.slice(cursor, cursor + take);
+      cursor += take;
+      return {
+        k: ph.k,
+        v: ph.v,
+        arts: slice.map(s => s.out).filter(Boolean)
+      };
+    });
+  }, [t]);
   return /*#__PURE__*/React.createElement("section", {
     "data-section": "process",
     id: "process",
@@ -660,7 +718,35 @@ function Process({
   }), /*#__PURE__*/React.createElement("p", {
     className: "lead-line",
     "data-reveal": true
-  }, t.process.lead), /*#__PURE__*/React.createElement("div", {
+  }, t.process.lead), phases.length ? /*#__PURE__*/React.createElement("ol", {
+    className: "proc-frames"
+  }, phases.map((ph, i) => /*#__PURE__*/React.createElement("li", {
+    className: "proc-frame",
+    key: i,
+    "data-reveal": true,
+    "data-reveal-delay": (i * 0.07).toFixed(2)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "proc-frame-n mono",
+    "aria-hidden": "true"
+  }, String(i + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("div", {
+    className: "proc-frame-body"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "proc-frame-k"
+  }, ph.k), /*#__PURE__*/React.createElement("p", {
+    className: "proc-frame-v"
+  }, ph.v)), /*#__PURE__*/React.createElement("div", {
+    className: "proc-frame-out"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mono proc-frame-out-label"
+  }, outLabel), /*#__PURE__*/React.createElement("ul", {
+    className: "proc-frame-arts"
+  }, ph.arts.map((a, k) => /*#__PURE__*/React.createElement("li", {
+    key: k,
+    className: "proc-frame-art"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "proc-frame-art-mark",
+    "aria-hidden": "true"
+  }, "\u2192"), /*#__PURE__*/React.createElement("span", null, a)))))))) : null, /*#__PURE__*/React.createElement("div", {
     className: "proc-terminal card",
     "data-reveal": true
   }, /*#__PURE__*/React.createElement("div", {

@@ -1671,153 +1671,265 @@ html[data-motion-lite] .proj-grid.is-expanded > .proj-card:nth-child(n+5) { anim
   .proj-expand { display: flex; }  /* full carousel only after explicit intent */
 }
 
-/* ── SKILLS ────────────────────────────────────────────────── */
-.skills-layout {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: 24px;
+/* ── SKILLS — THE MATRIX ───────────────────────────────────────────────────
+   Five rows of "group name | its tools", plus a QA band above them all.
+   Everything is visible at rest; hover only changes which row is loudest.
+   Replaces the radar dish + tab strip + mobile accordion (see the note above
+   Skills() in components-1.jsx for why). */
+.skx {
+  position: relative;
+  margin-top: clamp(26px, 3.4vw, 44px);
 }
-.skills-tabs {
+
+/* ── The QA band ──────────────────────────────────────────────────────────
+   Full width, above everything, and visually the source of the spine that
+   runs down the rows. It is NOT styled as a sixth row: different ground,
+   different border, its own label. */
+.skx-qa {
+  position: relative;
+  padding: clamp(16px, 2vw, 24px) clamp(16px, 2vw, 26px);
+  border: 1px solid rgba(var(--act-accent-rgb, var(--accent-rgb)) / 0.34);
+  background:
+    linear-gradient(180deg,
+      rgba(var(--act-accent-rgb, var(--accent-rgb)) / 0.07),
+      rgba(var(--act-accent-rgb, var(--accent-rgb)) / 0.02));
+  transition: border-color 1.2s ease, background 1.2s ease;
+}
+.skx-qa-head {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-bottom: 14px;
 }
-.skills-tab {
-  appearance: none;
-  background: transparent;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 18px 20px;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 14px;
-  align-items: center;
-  cursor: pointer;
-  text-align: left;
-  color: var(--text-dim);
-  transition: all var(--d-fast) var(--ease-out);
-}
-.skills-tab:hover, .skills-tab.is-active {
-  background: linear-gradient(180deg, rgba(var(--accent-rgb) / 0.04), transparent);
-  border-color: rgba(var(--accent-rgb) / 0.4);
+.skx-qa-name {
+  font-family: var(--f-head);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  font-size: clamp(19px, 2vw, 27px);
+  line-height: 1;
   color: var(--text);
 }
-.skills-tab.is-active .skills-num { color: var(--accent); }
-.skills-num { font-size: 10px; letter-spacing: 0.14em; color: var(--text-mute); }
-.skills-k {
-  font-family: var(--f-display);
-  font-size: 22px;
-  letter-spacing: -0.02em;
+.skx-qa-note {
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--act-accent, var(--accent));
+  transition: color 1.2s ease;
 }
-.skills-count { font-size: 11px; color: var(--text-mute); }
 
-.skills-panel {
-  position: relative;
-  min-height: 420px;
+/* ── The spine ────────────────────────────────────────────────────────────
+   One hairline dropping out of the QA band and running the full height of the
+   rows below it. This IS the "quality is a layer over all of this" claim —
+   made with a pseudo-element rather than a sentence asking to be believed.
+   It sits on `.skx-rows` (not `.skx`) so it starts exactly at the band's
+   bottom edge and stops at the last row, without arithmetic. */
+.skx-rows { position: relative; }
+.skx-rows::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(180deg,
+    rgba(var(--act-accent-rgb, var(--accent-rgb)) / 0.5),
+    rgba(var(--act-accent-rgb, var(--accent-rgb)) / 0.06));
+  pointer-events: none;
+}
+
+/* ── A row ────────────────────────────────────────────────────────────────
+   Name column narrow and fixed-ish, tools column takes the rest. The tools
+   are the content; the group name is a label for them, so it is the smaller
+   of the two despite being display type. */
+.skx-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.62fr) minmax(0, 3fr);
+  gap: clamp(14px, 2.4vw, 40px);
+  align-items: start;
+  padding: clamp(16px, 1.9vw, 24px) 0 clamp(16px, 1.9vw, 24px) clamp(16px, 2vw, 26px);
+  border-bottom: 1px solid var(--line);
+  outline: none;
+  transition: background .5s var(--ease-out);
+}
+.skx-row:last-child { border-bottom: 0; }
+.skx-row.is-active { background: rgba(var(--act-accent-rgb, var(--accent-rgb)) / 0.035); }
+.skx-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.skx-key {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 6px;
 }
-.skills-panel-head {
-  display: flex; justify-content: space-between; align-items: center;
+.skx-num {
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
   color: var(--text-mute);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--line);
+  transition: color .4s ease;
 }
-.skills-items {
+.skx-row.is-active .skx-num { color: var(--act-accent, var(--accent)); }
+.skx-name {
+  font-family: var(--f-head);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: clamp(17px, 1.55vw, 23px);
+  line-height: 1.02;
+  color: var(--text-dim);
+  transition: color .4s ease;
+}
+.skx-row.is-active .skx-name { color: var(--text); }
+
+/* Tools. Mono, generous tracking, wrapping — a wall of names rather than a
+   row of pills. No borders or chips: 31 bordered chips is a component
+   inventory, 31 tracked words is a stack. */
+.skx-items {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-}
-.skill-item {
+  gap: 6px clamp(12px, 1.5vw, 22px);
   font-family: var(--f-mono);
-  font-size: 13px;
-  padding: 8px 14px;
-  border: 1px solid rgba(var(--accent-rgb) / 0.3);
-  border-radius: 6px;
+  font-size: clamp(12px, 1.02vw, 14.5px);
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+.skx-item { transition: color .4s ease; }
+.skx-row.is-active .skx-item { color: var(--text); }
+.skx-items--qa {
   color: var(--text);
-  background: rgba(var(--accent-rgb) / 0.04);
-  animation: skillIn .55s cubic-bezier(.2,.7,.2,1) backwards;
-  transition: background var(--d-fast), color var(--d-fast), transform var(--d-fast);
-}
-.skill-item:hover {
-  background: rgba(var(--accent-rgb) / 0.18);
-  color: var(--accent);
-  transform: translateY(-1px);
-}
-@keyframes skillIn {
-  from { opacity: 0; transform: translateY(8px) scale(0.94); }
-  to   { opacity: 1; transform: translateY(0)   scale(1); }
-}
-.skills-radar {
-  margin-top: auto;
-  height: 240px;
-  width: 100%;
-  color: var(--accent);
-  align-self: center;
-}
-.skills-radar-ring {
-  transform-origin: center;
-  animation: radarRingPulse 5s ease-in-out infinite;
-}
-@keyframes radarRingPulse {
-  0%, 100% { stroke-opacity: 0.06; transform: scale(1); }
-  50%      { stroke-opacity: 0.20; transform: scale(1.02); }
-}
-@media (max-width: 900px) {
-  .skills-layout { grid-template-columns: 1fr; }
-  .skills-radar { height: 160px; }
+  font-size: clamp(12px, 1.05vw, 15px);
 }
 
-/* ── SKILLS — mobile accordion (≤900px) ──────────────────────────────
-   Tapping a group expands its tools directly under that row, instead of
-   routing to a separate tabs-then-panel layout that requires scrolling
-   back and forth to see what you just tapped. Same visual family as the
-   Services accordion (.svc-acc-*) for consistency. */
-.skills-acc { margin-top: 8px; }
-.skills-acc-row { border-top: 1px solid var(--line); }
-.skills-acc-row:last-child { border-bottom: 1px solid var(--line); }
-.skills-acc-h { margin: 0; }
-.skills-acc-head {
-  display: grid;
-  grid-template-columns: auto 1fr auto auto;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  text-align: left;
-  padding: 18px 4px;
-  background: transparent;
-  border: 0;
-  color: var(--text);
-  cursor: pointer;
-}
-.skills-acc-head .skills-k { font-size: 21px; }
-.skills-acc-head .skills-count { justify-self: end; }
-.skills-acc-chev {
-  font-size: 20px;
-  color: var(--text-mute);
-  transition: color var(--d-mid);
-  min-width: 22px; text-align: center;
-}
-.skills-acc-row.is-open .skills-acc-head .skills-k,
-.skills-acc-row.is-open .skills-acc-head .skills-num,
-.skills-acc-row.is-open .skills-acc-chev { color: var(--accent); }
-.skills-acc-head:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 6px; }
-.skills-acc-body { padding: 2px 4px 22px; }
-.skills-acc-body[hidden] { display: none; }
-.skills-acc-row.is-open .skills-items {
-  animation: skillsAccIn 320ms var(--e-entrance, cubic-bezier(.2,.6,.18,1)) both;
-}
-@keyframes skillsAccIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: none; }
+/* Focus mode: once any row is hovered the others step back, so the eye has
+   somewhere to land without anything actually being hidden. Kept shallow
+   (0.46, not 0.2) — this is emphasis, not a reveal. */
+.skx.is-focused .skx-row:not(.is-active) .skx-name,
+.skx.is-focused .skx-row:not(.is-active) .skx-item { color: var(--text-mute); }
+/* The QA band is deliberately EXEMPT from the focus dimming. An earlier
+   version faded it to 0.72 along with the unfocused rows, which contradicted
+   the one thing the band exists to say: a layer that covers everything does
+   not step back when you look at something it covers. It also collided with
+   the band's own `data-reveal` entrance, which drives inline opacity. */
+
+@media (max-width: 760px) {
+  /* Stacked: the name sits above its own tools. The two-column grid at phone
+     width left the tools column ~150px wide, which wrapped six mono words
+     into six lines each and turned the matrix into a column of ragged
+     paragraphs. */
+  .skx-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding-left: 14px;
+    padding-block: 16px;
+  }
+  .skx-key { flex-direction: row; align-items: baseline; gap: 10px; }
+  .skx-items { font-size: 12.5px; gap: 5px 14px; }
+  .skx-qa { padding: 16px 14px; }
+  /* No hover on touch, so the focus-mode dimming would be a state the reader
+     can never enter or leave. Everything stays at full strength. */
+  .skx.is-focused .skx-row:not(.is-active) .skx-name,
+  .skx.is-focused .skx-row:not(.is-active) .skx-item { color: inherit; }
+
 }
 @media (prefers-reduced-motion: reduce) {
-  .skills-acc-row.is-open .skills-items { animation: none; }
+  .skx-row, .skx-item, .skx-name, .skx-num, .skx-qa { transition: none; }
 }
-html[data-motion-lite] .skills-acc-row.is-open .skills-items { animation: none; }
+
+/* ── SERVICES — deliverables + the two arguments ────────────────────────── */
+
+/* Four artifacts, as a numbered editorial list rather than four cards. Cards
+   would have made them look like four more services; they are not offers, they
+   are what is left after the offer is done. */
+.svc-deliver { margin-top: clamp(38px, 5vw, 64px); }
+.svc-deliver-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line-strong);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+.svc-deliver-count { color: var(--act-accent, var(--accent)); transition: color 1.4s ease; }
+.svc-deliver-list { list-style: none; margin: 0; padding: 0; }
+.svc-deliver-item {
+  display: grid;
+  grid-template-columns: 46px minmax(140px, 0.7fr) minmax(0, 2fr);
+  align-items: baseline;
+  gap: 8px clamp(14px, 2vw, 30px);
+  padding: clamp(14px, 1.7vw, 20px) 0;
+  border-bottom: 1px solid var(--line);
+}
+.svc-deliver-n { font-size: 10.5px; letter-spacing: 0.14em; color: var(--text-mute); }
+.svc-deliver-k {
+  font-family: var(--f-head);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: clamp(15px, 1.35vw, 20px);
+  line-height: 1.05;
+  color: var(--text);
+}
+.svc-deliver-v { color: var(--text-dim); font-size: clamp(14px, 1.02vw, 16px); line-height: 1.5; }
+
+/* Two panels, side by side, equal weight. Equal on purpose: making one of them
+   visually dominant would answer one objection and imply the other is the
+   weaker case. */
+.svc-args {
+  margin-top: clamp(30px, 4vw, 52px);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(16px, 2.2vw, 30px);
+}
+.svc-arg {
+  padding: clamp(20px, 2.4vw, 30px);
+  border: 1px solid var(--line-strong);
+  background: linear-gradient(180deg, rgba(23, 20, 17, 0.5), rgba(13, 12, 10, 0.62));
+}
+.svc-arg-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-bottom: 12px;
+}
+.svc-arg-k {
+  font-family: var(--f-head);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: clamp(17px, 1.6vw, 24px);
+  line-height: 1;
+  color: var(--text);
+}
+.svc-arg-tag {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--act-accent, var(--accent));
+  transition: color 1.4s ease;
+}
+.svc-arg-v {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: clamp(14px, 1.05vw, 16.5px);
+  line-height: 1.62;
+}
+
+@media (max-width: 760px) {
+  .svc-deliver-item {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 4px 12px;
+    padding: 15px 0;
+  }
+  /* The description drops under the name instead of beside it — three columns
+     inside 390px gave the value text a ~120px measure. */
+  .svc-deliver-v { grid-column: 2; }
+  .svc-args { grid-template-columns: 1fr; }
+  .svc-arg { padding: 18px 16px; }
+}
 
 /* ── SERVICES 2.0 — panel switcher / accordion ──────────────────────── */
 .svc {
@@ -2334,6 +2446,97 @@ html[data-motion-lite] .svc-tab.is-active .svc-tab-mark { clip-path: inset(19% 0
 }
 @media (max-width: 1200px) { .proc-steps { grid-template-columns: repeat(3, 1fr); } .proc-rail { display: none; } }
 @media (max-width: 600px) { .proc-steps { grid-template-columns: repeat(2, 1fr); } }
+
+/* ── PROCESS — the four frames ──────────────────────────────────────────────
+   Four full-width bands above the nine-stage terminal. Each is one beat of the
+   engagement: an oversized number, the beat's name and sentence, and the
+   artifacts it hands over pulled out to the right where they can be scanned
+   without reading the prose. */
+.proc-frames {
+  list-style: none;
+  margin: clamp(26px, 3.4vw, 44px) 0 clamp(30px, 4vw, 52px);
+  padding: 0;
+  border-top: 1px solid var(--line-strong);
+}
+.proc-frame {
+  display: grid;
+  grid-template-columns: clamp(56px, 6vw, 96px) minmax(0, 1.35fr) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(14px, 2.4vw, 40px);
+  padding: clamp(20px, 2.6vw, 34px) 0;
+  border-bottom: 1px solid var(--line);
+}
+/* The number is the frame's own index at display scale, aligned to the type
+   below it rather than centred in its column — it reads as a folio mark on a
+   page, which is what it is. */
+.proc-frame-n {
+  font-family: var(--f-head);
+  font-weight: 600;
+  font-size: clamp(30px, 3.6vw, 54px);
+  line-height: 0.82;
+  color: rgba(var(--act-accent-rgb, var(--accent-rgb)) / 0.42);
+  transition: color 1.4s ease;
+  letter-spacing: 0;
+}
+.proc-frame-k {
+  margin: 0 0 8px;
+  font-family: var(--f-head);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: clamp(20px, 2.2vw, 32px);
+  line-height: 1;
+  color: var(--text);
+}
+.proc-frame-v {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: clamp(14px, 1.05vw, 16.5px);
+  line-height: 1.58;
+  max-width: 44ch;
+}
+.proc-frame-out {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: clamp(14px, 1.6vw, 24px);
+  border-left: 1px solid rgba(var(--act-accent-rgb, var(--accent-rgb)) / 0.24);
+  transition: border-color 1.4s ease;
+}
+.proc-frame-out-label {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--act-accent, var(--accent));
+  transition: color 1.4s ease;
+}
+.proc-frame-arts { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.proc-frame-art {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 8px;
+  align-items: baseline;
+  font-size: clamp(13px, 0.96vw, 15px);
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+.proc-frame-art-mark { color: var(--text-mute); font-family: var(--f-mono); font-size: 11px; }
+
+@media (max-width: 860px) {
+  /* Three columns inside a phone left the artifact list a ~110px measure and
+     wrapped every artifact onto three lines. The artifacts drop under the
+     prose and keep their accent rule as a left edge. */
+  .proc-frame {
+    grid-template-columns: clamp(40px, 11vw, 56px) minmax(0, 1fr);
+    gap: 10px 14px;
+    padding: 18px 0;
+  }
+  .proc-frame-out {
+    grid-column: 2;
+    margin-top: 12px;
+    padding-left: 12px;
+  }
+  .proc-frame-v { max-width: none; }
+}
 
 /* ── PROCESS — terminal pipeline ─────────────────────────────── */
 .proc-terminal {

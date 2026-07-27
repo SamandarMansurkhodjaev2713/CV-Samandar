@@ -1291,379 +1291,109 @@ function Projects({ t }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SKILLS — SVG radar with mouse-parallax 3D tilt. v47 restores the radar
-// design users liked, and adds a wrapping CSS perspective container with
-// pointer-driven `rotateX/rotateY` so the radar feels physically present —
-// like a tilted display dish on the page — without the constellation's
-// rendering complexity.
+// SKILLS — THE MATRIX
 //
-// Depth illusion is from three stacked SVG layers in the wrap:
-//   • back layer — deeper rings, dimmer, translated -36px in Z
-//   • mid layer  — main radar (rings + scan triangle + spokes)
-//   • front layer — pulse halo around the active endpoint, +28px in Z
+// What was here: an SVG radar dish with six spokes, a sweeping scan triangle,
+// three stacked depth layers and a cursor-driven parallax loop, wired to a tab
+// strip on desktop and an accordion on mobile. About 350 lines, one rAF loop
+// running whenever the section existed, and — the actual problem — it showed
+// you SIX TOOLS AT A TIME. A stack is a claim about breadth; a widget that
+// reveals it one sixth at a time is arguing against its own content, and it
+// spent a radar's worth of machinery to do it. Radar sweeps are also the single
+// most over-used "technical" ornament on developer portfolios.
 //
-// Interaction:
-//   • hover over a spoke endpoint → activate that tab (synchronised)
-//   • hover over the wrap → 3D tilt follows the cursor
-//   • leave → tilt smoothly returns to neutral
+// This shows all thirty-one tools at once, as type. No tabs, no accordion, no
+// panel to route through: the whole stack is one wall you read in a glance.
+// Hovering a row is the entire interaction — that row comes forward, the rest
+// recede — which is a reading aid, not a gate.
+//
+// QA IS NOT THE SIXTH GROUP. It was listed as a peer of Frontend and Backend,
+// which quietly said "one of the six things I do". The positioning it should
+// carry is that quality is a layer over all the others, so it is drawn as one:
+// a full-width band across the top of the matrix, with an accent spine running
+// down the left of every row beneath it. Same data, correct claim.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SKILLS_RADAR_RADIUS = 110;
-const SKILLS_TWEEN_MS = 620;
-const SKILLS_SCAN_PERIOD_S = 4.5;
-// Parallax shift in CSS pixels. Pure 2D translate — no 3D perspective so the
-// SVG content cannot leak outside its container (v47 had a CSS `perspective`
-// + `translateZ(-60px)` back layer that visually projected below the panel
-// onto the bg-fx grid). Keeping the shift tight (8px max) preserves the
-// "responsive to cursor" feel without spill.
-const SKILLS_PARALLAX_MAX_PX = 8;
-const SKILLS_PARALLAX_LERP = 0.10;
-const SKILLS_VIEW_SIZE = 320;
-
-function SkillsRadar({ groups, active, onActivate }) {
-  const total = groups.length;
-  const R = SKILLS_RADAR_RADIUS;
-
-  const endpoints = useMemo(function buildEndpoints() {
-    return groups.map(function buildEndpoint(g, i) {
-      const a = (i / total) * Math.PI * 2 - Math.PI / 2;
-      const r = R * (0.55 + Math.min(0.45, g.items.length / 10));
-      return { x: Math.cos(a) * r, y: Math.sin(a) * r };
-    });
-  }, [groups, total]);
-
-  // Smooth animated active endpoint (tween on tab change).
-  const [currentEnd, setCurrentEnd] = useState(function initEnd() {
-    return endpoints[active] || { x: 0, y: 0 };
-  });
-  const fromRef = useRef(currentEnd);
-  const startedAtRef = useRef(0);
-  useEffect(function tweenEndpoint() {
-    if (!endpoints[active]) return undefined;
-    fromRef.current = { x: currentEnd.x, y: currentEnd.y };
-    startedAtRef.current = performance.now();
-    let raf = 0;
-    function step(now) {
-      const tt = Math.min(1, (now - startedAtRef.current) / SKILLS_TWEEN_MS);
-      const eased = 1 - Math.pow(1 - tt, 3);
-      const target = endpoints[active];
-      setCurrentEnd({
-        x: fromRef.current.x + (target.x - fromRef.current.x) * eased,
-        y: fromRef.current.y + (target.y - fromRef.current.y) * eased,
-      });
-      if (tt < 1) raf = requestAnimationFrame(step);
-    }
-    raf = requestAnimationFrame(step);
-    return function () { cancelAnimationFrame(raf); };
-    // currentEnd intentionally omitted — we want one tween per active change,
-    // not a re-tween every interpolated frame.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, endpoints]);
-
-  // Scan-line angle in real time.
-  const [scanAngle, setScanAngle] = useState(-90);
-  useEffect(function rotateScan() {
-    let raf = 0;
-    function tick(now) {
-      const t = (now / 1000) % SKILLS_SCAN_PERIOD_S;
-      setScanAngle((t / SKILLS_SCAN_PERIOD_S) * 360 - 90);
-      raf = requestAnimationFrame(tick);
-    }
-    raf = requestAnimationFrame(tick);
-    return function () { cancelAnimationFrame(raf); };
-  }, []);
-
-  const half = SKILLS_VIEW_SIZE / 2;
+function SkillsRow({ group, index, active, onEnter }) {
   return (
-    <svg
-      className="skills-radar-svg"
-      viewBox={`-${half} -${half} ${SKILLS_VIEW_SIZE} ${SKILLS_VIEW_SIZE}`}
-      aria-hidden="true"
+    <div
+      className={`skx-row${active ? " is-active" : ""}`}
+      style={{ "--row-i": index }}
+      data-reveal
+      data-reveal-from="translateY(20px)"
+      data-reveal-delay={(index * 0.05).toFixed(2)}
+      onMouseEnter={onEnter}
+      onFocus={onEnter}
+      tabIndex={0}
     >
-      <defs>
-        <linearGradient id="skills-scan-grad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="160" y2="0">
-          <stop offset="0%" stopColor="currentColor" stopOpacity="0" />
-          <stop offset="55%" stopColor="currentColor" stopOpacity="0.10" />
-          <stop offset="100%" stopColor="currentColor" stopOpacity="0.55" />
-        </linearGradient>
-        <radialGradient id="skills-core-glow" cx="0" cy="0" r="60" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="currentColor" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-
-      {/* Central glow disc — adds depth + warmth. */}
-      <circle r="60" fill="url(#skills-core-glow)" />
-
-      {/* Concentric pulsing rings. */}
-      {[0.4, 0.7, 1].map(function renderRing(s, i) {
-        return (
-          <circle
-            key={i}
-            r={R * s}
-            fill="none"
-            stroke="currentColor"
-            strokeOpacity=".10"
-            className="skills-radar-ring"
-            style={{ animationDelay: `${i * 0.8}s` }}
-          />
-        );
-      })}
-
-      {/* Cross-hairs. */}
-      <line x1="-160" y1="0" x2="160" y2="0" stroke="currentColor" strokeOpacity=".06" />
-      <line x1="0" y1="-160" x2="0" y2="160" stroke="currentColor" strokeOpacity=".06" />
-
-      {/* Coverage polygon — links every group's endpoint into one shape, so
-          the radar reads as an actual stack "footprint" at a glance instead
-          of a single pointer on an otherwise-empty dial. Static + dim; the
-          active spoke below still carries all the emphasis. */}
-      <polygon
-        points={endpoints.map(function toPt(e) { return `${e.x.toFixed(1)},${e.y.toFixed(1)}`; }).join(" ")}
-        fill="currentColor"
-        fillOpacity="0.045"
-        stroke="currentColor"
-        strokeOpacity="0.16"
-        strokeWidth="1"
-        strokeLinejoin="round"
-      />
-
-      {/* Rotating scan triangle. */}
-      <g transform={`rotate(${scanAngle.toFixed(2)})`}>
-        <polygon points="0,0 160,-22 160,22" fill="url(#skills-scan-grad)" />
-        <line x1="0" y1="0" x2="160" y2="0" stroke="currentColor" strokeOpacity=".5" strokeWidth="1" />
-      </g>
-
-      {/* Inactive spokes (clickable for tab activation). */}
-      {groups.map(function renderSpoke(g, i) {
-        if (i === active) return null;
-        const e = endpoints[i];
-        return (
-          <g key={i} className="skills-radar-spoke" onClick={function () { if (onActivate) onActivate(i); }}>
-            <line x1="0" y1="0" x2={e.x} y2={e.y} stroke="currentColor" strokeOpacity="0.10" />
-            <circle cx={e.x} cy={e.y} r="5.5" fill="transparent" stroke="currentColor" strokeOpacity="0.45" />
-            <circle cx={e.x} cy={e.y} r="3" fill="currentColor" opacity="0.55" />
-            <text
-              x={e.x}
-              y={e.y - 14}
-              textAnchor="middle"
-              fontSize="10"
-              fontFamily="var(--f-mono)"
-              fill="currentColor"
-              opacity="0.55"
-            >
-              {g.k}
-            </text>
-          </g>
-        );
-      })}
-
-      {/* Active spoke — pulsing endpoint with halo. */}
-      <line x1="0" y1="0" x2={currentEnd.x} y2={currentEnd.y} stroke="currentColor" strokeOpacity="0.9" strokeWidth="1.5" />
-      <circle cx={currentEnd.x} cy={currentEnd.y} r="14" fill="none" stroke="currentColor" strokeOpacity="0.18">
-        <animate attributeName="r" values="10;18;10" dur="2.2s" repeatCount="indefinite" />
-        <animate attributeName="stroke-opacity" values="0.32;0.04;0.32" dur="2.2s" repeatCount="indefinite" />
-      </circle>
-      <circle cx={currentEnd.x} cy={currentEnd.y} r="6.5" fill="currentColor">
-        <animate attributeName="r" values="6.5;9;6.5" dur="1.6s" repeatCount="indefinite" />
-      </circle>
-      <text
-        x={currentEnd.x}
-        y={currentEnd.y - 16}
-        textAnchor="middle"
-        fontSize="11"
-        fontFamily="var(--f-mono)"
-        fill="currentColor"
-        opacity="1"
-      >
-        {groups[active].k}
-      </text>
-
-      {/* Centre node. */}
-      <circle r="3" fill="currentColor" />
-    </svg>
+      <div className="skx-key">
+        <span className="mono skx-num">/{String(index + 1).padStart(2, "0")}</span>
+        <span className="skx-name">{group.k}</span>
+      </div>
+      <div className="skx-items">
+        {group.items.map((it, i) => (
+          <span key={i} className="skx-item" style={{ "--item-i": i }}>{it}</span>
+        ))}
+      </div>
+    </div>
   );
 }
 
 function Skills({ t }) {
   const ref = useRevealRoot([t]);
-  // Desktop: which tab is active (always a valid index, tabs don't "close").
-  // Mobile: which accordion row is open (-1 = none) — tapping a group should
-  // expand its tools inline instead of routing through a separate panel the
-  // user has to scroll to find, which was the actual mobile complaint.
-  const [active, setActive] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  const stageRef = useRef(null);
-  const parallaxRef = useRef({ targetX: 0, targetY: 0, currentX: 0, currentY: 0 });
-  const rafRef = useRef(0);
+  // Which row is under the pointer. -1 (nothing) is the resting state and is
+  // deliberately reachable: with no row active every row reads at full
+  // strength, so the section's default is "all of it", not "one of it".
+  const [active, setActive] = useState(-1);
 
-  useEffect(function watchLayout() {
-    if (typeof window.matchMedia !== "function") return undefined;
-    const mq = window.matchMedia("(max-width: 900px)");
-    const apply = function () { setIsMobile(mq.matches); };
-    apply();
-    if (mq.addEventListener) mq.addEventListener("change", apply);
-    else if (mq.addListener) mq.addListener(apply);
-    return function () {
-      if (mq.removeEventListener) mq.removeEventListener("change", apply);
-      else if (mq.removeListener) mq.removeListener(apply);
-    };
-  }, []);
-
-  // 2D parallax — translates the SVG by up to SKILLS_PARALLAX_MAX_PX along
-  // each axis as the cursor moves. No CSS perspective, no translateZ — so the
-  // SVG content cannot project outside the .skills-radar-stage box. Lerped
-  // for silky motion, snaps back to centre on pointer leave.
-  useEffect(function startParallaxLoop() {
-    function tick() {
-      const s = parallaxRef.current;
-      s.currentX = s.currentX + (s.targetX - s.currentX) * SKILLS_PARALLAX_LERP;
-      s.currentY = s.currentY + (s.targetY - s.currentY) * SKILLS_PARALLAX_LERP;
-      const el = stageRef.current;
-      if (el) {
-        el.style.setProperty("--px", `${s.currentX.toFixed(2)}px`);
-        el.style.setProperty("--py", `${s.currentY.toFixed(2)}px`);
-      }
-      rafRef.current = requestAnimationFrame(tick);
-    }
-    rafRef.current = requestAnimationFrame(tick);
-    return function () { cancelAnimationFrame(rafRef.current); };
-  }, []);
-
-  function onPointerMove(e) {
-    const el = stageRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const nx = ((e.clientX - r.left) / r.width) * 2 - 1;  // -1..1
-    const ny = ((e.clientY - r.top) / r.height) * 2 - 1;  // -1..1
-    parallaxRef.current.targetX = nx * SKILLS_PARALLAX_MAX_PX;
-    parallaxRef.current.targetY = ny * SKILLS_PARALLAX_MAX_PX;
-  }
-  function onPointerLeave() {
-    parallaxRef.current.targetX = 0;
-    parallaxRef.current.targetY = 0;
-  }
+  const groups = t.skills.groups || [];
+  // The QA group is pulled out by slug rather than by position: content.js
+  // orders it last today, but that is a content decision and this is a
+  // structural one — reordering the list must not silently demote QA back to
+  // being a peer row.
+  const qa = groups.find((g) => g.slug === "qa");
+  const rows = groups.filter((g) => g.slug !== "qa");
 
   return (
     <section data-section="skills" id="skills" data-enter="converge" ref={ref}>
       <div className="shell">
-        <SecHead num="04" eyebrow={t.skills.eyebrow} title={t.skills.title} meta="stack.radar.v3" />
+        <SecHead num="04" eyebrow={t.skills.eyebrow} title={t.skills.title} meta="stack.matrix" />
         <p className="lead-line" data-reveal>{t.skills.lead}</p>
 
-        {isMobile ? (
-          /* Mobile: tapping a group expands its tools INLINE, right under
-             that row — the old layout put tabs above and the tools panel
-             below, both scrolled far apart, which is what read as
-             inconvenient. One shared radar sits below, highlighting
-             whichever group is currently open (falls back to the first). */
-          <div className="skills-acc">
-            {t.skills.groups.map(function renderAccRow(g, i) {
-              const isOpen = active === i;
-              return (
-                <div key={i} className={`skills-acc-row ${isOpen ? "is-open" : ""}`}>
-                  <h3 className="skills-acc-h">
-                    <button
-                      type="button"
-                      className="skills-acc-head"
-                      aria-expanded={isOpen}
-                      aria-controls={`skills-acc-body-${i}`}
-                      id={`skills-acc-head-${i}`}
-                      onClick={function () { setActive(isOpen ? -1 : i); }}
-                    >
-                      <span className="mono skills-num">/{String(i + 1).padStart(2, "0")}</span>
-                      <span className="skills-k">{g.k}</span>
-                      <span className="mono skills-count">{g.items.length}</span>
-                      <span className="skills-acc-chev" aria-hidden="true">{isOpen ? "−" : "+"}</span>
-                    </button>
-                  </h3>
-                  <div
-                    className="skills-acc-body"
-                    id={`skills-acc-body-${i}`}
-                    role="region"
-                    aria-labelledby={`skills-acc-head-${i}`}
-                    hidden={!isOpen}
-                  >
-                    <div className="skills-items">
-                      {g.items.map(function renderItem(it, k) {
-                        return (
-                          <span key={k} className="skill-item" style={{ animationDelay: `${k * 50}ms` }}>{it}</span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+        <div
+          className={`skx${active >= 0 ? " is-focused" : ""}`}
+          onMouseLeave={() => setActive(-1)}
+        >
+          {qa ? (
+            <div className="skx-qa" data-reveal data-reveal-from="translateY(16px)">
+              <div className="skx-qa-head">
+                <span className="skx-qa-name">{qa.k}</span>
+                <span className="mono skx-qa-note">{t.skills.qa_note || "across everything"}</span>
+              </div>
+              <div className="skx-items skx-items--qa">
+                {qa.items.map((it, i) => (
+                  <span key={i} className="skx-item" style={{ "--item-i": i }}>{it}</span>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
-            <div
-              ref={stageRef}
-              className="skills-radar-stage"
-              onMouseMove={onPointerMove}
-              onMouseLeave={onPointerLeave}
-              data-cursor="target"
-              data-cursor-label="◎ радар"
-            >
-              <SkillsRadar groups={t.skills.groups} active={Math.max(0, active)} onActivate={setActive} />
-              <div className="skills-radar-hint mono" aria-hidden="true">tap a group above</div>
-            </div>
+          {/* The spine — a single accent hairline dropping out of the QA band
+              and running the full height of the rows below it. This is the
+              whole "layer over everything" claim, made with one pseudo-element
+              instead of a paragraph asking the reader to believe it. */}
+          <div className="skx-rows">
+            {rows.map((g, i) => (
+              <SkillsRow
+                key={g.slug || i}
+                group={g}
+                index={i}
+                active={active === i}
+                onEnter={() => setActive(i)}
+              />
+            ))}
           </div>
-        ) : (
-          <div className="skills-layout">
-            <div className="skills-tabs" role="tablist" aria-label="stack">
-              {t.skills.groups.map(function renderTab(g, i) {
-                return (
-                  <button
-                    key={i}
-                    role="tab"
-                    aria-selected={active === i}
-                    className={`skills-tab ${active === i ? "is-active" : ""}`}
-                    onMouseEnter={function () { setActive(i); }}
-                    onFocus={function () { setActive(i); }}
-                    onClick={function () { setActive(i); }}
-                  >
-                    <span className="mono skills-num">/{String(i + 1).padStart(2, "0")}</span>
-                    <span className="skills-k">{g.k}</span>
-                    <span className="mono skills-count">{g.items.length}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="skills-panel card" data-reveal>
-              <div className="skills-panel-head">
-                {/* An explicit ASCII `slug` avoids mangling Cyrillic/Uzbek group
-                    names: \W in a plain (non-unicode) JS regex only recognizes
-                    ASCII word chars, so a fully-Cyrillic label like "Качество"
-                    collapsed the ENTIRE string to a single "-" (`/stack/-`).
-                    Falls back to the old derivation for any group missing it. */}
-                <span className="mono">{`/stack/${t.skills.groups[Math.max(0, active)].slug || t.skills.groups[Math.max(0, active)].k.toLowerCase().replace(/\W+/g, "-")}`}</span>
-                <span className="chip"><span className="chip-dot" />ready</span>
-              </div>
-              <div className="skills-items">
-                {t.skills.groups[Math.max(0, active)].items.map(function renderItem(it, i) {
-                  return (
-                    <span key={i} className="skill-item" style={{ animationDelay: `${i * 50}ms` }}>{it}</span>
-                  );
-                })}
-              </div>
-
-              {/* Contained radar stage — clip-path-safe (overflow: hidden in CSS)
-                  so the SVG can never spill into the page grid. Cursor moves the
-                  SVG by a few pixels in 2D — gives a tactile feel without
-                  introducing 3D transforms that would project content downward. */}
-              <div
-                ref={stageRef}
-                className="skills-radar-stage"
-                onMouseMove={onPointerMove}
-                onMouseLeave={onPointerLeave}
-                data-cursor="target"
-                data-cursor-label="◎ радар"
-              >
-                <SkillsRadar groups={t.skills.groups} active={Math.max(0, active)} onActivate={setActive} />
-                <div className="skills-radar-hint mono" aria-hidden="true">hover · radar</div>
-              </div>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </section>
   );

@@ -340,7 +340,7 @@
    so the live `--pin-p` transform on the <section> is never clobbered.
    Non-pinned sections animate the <section> directly.
    NOTE: `converge` is a section-level fade+lift ONLY — it deliberately does
-   NOT animate child .sec-head/.skills-panel, which are already reveal-bound
+   NOT animate child .sec-head, which is already reveal-bound
    ([data-reveal]) and would fight motion.js's inline styles.
    ════════════════════════════════════════════════════════════ */
 :root {
