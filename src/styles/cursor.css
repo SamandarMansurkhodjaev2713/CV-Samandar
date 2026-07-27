@@ -432,6 +432,19 @@ section[data-enter="assemble"].sec-in { animation: secAssemble .9s var(--sec-eas
   to   { opacity: 1; transform: none; }
 }
 
+/* 08b faq — transcript: the section settles vertically, as a sheet of set type
+   coming to rest, while the individual turns arrive on their own staggered
+   `data-reveal` delays. Split out from `assemble` (which the builder uses)
+   because the two were the only sections on the page sharing an entrance, and
+   a transcript and a machine assembling itself should not move the same way.
+   scaleY only, no translate: the horizontal edge stays put, which is what
+   makes it read as paper settling rather than as a card flying in. */
+section[data-enter="transcript"].sec-in { animation: secTranscript .95s var(--sec-ease) both; }
+@keyframes secTranscript {
+  from { opacity: 0; transform: scaleY(.985) translateY(14px); transform-origin: 50% 0; }
+  to   { opacity: 1; transform: none; }
+}
+
 /* 09 trust — slide-from-right (mirror of services; pinned → .shell). */
 .pin-host > section[data-enter="slide-right"].sec-in > .shell { animation: secSlideRight var(--sec-dur) var(--sec-ease) both; }
 @keyframes secSlideRight {

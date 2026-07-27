@@ -1171,49 +1171,55 @@ function Interlude({ data, index }) {
 // browsing Signal owns). First question starts open so the interaction pattern
 // is visible without requiring a click.
 // ─────────────────────────────────────────────────────────────────────────────
-function FaqRow({ item, index, open, onToggle }) {
-  return (
-    <div className={`faq-row${open ? " is-open" : ""}`}>
-      <button
-        type="button"
-        className="faq-row-head"
-        aria-expanded={open}
-        aria-controls={`faq-a-${index}`}
-        onClick={() => onToggle(index)}
-      >
-        <span className="faq-row-num mono">{String(index + 1).padStart(2, "0")}</span>
-        <span className="faq-row-q">{item.q}</span>
-        <span className="faq-row-icon" aria-hidden="true">
-          <span className="faq-row-icon-h" />
-          <span className="faq-row-icon-v" />
-        </span>
-      </button>
-      <div className="faq-row-detail" id={`faq-a-${index}`}>
-        <div className="faq-row-detail-inner">
-          <p className="faq-row-a">{item.a}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
+// ─────────────────────────────────────────────────────────────────────────────
+// FAQ — THE TRANSCRIPT
+//
+// Was an accordion: seven questions, one open, six collapsed behind a plus
+// sign. Two things wrong with that here. An accordion is a filing system — it
+// is right when a reader wants ONE answer out of many and knows which — and
+// these seven are the pre-sales conversation, which is read straight through
+// by someone deciding whether to write at all. Collapsing it made the reader
+// click six times to have a conversation they were already having.
+//
+// So it is a transcript. Speaker in the margin, turn in the column, every word
+// on the page at once. Seven exchanges is 1100 characters — about a screen and
+// a half, and the last thing read before the contact form, which is exactly
+// where a transcript of "here is how this actually works" belongs.
+//
+// No interaction at all. That is the point, not an omission: nothing here is
+// worth a click, and adding one would only slow down the reading it exists for.
+// ─────────────────────────────────────────────────────────────────────────────
 function Faq({ t }) {
   const ref = useRevealRoot([t]);
-  const [openIndex, setOpenIndex] = useState2(0);
   const items = (t.faq && Array.isArray(t.faq.items)) ? t.faq.items : [];
-
-  function handleToggle(i) {
-    setOpenIndex((prev) => (prev === i ? -1 : i));
-  }
+  const you = (t.faq && t.faq.speaker_you) || "you";
 
   return (
-    <section data-section="faq" id="faq" data-enter="assemble" ref={ref}>
+    <section data-section="faq" id="faq" data-enter="transcript" ref={ref}>
       <div className="shell">
-        <SecHead num="09" eyebrow={t.faq.eyebrow} title={t.faq.title} meta={`${items.length} · Q&A`} />
+        <SecHead num="09" eyebrow={t.faq.eyebrow} title={t.faq.title} meta={`${items.length} · transcript`} />
         <p className="lead-line" data-reveal>{t.faq.lead}</p>
-        <div className="faq-list" data-reveal>
-          {items.map(function renderFaq(item, i) {
-            return <FaqRow key={i} item={item} index={i} open={openIndex === i} onToggle={handleToggle} />;
+
+        <div className="dlg">
+          {items.map(function renderExchange(item, i) {
+            return (
+              <div
+                className="dlg-turn"
+                key={i}
+                data-reveal
+                data-reveal-from="translateY(16px)"
+                data-reveal-delay={(Math.min(i, 4) * 0.05).toFixed(2)}
+              >
+                <p className="dlg-line dlg-line--q">
+                  <span className="dlg-who mono">{you}</span>
+                  <span className="dlg-text">{item.q}</span>
+                </p>
+                <p className="dlg-line dlg-line--a">
+                  <span className="dlg-who mono dlg-who--me">SM</span>
+                  <span className="dlg-text">{item.a}</span>
+                </p>
+              </div>
+            );
           })}
         </div>
       </div>
@@ -1599,13 +1605,22 @@ function Contact({ t, links }) {
                 {(t.contact.form && t.contact.form.copied) || "Заявка скопирована — вставь в чат Telegram"}
               </div>
             ) : null}
+            {/* Telegram leads, the form's own submit follows. The hierarchy
+                used to be the other way round, which described the wrong
+                reality: the Telegram button already carries everything typed
+                above it (openTelegram builds the brief from these same
+                fields), Telegram is where the reply actually happens, and it
+                is the channel this audience uses. The form is the input, not
+                the destination — so the button that opens the conversation is
+                the primary one and the one that posts a form is the fallback. */}
             <div className="contact-actions">
-              <button type="submit" className={`btn btn-primary contact-submit ${sent ? "is-sent" : ""}`} disabled={sent || sending}>
+              <button type="button" className="btn btn-primary contact-tg" data-magnetic onClick={function () { if (formRef.current) openTelegram(formRef.current); }}>
+                <span>✈ {(t.contact.form && t.contact.form.telegram) || "В Telegram"}</span>
+                <span className="arrow">→</span>
+              </button>
+              <button type="submit" className={`btn btn-ghost contact-submit ${sent ? "is-sent" : ""}`} disabled={sent || sending}>
                 <span>{sending ? (t.contact.form.sending || "Отправка…") : sent ? t.contact.form.sent : t.contact.form.submit}</span>
                 <span className="arrow">{sent ? "✓" : "→"}</span>
-              </button>
-              <button type="button" className="btn btn-ghost contact-tg" onClick={function () { if (formRef.current) openTelegram(formRef.current); }}>
-                <span>✈ {(t.contact.form && t.contact.form.telegram) || "В Telegram"}</span>
               </button>
             </div>
           </form>
@@ -1651,6 +1666,30 @@ function Contact({ t, links }) {
               </div>
             </div>
           </aside>
+        </div>
+
+        {/* ── THE RING ──────────────────────────────────────────────────
+            The page opens on the name at full viewport width and closes on
+            the same name, small, set the same way — condensed caps, letters
+            spaced flush across their line. Not decoration: a long scroll needs
+            an ending that says "that was the whole thing", and the strongest
+            available signal that the reader has come all the way round is the
+            first thing they saw, returned at a whisper.
+
+            The link goes back to #hero rather than scrolling to 0, so it
+            reuses the same in-page navigation (and the same cinema transition)
+            as every other jump on the site. */}
+        <div className="ring" data-reveal>
+          <a className="ring-mark" href="#hero" data-cursor="link" data-cursor-label={t.contact.ring_back || "back to the top"}>
+            <span className="ring-name" aria-hidden="true">
+              {"SAMANDAR".split("").map((ch, i) => <span className="ring-l" key={i}>{ch}</span>)}
+            </span>
+            <span className="a11y-only">{t.contact.ring_back || "back to the top"}</span>
+          </a>
+          <div className="ring-foot mono">
+            <span className="ring-note">{t.contact.ring_note || ""}</span>
+            <span className="ring-back">{t.contact.ring_back || "back to the top"} ↑</span>
+          </div>
         </div>
       </div>
     </section>

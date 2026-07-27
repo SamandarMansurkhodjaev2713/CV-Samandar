@@ -1352,53 +1352,34 @@ function Interlude({
 // browsing Signal owns). First question starts open so the interaction pattern
 // is visible without requiring a click.
 // ─────────────────────────────────────────────────────────────────────────────
-function FaqRow({
-  item,
-  index,
-  open,
-  onToggle
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    className: `faq-row${open ? " is-open" : ""}`
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "faq-row-head",
-    "aria-expanded": open,
-    "aria-controls": `faq-a-${index}`,
-    onClick: () => onToggle(index)
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "faq-row-num mono"
-  }, String(index + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("span", {
-    className: "faq-row-q"
-  }, item.q), /*#__PURE__*/React.createElement("span", {
-    className: "faq-row-icon",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "faq-row-icon-h"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "faq-row-icon-v"
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "faq-row-detail",
-    id: `faq-a-${index}`
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "faq-row-detail-inner"
-  }, /*#__PURE__*/React.createElement("p", {
-    className: "faq-row-a"
-  }, item.a))));
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// FAQ — THE TRANSCRIPT
+//
+// Was an accordion: seven questions, one open, six collapsed behind a plus
+// sign. Two things wrong with that here. An accordion is a filing system — it
+// is right when a reader wants ONE answer out of many and knows which — and
+// these seven are the pre-sales conversation, which is read straight through
+// by someone deciding whether to write at all. Collapsing it made the reader
+// click six times to have a conversation they were already having.
+//
+// So it is a transcript. Speaker in the margin, turn in the column, every word
+// on the page at once. Seven exchanges is 1100 characters — about a screen and
+// a half, and the last thing read before the contact form, which is exactly
+// where a transcript of "here is how this actually works" belongs.
+//
+// No interaction at all. That is the point, not an omission: nothing here is
+// worth a click, and adding one would only slow down the reading it exists for.
+// ─────────────────────────────────────────────────────────────────────────────
 function Faq({
   t
 }) {
   const ref = useRevealRoot([t]);
-  const [openIndex, setOpenIndex] = useState2(0);
   const items = t.faq && Array.isArray(t.faq.items) ? t.faq.items : [];
-  function handleToggle(i) {
-    setOpenIndex(prev => prev === i ? -1 : i);
-  }
+  const you = t.faq && t.faq.speaker_you || "you";
   return /*#__PURE__*/React.createElement("section", {
     "data-section": "faq",
     id: "faq",
-    "data-enter": "assemble",
+    "data-enter": "transcript",
     ref: ref
   }, /*#__PURE__*/React.createElement("div", {
     className: "shell"
@@ -1406,21 +1387,32 @@ function Faq({
     num: "09",
     eyebrow: t.faq.eyebrow,
     title: t.faq.title,
-    meta: `${items.length} · Q&A`
+    meta: `${items.length} · transcript`
   }), /*#__PURE__*/React.createElement("p", {
     className: "lead-line",
     "data-reveal": true
   }, t.faq.lead), /*#__PURE__*/React.createElement("div", {
-    className: "faq-list",
-    "data-reveal": true
-  }, items.map(function renderFaq(item, i) {
-    return /*#__PURE__*/React.createElement(FaqRow, {
+    className: "dlg"
+  }, items.map(function renderExchange(item, i) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "dlg-turn",
       key: i,
-      item: item,
-      index: i,
-      open: openIndex === i,
-      onToggle: handleToggle
-    });
+      "data-reveal": true,
+      "data-reveal-from": "translateY(16px)",
+      "data-reveal-delay": (Math.min(i, 4) * 0.05).toFixed(2)
+    }, /*#__PURE__*/React.createElement("p", {
+      className: "dlg-line dlg-line--q"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "dlg-who mono"
+    }, you), /*#__PURE__*/React.createElement("span", {
+      className: "dlg-text"
+    }, item.q)), /*#__PURE__*/React.createElement("p", {
+      className: "dlg-line dlg-line--a"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "dlg-who mono dlg-who--me"
+    }, "SM"), /*#__PURE__*/React.createElement("span", {
+      className: "dlg-text"
+    }, item.a)));
   }))));
 }
 
@@ -1873,18 +1865,21 @@ function Contact({
   }, t.contact.form && t.contact.form.copied || "Заявка скопирована — вставь в чат Telegram") : null, /*#__PURE__*/React.createElement("div", {
     className: "contact-actions"
   }, /*#__PURE__*/React.createElement("button", {
-    type: "submit",
-    className: `btn btn-primary contact-submit ${sent ? "is-sent" : ""}`,
-    disabled: sent || sending
-  }, /*#__PURE__*/React.createElement("span", null, sending ? t.contact.form.sending || "Отправка…" : sent ? t.contact.form.sent : t.contact.form.submit), /*#__PURE__*/React.createElement("span", {
-    className: "arrow"
-  }, sent ? "✓" : "→")), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "btn btn-ghost contact-tg",
+    className: "btn btn-primary contact-tg",
+    "data-magnetic": true,
     onClick: function () {
       if (formRef.current) openTelegram(formRef.current);
     }
-  }, /*#__PURE__*/React.createElement("span", null, "\u2708 ", t.contact.form && t.contact.form.telegram || "В Telegram")))), /*#__PURE__*/React.createElement("aside", {
+  }, /*#__PURE__*/React.createElement("span", null, "\u2708 ", t.contact.form && t.contact.form.telegram || "В Telegram"), /*#__PURE__*/React.createElement("span", {
+    className: "arrow"
+  }, "\u2192")), /*#__PURE__*/React.createElement("button", {
+    type: "submit",
+    className: `btn btn-ghost contact-submit ${sent ? "is-sent" : ""}`,
+    disabled: sent || sending
+  }, /*#__PURE__*/React.createElement("span", null, sending ? t.contact.form.sending || "Отправка…" : sent ? t.contact.form.sent : t.contact.form.submit), /*#__PURE__*/React.createElement("span", {
+    className: "arrow"
+  }, sent ? "✓" : "→")))), /*#__PURE__*/React.createElement("aside", {
     className: "contact-side",
     "data-reveal": true
   }, /*#__PURE__*/React.createElement("div", {
@@ -1924,7 +1919,29 @@ function Contact({
     className: "signal-pulse"
   }, /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null)), /*#__PURE__*/React.createElement("div", {
     className: "signal-meta mono"
-  }, /*#__PURE__*/React.createElement("div", null, "UTC+5 \xB7 Tashkent"), /*#__PURE__*/React.createElement("div", null, "response < 24h"), /*#__PURE__*/React.createElement("div", null, "EN \xB7 RU \xB7 UZ")))))));
+  }, /*#__PURE__*/React.createElement("div", null, "UTC+5 \xB7 Tashkent"), /*#__PURE__*/React.createElement("div", null, "response < 24h"), /*#__PURE__*/React.createElement("div", null, "EN \xB7 RU \xB7 UZ"))))), /*#__PURE__*/React.createElement("div", {
+    className: "ring",
+    "data-reveal": true
+  }, /*#__PURE__*/React.createElement("a", {
+    className: "ring-mark",
+    href: "#hero",
+    "data-cursor": "link",
+    "data-cursor-label": t.contact.ring_back || "back to the top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ring-name",
+    "aria-hidden": "true"
+  }, "SAMANDAR".split("").map((ch, i) => /*#__PURE__*/React.createElement("span", {
+    className: "ring-l",
+    key: i
+  }, ch))), /*#__PURE__*/React.createElement("span", {
+    className: "a11y-only"
+  }, t.contact.ring_back || "back to the top")), /*#__PURE__*/React.createElement("div", {
+    className: "ring-foot mono"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ring-note"
+  }, t.contact.ring_note || ""), /*#__PURE__*/React.createElement("span", {
+    className: "ring-back"
+  }, t.contact.ring_back || "back to the top", " \u2191")))));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -493,6 +493,9 @@ const CONTENT = {
       eyebrow: "FAQ",
       title: "Частые вопросы",
       lead: "Коротко — то, что обычно спрашивают до старта.",
+      // Rendered as a transcript, not an accordion — see Faq() in
+      // components-2.jsx. "SM" is the signature, not a translated word.
+      speaker_you: "вы",
       items: [
         {
           q: "Сколько стоит проект?",
@@ -541,6 +544,10 @@ const CONTENT = {
     contact: {
       eyebrow: "Deploy request",
       title: "Запустим проект",
+      // Closes the ring: the page opens on the name at full width and ends on
+      // the same name, small, as a signature. See the finale block in Contact().
+      ring_back: "в начало",
+      ring_note: "страница закончилась там же, где началась",
       lead: "Опишите задачу — отвечу с архитектурным черновиком и оценкой за 24 часа.",
       form: {
         name: "Имя",
@@ -1035,6 +1042,7 @@ const CONTENT = {
       eyebrow: "FAQ",
       title: "Frequent questions",
       lead: "Short version — what people usually ask before we start.",
+      speaker_you: "you",
       items: [
         {
           q: "How much does a project cost?",
@@ -1083,6 +1091,8 @@ const CONTENT = {
     contact: {
       eyebrow: "Deploy request",
       title: "Let's ship something",
+      ring_back: "back to the top",
+      ring_note: "the page ends where it started",
       lead: "Describe the task — I'll come back with an architecture sketch and estimate within 24 hours.",
       form: {
         name: "Name",
@@ -1577,6 +1587,7 @@ const CONTENT = {
       eyebrow: "FAQ",
       title: "Tez-tez so'raladigan savollar",
       lead: "Qisqacha — boshlashdan oldin odatda so'raladigan savollar.",
+      speaker_you: "siz",
       items: [
         {
           q: "Loyiha qancha turadi?",
@@ -1625,6 +1636,8 @@ const CONTENT = {
     contact: {
       eyebrow: "Deploy so'rovi",
       title: "Loyihani ishga tushiramiz",
+      ring_back: "boshiga",
+      ring_note: "sahifa qayerdan boshlangan bo‘lsa, o‘sha yerda tugadi",
       lead: "Vazifani tasvirlang — 24 soat ichida arxitektura eskizi va baho bilan qaytaman.",
       form: {
         name: "Ism",

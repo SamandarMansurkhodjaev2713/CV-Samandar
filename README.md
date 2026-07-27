@@ -26,7 +26,9 @@ thing deploys as static files to GitHub Pages.
 | **Colour dramaturgy** | The page ground and the atmospheric accent evolve act by act — cool at the start, warm through the work, cool again in the engineering blocks, warmest at contact. Brand tokens stay fixed, so the primary action never changes colour. |
 | **Living imagery** | One shared WebGL context follows the pointer between project cards: the illustration ripples under the hand and swells with scroll velocity. Degrades to a sharp still image where WebGL is unavailable. |
 | **Frame governor** | Quality tiers come from the frames the device *actually delivers*, not from `navigator.hardwareConcurrency`. Effects are shed in a defined order when the budget is tight. |
-| **Nine section signatures** | Each act announces itself in its own language: a radar sweep, a CRT power-on, modules snapping into a rack, a document passing under a scanner bar. |
+| **A typographic masthead** | The hero is the name, set edge to edge in condensed caps, letters rising out of a mask on their own beats and leaning on separate depth planes. No 3D character, no second WebGL context, no CDN runtime to wait on. |
+| **Eleven distinct entrances** | Every section arrives in its own language — a curtain, a develop, a converge, a transcript settling like set type. No two share an animation. |
+| **Live telemetry, not decoration** | The activity strip is the real GitHub public-events feed. There is no synthetic fallback: when the fetch fails the strip disappears rather than inventing a graph. |
 | **12 product case studies** | Every closed project has a full in-site case page with a hand-authored architecture diagram, an evidence section and an honest-limits block — RU / EN / UZ. |
 | **Honest by construction** | Every number on the site is traceable to a public repository; private work states its own boundaries. |
 
@@ -37,7 +39,6 @@ thing deploys as static files to GitHub Pages.
 - Vanilla HTML / CSS / JavaScript
 - React 18 (vendored production build) + ahead-of-time JSX compilation
 - Three.js — background field and image shaders
-- Spline — the hero robot
 - GitHub Actions → GitHub Pages
 
 ---
@@ -67,11 +68,10 @@ number into their asset URLs.
 index.html              entry point, script order, intro curtain
 build.js                JSX compiler + landing generator
 src/
-  engine/               perf · acts · motion · img-fx · bg-fx · sound · intro · scene-cinema
+  engine/               perf · acts · motion · glide · gh · img-fx · bg-fx · sound · intro · scene-cinema
   components/           React source (.jsx) and compiled output (.js)
   content/content.js    all copy, RU / EN / UZ
   projects/             landing data, renderer and styles
-  robot/                Spline runtime wrapper
   styles/               design tokens and section styles
 projects/<slug>/        generated case-study pages — do not edit by hand
 docs/DESIGN-SYSTEM.md   engine map, motion grammar, conventions

@@ -2738,101 +2738,71 @@ html[data-motion-lite] .svc-tab.is-active .svc-tab-mark { clip-path: inset(19% 0
   .proc-terminal-head, .proc-terminal-foot { padding: 12px 14px; }
 }
 
-/* ── FAQ — accordion, single-open, click/tap only ──────────────────────
-   Deliberately NOT the Signal row engine (oversized ghost numeral + hover-
-   preview) — that's Signal's own editorial-browsing signature. This is a
-   plain utilitarian Q&A list: small numbered label, a plus→minus icon that
-   rotates, and the same proven grid-template-rows 0fr→1fr expand technique
-   (verified working this session for Signal — real auto-height, no
-   max-height guessing/jumps). */
-.faq-list {
-  margin-top: 28px;
-  display: flex;
-  flex-direction: column;
-  border-top: 1px solid var(--line);
-}
-.faq-row { border-bottom: 1px solid var(--line); }
-.faq-row-head {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 100%;
-  margin: 0;
-  padding: clamp(18px, 2.2vw, 24px) 4px;
-  background: transparent;
-  border: 0;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-  font: inherit;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  column-gap: clamp(14px, 2vw, 24px);
-}
-.faq-row-num {
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  color: var(--text-mute);
-  transition: color .3s var(--ease-out);
-}
-.faq-row.is-open .faq-row-num { color: var(--accent); }
-.faq-row-q {
-  font-family: var(--f-display);
-  font-weight: 600;
-  font-size: clamp(17px, 2.2vw, 21px);
-  line-height: 1.35;
-  color: var(--text);
-  letter-spacing: -0.01em;
-  transition: color .3s var(--ease-out);
-}
-@media (hover: hover) and (pointer: fine) {
-  .faq-row-head:hover .faq-row-q { color: var(--accent); }
-}
-.faq-row-icon {
-  position: relative;
-  width: 24px; height: 24px;
-  flex: none;
-  border-radius: 50%;
-  border: 1px solid var(--line-strong);
-  transition: border-color .3s var(--ease-out), background-color .3s var(--ease-out);
-}
-.faq-row-icon-h, .faq-row-icon-v {
-  position: absolute;
-  top: 50%; left: 50%;
-  background: var(--text-dim);
-  transition: transform .35s var(--e-entrance, cubic-bezier(.2,.6,.18,1)), background-color .3s var(--ease-out);
-}
-.faq-row-icon-h { width: 10px; height: 1.5px; transform: translate(-50%, -50%); }
-.faq-row-icon-v { width: 1.5px; height: 10px; transform: translate(-50%, -50%); }
-.faq-row.is-open .faq-row-icon { border-color: var(--accent); background-color: rgba(var(--accent-rgb) / 0.12); }
-.faq-row.is-open .faq-row-icon-h,
-.faq-row.is-open .faq-row-icon-v { background: var(--accent); }
-.faq-row.is-open .faq-row-icon-v { transform: translate(-50%, -50%) rotate(90deg); }
+/* ── FAQ — the transcript ───────────────────────────────────────────────────
+   Speaker in the margin, turn in the column, nothing collapsed. Replaces the
+   single-open accordion (see the note above Faq() in components-2.jsx).
 
-.faq-row-detail {
+   The two speakers are told apart by WEIGHT AND POSITION ONLY — no bubbles, no
+   alternating alignment, no avatars. A chat-app pastiche would have been the
+   obvious move and it would have made a real answer about payment terms look
+   like a mock-up of a support widget. This reads as a printed interview. */
+.dlg {
+  margin-top: clamp(24px, 3vw, 40px);
+  border-top: 1px solid var(--line-strong);
+}
+.dlg-turn {
+  padding: clamp(20px, 2.4vw, 32px) 0;
+  border-bottom: 1px solid var(--line);
+}
+.dlg-line {
   display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows .5s var(--e-entrance, cubic-bezier(.2,.6,.18,1));
+  grid-template-columns: clamp(52px, 6vw, 84px) minmax(0, 1fr);
+  gap: clamp(12px, 1.6vw, 26px);
+  margin: 0;
+  align-items: baseline;
 }
-.faq-row.is-open .faq-row-detail { grid-template-rows: 1fr; }
-.faq-row-detail-inner { overflow: hidden; }
-.faq-row-a {
-  padding: 0 4px clamp(18px, 2.2vw, 24px) calc(4px + 1.4em + clamp(14px, 2vw, 24px));
-  max-width: 62ch;
+.dlg-line--a { margin-top: 12px; }
+.dlg-who {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  padding-top: 4px;
+}
+/* The answer's speaker mark is the one that carries the accent — it is the
+   voice the page is selling, and it is the only place in the section where
+   colour appears. */
+.dlg-who--me { color: var(--act-accent, var(--accent)); transition: color 1.4s ease; }
+.dlg-text { min-width: 0; }
+/* The question is the display voice, the answer is the body voice. Same
+   hierarchy a printed interview uses: the question is a heading, the answer is
+   the text — so the reader can skim the questions alone and stop at the one
+   that is theirs, which is the only thing the accordion was ever doing for
+   them, done without a click. */
+.dlg-line--q .dlg-text {
+  font-family: var(--f-head);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: clamp(17px, 1.7vw, 25px);
+  line-height: 1.08;
+  color: var(--text);
+}
+.dlg-line--a .dlg-text {
+  font-size: clamp(14px, 1.06vw, 16.5px);
+  line-height: 1.62;
   color: var(--text-dim);
-  font-size: 15px;
-  line-height: 1.65;
+  max-width: 64ch;
 }
+
 @media (max-width: 640px) {
-  .faq-row-a { padding-left: 4px; }
-  .faq-row-q { font-size: 17px; }
+  /* The speaker mark moves above its turn instead of beside it: a 52px margin
+     column inside 390px left the answer text a 47-character measure, and the
+     questions — display type — wrapped mid-word. */
+  .dlg-line { grid-template-columns: 1fr; gap: 6px; }
+  .dlg-who { padding-top: 0; }
+  .dlg-turn { padding: 18px 0; }
+  .dlg-line--a { margin-top: 14px; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .faq-row-detail, .faq-row-icon-h, .faq-row-icon-v, .faq-row-num, .faq-row-q, .faq-row-icon { transition: none; }
-}
-html[data-motion-lite] .faq-row-detail,
-html[data-motion-lite] .faq-row-icon-h,
-html[data-motion-lite] .faq-row-icon-v { transition: none; }
 
 /* ── PROJECT BUILDER — "Живой конструктор проекта" (v2) ─────────────────
    Signature interactive. Grid-areas layout: choices → stage → readout → cta,
@@ -4297,4 +4267,68 @@ html[data-motion-lite] .builder-chip { animation: none; }
   .mobile-dock-label > span:last-child { display: none; }
   .mobile-dock-label { max-width: 30px; }
   .mobile-dock-cta { padding-inline: 12px; font-size: 10px; }
+}
+
+/* ── THE RING — the page's closing signature ────────────────────────────────
+   The same masthead gesture as the hero, at a whisper: condensed caps spread
+   flush across the column with `space-between`, exactly like `.hn-line`. That
+   repetition IS the effect — the reader recognises the shape before they read
+   the word, which is what makes the page feel closed rather than merely over. */
+.ring {
+  margin-top: clamp(48px, 7vw, 96px);
+  padding-top: clamp(22px, 2.6vw, 34px);
+  border-top: 1px solid rgba(var(--act-accent-rgb, var(--accent-rgb)) / 0.24);
+  transition: border-color 1.4s ease;
+}
+.ring-mark {
+  display: block;
+  text-decoration: none;
+  color: var(--text-dim);
+  transition: color .6s var(--ease-out);
+}
+.ring-mark:hover { color: var(--text); }
+.ring-mark:focus-visible { outline: 2px solid var(--accent); outline-offset: 6px; }
+.ring-name {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--f-head);
+  font-weight: 600;
+  text-transform: uppercase;
+  /* Sized to the CONTENT column, not the viewport — the hero's version is
+     full-bleed and this one is not, which is the difference between an opening
+     statement and a signature. */
+  /* 46px floor, not 30: the em-bounded box means the signature is always
+     5.6em wide, so at 30px it was a 162px mark adrift in a 350px column —
+     quiet past the point of reading as deliberate. 46px fills 258 of 350. */
+  font-size: clamp(46px, 6.4vw, 96px);
+  line-height: 0.86;
+  letter-spacing: 0;
+  /* THE WIDTH IS IN EM, AND THAT IS THE WHOLE TRICK. `space-between` spreads
+     the letters across whatever box it is given, so a box sized by the column
+     (1271px) and a font sized by the viewport (92px) produced 120px gaps —
+     1.35em of tracking, which reads as a dotted rule, not a word. Measured:
+     the eight glyphs occupy 4.64em, so a box of 5.6em leaves 0.96em to split
+     across seven gaps ≈ 0.137em each. Being an em value it holds at every
+     viewport with no second breakpoint to keep in sync, and it is deliberately
+     looser than the hero's 0.024em — a spaced signature, not a small masthead. */
+  max-width: 5.6em;
+  margin-right: auto;
+}
+.ring-l { display: block; }
+.ring-foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  margin-top: clamp(10px, 1.4vw, 18px);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+.ring-back { color: var(--act-accent, var(--accent)); transition: color 1.4s ease; }
+@media (max-width: 600px) {
+  .ring { margin-top: 40px; }
+  .ring-foot { font-size: 9.5px; letter-spacing: 0.12em; }
 }
