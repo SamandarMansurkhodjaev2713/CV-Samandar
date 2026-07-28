@@ -1779,7 +1779,7 @@ const PROJECT_ADDITIONS = [
   {
     slug: "car-superapp",
     name: "CAR Superapp",
-    status: "BUILD",
+    status: "DISCOVERY",
     url: "projects/car-superapp/",
     github: null,
     stack: ["Next.js", "NestJS", "PostgreSQL", "Prisma", "Redis", "PWA"],
@@ -1787,23 +1787,23 @@ const PROJECT_ADDITIONS = [
       ru: {
         tag: "AUTO SERVICE · OPERATIONS",
         problem: "Автосервису сложно держать заказы, филиалы, согласования, медиа, оплату и клиентский статус в одном надёжном процессе.",
-        solution: "Multi-tenant PWA для СТО Узбекистана с branch-scoped RLS, модульным монолитом и проверяемыми интеграционными границами.",
-        role: "Product Architect + Full-stack + QA",
-        outcome: "production foundation · RLS · CI · BUILD",
+        solution: "Проработанная discovery- и architecture-фаза multi-tenant PWA для СТО: карта ролей, границы модулей, модель данных и проверяемый план реализации.",
+        role: "Product Discovery + Architecture + QA Planning",
+        outcome: "discovery · architecture · implementation plan",
       },
       en: {
         tag: "AUTO SERVICE · OPERATIONS",
         problem: "Auto workshops struggle to keep orders, branches, approvals, media, payments and customer status in one reliable flow.",
-        solution: "A multi-tenant PWA for Uzbekistan workshops with branch-scoped RLS, a modular monolith and verifiable integration boundaries.",
-        role: "Product Architect + Full-stack + QA",
-        outcome: "production foundation · RLS · CI · BUILD",
+        solution: "A documented discovery and architecture phase for a multi-tenant workshop PWA: roles, module boundaries, data model and a verifiable implementation plan.",
+        role: "Product Discovery + Architecture + QA Planning",
+        outcome: "discovery · architecture · implementation plan",
       },
       uz: {
         tag: "AUTO SERVICE · OPERATIONS",
         problem: "Avtoservis buyurtma, filial, tasdiq, media, to‘lov va mijoz holatini bitta ishonchli jarayonda ushlashda qiynaladi.",
-        solution: "O‘zbekiston STОlari uchun branch-scoped RLS, modulli monolit va tekshiriladigan integratsiya chegaralariga ega multi-tenant PWA.",
-        role: "Product Architect + Full-stack + QA",
-        outcome: "production foundation · RLS · CI · BUILD",
+        solution: "O‘zbekiston STОlari uchun multi-tenant PWA’ning hujjatlashtirilgan discovery va arxitektura bosqichi: rollar, modul chegaralari, ma’lumot modeli va tekshiriladigan amalga oshirish rejasi.",
+        role: "Product Discovery + Architecture + QA Planning",
+        outcome: "discovery · architecture · implementation plan",
       },
     },
   },
@@ -1930,55 +1930,120 @@ const PROJECT_ADDITIONS = [
       },
     },
   },
+  {
+    slug: "vacation-control",
+    name: "Vacation Control Agent",
+    status: "BUILD",
+    url: "projects/vacation-control/",
+    github: null,
+    stack: ["Python", "aiogram", "SQLite", "openpyxl", "python-docx", "pytest"],
+    i18n: {
+      ru: {
+        tag: "HR OPS · DOCUMENT AUTOMATION",
+        problem: "Ручной отпускной процесс распадается между Excel-графиком, подготовкой приказа, последовательными подтверждениями и контролем незакрытых случаев.",
+        solution: "Telegram-агент ведёт один контролируемый workflow: читает график, формирует документ, хранит state, запрашивает подтверждения по порядку и защищает от повторной отправки.",
+        role: "Product Engineering + Automation + QA",
+        outcome: "72 теста · persistent state · dedupe/retry",
+      },
+      en: {
+        tag: "HR OPS · DOCUMENT AUTOMATION",
+        problem: "A manual leave process fragments across an Excel schedule, order preparation, sequential confirmations and unresolved-case tracking.",
+        solution: "A Telegram agent owns one controlled workflow: reads the schedule, creates the document, persists state, requests confirmations in order and prevents duplicate sends.",
+        role: "Product Engineering + Automation + QA",
+        outcome: "72 tests · persistent state · dedupe/retry",
+      },
+      uz: {
+        tag: "HR OPS · DOCUMENT AUTOMATION",
+        problem: "Qo‘lda boshqariladigan ta’til jarayoni Excel jadvali, buyruq tayyorlash, ketma-ket tasdiqlar va yopilmagan holatlar nazorati orasida tarqaladi.",
+        solution: "Telegram-agent bitta boshqariladigan workflow’ni olib boradi: jadvalni o‘qiydi, hujjat yaratadi, state’ni saqlaydi, tasdiqlarni tartib bilan so‘raydi va takroriy yuborishni to‘xtatadi.",
+        role: "Product Engineering + Automation + QA",
+        outcome: "72 test · persistent state · dedupe/retry",
+      },
+    },
+  },
+  {
+    slug: "b24-sales-analyst",
+    name: "B24 Sales Analyst",
+    status: "BUILD",
+    url: "projects/b24-sales-analyst/",
+    github: null,
+    stack: ["Python", "Bitrix24 API", "SQLite", "Telegram", "SQL", "pytest"],
+    i18n: {
+      ru: {
+        tag: "CRM ANALYTICS · DECISION SUPPORT",
+        problem: "CRM-отчёт теряет доверие, когда цифры считает языковая модель, а сверить итог с источником невозможно.",
+        solution: "Read-only агент синхронизирует сделки, считает метрики детерминированным SQL, сверяет их с CRM и отдаёт LLM только объяснение уже рассчитанных данных.",
+        role: "Backend + Data Engineering + QA",
+        outcome: "80 тестов · deterministic metrics · CRM verification",
+      },
+      en: {
+        tag: "CRM ANALYTICS · DECISION SUPPORT",
+        problem: "A CRM report loses trust when a language model calculates the numbers and the result cannot be reconciled with the source.",
+        solution: "A read-only agent syncs deals, computes metrics with deterministic SQL, reconciles them with the CRM and lets the LLM explain only pre-calculated data.",
+        role: "Backend + Data Engineering + QA",
+        outcome: "80 tests · deterministic metrics · CRM verification",
+      },
+      uz: {
+        tag: "CRM ANALYTICS · DECISION SUPPORT",
+        problem: "Raqamlarni til modeli hisoblasa va natijani manba bilan solishtirib bo‘lmasa, CRM hisoboti ishonchni yo‘qotadi.",
+        solution: "Read-only agent bitimlarni sinxronlaydi, metrikalarni deterministik SQL bilan hisoblaydi, CRM bilan tekshiradi va LLM’ga faqat tayyor raqamlarni izohlashni beradi.",
+        role: "Backend + Data Engineering + QA",
+        outcome: "80 test · deterministic metrics · CRM verification",
+      },
+    },
+  },
+  {
+    slug: "chat-app",
+    name: "ChAT — Offline-first Messenger",
+    status: "PROTOTYPE",
+    url: "projects/chat-app/",
+    github: "https://github.com/SamandarMansurkhodjaev2713/ChAT-app",
+    stack: ["React Native", "Expo", "TypeScript", "Firebase", "SQLite", "Jest"],
+    i18n: {
+      ru: {
+        tag: "MOBILE · OFFLINE-FIRST · SECURITY",
+        problem: "Мобильный чат становится ненадёжным при нестабильной сети: сообщения дублируются, теряются, а правила доступа сложно доказать.",
+        solution: "Offline-first мессенджер с SQLite outbox, idempotency, retry, server-side OTP и тестируемыми Firebase security rules.",
+        role: "Mobile Architecture + Full-stack + QA",
+        outcome: "234 automated checks · offline outbox · security rules",
+      },
+      en: {
+        tag: "MOBILE · OFFLINE-FIRST · SECURITY",
+        problem: "A mobile chat becomes unreliable on unstable networks: messages duplicate or disappear, while access rules are hard to prove.",
+        solution: "An offline-first messenger with a SQLite outbox, idempotency, retries, server-side OTP and testable Firebase security rules.",
+        role: "Mobile Architecture + Full-stack + QA",
+        outcome: "234 automated checks · offline outbox · security rules",
+      },
+      uz: {
+        tag: "MOBILE · OFFLINE-FIRST · SECURITY",
+        problem: "Beqaror tarmoqda mobil chat ishonchsiz bo‘lib qoladi: xabarlar takrorlanadi yoki yo‘qoladi, kirish qoidalarini esa isbotlash qiyin.",
+        solution: "SQLite outbox, idempotency, retry, server-side OTP va test qilinadigan Firebase security rules bilan offline-first messenjer.",
+        role: "Mobile Architecture + Full-stack + QA",
+        outcome: "234 automated checks · offline outbox · security rules",
+      },
+    },
+  },
 ];
 
-const PROJECT_ORDER = [
-  "Klawis — Legal AI Assistant",
-  "CoupleOS / Softly",
-  "GrowthOps AI",
-  "TTYL Platform",
-  "Доступное Право",
-  "AI Classroom Intelligence",
-  "CAR Superapp",
-  "Helion",
-  "Stones",
-  "Sentinel Edge",
-  "CardioGuard",
-  "Task-manager / Task Manage Bot",
-  "Marketbot",
-  "IZATULO / BEL ALMA",
-  "Forge / Learning OS",
-  "BelfProctor",
-  "LaplaceFX",
-  "BioFlux Observer",
-  "VFS Killer",
-  "med-exe",
-  "3D Landing",
-];
-
-const PROJECT_SLUGS = {
-  "Klawis — Legal AI Assistant": "klawis",
-  "CoupleOS / Softly": "softly",
-  "TTYL Platform": "ttyl",
-  "Task-manager / Task Manage Bot": "task-manager",
-  "Marketbot": "marketbot",
-  "Sentinel Edge": "sentinel-edge",
-  "CardioGuard": "cardioguard",
-  "BioFlux Observer": "bioflux",
-  "Forge / Learning OS": "forge",
-  "BelfProctor": "belfproctor",
-  "VFS Killer": "vfs-killer",
-  "med-exe": "med-exe",
-  "3D Landing": "3d-landing",
-};
-
-const PROJECT_GITHUB = {
-  "Task-manager / Task Manage Bot": "https://github.com/SamandarMansurkhodjaev2713/Task-manager",
-  "Sentinel Edge": "https://github.com/SamandarMansurkhodjaev2713/sentinel-edge-smart-system",
-  "CardioGuard": "https://github.com/SamandarMansurkhodjaev2713/cardioguard",
-  "BioFlux Observer": "https://github.com/SamandarMansurkhodjaev2713/bioflux-observer",
-  "3D Landing": "https://github.com/SamandarMansurkhodjaev2713/3d-landing",
-};
+const PRODUCT_META = Array.isArray(window.PRODUCT_REGISTRY) ? window.PRODUCT_REGISTRY : [];
+const PRODUCT_ORDER = PRODUCT_META.slice().sort(function byFeaturedRank(a, b) {
+  return a.featuredRank - b.featuredRank;
+});
+const PROJECT_ORDER = PRODUCT_ORDER.map(function productName(product) {
+  return product.i18n.ru.name;
+});
+const PROJECT_BY_NAME = PRODUCT_ORDER.reduce(function indexProduct(map, product) {
+  map[product.i18n.ru.name] = product;
+  return map;
+}, {});
+const PROJECT_SLUGS = PRODUCT_ORDER.reduce(function indexSlug(map, product) {
+  map[product.i18n.ru.name] = product.slug;
+  return map;
+}, {});
+const PROJECT_GITHUB = PRODUCT_ORDER.reduce(function indexGithub(map, product) {
+  if (product.githubUrl) map[product.i18n.ru.name] = product.githubUrl;
+  return map;
+}, {});
 
 const PROJECT_UI = {
   ru: {
@@ -2036,16 +2101,23 @@ Object.keys(CONTENT).forEach(function hydrateProjectCatalog(lang) {
   const byName = new Map();
 
   section.items.forEach(function addExisting(item) {
+    const meta = PROJECT_BY_NAME[item.name];
     byName.set(item.name, Object.assign({}, item, {
-      slug: PROJECT_SLUGS[item.name] || item.slug,
-      github: PROJECT_GITHUB[item.name] || item.github || null,
+      slug: (meta && meta.slug) || PROJECT_SLUGS[item.name] || item.slug,
+      status: meta ? meta.lifecycle.toUpperCase() : item.status,
+      lifecycle: meta ? meta.lifecycle : null,
+      confidentiality: meta ? meta.confidentiality : null,
+      portfolioState: meta ? meta.portfolioState : "catalog",
+      url: meta ? (meta.presentation === "live" ? meta.liveUrl : meta.casePage) : item.url,
+      github: meta ? meta.githubUrl : (PROJECT_GITHUB[item.name] || item.github || null),
     }));
   });
 
   PROJECT_ADDITIONS.forEach(function addNew(product) {
     const copy = product.i18n[lang] || product.i18n.ru;
+    const meta = PROJECT_BY_NAME[product.name];
     byName.set(product.name, {
-      slug: product.slug,
+      slug: (meta && meta.slug) || product.slug,
       tag: copy.tag,
       name: product.name,
       problem: copy.problem,
@@ -2053,9 +2125,12 @@ Object.keys(CONTENT).forEach(function hydrateProjectCatalog(lang) {
       role: copy.role,
       stack: product.stack.slice(),
       outcome: copy.outcome,
-      status: product.status,
-      url: product.url,
-      github: product.github,
+      status: meta ? meta.lifecycle.toUpperCase() : product.status,
+      lifecycle: meta ? meta.lifecycle : null,
+      confidentiality: meta ? meta.confidentiality : null,
+      portfolioState: meta ? meta.portfolioState : "catalog",
+      url: meta ? (meta.presentation === "live" ? meta.liveUrl : meta.casePage) : product.url,
+      github: meta ? meta.githubUrl : product.github,
     });
   });
 

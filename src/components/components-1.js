@@ -1030,113 +1030,14 @@ function formatTashkentTime(date) {
 // is still lazy-loading.
 // (Superseded the earlier hand-drawn SVG blueprint set, which was keyed by
 // display name — that map and its 13 .svg files were removed with this change.)
-const PROJ_CARD = {
-  "klawis": {
-    src: "assets/proj/klawis.webp",
+const PROJ_CARD = (window.PRODUCT_REGISTRY || []).reduce((cards, product) => {
+  cards[product.slug] = {
+    src: product.image,
     bg: "#1F1E1B",
-    accent: "#C89B5E"
-  },
-  "softly": {
-    src: "assets/proj/softly.webp",
-    bg: "#1F1E1B",
-    accent: "#C4788A"
-  },
-  "growthops-ai": {
-    src: "assets/proj/growthops-ai.webp",
-    bg: "#1F1E1B",
-    accent: "#5879A8"
-  },
-  "ttyl": {
-    src: "assets/proj/ttyl.webp",
-    bg: "#1F1E1B",
-    accent: "#4D9295"
-  },
-  "dostupnoe-pravo": {
-    src: "assets/proj/dostupnoe-pravo.webp",
-    bg: "#1F1E1B",
-    accent: "#9B4D52"
-  },
-  "ai-classroom": {
-    src: "assets/proj/ai-classroom.webp",
-    bg: "#1F1E1B",
-    accent: "#6879BF"
-  },
-  "car-superapp": {
-    src: "assets/proj/car-superapp.webp",
-    bg: "#1F1E1B",
-    accent: "#D47743"
-  },
-  "helion": {
-    src: "assets/proj/helion.webp",
-    bg: "#1F1E1B",
-    accent: "#89AECB"
-  },
-  "stones": {
-    src: "assets/proj/stones.webp",
-    bg: "#1F1E1B",
-    accent: "#A88D6B"
-  },
-  "sentinel-edge": {
-    src: "assets/proj/sentinel.webp",
-    bg: "#1F1E1B",
-    accent: "#8FB33E"
-  },
-  "cardioguard": {
-    src: "assets/proj/cardioguard.webp",
-    bg: "#1F1E1B",
-    accent: "#D2604F"
-  },
-  "task-manager": {
-    src: "assets/proj/task-manager.webp",
-    bg: "#1F1E1B",
-    accent: "#C08A3E"
-  },
-  "marketbot": {
-    src: "assets/proj/marketbot.webp",
-    bg: "#1F1E1B",
-    accent: "#4F9A68"
-  },
-  "izatullo": {
-    src: "assets/proj/izatullo.webp",
-    bg: "#1F1E1B",
-    accent: "#B5762F"
-  },
-  "forge": {
-    src: "assets/proj/forge.webp",
-    bg: "#1F1E1B",
-    accent: "#8B72B7"
-  },
-  "belfproctor": {
-    src: "assets/proj/belfproctor.webp",
-    bg: "#1F1E1B",
-    accent: "#6F8EAD"
-  },
-  "laplacefx": {
-    src: "assets/proj/laplacefx.webp",
-    bg: "#1F1E1B",
-    accent: "#659575"
-  },
-  "bioflux": {
-    src: "assets/proj/bioflux.webp",
-    bg: "#1F1E1B",
-    accent: "#99984F"
-  },
-  "vfs-killer": {
-    src: "assets/proj/vfs-killer.webp",
-    bg: "#1F1E1B",
-    accent: "#4D79A8"
-  },
-  "med-exe": {
-    src: "assets/proj/med-exe.webp",
-    bg: "#1F1E1B",
-    accent: "#4F9696"
-  },
-  "3d-landing": {
-    src: "assets/proj/3d-landing.webp",
-    bg: "#1F1E1B",
-    accent: "#7767AF"
-  }
-};
+    accent: product.accent || "var(--accent)"
+  };
+  return cards;
+}, {});
 function ProjectCard({
   p,
   i,

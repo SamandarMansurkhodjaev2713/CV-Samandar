@@ -803,6 +803,12 @@
     },
   });
 
+  var NEW_LANDINGS = root.NEW_LANDINGS || {};
+  if (typeof module !== "undefined" && module.exports) {
+    NEW_LANDINGS = require("./landings-new.js");
+  }
+  Object.assign(LANDINGS, NEW_LANDINGS);
+
   // Every case page gets a small, code-native system map. Labels are technical
   // layer names rather than marketing copy, so they remain useful in RU/EN/UZ
   // and cannot drift from the architecture paragraph.
@@ -823,7 +829,17 @@
 
 
   Object.keys(LANDINGS).forEach(function enrichLanding(slug) {
-    LANDINGS[slug].flow = LANDING_FLOWS[slug] || [];
+    var registry = Array.isArray(root.PRODUCT_REGISTRY) ? root.PRODUCT_REGISTRY : [];
+    if (!registry.length && typeof module !== "undefined" && module.exports) {
+      registry = require("../content/product-registry.js");
+    }
+    var meta = registry.find(function findProduct(product) { return product.slug === slug; });
+    if (meta) {
+      LANDINGS[slug].meta = meta;
+      LANDINGS[slug].status = String(meta.lifecycle || LANDINGS[slug].status).toUpperCase();
+      LANDINGS[slug].github = meta.githubUrl;
+    }
+    LANDINGS[slug].flow = LANDING_FLOWS[slug] || LANDINGS[slug].flow || [];
   });
 
   root.LANDINGS = LANDINGS;

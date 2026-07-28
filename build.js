@@ -32,6 +32,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const validateSite = require("./scripts/validate-site.js").validate;
 
 // ── Configuration ──────────────────────────────────────────────────────────
 const COMPONENTS_DIR = path.join(__dirname, "src", "components");
@@ -141,6 +142,8 @@ function renderLandingPage(p, R, version) {
     "<body>",
     '<div id="lp-root">' + body + "</div>",
     "<script>window.__LP_SLUG__=" + JSON.stringify(p.slug) + ";</script>",
+    '<script src="../../src/content/product-registry.js' + v + '"></script>',
+    '<script src="../../src/projects/landings-new.js' + v + '"></script>',
     '<script src="../../src/projects/landings-data.js' + v + '"></script>',
     '<script src="../../src/projects/render.js' + v + '"></script>',
     '<script src="../../src/projects/landing.js' + v + '"></script>',
@@ -172,6 +175,18 @@ function buildLandings() {
 }
 
 function main() {
+  try {
+    const contract = validateSite({ generated: false });
+    process.stdout.write(
+      "[build] contract OK — " + contract.products + " products, " +
+      contract.cases + " case routes, " + contract.locales + " locales\n"
+    );
+  } catch (err) {
+    process.stderr.write("[build] contract FAILED: " + err.message + "\n");
+    process.exit(1);
+    return;
+  }
+
   let babel;
   try {
     babel = loadBabel();
@@ -197,6 +212,7 @@ function main() {
   let landingCount = 0;
   try {
     landingCount = buildLandings();
+    validateSite({ generated: true });
   } catch (err) {
     process.stderr.write("[build] landings FAILED: " + err.message + "\n");
     process.exit(1);
