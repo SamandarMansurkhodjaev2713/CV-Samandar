@@ -211,6 +211,21 @@ function validateScriptOrder() {
   assert(registryAt >= 0 && contentAt >= 0 && registryAt < contentAt, "product registry must load before content.js");
 }
 
+function validateRuntimeShell() {
+  const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
+  const appSource = fs.readFileSync(path.join(ROOT, "src", "components", "app.jsx"), "utf8");
+  const deployWorkflow = fs.readFileSync(path.join(ROOT, ".github", "workflows", "deploy-pages.yml"), "utf8");
+  const cacheTokens = Array.from(html.matchAll(/\?v=(\d+)/g), (match) => match[1]);
+  assert(cacheTokens.length >= 15, "index.html must cache-bust all first-party assets");
+  assert(new Set(cacheTokens).size === 1, "index.html contains mixed cache versions");
+  assert(html.includes("<noscript>"), "index.html must provide a no-JavaScript fallback");
+  assert(html.includes("__SM_APP_WATCHDOG"), "index.html must recover from pre-React load failures");
+  assert(appSource.includes("class ErrorBoundary"), "React render failures need an ErrorBoundary");
+  assert(appSource.includes('className="fatal-shell"'), "ErrorBoundary must render the branded recovery surface");
+  assert(deployWorkflow.includes("npm ci"), "deployment must install the locked dependency graph");
+  assert(deployWorkflow.includes("npm test"), "deployment must pass the automated quality gate");
+}
+
 function validate(options) {
   const registryPath = path.join(ROOT, "src", "content", "product-registry.js");
   const landingPath = path.join(ROOT, "src", "projects", "landings-data.js");
@@ -223,6 +238,7 @@ function validate(options) {
   validateMainContent(registry, content);
   validateLandings(registry, landings, Boolean(options && options.generated));
   validateScriptOrder();
+  validateRuntimeShell();
   return {
     products: registry.length,
     live: registry.filter((p) => p.presentation === "live").length,

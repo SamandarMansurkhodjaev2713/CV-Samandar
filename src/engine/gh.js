@@ -36,6 +36,8 @@
 (function () {
   "use strict";
 
+  if (window.__SM_TEST_MODE) return;
+
   var USER = "SamandarMansurkhodjaev2713";
   var DAYS = 28;
   var CACHE_KEY = "sm_gh_v1";

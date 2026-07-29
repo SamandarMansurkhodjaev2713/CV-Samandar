@@ -35,6 +35,7 @@
 
 (function () {
   "use strict";
+  if (window.__SM_TEST_MODE) return;
 
   // ── Configuration ──────────────────────────────────────────────────────
   // Time between accepted nav clicks. Below this we drop subsequent clicks

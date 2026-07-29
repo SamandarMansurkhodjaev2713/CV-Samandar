@@ -88,7 +88,7 @@
     "task-manager": {
       slug: "task-manager",
       visual: "task-manager.webp",
-      name: "Task-manager",
+      name: "Task-manager / Task Manage Bot",
       status: "PROD",
       stack: ["Rust", "Teloxide", "SQLx", "PostgreSQL", "Docker", "GitHub Actions"],
       github: "https://github.com/SamandarMansurkhodjaev2713/Task-manager",
@@ -844,4 +844,4 @@
 
   root.LANDINGS = LANDINGS;
   if (typeof module !== "undefined" && module.exports) module.exports = LANDINGS;
-})(typeof window !== "undefined" ? window : this);
+})(typeof window !== "undefined" ? window : (typeof globalThis !== "undefined" ? globalThis : {}));

@@ -507,4 +507,4 @@
 
   root.PRODUCT_REGISTRY = PRODUCT_REGISTRY;
   if (typeof module !== "undefined" && module.exports) module.exports = PRODUCT_REGISTRY;
-})(typeof window !== "undefined" ? window : this);
+})(typeof window !== "undefined" ? window : (typeof globalThis !== "undefined" ? globalThis : {}));

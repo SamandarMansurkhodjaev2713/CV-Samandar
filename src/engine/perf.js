@@ -29,6 +29,18 @@
 (function () {
   "use strict";
 
+  if (window.__SM_TEST_MODE) {
+    document.documentElement.setAttribute("data-perf", "low");
+    window.__SM_PERF = {
+      tier: "low",
+      allows: function () { return false; },
+      shaderBudget: function () { return 0; },
+      on: function (fn) { if (typeof fn === "function") fn("low"); },
+      __set: function () {},
+    };
+    return;
+  }
+
   var TIERS = ["low", "mid", "high"];
 
   // Frame-time thresholds in ms. 22ms ≈ 45fps — the point where scrolling

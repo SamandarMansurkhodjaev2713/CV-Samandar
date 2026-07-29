@@ -26,20 +26,21 @@ class ErrorBoundary extends React.Component {
   }
   render() {
     if (this.state.error) {
-      return React.createElement("div", {
-        style: {
-          position: "fixed",
-          inset: 0,
-          background: "#1F1E1B",
-          color: "#D97757",
-          fontFamily: "monospace",
-          fontSize: "13px",
-          padding: "80px 40px",
-          zIndex: 9999,
-          overflowY: "auto",
-          whiteSpace: "pre-wrap"
-        }
-      }, "⚠ RENDER ERROR\n\n" + String(this.state.error) + "\n\n" + (this.state.error.stack || ""));
+      return /*#__PURE__*/React.createElement("main", {
+        className: "fatal-shell",
+        role: "alert"
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "fatal-code mono"
+      }, "RECOVERY \xB7 01"), /*#__PURE__*/React.createElement("h1", null, "\u0418\u043D\u0442\u0435\u0440\u0444\u0435\u0439\u0441 \u043D\u0435 \u043E\u0442\u043A\u0440\u044B\u043B\u0441\u044F"), /*#__PURE__*/React.createElement("p", null, "\u041F\u0440\u043E\u0435\u043A\u0442\u044B \u0438 \u043A\u043E\u043D\u0442\u0430\u043A\u0442\u044B \u0432 \u0431\u0435\u0437\u043E\u043F\u0430\u0441\u043D\u043E\u0441\u0442\u0438. \u041E\u0431\u043D\u043E\u0432\u0438\u0442\u0435 \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u0443 \u2014 \u0435\u0441\u043B\u0438 \u0441\u0431\u043E\u0439 \u043F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u0441\u044F, \u043D\u0430\u043F\u0438\u0448\u0438\u0442\u0435 \u043C\u043D\u0435 \u043D\u0430\u043F\u0440\u044F\u043C\u0443\u044E."), /*#__PURE__*/React.createElement("div", {
+        className: "fatal-actions"
+      }, /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        onClick: () => window.location.reload()
+      }, "\u041E\u0431\u043D\u043E\u0432\u0438\u0442\u044C \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u0443"), /*#__PURE__*/React.createElement("a", {
+        href: "https://t.me/killallofthem13"
+      }, "\u041D\u0430\u043F\u0438\u0441\u0430\u0442\u044C \u0432 Telegram")), /*#__PURE__*/React.createElement("span", {
+        className: "fatal-foot mono"
+      }, "SAMANDAR \xB7 EXECUTIVE AI CODE LAB"));
     }
     return this.props.children;
   }

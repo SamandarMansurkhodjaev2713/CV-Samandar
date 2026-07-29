@@ -9,7 +9,7 @@ window.THEMES = {
     name: "Ember",
     accent: "#D97757", accent2: "#C89B5E",
     bg0: "#1F1E1B", bg1: "#28251F", panel: "#2F2B24",
-    text: "#F5F0E6", textDim: "#B8AC97", textMute: "#6B6353",
+    text: "#F5F0E6", textDim: "#B8AC97", textMute: "#9C9180",
     line: "rgba(217,119,87,0.10)", lineStrong: "rgba(217,119,87,0.22)",
   },
 };

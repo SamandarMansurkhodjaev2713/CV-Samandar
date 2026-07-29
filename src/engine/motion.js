@@ -20,6 +20,7 @@
 
 (function () {
   "use strict";
+  if (window.__SM_TEST_MODE) return;
   if (window.Motion) return;
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;

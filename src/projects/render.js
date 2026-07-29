@@ -452,7 +452,7 @@
 
           '<nav class="lp-chapters" aria-label="' + esc(ui.chapterNav) + '">' + chapterNav + '</nav>' +
 
-          (c.quick && c.quick.length ? '<section class="lp-quick" aria-label="' + esc(ui.quickView) + '" data-lp-reveal>' + quickItems(c.quick, ui) + "</section>" : "") +
+          (c.quick && c.quick.length ? '<section class="lp-quick" aria-label="' + esc(ui.quickView) + '" tabindex="0" data-lp-reveal>' + quickItems(c.quick, ui) + "</section>" : "") +
 
           '<section class="lp-act lp-act--context" id="context" data-lp-chapter="context">' +
             '<div class="lp-act-head" data-lp-reveal><span class="lp-act-num mono">02 / 05</span><h2>' + esc(ui.chapters[1]) + '</h2></div>' +

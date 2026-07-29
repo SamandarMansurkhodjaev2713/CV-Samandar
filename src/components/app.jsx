@@ -9,15 +9,17 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(err, info) { console.error("[ErrorBoundary]", err, info); }
   render() {
     if (this.state.error) {
-      return React.createElement("div", {
-        style: {
-          position: "fixed", inset: 0, background: "#1F1E1B", color: "#D97757",
-          fontFamily: "monospace", fontSize: "13px", padding: "80px 40px",
-          zIndex: 9999, overflowY: "auto", whiteSpace: "pre-wrap"
-        }
-      },
-        "⚠ RENDER ERROR\n\n" + String(this.state.error) + "\n\n" +
-        (this.state.error.stack || "")
+      return (
+        <main className="fatal-shell" role="alert">
+          <span className="fatal-code mono">RECOVERY · 01</span>
+          <h1>Интерфейс не открылся</h1>
+          <p>Проекты и контакты в безопасности. Обновите страницу — если сбой повторится, напишите мне напрямую.</p>
+          <div className="fatal-actions">
+            <button type="button" onClick={() => window.location.reload()}>Обновить страницу</button>
+            <a href="https://t.me/killallofthem13">Написать в Telegram</a>
+          </div>
+          <span className="fatal-foot mono">SAMANDAR · EXECUTIVE AI CODE LAB</span>
+        </main>
       );
     }
     return this.props.children;

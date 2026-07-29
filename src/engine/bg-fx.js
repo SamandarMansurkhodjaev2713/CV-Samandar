@@ -22,6 +22,8 @@
 (function () {
   "use strict";
 
+  if (window.__SM_TEST_MODE) return;
+
   const THREE = window.THREE;
 
   // ── Camera / scene geometry ─────────────────────────────────────────────

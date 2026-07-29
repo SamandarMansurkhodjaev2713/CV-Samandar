@@ -1,0 +1,23 @@
+{
+  "name": "samandar-executive-ai-code-lab",
+  "version": "2.12.0",
+  "private": true,
+  "description": "Static trilingual portfolio with generated product case pages.",
+  "scripts": {
+    "build": "node build.js",
+    "validate": "node scripts/validate-site.js --generated",
+    "test": "npm run validate && playwright test",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:a11y": "playwright test tests/accessibility.spec.js",
+    "test:mobile": "playwright test --project=mobile-chromium --project=mobile-webkit",
+    "test:desktop": "playwright test --project=desktop-chromium",
+    "test:update-snapshots": "playwright test --update-snapshots"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.12.1",
+    "@playwright/test": "1.62.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

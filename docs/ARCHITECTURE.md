@@ -103,6 +103,44 @@ Vacation Control Agent has the strictest current gate: no employee names,
 spreadsheet rows, company document template, organization identity, bot
 username or chat identifiers may enter the public build.
 
+## Quality and recovery contract
+
+The repository uses a locked Playwright + axe-core harness:
+
+```text
+npm run build          compile, generate and validate
+npm test               full automated gate
+npm run test:desktop   desktop Chromium
+npm run test:mobile    Android Chromium + iPhone WebKit smoke
+npm run test:a11y      WCAG 2A / 2AA / 2.1 AA blocking checks
+```
+
+The automated matrix proves:
+
+- all 24 canonical cards, 9 live routes and 15 case routes;
+- RU / EN / UZ route and runtime-language parity;
+- desktop Chromium and Android Chromium behavior;
+- the critical iPhone WebKit journey;
+- mobile overflow safety across all case pages;
+- keyboard access, reduced motion and critical/serious axe checks;
+- exact return from a case page to its originating card;
+- useful recovery when the application script fails before React mounts.
+
+`?e2e=1` is a deterministic QA mode, not a separate product build. It keeps
+the real DOM, routing and state logic while disabling continuous GPU/rAF
+decoration. This prevents compositor timing from changing functional test
+results. Production behavior is still reviewed manually without this flag.
+
+The runtime has three failure layers:
+
+1. a `<noscript>` contact surface;
+2. a pre-React watchdog for blocked or failed application scripts;
+3. a React `ErrorBoundary` for render-time failures.
+
+None of these surfaces exposes stack traces or private implementation detail.
+Pull requests run `.github/workflows/quality.yml`; deployment runs the same
+locked gate before a Pages artifact can be uploaded.
+
 ## Versioning
 
 Static browser assets use one cache version in `index.html`. A release-changing

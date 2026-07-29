@@ -1807,6 +1807,8 @@ function Contact({
     max: BUDGET_BUCKETS.length - 1,
     step: "1",
     value: budgetIdx,
+    "aria-label": BUDGET_LABEL,
+    "aria-valuetext": BUDGET_BUCKETS[budgetIdx],
     onChange: e => setBudgetIdx(parseInt(e.target.value, 10)),
     style: {
       "--val-pct": `${budgetIdx / (BUDGET_BUCKETS.length - 1) * 100}%`

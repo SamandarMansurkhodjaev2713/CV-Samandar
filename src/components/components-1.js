@@ -1382,12 +1382,20 @@ function Projects({
 }) {
   const ref = useRevealRoot([t]);
   const gridRef = useRef(null);
+  const items = t.projects.items;
   // Four strongest product families lead the section on every viewport. The
   // complete catalog expands on intent; mobile keeps its swipe carousel, but
   // nobody has to swipe through 21 cards just to leave the block.
   const FEATURED_PROJECT_COUNT = 4;
-  const [expanded, setExpanded] = useState(false);
-  const items = t.projects.items;
+  // Resolve a returning case-page anchor synchronously. Waiting for an effect
+  // leaves the requested card display:none during the browser's native anchor
+  // resolution and is especially unreliable on mobile under CPU pressure.
+  const [expanded, setExpanded] = useState(() => {
+    const id = (window.location.hash || "").replace(/^#/, "");
+    if (id.indexOf("proj-") !== 0) return false;
+    const slug = id.slice(5);
+    return items.findIndex(p => p.slug === slug) >= FEATURED_PROJECT_COUNT;
+  });
   const hiddenCount = Math.max(0, items.length - FEATURED_PROJECT_COUNT);
   const chapterItems = expanded ? items : items.slice(0, FEATURED_PROJECT_COUNT);
 

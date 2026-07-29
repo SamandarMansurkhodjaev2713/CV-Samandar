@@ -1,0 +1,59 @@
+"use strict";
+
+const { test, expect } = require("@playwright/test");
+const { caseProducts, expectNoHorizontalOverflow } = require("./helpers");
+
+for (const product of caseProducts) {
+  test(product.slug + " has complete generated structure", async ({ page, isMobile }) => {
+    test.skip(isMobile, "Complete route sweep runs once on desktop; mobile geometry is covered in one shared sweep.");
+    const response = await page.goto("/" + product.casePage, { waitUntil: "domcontentloaded" });
+    expect(response && response.status()).toBe(200);
+    await expect(page.locator("h1")).toHaveText(product.i18n.ru.name);
+    await expect(page.locator(".lp-back")).toHaveAttribute("href", "../../#proj-" + product.slug);
+    await expect(page.locator("[data-lp-chapter]")).toHaveCount(5);
+    await expect(page.locator(".lp-quick-item")).toHaveCount(3);
+
+    const image = page.locator("img").first();
+    await expect(image).toBeVisible();
+    const dimensions = await image.evaluate((node) => ({
+      complete: node.complete,
+      width: node.naturalWidth,
+      height: node.naturalHeight,
+    }));
+    expect(dimensions).toEqual({ complete: true, width: 1536, height: 512 });
+    await expectNoHorizontalOverflow(expect, page, product.slug);
+  });
+}
+
+test("all case pages fit the mobile viewport", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "Mobile-only geometry sweep.");
+  test.setTimeout(180000);
+  for (const product of caseProducts) {
+    await test.step(product.slug, async () => {
+      await page.goto("/" + product.casePage, { waitUntil: "domcontentloaded" });
+      await expect(page.locator("h1")).toHaveText(product.i18n.ru.name);
+      await expect(page.locator("img").first()).toBeVisible();
+      await expectNoHorizontalOverflow(expect, page, product.slug);
+    });
+  }
+});
+
+test("new cases switch RU / EN / UZ without losing chapter or route", async ({ page, isMobile }) => {
+  test.skip(isMobile, "Runtime language behavior is viewport-independent and covered once.");
+  for (const slug of ["vacation-control", "b24-sales-analyst", "chat-app"]) {
+    const product = caseProducts.find((item) => item.slug === slug);
+    await test.step(slug, async () => {
+      await page.goto("/" + product.casePage + "#system", { waitUntil: "domcontentloaded" });
+      await page.getByRole("button", { name: "EN", exact: true }).click();
+      await expect(page.locator("html")).toHaveAttribute("lang", "en");
+      await expect(page).toHaveURL(/#system$/);
+      await expect(page.locator("h1")).toHaveText(product.i18n.en.name);
+
+      await page.getByRole("button", { name: "UZ", exact: true }).click();
+      await expect(page.locator("html")).toHaveAttribute("lang", "uz");
+      await expect(page).toHaveURL(/#system$/);
+      await expect(page.locator("h1")).toHaveText(product.i18n.uz.name);
+      await expect(page.locator(".lp-back")).toHaveAttribute("href", "../../#proj-" + product.slug);
+    });
+  }
+});

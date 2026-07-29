@@ -212,4 +212,4 @@
 
   root.NEW_LANDINGS = NEW_LANDINGS;
   if (typeof module !== "undefined" && module.exports) module.exports = NEW_LANDINGS;
-})(typeof window !== "undefined" ? window : this);
+})(typeof window !== "undefined" ? window : (typeof globalThis !== "undefined" ? globalThis : {}));

@@ -278,6 +278,7 @@ button { color: inherit; font: inherit; }
 
 /* At a glance */
 .lp-quick { display: grid; grid-template-columns: repeat(3, 1fr); margin: 88px 0 0; border: 1px solid var(--lp-line); }
+.lp-quick:focus-visible { outline: 1px solid var(--lp-accent); outline-offset: 4px; }
 .lp-quick-item { min-height: 148px; padding: 28px; border-right: 1px solid var(--lp-line); background: rgba(255,255,255,.018); }
 .lp-quick-item:last-child { border-right: 0; }
 .lp-quick-k { display: block; margin-bottom: 20px; color: var(--lp-mute); font-size: 9px; letter-spacing: .16em; text-transform: uppercase; }

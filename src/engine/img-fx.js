@@ -30,6 +30,8 @@
 (function () {
   "use strict";
 
+  if (window.__SM_TEST_MODE) return;
+
   var THREE = window.THREE;
   if (!THREE) return;
 
