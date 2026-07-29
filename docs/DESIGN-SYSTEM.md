@@ -1,198 +1,295 @@
-# Design system & engine map
+# Samandar Portfolio Design System
 
-The map for this site. Read this before adding a section, an effect, or a
-colour — most of the traps here have already been paid for once.
+Статус: `v3 / authoritative`
+Вертикальный эталон: `intro → hero → signal`
+Языки: `RU / EN / UZ`
+Тема: только тёмная, material editorial
 
----
+## 1. Идея
 
-## 1. The idea
+Сайт показывает не «набор технологий», а один контур ответственности:
 
-A warm, dark, editorial instrument panel. Everything is one journey: the page
-starts cool, warms through the work, cools again in the engineering blocks, and
-lands warmest at the point of contact. Nothing is decoration for its own sake —
-every effect is drawn from what its section actually *is*.
+`BUILD → VERIFY → SHIP`
 
----
+Samandar проектирует и собирает продукт, проверяет его как QA-инженер и
+доводит до production. Каждый визуальный эффект обязан усиливать один из этих
+трёх смыслов. Эффект без продуктовой функции удаляется.
 
-## 2. Tokens
+Характер:
 
-### Brand — never drift
+- тёплая тёмная материальность вместо неона и sci-fi UI;
+- editorial-масштаб и инженерная точность;
+- доказательства, состояния и реальные маршруты вместо вымышленных метрик;
+- заметная режиссура без scroll-jacking;
+- одна визуальная система на главной и 15 case pages;
+- одинаковая типографическая идентичность в RU, EN и UZ.
 
-| Token | Value | Used for |
-|---|---|---|
-| `--accent` / `--accent-rgb` | `#D97757` / `217 119 87` | primary CTA, brand mark |
-| `--accent-2` / `--accent-2-rgb` | `#C89B5E` / `200 155 94` | secondary warmth, gradients |
-| `--text` `--text-dim` `--text-mute` | bone → ash | body, meta, quiet |
+## 2. Signature motif — Proof Rail
 
-The primary CTA is the **same colour on every screen**. A button that changes
-colour as you scroll stops reading as "the button".
+Proof Rail — калиброванная линия с тремя контрольными точками:
 
-### Atmosphere — drifts per act
+1. `BUILD` — архитектура, интерфейс, код, AI.
+2. `VERIFY` — test design, API/UI checks, CI, regression control.
+3. `SHIP` — production, наблюдаемость, поддержка результата.
 
-`acts.js` writes these on `<html>` and CSS transitions them over 1.4s:
+Rail используется только там, где есть реальный маршрут или доказательная
+структура:
 
-| Var | Note |
+- финальный beat интро;
+- нижняя граница Hero;
+- переход в Signal;
+- схемы архитектуры на case pages;
+- QA/evidence-блоки;
+- итог builder-конфигурации.
+
+Rail не является процентом готовности проекта и не имитирует живую телеметрию.
+
+## 3. Token architecture
+
+### 3.1 Reference tokens
+
+Физические значения объявляются один раз в `src/styles/styles.css`:
+
+- бренд: `--bg-*`, `--text-*`, `--accent-*`;
+- шаги: `--space-1 … --space-32`;
+- форма: `--radius-control/card/panel/pill`;
+- движение: `--ease-*`, `--d-*`;
+- глубина: `--elevation-*`, `--z-*`.
+
+### 3.2 Semantic tokens
+
+Компоненты используют роли, а не hex:
+
+| Роль | Токен |
 |---|---|
-| `--act-bg` | page ground, ±3–5 per channel around `#1F1E1B` |
-| `--act-accent` | `rgb(r, g, b)` — for `color:` |
-| `--act-accent-rgb` | **space-separated** `r g b` — for alpha composition |
+| canvas | `--surface-canvas` |
+| quiet surface | `--surface-subtle` |
+| raised panel | `--surface-raised` |
+| inset/evidence | `--surface-inset` |
+| primary ink | `--ink-primary` |
+| secondary ink | `--ink-secondary` |
+| muted metadata | `--ink-muted` |
+| primary action | `--action-primary` |
+| secondary action | `--action-secondary` |
+| proof states | `--proof-build/verify/ship` |
+| system states | `--state-positive/caution/negative` |
 
-> ### ⚠ The comma trap — cost us nine invisible signatures
-> The stylesheet composes alpha with the modern slash syntax:
-> ```css
-> background: rgba(var(--act-accent-rgb) / 0.3);
-> ```
-> That syntax requires **space-separated** channels. With commas it expands to
-> `rgba(217, 119, 87 / 0.3)`, which is invalid, so the browser **silently drops
-> the declaration** — no console error, no failed assertion. Nine section
-> signatures animated perfectly while painting fully transparent.
->
-> **Rule:** every `*-rgb` token is space-separated. Test the painted colour, not
-> just that the animation is attached.
+Новый компонент не имеет права заводить локальную «мини-тему». Уникальность
+проекта создаётся product accent, композицией и изображением, а не новым набором
+базовых поверхностей.
 
----
+### 3.3 Material contexts
 
-## 3. Engines
+- `dark/material` — основная система;
+- `paper` — CV и Quality;
+- `print` — PDF/печать;
+- `product-accent` — уникальный акцент case page.
 
-Load order matters — it is the order in `index.html`.
+Контекст может переопределить semantic role, но не сам компонент.
 
-| File | Owns | Public API |
-|---|---|---|
-| `engine/perf.js` | frame budget, quality tier | `__SM_PERF.tier` `.allows(cost)` `.shaderBudget()` `.on(fn)` `.__set(t)` |
-| `engine/acts.js` | colour dramaturgy, veils, mouse light, act shutters | `__SM_ACTS.set(id)` `.current()` `.shutter()` |
-| `engine/motion.js` | cursor, magnetism, reveals, parallax, centre-stage | `Motion.init()` `.refresh()` `.plxTick()` `.checkVisible()` |
-| `engine/img-fx.js` | living project imagery (one shared WebGL context) | `__SM_IMGFX.attach(el)` `.detach()` `.active()` |
-| `engine/bg-fx.js` | background WebGL field | `setSection()` `setScroll()` `setAccent()` |
-| `engine/sound.js` | opt-in UI sound (OFF by default) | `SMSound.play(name)` `.set(bool)` `.isOn()` |
-| `engine/intro.js` | boot curtain | `SMIntro.run()` |
-| `engine/scene-cinema.js` | View-Transition section navigation | `SceneCinema.navigate(id)` `.dispose()` |
+### 3.4 RGB rule
 
-### Events — the shared nervous system
-
-| Event | Fired by | Consumed by |
-|---|---|---|
-| `sm:section` | `app.jsx` IntersectionObserver | `acts.js`, `sound.js` |
-| `sm:focus-card` | `motion.js` centre-stage | `img-fx.js` (touch) |
-| `sm:cinema-start` / `sm:cinema-done` | `scene-cinema.js` | `bg-fx.js` |
-| `sm:intro-done` | `intro.js` (+ head-boot safety net) | `bg-fx.js`, `Hero` (letter reveal) |
-
-**Balance rule:** anything that pauses work on `-start` must be released on
-`-done` — including when teardown interrupts the transition. An unbalanced pair
-leaves the background permanently frozen or the hero name permanently hidden.
-
----
-
-## 4. The performance contract
-
-`perf.js` measures the frames the device actually delivers and publishes
-`html[data-perf="high|mid|low"]`.
-
-- Drops a tier after ~1s of bad frames, earns one back after ~4s of good ones.
-  Asymmetric on purpose: flickering between quality levels looks broken.
-- The sampler **sleeps** once the picture is stable and wakes on scroll/resize.
-- `prefers-reduced-motion` pins `low` and never samples.
-
-Gate expensive work on it, in CSS or JS:
+Токены `*-rgb` хранят каналы через пробел:
 
 ```css
-html[data-perf="low"] .my-effect { display: none; }
-```
-```js
-if (window.__SM_PERF.allows("shader")) { /* … */ }
+--accent-rgb: 217 119 87;
+background: rgb(var(--accent-rgb) / 0.2);
 ```
 
-What each tier drops, in order: section signatures → parallax depth →
-image shaders → everything but the base entrance.
+Запятая ломает slash-alpha без ошибки браузера.
 
----
+## 4. Цвет и контраст
 
-## 5. Motion grammar
+База:
 
-| Layer | Rule |
+| Роль | Значение |
 |---|---|
-| Section entrance | one per section, `data-enter="…"`, plays once via `.sec-in` |
-| Section signature | a second, meaning-specific note (scanline, stamp, rack…) |
-| Headings | line-mask rise + variable-weight settle (520 → 650) |
-| Reveals | `data-reveal` (IO-driven, `motion.js`), never `animation-timeline` |
-| Parallax | `data-plx="0.05"` → `--plx` → `transform` |
-| Interludes | full-screen rests, **not** sections — no `data-section` |
+| canvas | `#1F1E1B` |
+| subtle | `#28251F` |
+| raised | `#2F2B24` |
+| primary ink | `#F5F0E6` |
+| secondary ink | `#B8AC97` |
+| muted ink | `#9C9180` |
+| faint ink | `#938A7D` |
+| terracotta | `#D97757` |
+| brass | `#C89B5E` |
 
-**Native scroll is never hijacked.** `flyTo()` and `SceneCinema` only run on
-explicit navigation clicks.
+Контракт:
 
-**Anything driven by rAF needs a wall-clock backstop.** rAF stops in a
-backgrounded tab; without a `setTimeout` fallback a one-shot teardown can strand
-state forever (hit twice: the intro curtain, then the image-shader canvas).
+- обычный смысловой текст: не ниже `4.5:1`;
+- крупный текст: не ниже `3:1`;
+- основной текст и CTA по возможности идут выше `7:1`;
+- декоративная телеметрия получает `aria-hidden="true"` и не заменяет смысл;
+- light plates используют собственные ink/accent roles;
+- фотография всегда имеет измеримый readability veil.
 
----
+## 5. Типографика
 
-## 6. Adding a section
+Все шрифты self-hosted в `assets/fonts/`; внешнего font CDN нет.
 
-1. `<section data-section="x" id="x" data-enter="…">` inside `app.jsx`.
-2. Add the act preset in `acts.js` (`bg` + `accent`).
-3. Optional signature in `cursor.css` — **use `::after` for pinned sections**;
-   `::before` is already owned by the pin-overlap effect and wins on specificity.
-4. Add the label to `EXTRA_SECTION_LABELS` and `MENU_ACCENT` in `app.jsx`.
-5. Add the kill-switch entries for `reduced-motion`, `data-motion-lite`,
-   `data-perf="low"`.
+| Роль | Семейство | Назначение |
+|---|---|---|
+| Display | Oswald variable | имена, заголовки, section scale |
+| Body | Inter variable | тексты и интерфейс |
+| Mono | JetBrains Mono variable | telemetry, evidence, metadata |
+| Editorial | Cormorant Garamond | смысловой акцент и italic voice |
 
-The nav counter, dock and act engine read the DOM, so they pick it up for free.
+Все четыре роли покрывают кириллицу и Latin Extended. Русский больше не
+проваливается в Georgia, а узбекские строки не получают другой рисунок шрифта.
 
----
+Правила:
 
-## 7. Build & deploy
+- body не меньше `16px` на контентных экранах;
+- функциональный mobile text не меньше `10px`;
+- значения `7–9px` допустимы только как декоративная телеметрия;
+- Hero mobile подгоняет роли по реальным метрикам загруженного шрифта, а не по
+  длине английской строки;
+- переносы тестируются отдельно в RU, EN и UZ.
+
+## 6. Motion grammar
+
+### 6.1 Роли движения
+
+| Роль | Поведение |
+|---|---|
+| enter | один осмысленный вход секции |
+| focus | hover/focus/tap подчёркивает действие |
+| transition | нативный scroll или interruptible navigation |
+| ambient | редкое фоновое дыхание, не постоянный шум |
+| proof | линия проходит реальные checkpoints |
+| reduced | конечное состояние без continuous motion |
+
+### 6.2 Timing
+
+- instant: `--d-instant`;
+- control: `--d-fast`;
+- component: `--d-mid`;
+- section: `--d-slow`;
+- staged scene: `--d-scene`.
+
+Новые literal duration/easing запрещены. Motion работает через
+`--ease-out`, `--ease-emphasized`, `--ease-standard`,
+`--ease-overlap`.
+
+### 6.3 Intro contract
+
+- первый вход: `2.4–2.9s`;
+- повторный вход: `2.0–2.3s`;
+- deep link: без интро;
+- hard recovery cap: меньше `3.6s`;
+- scroll под curtain заблокирован;
+- Hero собирается под последним beat интро;
+- состояния: `BUILD → VERIFY → SHIP → ONLINE`;
+- boot log, Tashkent telemetry и core pulse существуют как одна композиция;
+- `92 → 99` проходит плавно, без скачка к 100.
+
+### 6.4 Hero → Signal
+
+- нативный sticky curtain, scroll остаётся `1:1`;
+- mobile Hero занимает около `86svh`, поэтому Signal виден на первом экране;
+- отдельная floating scroll-подсказка удалена: направление показывает Proof Rail
+  и видимый край Signal;
+- Signal не переключает текст автоматически;
+- accordion полностью управляется читателем;
+- reduced motion меняет движение, но не `aria-expanded`/`aria-hidden`.
+
+## 7. Reference components
+
+### Section heading
+
+- eyebrow/number задают координату;
+- display title несёт смысл;
+- meta содержит только проверяемый контекст;
+- один line-mask entrance, без двойного transform.
+
+### CTA
+
+- один визуально главный action;
+- вторичный не конкурирует по заливке;
+- mobile target не меньше `48×48px`;
+- hover, focus и press должны композироваться, а не перезаписывать transform;
+- текст проверяется на длиннейшем locale.
+
+### Project card
+
+- фотография `1536×512`, safe area 84%;
+- название, роль, краткий outcome;
+- live-проект: primary ведёт на live, GitHub — secondary;
+- private/case: primary ведёт на case page;
+- возврат из case page приходит к точной исходной карточке.
+
+### Disclosure
+
+- affordance однозначен;
+- визуальное и ARIA-состояние имеют один источник истины;
+- reduced motion не раскрывает скрытые данные самовольно.
+
+### Evidence
+
+- только реальные ссылки, тестовые артефакты, публичный код и безопасные
+  NDA-формулировки;
+- никаких фальшивых queued/live/verified состояний;
+- диаграмма обязана объяснять архитектурное решение, а не украшать фон.
+
+## 8. Performance and device policy
+
+Цели:
+
+- LCP `≤2.5s desktop`, `≤3.5s mobile`;
+- INP `≤200ms`;
+- CLS `≤0.05`;
+- high: `55–60 FPS`;
+- mid: стабильные `≥45 FPS`;
+- low/reduced: тот же смысл и композиция без continuous GPU motion.
+
+Деградация снимает стоимость в порядке:
+
+1. image shader;
+2. pointer depth;
+3. ambient layers;
+4. staged decorative details.
+
+Никогда не снимаются текст, CTA, Proof Rail, нативный transition и доступность.
+
+## 9. Source-of-truth and build
+
+- `src/content/product-registry.js` — 24 продукта и routing;
+- `src/content/content.js` — главная RU/EN/UZ;
+- `src/projects/landings-data.js` + `landings-new.js` — 15 case pages;
+- `src/projects/render.js` — единый browser/build renderer;
+- `*.jsx` — source, `*.js` — generated;
+- `projects/*/index.html` — generated, вручную не редактируется.
+
+После JSX/content/version изменений:
 
 ```bash
-node build.js     # JSX → JS, and bakes the 12 product landings
+node build.js
+node scripts/validate-site.js --generated
+npx playwright test --reporter=line --workers=2
 ```
 
-- **`?v=` must be bumped in `index.html` before `node build.js`** — landings
-  bake that number into their asset URLs.
-- Bump it with **node, not PowerShell**: PS 5.1 mangles the UTF-8 in
-  `index.html`.
-- `content.js` is loaded raw (no build step); `*.jsx` must be compiled.
-- Landings are generated from `src/projects/landings-data.js` + `render.js` —
-  never edit `projects/<slug>/index.html` by hand.
+`?v=` сначала меняется в `index.html`, затем case pages пересобираются.
 
----
+## 10. Acceptance gates
 
-## 8. i18n
+Vertical slice считается принятым, когда:
 
-Three locales, RU default. Some values are **deliberately empty strings**.
+- Builder + QA явно видны в первом viewport;
+- intro, Hero и Signal читаются как одна постановка;
+- RU/EN/UZ не имеют overflow и случайного fallback;
+- desktop 1440×1000 и mobile 390×844 визуально проверены;
+- mobile UZ CTA и роли не обрезаются;
+- axe не находит critical/serious нарушений;
+- Chromium desktop/mobile, iPhone WebKit и reduced-motion проходят gate;
+- recovery/deep-link/return-to-card остаются рабочими;
+- нет известного P0-дефекта в изменённом контуре.
 
-> `x || fallback` leaks English into RU/UZ — an empty RU suffix once shipped a
-> button reading "Показать ещё 17 more". Always `x != null ? x : fallback`.
+## 11. Migration rule
 
----
+Старая часть сайта ещё содержит raw colors/timings. Она мигрирует по сценам,
+чтобы не сломать существующую драматургию одним массовым replace. При этом:
 
-## 9. Verification
-
-The preview browser is headless: **rAF is frozen, scroll is frozen, CSS
-transitions never advance**. So:
-
-- Read **end states** (freeze transitions, toggle the class, read computed).
-- Use the sync hooks: `__SM_ACTS.set()`, `Motion.plxTick()`, `__SM_PERF.__set()`.
-- Check the **painted colour**, not just that a rule or animation is attached.
-- React's `onMouseEnter` is synthesised from delegated events — call handlers
-  through the fiber (`__reactProps$…`) instead of dispatching raw mouse events.
-
----
-
-## Traps found the hard way
-
-Each of these passed a structural check and failed a visual one. The lesson in
-all of them is the same: assert the **painted result**, not the presence of a
-rule.
-
-| Trap | What it looked like | The rule |
-|---|---|---|
-| `rgba(var(--x) / a)` needs **space-separated** channels | Nine section signatures painted fully transparent while `animationName` read correctly | Store RGB triples space-separated; a comma-separated value makes the whole declaration invalid and it is dropped silently |
-| A mask flush to the box bottom clips the glyph | `clip-path: inset(… 0% …)` cut 25px off every hero letter | With `line-height < 1` the baseline sits *below* the content box — Oswald at 0.76 puts it 0.09em under. Measure, then inset negative |
-| `.shell`'s `margin: 0 auto` disables flex stretch | Hero bands shrank to their own text width and floated centred | A flex item with an auto cross-axis margin is never stretched. Give it an explicit `width: 100%` |
-| `text-align-last: justify` cannot spread a single word | "FULL-STACK" ignored justification entirely; "AI AUTOMATION" opened one canyon | Justification distributes slack at word boundaries. To track a word to a margin, split it and use `justify-content: space-between` |
-| A ratio `threshold` is unreachable on a tall section | The Signal countdown was one added row from never starting | `threshold: 0.35` means 35% of the element's own area. Use an inset `rootMargin` band instead — it is height-independent |
-| IntersectionObserver callbacks need a rendering step | A raw IO on a visible element delivered zero entries in 500ms | Callbacks are delivered on the rendering lifecycle, so a non-compositing tab never gets them. `MutationObserver` (microtask) does fire — watch `.sec-in` instead of observing again |
-| A transitioned `transform` swallows per-frame parallax | Cards lagged the scroll and burned a style recalc per frame | Put scroll-driven drift on the standalone `translate` property; keep `transform` for the transitioned hover state |
-| Act colours and plate colours are not the same clock | Near-white text on a near-white plate during the act transition | The plate is a property of the section; the act is scroll-driven. Declare light-plate ink **on the section**, which also outranks the inherited inline value `acts.js` writes on `<html>` |
-| An accent built for a dark ground fails on a light one | `#D97757` measures 7:1 on `#161719` and 2.5:1 on `#E8E6E1` | Light plates get their own darkened accent tokens. Measure the pair, do not eyeball it |
-| A transition effect can cost contrast | The mobile dark→light bridge left the Quality eyebrow at 3.9:1 | Resolve any tint fully *above* the first line of text |
+- новые raw color/duration/easing не добавляются;
+- каждая переработанная секция полностью переводится на semantic roles;
+- после миграции последней сцены CI запрещает новые raw values автоматически;
+- landing, paper/print и builder получают те же reference roles до релиза.

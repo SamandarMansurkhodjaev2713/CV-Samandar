@@ -168,13 +168,17 @@ function Hero({ t, links }) {
   //     timelines like the intro's indefinitely, and "the name never appears"
   //     is the worst possible failure mode for the hero.
   useEffect(() => {
-    const curtain = window.__SM_INTRO && window.__SM_INTRO.panel;
+    const intro = window.__SM_INTRO;
+    const curtain = intro && intro.panel;
     if (!curtain || !curtain.parentNode) { setLit(true); return undefined; }
+    if (intro.prepared) { setLit(true); return undefined; }
     let fired = false;
     const light = () => { if (fired) return; fired = true; setLit(true); };
+    window.addEventListener("sm:intro-prep", light);
     window.addEventListener("sm:intro-done", light);
     const backstop = window.setTimeout(light, 4200);
     return () => {
+      window.removeEventListener("sm:intro-prep", light);
       window.removeEventListener("sm:intro-done", light);
       window.clearTimeout(backstop);
     };
@@ -233,6 +237,61 @@ function Hero({ t, links }) {
   // Trailing full stops are dropped: they belonged to the stacked reading and
   // read as noise inside a slash-separated rule.
   const roles = (t.hero.title_lines || []).map((s) => s.replace(/\.\s*$/, ""));
+  const proofSteps = Array.isArray(t.hero.proof_steps) && t.hero.proof_steps.length
+    ? t.hero.proof_steps
+    : [
+        { code: "01", k: "BUILD", v: "full-stack" },
+        { code: "02", k: "VERIFY", v: "QA" },
+        { code: "03", k: "SHIP", v: "production" },
+      ];
+
+  // Mobile roles are justified character-by-character, so a font size chosen
+  // from character count alone breaks as soon as a locale contains wider
+  // glyphs. Fit the actual loaded Oswald metrics to the available line width.
+  // This runs under the intro curtain on first load and again after a language
+  // switch; the conservative CSS fallback keeps the pre-fit frame contained.
+  useEffect(() => {
+    const heroEl = document.getElementById("hero");
+    if (!heroEl) return undefined;
+    let cancelled = false;
+    let resizeRaf = 0;
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    function fitRoles() {
+      if (cancelled || !ctx || !window.matchMedia("(max-width: 900px)").matches) return;
+      const list = heroEl.querySelector(".hero-roles");
+      if (!list) return;
+      const available = list.clientWidth;
+      if (!available) return;
+      list.querySelectorAll(".hero-role").forEach((role) => {
+        const copy = role.querySelector(".a11y-only");
+        const text = (copy ? copy.textContent : role.textContent || "").toUpperCase();
+        const family = getComputedStyle(role).fontFamily;
+        ctx.font = `600 100px ${family}`;
+        let units = 0;
+        for (const ch of text) units += /\s/.test(ch) ? 16 : ctx.measureText(ch).width;
+        if (!units) return;
+        const cap = Math.min(76, window.innerWidth * 0.188);
+        const fitted = Math.max(30, Math.min(cap, (available * 0.985 * 100) / units));
+        role.style.setProperty("--role-size", `${fitted.toFixed(2)}px`);
+      });
+    }
+
+    function scheduleFit() {
+      if (resizeRaf) cancelAnimationFrame(resizeRaf);
+      resizeRaf = requestAnimationFrame(fitRoles);
+    }
+
+    scheduleFit();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleFit);
+    window.addEventListener("resize", scheduleFit, { passive: true });
+    return () => {
+      cancelled = true;
+      if (resizeRaf) cancelAnimationFrame(resizeRaf);
+      window.removeEventListener("resize", scheduleFit);
+    };
+  }, [t]);
 
   return (
     <section
@@ -283,7 +342,10 @@ function Hero({ t, links }) {
                     letter (each char is a flex item there, i.e. its own text
                     run). So the characters are hidden from the a11y tree and
                     a plain, off-screen copy of the string carries the meaning. */}
-                <span className="hero-role">
+                <span
+                  className="hero-role"
+                  style={{ "--role-size": "12vw" }}
+                >
                   <span className="a11y-only">{r}</span>
                   <span className="hero-role-ink" aria-hidden="true">{spreadChars(r)}</span>
                 </span>
@@ -320,29 +382,23 @@ function Hero({ t, links }) {
       {/* Mobile-only scroll cue at the bottom of the takeover-hero. CSS hides it on desktop. */}
       <div className="hero-scroll-hint mono" aria-hidden="true">scroll</div>
 
-      {/* Tech-stack marquee — fills the otherwise-empty bottom band of the hero
-          and ties the section to the rest of the page with a single moving line. */}
-      <div className="hero-marquee" aria-hidden="true">
-        <div className="hero-marquee-track">
-          {Array.from({ length: 2 }).map((_, dup) => (
-            <div className="hero-marquee-group mono" key={dup}>
-              <span>TypeScript</span><span className="hero-marquee-sep">·</span>
-              <span>React</span><span className="hero-marquee-sep">·</span>
-              <span>Next.js</span><span className="hero-marquee-sep">·</span>
-              <span>Node.js</span><span className="hero-marquee-sep">·</span>
-              <span>Postgres</span><span className="hero-marquee-sep">·</span>
-              <span>OpenAI</span><span className="hero-marquee-sep">·</span>
-              <span>Anthropic</span><span className="hero-marquee-sep">·</span>
-              <span>LangChain</span><span className="hero-marquee-sep">·</span>
-              <span>n8n</span><span className="hero-marquee-sep">·</span>
-              <span>Three.js</span><span className="hero-marquee-sep">·</span>
-              <span>Telegram Bot API</span><span className="hero-marquee-sep">·</span>
-              <span>Docker</span><span className="hero-marquee-sep">·</span>
-              <span>Redis</span><span className="hero-marquee-sep">·</span>
-              <span>RAG</span><span className="hero-marquee-sep">·</span>
-              <span>Vector DBs</span><span className="hero-marquee-sep">·</span>
-            </div>
-          ))}
+      {/* Signature motif: a calibrated responsibility rail. It is not a
+          decorative progress bar — the three checkpoints state the actual
+          product loop this portfolio sells, and expose QA within the first
+          viewport instead of leaving it buried in later copy. */}
+      <div className="hero-proof" aria-label={t.hero.proof_label || "Build, verify, ship"}>
+        <div className="shell hero-proof-inner">
+          <span className="hero-proof-label mono">{t.hero.proof_label || "One ownership loop"}</span>
+          <ol className="hero-proof-steps">
+            {proofSteps.map((step, index) => (
+              <li className="hero-proof-step" style={{ "--proof-i": index }} key={`${step.code}-${step.k}`}>
+                <span className="hero-proof-node" aria-hidden="true" />
+                <span className="hero-proof-code mono">{step.code}</span>
+                <strong>{step.k}</strong>
+                <span>{step.v}</span>
+              </li>
+            ))}
+          </ol>
         </div>
       </div>
     </section>
@@ -420,20 +476,6 @@ function SignalRow({ card, index, total, open, onToggle, hasHover }) {
   );
 }
 
-// The section's eyebrow has always read "10-second signal". It was a figure of
-// speech attached to a static accordion — the one thing on the page that made a
-// concrete promise and then didn't keep it. Now it is literal: arriving in the
-// section starts a real ten-second run that opens each of the six reasons in
-// turn, roughly 1.6s apart, with a hairline counting the ten seconds down. Read
-// nothing, do nothing, and you still get every reason inside ten seconds.
-//
-// It yields immediately and permanently to the reader. Any hover, focus or tap
-// cancels the run for good — a timer that fights you for control of what you
-// are reading is worse than no timer. It also only ever runs once, and only
-// while the section is actually on screen (an IntersectionObserver gate), so
-// scrolling back never restarts a show you already sat through.
-const SIGNAL_RUN_MS = 10000;
-
 function Signal({ t }) {
   const ref = useRevealRoot([t]);
   // -1 = nothing open. Hover/focus opens the hovered row and "sticks" (doesn't
@@ -441,11 +483,6 @@ function Signal({ t }) {
   // clicked. Click/tap toggles (accordion behavior on touch — see SignalRow's
   // hasHover branching for why desktop click doesn't use the toggle path).
   const [openIndex, setOpenIndex] = useState(-1);
-  // "idle" before the section is reached, "running" during the ten seconds,
-  // "done" once it finishes or the reader takes over. Drives the countdown
-  // hairline and the state read-out beside it.
-  const [runState, setRunState] = useState("idle");
-  const timersRef = useRef([]);
   const hasHoverRef = useRef(null);
   if (hasHoverRef.current === null) {
     hasHoverRef.current = typeof window.matchMedia === "function"
@@ -454,74 +491,16 @@ function Signal({ t }) {
 
   const cards = t.signal.cards;
   const total = cards.length;
-
-  function stopRun() {
-    timersRef.current.forEach(window.clearTimeout);
-    timersRef.current = [];
-  }
+  const pathSteps = Array.isArray(t.hero && t.hero.proof_steps)
+    ? t.hero.proof_steps
+    : [];
 
   const handleToggle = (i, isHover) => {
-    // The reader touched it — the run is over, permanently.
-    stopRun();
-    setRunState("done");
     setOpenIndex((prev) => {
       if (isHover) return i;
       return prev === i ? -1 : i;
     });
   };
-
-  useEffect(() => {
-    const el = document.getElementById("signal");
-    let reduced = false;
-    try { reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { /* opportunistic */ }
-    // Reduced motion gets the whole point without the performance: opening all
-    // six at once is not an option (six expanded rows is a wall), so instead
-    // nothing auto-opens and the countdown never appears. The rows are still
-    // fully readable on hover/tap — the content was never gated on the run.
-    if (!el || reduced) return undefined;
-
-    // ── The trigger is motion.js's `.sec-in`, not an IntersectionObserver of
-    // our own. Two reasons, and the second is the important one:
-    //
-    //   1. A private IO needs its own answer to "how much of this section
-    //      counts as arrived", and both obvious answers are wrong here. A
-    //      ratio threshold is unreachable on a section taller than a couple of
-    //      viewports (this one is 1256px against a 900px window — max possible
-    //      ratio 0.72, so `threshold: 0.35` was one added row away from
-    //      silently never firing). A rootMargin band works, but then two
-    //      different definitions of "in view" live on the same section.
-    //   2. motion.js's version already has a fallback for environments where
-    //      IntersectionObserver callbacks never arrive — measured here: a raw
-    //      IO on this exact element with these exact options delivered ZERO
-    //      entries in 500ms while `.sec-in` was already on the section. IO
-    //      callbacks are delivered on a rendering-lifecycle step, so a tab
-    //      that is not compositing frames never gets them; motion.js's
-    //      scroll/poll path covers that, and this now inherits it for free.
-    //
-    // MutationObserver is used to watch for the class because IT is delivered
-    // on a microtask — no rendering step required, so the observer works in
-    // exactly the situation that broke the IO.
-    let started = false;
-    function begin() {
-      if (started) return;
-      started = true;
-      setRunState("running");
-      const step = SIGNAL_RUN_MS / (total + 1);
-      for (let i = 0; i < total; i++) {
-        timersRef.current.push(window.setTimeout(function () { setOpenIndex(i); }, step * (i + 1)));
-      }
-      // Land on the last reason rather than closing everything: the run ends
-      // with something to read, not with an empty list.
-      timersRef.current.push(window.setTimeout(function () { setRunState("done"); }, SIGNAL_RUN_MS));
-    }
-
-    if (el.classList.contains("sec-in")) { begin(); return function () { stopRun(); }; }
-    const mo = new MutationObserver(function () {
-      if (el.classList.contains("sec-in")) { mo.disconnect(); begin(); }
-    });
-    mo.observe(el, { attributes: true, attributeFilter: ["class"] });
-    return function () { mo.disconnect(); stopRun(); };
-  }, [total]);
 
   return (
     <section data-section="signal" id="signal" data-enter="emerge" ref={ref}>
@@ -531,19 +510,23 @@ function Signal({ t }) {
           eyebrow={t.signal.eyebrow}
           title={t.signal.title}
           em={t.signal.title.split(" ").pop()}
-          meta={`${total} · signal`}
+          meta={t.signal.meta || `${total} · signal`}
         />
 
-        {/* The countdown itself: a hairline that drains left-to-right over the
-            ten seconds, and a read-out that names what is happening. Purely
-            decorative — aria-hidden, because the reasons below are the content
-            and a screen reader has no use for a progress bar on an accordion
-            it can already open directly. */}
-        <div className={`signal-run signal-run--${runState}`} aria-hidden="true">
-          <span className="signal-run-bar" style={{ "--run-ms": `${SIGNAL_RUN_MS}ms` }} />
-          <span className="signal-run-read mono">
-            {runState === "running" ? "10s · signal running" : runState === "done" ? "signal complete" : "10s · signal"}
-          </span>
+        {/* The signature rail continues here, but no text auto-switches. The
+            visitor controls every accordion row; motion communicates the
+            product route without racing the reading pace or changing ARIA state
+            behind the reader's back. */}
+        <div className="signal-path">
+          <span className="signal-path-label mono">{t.signal.run_idle || "10s · read the essentials"}</span>
+          <ol className="signal-path-steps" aria-label={t.hero.proof_label || "Build, verify, ship"}>
+            {pathSteps.map((step) => (
+              <li key={`${step.code}-${step.k}`}>
+                <span aria-hidden="true" />
+                <strong className="mono">{step.k}</strong>
+              </li>
+            ))}
+          </ol>
         </div>
 
         <div className="signal-rows">

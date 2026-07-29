@@ -419,7 +419,7 @@
   align-items: end;
 }
 .cv-id-name {
-  font-family: var(--f-display, "Instrument Serif", serif);
+  font-family: var(--f-display, "Cormorant Garamond", serif);
   font-size: clamp(38px, 5vw, 64px);
   line-height: 0.95;
   letter-spacing: -0.025em;
@@ -461,7 +461,7 @@
   margin-bottom: 4px;
 }
 .cv-id-stat dd {
-  font-family: var(--f-display, "Instrument Serif", serif);
+  font-family: var(--f-display, "Cormorant Garamond", serif);
   font-size: 22px;
   letter-spacing: -0.015em;
   color: var(--accent, #D97757);
@@ -553,7 +553,7 @@
 .cv-role.is-open .cv-role-y { color: var(--accent, #D97757); }
 .cv-role-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .cv-role-title {
-  font-family: var(--f-display, "Instrument Serif", serif);
+  font-family: var(--f-display, "Cormorant Garamond", serif);
   font-size: 21px;
   letter-spacing: -0.01em;
   line-height: 1.15;

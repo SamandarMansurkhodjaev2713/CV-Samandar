@@ -110,9 +110,6 @@ function renderLandingPage(p, R, version) {
   // Each case owns a photographic 3:1 social preview instead of sharing the
   // portfolio cover. This keeps Telegram/LinkedIn links visually distinct.
   const ogImg = SITE_BASE + "assets/proj/" + p.visual;
-  const fonts =
-    "https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700" +
-    "&family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap";
   const body = R.LP_render(p, "ru");
   return [
     "<!doctype html>",
@@ -134,9 +131,7 @@ function renderLandingPage(p, R, version) {
     '<meta name="twitter:card" content="summary_large_image">',
     '<meta name="theme-color" content="#171713">',
     '<link rel="icon" href="../../favicon.svg">',
-    '<link rel="preconnect" href="https://fonts.googleapis.com">',
-    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',
-    '<link rel="stylesheet" href="' + fonts + '">',
+    '<link rel="stylesheet" href="../../src/styles/fonts.css' + v + '">',
     '<link rel="stylesheet" href="../../src/projects/landing.css' + v + '">',
     "</head>",
     "<body>",

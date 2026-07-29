@@ -12,7 +12,7 @@
 .hero { position: relative; isolation: isolate; overflow: hidden; }
 .hero > .shell,
 .hero > .hero-scroll-hint,
-.hero > .hero-marquee { position: relative; z-index: 1; }
+.hero > .hero-proof { position: relative; z-index: 1; }
 /* Split into a static -wrap (carries the mask + overflow) and an -inner layer
    (carries the image, entrance scale, and the parallax `translate` written by
    the effect in Hero()). Previously both lived on one element, so the mask's
@@ -444,64 +444,177 @@ section[data-section="hero"] { padding-block: 0; }
   .hn-l { transform: none; transition: none; }
 }
 
-/* Marquee */
-.hero-marquee {
+/* ── Proof rail — signature motif ─────────────────────────────────────────
+   The previous tech marquee moved continuously but said nothing the page had
+   not already said in Stack. This rail earns its place: it exposes the complete
+   responsibility loop and makes QA visible in the first viewport. The same
+   checkpoint grammar is reused on case-study diagrams and evidence blocks. */
+.hero-proof {
   position: relative;
-  /* The hero is a fixed-height flex column now, so this margin is taken
-     straight out of the masthead's share of the screen — hence a fraction of
-     the old flat 72px. `flex: none` keeps the band from being squeezed when
-     the stack above wants more room than the viewport has. */
-  margin: clamp(20px, 3.4vh, 48px) calc(-1 * var(--gutter)) 0;
+  margin-top: clamp(16px, 2.6vh, 34px);
   flex: none;
-  height: 44px;
+  min-height: 58px;
+  border-block: 1px solid var(--line-strong);
+  background:
+    linear-gradient(90deg, rgba(var(--accent-2-rgb) / 0.04), transparent 28% 72%, rgba(var(--accent-rgb) / 0.04)),
+    rgba(20, 19, 17, 0.48);
   overflow: hidden;
-  z-index: 3;
-  /* Single edge line instead of a heavy boxed band — feels lighter, more
-     editorial. The track itself is just text drifting through. */
-  border-top: 1px solid rgba(var(--accent-rgb) / 0.18);
-  mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
-  -webkit-mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
 }
-.hero-marquee-track {
-  display: flex;
-  width: max-content;
-  height: 100%;
-  align-items: center;
-  animation: marquee calc(58s / var(--motion, 1)) linear infinite;
-}
-.hero-marquee-group {
-  display: flex;
-  align-items: center;
-  gap: 36px;
-  padding-right: 36px;
-  font-family: var(--f-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.22em;
-  color: var(--text-mute);
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.hero-marquee-group > span:not(.hero-marquee-sep) {
-  position: relative;
-}
-.hero-marquee-sep { display: none; }   /* Separator dot replaced by gap */
-.hero-marquee-group > span:not(.hero-marquee-sep)::after {
-  /* Small accent dot before each item — minimal but on-brand */
+.hero-proof::before {
   content: "";
   position: absolute;
-  left: -22px; top: 50%;
-  width: 4px; height: 4px;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 22%, rgba(var(--accent-2-rgb) / 0.11) 48%, transparent 74%);
+  translate: -110% 0;
+}
+.hero.is-lit .hero-proof::before {
+  animation: proofRailSweep var(--d-scene) var(--ease-emphasized) 480ms both;
+}
+.hero-proof-inner {
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: minmax(150px, 0.72fr) minmax(0, 2.28fr);
+  align-items: center;
+  gap: var(--space-8);
+}
+.hero-proof-label {
+  font-size: 9px;
+  line-height: 1.35;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.hero-proof-steps {
+  position: relative;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  min-height: 58px;
+}
+.hero-proof-steps::before,
+.hero-proof-steps::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 50%;
+  height: 1px;
+  transform-origin: left center;
+}
+.hero-proof-steps::before { background: var(--line-strong); }
+.hero-proof-steps::after {
+  background: linear-gradient(90deg, var(--proof-build), var(--proof-verify) 52%, var(--proof-ship));
+  scale: 0 1;
+}
+.hero.is-lit .hero-proof-steps::after {
+  animation: proofRailDraw var(--d-scene) var(--ease-emphasized) 220ms both;
+}
+.hero-proof-step {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 18px auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: var(--space-2);
+  padding-inline: var(--space-2);
+  color: var(--ink-secondary);
+  opacity: 0;
+  translate: 0 10px;
+}
+.hero.is-lit .hero-proof-step {
+  animation: proofStepIn var(--d-mid) var(--ease-emphasized)
+    calc(340ms + var(--proof-i, 0) * 150ms) both;
+}
+.hero-proof-node {
+  grid-row: 1 / 3;
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--surface-canvas);
   border-radius: 50%;
-  background: rgba(var(--accent-rgb) / 0.5);
-  transform: translateY(-50%);
+  background: var(--proof-verify);
+  box-shadow: 0 0 0 1px var(--proof-verify), 0 0 18px rgba(var(--accent-rgb) / 0.24);
 }
-.hero-marquee-group > span:not(.hero-marquee-sep):first-child::after { display: none; }
-@media (max-width: 600px) {
-  .hero-marquee { height: 38px; margin-top: 16px; }
-  .hero-marquee-group { font-size: 9.5px; gap: 26px; padding-right: 26px; letter-spacing: 0.18em; }
-  .hero-marquee-group > span:not(.hero-marquee-sep)::after { left: -16px; }
+.hero-proof-step:first-child .hero-proof-node { background: var(--proof-build); box-shadow: 0 0 0 1px var(--proof-build); }
+.hero-proof-step:last-child .hero-proof-node { background: var(--proof-ship); box-shadow: 0 0 0 1px var(--proof-ship); }
+.hero-proof-code {
+  position: absolute;
+  right: var(--space-2);
+  top: 50%;
+  translate: 0 -50%;
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: var(--ink-faint);
 }
-@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.hero-proof-step strong {
+  grid-column: 2;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  color: var(--ink-primary);
+}
+.hero-proof-step > span:last-child {
+  grid-column: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  line-height: 1.3;
+  color: var(--ink-muted);
+}
+@keyframes proofRailDraw { to { scale: 1 1; } }
+@keyframes proofRailSweep { to { translate: 110% 0; } }
+@keyframes proofStepIn {
+  to { opacity: 1; translate: 0 0; }
+}
+
+@media (max-width: 900px) {
+  .hero-proof {
+    position: absolute !important;
+    inset: auto 0 0;
+    z-index: 4 !important;
+    min-height: 32px;
+    margin: 0;
+    background: rgba(25, 24, 21, 0.82);
+    border-bottom: 0;
+  }
+  .hero-proof-inner {
+    min-height: 32px;
+    display: block;
+    padding-inline: 12px;
+  }
+  .hero-proof-label { display: none; }
+  .hero-proof-steps { min-height: 32px; }
+  .hero-proof-step {
+    grid-template-columns: 10px auto;
+    grid-template-rows: auto;
+    gap: 5px;
+    padding-inline: 2px;
+  }
+  .hero-proof-node {
+    grid-row: auto;
+    width: 6px;
+    height: 6px;
+    border-width: 1px;
+  }
+  .hero-proof-step strong {
+    grid-column: 2;
+    font-size: 8px;
+    letter-spacing: 0.13em;
+  }
+  .hero-proof-step > span:last-child,
+  .hero-proof-code { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-proof::before { display: none; }
+  .hero-proof-steps::after { scale: 1 1; animation: none; }
+  .hero-proof-step { opacity: 1; translate: none; animation: none; }
+}
 
 @media (max-width: 900px) {
   /* ── Mobile masthead ────────────────────────────────────────────────────
@@ -579,6 +692,9 @@ section[data-section="hero"] { padding-block: 0; }
   .hero-band--rule {
     flex-direction: column;
     align-items: stretch;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
     margin-bottom: auto;
     gap: clamp(2px, 0.5vh, 8px);
     margin-top: clamp(10px, 1.8vh, 22px);
@@ -594,6 +710,8 @@ section[data-section="hero"] { padding-block: 0; }
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    width: 100%;
+    min-width: 0;
     gap: clamp(1px, 0.3vh, 5px);
     font-family: var(--f-head);
     font-weight: 600;
@@ -602,7 +720,12 @@ section[data-section="hero"] { padding-block: 0; }
     color: var(--text-dim);
   }
   .hero-roles-sep { display: none; }
-  .hero-role { display: block; width: 100%; text-transform: uppercase; }
+  .hero-role {
+    display: block;
+    width: 100%;
+    font-size: var(--role-size, 14vw);
+    text-transform: uppercase;
+  }
   /* Flush by distributing slack between characters — see spreadChars() in
      components-1.jsx for why `text-align-last: justify` cannot do this. */
   .hero-role-ink {
@@ -611,9 +734,7 @@ section[data-section="hero"] { padding-block: 0; }
     width: 100%;
   }
   .hr-sp { flex: 0 0 0.16em; }
-  .hero-role:nth-child(1) { font-size: 18.8vw; color: var(--text); }
-  .hero-role:nth-child(3) { font-size: 14.2vw; }
-  .hero-role:nth-child(5) { font-size: 11.2vw; }
+  .hero-role:nth-child(1) { color: var(--text); }
   /* Roles carry the same rise as the name, one beat behind the surname, so the
      whole block assembles as a single gesture rather than in two halves. */
   .hero-role {
@@ -637,15 +758,20 @@ section[data-section="hero"] { padding-block: 0; }
   .hero-tagline { display: none; }
   .hero-band--act { padding-top: clamp(10px, 2vh, 22px); }
   .hero-ctas { width: 100%; gap: 10px; }
-  .hero-ctas .btn { flex: 1; justify-content: center; min-height: 48px; }
+  .hero-ctas .btn {
+    min-width: 0;
+    padding-inline: 12px;
+    justify-content: center;
+    min-height: 48px;
+    white-space: nowrap;
+  }
+  .hero-ctas .btn:first-child { flex: 1.2 1 0; }
+  .hero-ctas .btn:last-child { flex: 0.9 1 0; }
+  html[lang="uz"] .hero-ctas .btn { font-size: 9.5px; letter-spacing: 0.055em; }
 
-  /* The marquee duplicates the stack section, overflowed horizontally, and
-     cost ~54px + GPU on the one screen that most needs to be lean. */
-  .hero-marquee { display: none; }
-  /* `.hero > .hero-scroll-hint` is position:relative site-wide, which on the
-     compact mobile hero dropped the cue mid-content. Float it at the bottom
-     edge instead — no layout cost, and it points at the Signal peek. */
-  .hero > .hero-scroll-hint { position: absolute; bottom: 12px; top: auto; z-index: 4; }
+  /* The proof rail now owns the bottom edge and already communicates direction;
+     the old free-floating "scroll" label overlapped the CTA at 390×844. */
+  .hero > .hero-scroll-hint { display: none; }
 }
 @media (max-width: 480px) {
   /* Compact phones: the vw coefficients still hold (they are width-relative),
@@ -1569,7 +1695,7 @@ html[data-perf="low"] section[data-section="contact"].sec-in .contact-form > * {
 }
 .ilude.rv-in .ilude-line { transform: none; }
 .ilude-em {
-  font-family: var(--f-serif, "Instrument Serif", Georgia, serif);
+  font-family: var(--f-serif, "Cormorant Garamond", Georgia, serif);
   font-style: italic; font-weight: 400;
   letter-spacing: -0.02em;
   color: var(--act-accent, var(--accent));
@@ -2974,11 +3100,11 @@ html[data-motion-lite] .svc-tab.is-active .svc-tab-mark { clip-path: inset(19% 0
 .builder-verdict.is-in { opacity: 1; transform: none; }
 .builder-verdict-mark {
   position: absolute; left: 8px; top: 2px;
-  font-family: var(--f-serif, "Instrument Serif", Georgia, serif);
+  font-family: var(--f-serif, "Cormorant Garamond", Georgia, serif);
   font-size: 34px; line-height: 1; color: rgba(var(--accent-rgb) / 0.4);
 }
 .builder-verdict-text {
-  font-family: var(--f-serif, "Instrument Serif", Georgia, serif);
+  font-family: var(--f-serif, "Cormorant Garamond", Georgia, serif);
   font-style: italic; font-size: 16px; line-height: 1.5; color: var(--text); margin: 0;
 }
 

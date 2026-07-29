@@ -141,6 +141,35 @@ None of these surfaces exposes stack traces or private implementation detail.
 Pull requests run `.github/workflows/quality.yml`; deployment runs the same
 locked gate before a Pages artifact can be uploaded.
 
+## Design-system contract
+
+`src/styles/styles.css` is the source of truth for palette and semantic tokens.
+Runtime theme code may select a theme identity, but it must not duplicate or
+rewrite the token values inline.
+
+`src/styles/fonts.css` declares all production fonts from `assets/fonts/`.
+The main page and generated case pages must not request Google Fonts or another
+font CDN. The font set must preserve the intended hierarchy in RU, EN and UZ:
+
+```text
+Oswald             display
+Inter              body and controls
+JetBrains Mono     evidence and telemetry
+Cormorant Garamond editorial emphasis
+```
+
+The global signature motif is the three-state Proof Rail:
+
+```text
+BUILD → VERIFY → SHIP
+```
+
+It may change composition between scenes, but its order and meaning are stable.
+Decoration must not introduce a conflicting process model or fake system state.
+The authoritative visual and motion rules are in `docs/DESIGN-SYSTEM.md`;
+verified implementation checkpoints are recorded in
+`docs/IMPLEMENTATION-LOG.md`.
+
 ## Versioning
 
 Static browser assets use one cache version in `index.html`. A release-changing

@@ -152,27 +152,11 @@
     // signatures animated correctly while rendering fully transparent.)
     document.documentElement.style.setProperty("--act-accent-rgb", act.accent.replace(/,\s*/g, " "));
     document.documentElement.style.setProperty("--act-accent", "rgb(" + act.accent + ")");
-    // Light acts invert the entire ground.
-    //
-    // The class alone is NOT enough: themes.js writes --text/--text-dim/
-    // --text-mute inline on <html> (applyTheme), and an inline custom property
-    // beats any stylesheet rule, so `html.act-light { --text: … }` could never
-    // win. The inversion therefore has to be written through the same inline
-    // channel — and cleared again on the way out, or the dark acts after a
-    // light one would keep the dark ink.
+    // Light acts invert through one class. themes.js no longer writes palette
+    // variables inline, so the stylesheet remains authoritative at every
+    // point in the transition.
     var root = document.documentElement;
     root.classList.toggle("act-light", !!act.light);
-    if (act.light) {
-      root.style.setProperty("--text", "#1A1A18");
-      root.style.setProperty("--text-dim", "#4A473F");
-      root.style.setProperty("--text-mute", "#7C776B");
-    } else {
-      root.style.removeProperty("--text");
-      root.style.removeProperty("--text-dim");
-      root.style.removeProperty("--text-mute");
-      // Hand control back to whatever theme the tweak panel had applied.
-      try { if (window.applyTheme && window.CURRENT_THEME) window.applyTheme(window.CURRENT_THEME); } catch (e) { /* opportunistic */ }
-    }
     // Crossfade: paint the incoming gradient on the back veil, then swap roles.
     var front = frontIsA ? veilA : veilB;
     var back  = frontIsA ? veilB : veilA;

@@ -17,16 +17,16 @@
   --bg-0: #1F1E1B;
   --bg-1: #28251F;
   --bg-panel: #2F2B24;
-  --bg-2: #101316;
-  --surf-1: #14181C;
-  --surf-2: #1B2026;
-  --surf-3: #232932;
+  --bg-2: #191815;
+  --surf-1: #23211D;
+  --surf-2: #2A2721;
+  --surf-3: #343028;
 
   /* — Text — */
   --text: #F5F0E6;
   --text-dim: #B8AC97;
   --text-mute: #9C9180;
-  --text-faint: #8B8275;
+  --text-faint: #938A7D;
 
   /* — Accent (Ember — mirrors themes.js) — */
   --accent: #D97757;
@@ -36,6 +36,30 @@
   --accent-3: #C89B5E;
   --accent-3-rgb: 200 155 94;
 
+  /* — Semantic colour roles —
+     Components consume these names; the legacy brand tokens above remain the
+     one place themes.js writes at boot. This keeps the runtime contract stable
+     while preventing a component from deciding whether "#28251F" means a
+     canvas, a card, or an interaction state. */
+  --surface-canvas: var(--bg-0);
+  --surface-subtle: var(--bg-1);
+  --surface-raised: var(--bg-panel);
+  --surface-inset: var(--bg-2);
+  --surface-interactive: var(--surf-1);
+  --surface-interactive-hover: var(--surf-2);
+  --ink-primary: var(--text);
+  --ink-secondary: var(--text-dim);
+  --ink-muted: var(--text-mute);
+  --ink-faint: var(--text-faint);
+  --action-primary: var(--accent);
+  --action-secondary: var(--accent-2);
+  --proof-build: var(--accent-2);
+  --proof-verify: #D97757;
+  --proof-ship: #B7A887;
+  --state-positive: #A8B67A;
+  --state-caution: #D6A85F;
+  --state-negative: #D17668;
+
   /* — Lines (Ember — mirrors themes.js) — */
   --line: rgba(217, 119, 87, 0.10);
   --line-strong: rgba(217, 119, 87, 0.22);
@@ -43,109 +67,75 @@
 
   /* — Type —
      Display is a CONDENSED UPPERCASE face. This is the single biggest lever
-     against the "generic AI site" read: a geometric sans like Geist is exactly
+     against the "generic AI site" read: a default geometric sans is exactly
      what gets reached for by default, while a narrow caps face has an author's
      voice from the first screen. Oswald rather than Bebas Neue because Bebas
      ships no Cyrillic at all — a Russian-first site would silently fall back
-     and lose the whole point. Geist stays as the fallback and for anything that
-     must not be uppercase; Inter still carries every word of running text, so
+     and lose the whole point. Inter stays as the fallback and carries every
+     word of running text, so
      readability is untouched. */
-  --f-display: "Oswald", "Geist", "Inter", -apple-system, system-ui, sans-serif;
-  --f-body: "Inter", "Geist", -apple-system, system-ui, sans-serif;
+  --f-display: "Oswald", "Inter", -apple-system, system-ui, sans-serif;
+  --f-body: "Inter", -apple-system, system-ui, sans-serif;
   --f-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
-  --f-serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --f-serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
 
-  /* — Density — */
-  --gap-section: 140px;
-  --gap-block: 64px;
-  --pad-card: 28px;
+  /* — Spacing —
+     4px base rhythm. Fluid aliases cover composition; fixed steps cover
+     controls and internal component geometry. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+  --space-32: 128px;
+  --gap-section: clamp(96px, 10vw, 160px);
+  --gap-block: clamp(40px, 5vw, 72px);
+  --pad-card: clamp(20px, 2.2vw, 32px);
+
+  /* — Shape & elevation — */
+  --radius-control: 6px;
+  --radius-card: 10px;
+  --radius-panel: 16px;
+  --radius-pill: 999px;
+  --elevation-rest: 0 18px 50px -34px rgba(0, 0, 0, 0.68);
+  --elevation-focus:
+    0 28px 72px -34px rgba(0, 0, 0, 0.78),
+    0 0 0 1px rgba(var(--accent-rgb) / 0.16);
 
   /* — Motion — */
   --motion: 1;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-emphasized: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --d-fast: calc(0.18s * var(--motion));
-  --d-mid: calc(0.42s * var(--motion));
+  --ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-standard: cubic-bezier(0.2, 0.6, 0.2, 1);
+  --ease-overlap: cubic-bezier(0.83, 0, 0.17, 1);
+  --ease-spring: cubic-bezier(0.34, 1.32, 0.64, 1);
+  --d-instant: calc(0.12s * var(--motion));
+  --d-fast: calc(0.2s * var(--motion));
+  --d-mid: calc(0.46s * var(--motion));
   --d-slow: calc(0.9s * var(--motion));
+  --d-scene: calc(1.25s * var(--motion));
 
   /* — Layout — */
   --max-w: 1440px;
   --gutter: clamp(20px, 4vw, 64px);
   --nav-h: 60px;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   8 PALETTES — applied via [data-palette="..."] on <html>
-   ═══════════════════════════════════════════════════════════ */
-[data-palette="matrix"] {
-  --bg-0: #050706; --bg-1: #0A0D0B; --bg-2: #0F1311;
-  --accent: #6EFF8A; --accent-rgb: 110 255 138;
-  --accent-2: #B8FF3D; --accent-2-rgb: 184 255 61;
-  --accent-3: #4DEBFF; --accent-3-rgb: 77 235 255;
-}
-[data-palette="cyber"] {
-  --bg-0: #060912; --bg-1: #0A0F1D; --bg-2: #0F1729;
-  --accent: #4DEBFF; --accent-rgb: 77 235 255;
-  --accent-2: #B8FF3D; --accent-2-rgb: 184 255 61;
-  --accent-3: #A78BFA; --accent-3-rgb: 167 139 250;
-}
-[data-palette="vercel"] {
-  --bg-0: #000000; --bg-1: #0A0A0A; --bg-2: #111111;
-  --accent: #FAFAFA; --accent-rgb: 250 250 250;
-  --accent-2: #B8B8B8; --accent-2-rgb: 184 184 184;
-  --accent-3: #6E6E6E; --accent-3-rgb: 110 110 110;
-  --text: #FAFAFA;
-}
-[data-palette="synthwave"] {
-  --bg-0: #0A0612; --bg-1: #110A1F; --bg-2: #1A0F2E;
-  --accent: #FF4DD8; --accent-rgb: 255 77 216;
-  --accent-2: #9E5BFF; --accent-2-rgb: 158 91 255;
-  --accent-3: #4DEBFF; --accent-3-rgb: 77 235 255;
-}
-[data-palette="amber"] {
-  --bg-0: #0A0805; --bg-1: #110D08; --bg-2: #19130A;
-  --accent: #FFAA33; --accent-rgb: 255 170 51;
-  --accent-2: #FF6B1A; --accent-2-rgb: 255 107 26;
-  --accent-3: #FFD980; --accent-3-rgb: 255 217 128;
-}
-[data-palette="blueprint"] {
-  --bg-0: #061018; --bg-1: #0A1825; --bg-2: #0F2238;
-  --accent: #6BB6FF; --accent-rgb: 107 182 255;
-  --accent-2: #FFFFFF; --accent-2-rgb: 255 255 255;
-  --accent-3: #4DEBFF; --accent-3-rgb: 77 235 255;
-}
-[data-palette="brutalist"] {
-  --bg-0: #0A0A0A; --bg-1: #111111; --bg-2: #1A1A1A;
-  --accent: #FF3D2E; --accent-rgb: 255 61 46;
-  --accent-2: #FFFFFF; --accent-2-rgb: 255 255 255;
-  --accent-3: #888888; --accent-3-rgb: 136 136 136;
-}
-[data-palette="sunset"] {
-  --bg-0: #0B0508; --bg-1: #14080D; --bg-2: #1F0D14;
-  --accent: #FF5E7E; --accent-rgb: 255 94 126;
-  --accent-2: #FFA94D; --accent-2-rgb: 255 169 77;
-  --accent-3: #C89B5E; --accent-3-rgb: 200 155 94;
+  --z-base: 0;
+  --z-content: 10;
+  --z-sticky: 100;
+  --z-nav: 1000;
+  --z-overlay: 2000;
+  --z-recovery: 2147482000;
 }
 
 /* — Density variants — */
 [data-density="compact"] { --gap-section: 96px; --gap-block: 48px; --pad-card: 22px; }
 [data-density="airy"]    { --gap-section: 200px; --gap-block: 96px; --pad-card: 40px; }
-
-/* — Type variants — */
-[data-type="mono"] {
-  --f-display: "JetBrains Mono", monospace;
-  --f-body: "JetBrains Mono", monospace;
-  letter-spacing: -0.01em;
-}
-[data-type="geist"] {
-  --f-display: "Geist", "Inter", system-ui, sans-serif;
-  --f-body: "Geist", "Inter", system-ui, sans-serif;
-}
-[data-type="space"] {
-  --f-display: "Space Grotesk", sans-serif;
-  --f-body: "Geist", system-ui, sans-serif;
-}
 
 @media (prefers-reduced-motion: reduce) {
   :root { --motion: 0.01; }
@@ -157,6 +147,11 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
+html.intro-lock,
+html.intro-lock body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
 body {
@@ -379,13 +374,14 @@ section[data-section="hero"] { padding-top: 0; }
 .nav {
   position: fixed; top: 0; left: 0; right: 0;
   height: var(--nav-h);
-  z-index: 100;
+  z-index: var(--z-nav);
   display: flex; align-items: center;
   background: linear-gradient(180deg, rgba(7,9,11,.88) 0%, rgba(7,9,11,.4) 80%, transparent);
   backdrop-filter: blur(14px) saturate(160%);
   -webkit-backdrop-filter: blur(14px) saturate(160%);
   border-bottom: 1px solid var(--line);
 }
+.nav.nav-open { z-index: calc(var(--z-overlay) + 1); }
 .nav-inner {
   width: 100%;
   max-width: var(--max-w);
@@ -654,10 +650,12 @@ body.cursor-hover .cursor-dot { opacity: 0; }
   top: 0; left: 0;
   height: 2px;
   background: linear-gradient(90deg, var(--accent), var(--accent-2));
-  width: 0;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left center;
   z-index: 200;
   box-shadow: 0 0 12px var(--accent);
-  will-change: width;
+  will-change: transform;
 }
 
 /* — Section header — */
@@ -874,10 +872,11 @@ body.cursor-hover .cursor-dot { opacity: 0; }
 
 /* ═══ Fullscreen menu — the navigation SCENE (desktop + mobile) ═════════════
    Opens with a top-down clip reveal; items line-mask in with a stagger; live
-   Tashkent telemetry in the footer. The capsule/bar stays above it (z:2) so
-   the burger doubles as the close control. */
+   Tashkent telemetry in the footer. The open nav bar is promoted above this
+   layer so the burger remains the close control, while the overlay itself
+   stays above every content section regardless of local stacking contexts. */
 .nav-menu {
-  position: fixed; inset: 0; z-index: 1;
+  position: fixed; inset: 0; z-index: var(--z-overlay);
   display: flex;
   pointer-events: none;
   background:
@@ -1076,7 +1075,7 @@ html.is-flying body::after { opacity: 1; }
    every stylesheet rule — the display voice would silently revert to Geist.
    The heading face is identity, not a user preference, so it gets its own
    token that nothing overwrites. */
-:root { --f-head: "Oswald", "Geist", "Inter", -apple-system, system-ui, sans-serif; }
+:root { --f-head: "Oswald", "Inter", -apple-system, system-ui, sans-serif; }
 h1, h2, h3,
 .sec-head h2,
 .hero-line,
@@ -1249,7 +1248,7 @@ section[data-section="hero"]::after { display: none; }
 html.act-light {
   --text: #1A1A18;
   --text-dim: #4A473F;
-  --text-mute: #7C776B;
+  --text-mute: #655F54;
   --line: rgba(26, 26, 24, 0.12);
   --line-strong: rgba(26, 26, 24, 0.20);
   --hair: rgba(26, 26, 24, 0.10);

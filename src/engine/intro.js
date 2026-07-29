@@ -24,12 +24,12 @@
   "use strict";
 
   let CFG = {
-    EASE_MS: 2200,       // first visit: 0 → EASE_TARGET while the critical shell settles
+    EASE_MS: 1850,       // first visit: 0 → EASE_TARGET while the critical shell settles
     EASE_TARGET: 92,
-    CREEP_MS: 360,       // short honest settle — the robot is progressive enhancement
-    CEILING_MS: 2400,    // intro itself never blocks the page beyond the approved 2–3s window
-    HOLD_MS: 220,        // brief hold at real 100% before the reveal starts
-    REVEAL_MS: 550,
+    CREEP_MS: 340,       // visible 92 → 99 settle; never jump straight to 100
+    CEILING_MS: 2190,    // motion phase; hold + reveal lands just under three seconds
+    HOLD_MS: 180,        // brief hold at real 100% before the reveal starts
+    REVEAL_MS: 480,
     SKIP_GRACE_MS: 500,
     CORE_Y: 0.42,        // matches hero photo's own focal point
     PARTICLES: 22,
@@ -85,19 +85,19 @@
     try { isMobile = window.matchMedia("(max-width: 900px)").matches; } catch (e) { /* opportunistic */ }
     if (repeatVisit) {
       CFG = Object.assign({}, CFG, {
-        EASE_MS: isMobile ? 1120 : 1280,
-        CREEP_MS: 220,
-        CEILING_MS: isMobile ? 1380 : 1540,
-        HOLD_MS: 140,
-        REVEAL_MS: 420,
+        EASE_MS: isMobile ? 1350 : 1450,
+        CREEP_MS: isMobile ? 240 : 250,
+        CEILING_MS: isMobile ? 1590 : 1700,
+        HOLD_MS: 130,
+        REVEAL_MS: 400,
       });
     } else if (isMobile) {
       CFG = Object.assign({}, CFG, {
-        EASE_MS: 1950,
-        CREEP_MS: 320,
-        CEILING_MS: 2220,
-        HOLD_MS: 180,
-        REVEAL_MS: 500,
+        EASE_MS: 1700,
+        CREEP_MS: 300,
+        CEILING_MS: 2000,
+        HOLD_MS: 170,
+        REVEAL_MS: 460,
       });
     }
 
@@ -105,6 +105,7 @@
     function forceRemove() {
       forcedTimer = 0;
       if (panel && panel.parentNode) panel.remove();
+      document.documentElement.classList.remove("intro-lock");
       try { window.dispatchEvent(new CustomEvent("sm:intro-done")); } catch (e) { /* opportunistic */ }
     }
 
@@ -118,7 +119,7 @@
     var particles = null, pW = 0, pH = 0, pDpr = 1;
     var start = 0, raf = 0, resizeHandler = null;
     var exitFrom = 0, finished = false, revealing = false;
-    var displayed = -1;
+    var displayed = -1, prepDispatched = false;
 
     // Boot-log lines: reuse the hero's real boot readout (technical, language-
     // independent) so the loader narrates the same "system coming online" story
@@ -215,7 +216,7 @@
       wrap.className = "sm-boot";
       wrap.style.top = (CFG.CORE_Y * 100).toFixed(1) + "%";
       wrap.innerHTML =
-        '<div class="sm-boot-label mono">CORE.AI <span class="sm-boot-state">INITIALIZING</span></div>' +
+        '<div class="sm-boot-label mono">SAMANDAR / PRODUCT LAB <span class="sm-boot-state">BUILD</span></div>' +
         '<div class="sm-boot-pct"><span class="sm-boot-pct-n">00</span><span class="sm-boot-pct-sign">%</span></div>' +
         '<div class="sm-boot-line"><i></i></div>' +
         '<div class="sm-boot-log mono" aria-hidden="true"></div>';
@@ -313,6 +314,7 @@
       detachSkipListeners();
       if (resizeHandler) window.removeEventListener("resize", resizeHandler);
       if (panel.parentNode) panel.remove();
+      document.documentElement.classList.remove("intro-lock");
       try { window.dispatchEvent(new CustomEvent("sm:intro-done")); } catch (e) { /* opportunistic */ }
     }
 
@@ -322,6 +324,16 @@
       displayed = n;
       if (elPct) elPct.textContent = String(n).padStart(2, "0");
       if (elLine) elLine.style.width = n + "%";
+      if (elLabelState && !revealing) {
+        elLabelState.textContent = n < 46 ? "BUILD" : n < 88 ? "VERIFY" : "SHIP";
+      }
+      // Assemble Hero underneath the opaque final beat so the reveal opens on
+      // a nearly settled composition instead of starting a second intro.
+      if (!prepDispatched && n >= 80) {
+        prepDispatched = true;
+        intent.prepared = true;
+        try { window.dispatchEvent(new CustomEvent("sm:intro-prep")); } catch (e) { /* opportunistic */ }
+      }
     }
 
     function startReveal() {
@@ -368,7 +380,7 @@
       setLog(visualPct);
 
       var pastCeiling = t >= CFG.CEILING_MS;
-      if (pastCeiling || visualPct >= CFG.EASE_TARGET - 0.01) {
+      if (pastCeiling || visualPct >= 98.95) {
         startReveal();
         return;
       }

@@ -59,7 +59,7 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "density": "regular"
 }/*EDITMODE-END*/;
 
-function useScrollEngine(bgFxRef, setActiveSection) {
+function useScrollEngine(setActiveSection) {
   useE(() => {
     const progressEl = document.querySelector(".scroll-progress");
     let raf = 0;
@@ -67,8 +67,7 @@ function useScrollEngine(bgFxRef, setActiveSection) {
       raf = 0;
       const max = document.documentElement.scrollHeight - window.innerHeight;
       const y = max > 0 ? window.scrollY / max : 0;
-      if (progressEl) progressEl.style.width = `${(y * 100).toFixed(2)}%`;
-      if (bgFxRef.current && bgFxRef.current.setScroll) bgFxRef.current.setScroll(y);
+      if (progressEl) progressEl.style.transform = `scaleX(${y.toFixed(4)})`;
     }
     function onScroll() { if (!raf) raf = requestAnimationFrame(tick); }
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -79,7 +78,6 @@ function useScrollEngine(bgFxRef, setActiveSection) {
         if (e.isIntersecting && e.intersectionRatio > 0.3) {
           const id = e.target.getAttribute("data-section");
           setActiveSection(id);
-          if (bgFxRef.current && bgFxRef.current.setSection) bgFxRef.current.setSection(id);
           // Single source of truth for "which section is the reader in" —
           // acts.js (colour dramaturgy) and future engines subscribe to this.
           try { window.dispatchEvent(new CustomEvent("sm:section", { detail: { id } })); } catch (err) { /* opportunistic */ }
@@ -482,8 +480,6 @@ function App() {
   const [activeSection, setActiveSection] = useS("hero");
   const [coreReady, setCoreReady] = useS(false);
   const canvasRef = useR(null);
-  const bgFxCanvasRef = useR(null);
-  const bgFxRef = useR(null);
   const lang = tweaks.lang in window.CONTENT ? tweaks.lang : "ru";
   const t = window.CONTENT[lang];
 
@@ -541,14 +537,10 @@ function App() {
     });
   }, []);
 
-  // Apply the (single) theme: set CSS variables + push accent to the bg-fx
-  // renderer. Kept dependency-driven so a future re-introduction of theming
-  // would just work.
+  // Publish the single theme identity. Palette values live in CSS so first
+  // paint and hydrated paint always share one source of truth.
   useE(() => {
-    const theme = window.applyTheme(tweaks.theme);
-    if (bgFxRef.current && theme) {
-      bgFxRef.current.setAccent(theme.accent, theme.accent2);
-    }
+    window.applyTheme(tweaks.theme);
   }, [tweaks.theme]);
   useE(() => { window.applyFontStack(tweaks.font); }, [tweaks.font]);
 
@@ -610,29 +602,16 @@ function App() {
   }, [tweaks.density, lang]);
   useE(() => {
     document.documentElement.style.setProperty("--motion", String(tweaks.motion));
-    if (bgFxRef.current && bgFxRef.current.setMotion) bgFxRef.current.setMotion(tweaks.motion);
   }, [tweaks.motion]);
 
-  // Apply theme/font once on mount + init bg-fx canvas
+  // Apply theme/font once on mount.
   useE(() => {
     window.applyTheme(tweaks.theme);
     window.applyFontStack(tweaks.font);
     setCoreReady(true);
-    if (bgFxCanvasRef.current && window.BgFx) {
-      const rootStyles = getComputedStyle(document.documentElement);
-      const a1 = rootStyles.getPropertyValue("--accent").trim() || "#D97757";
-      const a2 = rootStyles.getPropertyValue("--accent-2").trim() || "#C89B5E";
-      bgFxRef.current = window.BgFx.create(bgFxCanvasRef.current, {
-        accent: a1, accent2: a2, motion: tweaks.motion,
-      });
-    }
-    return () => {
-      if (bgFxRef.current && bgFxRef.current.dispose) bgFxRef.current.dispose();
-      bgFxRef.current = null;
-    };
   }, []);
 
-  useScrollEngine(bgFxRef, setActiveSection);
+  useScrollEngine(setActiveSection);
 
   // Motion: init smart cursor + reveal observers after first paint, refresh on lang change.
   // isInViewport check in motion.js handles the "no-flash" problem for visible elements.
@@ -683,8 +662,6 @@ function App() {
       {/* Keyboard/screen-reader skip link — first focusable element. */}
       <a href="#main" className="skip-link">{(t.nav && t.nav.skip) || "К содержимому"}</a>
 
-      <canvas ref={bgFxCanvasRef} className="bg-fx-canvas" aria-hidden="true" />
-      <div className="bg-grid" />
       <div className="bg-noise" />
       <div className="scroll-progress" />
 

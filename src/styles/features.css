@@ -20,12 +20,10 @@
  * overlap) reads as one coherent system. The JS reveal engine (motion.js)
  * uses the canonical entrance ease directly; these mirror it for CSS. */
 :root {
-  --e-entrance: cubic-bezier(.2, .6, .18, 1);   /* matches motion.js REVEAL_TRANSITION */
-  --e-soft:     cubic-bezier(.22, .61, .36, 1);
-  --e-overlap:  cubic-bezier(.83, 0, .17, 1);
-  --d-fast: .55s;
-  --d-base: .85s;
-  --d-slow: 1.1s;
+  --e-entrance: var(--ease-emphasized);
+  --e-soft: var(--ease-out);
+  --e-overlap: var(--ease-overlap);
+  --d-base: var(--d-slow);
 }
 
 /* ── 1. Scene Cinema — View Transitions API ───────────────────────── */
@@ -121,7 +119,7 @@
   flex-shrink: 0;
 }
 .pe-title {
-  font-family: var(--f-display, "Instrument Serif", serif);
+  font-family: var(--f-display, "Cormorant Garamond", serif);
   font-size: clamp(16px, 1.8vw, 20px);
   letter-spacing: -0.01em;
   color: rgba(255, 240, 220, 0.96);
@@ -244,7 +242,7 @@
   color: rgba(255, 240, 220, 0.4);
 }
 .pe-result-v {
-  font-family: var(--f-display, "Instrument Serif", serif);
+  font-family: var(--f-display, "Cormorant Garamond", serif);
   font-size: clamp(22px, 3vw, 30px);
   font-weight: 400;
   letter-spacing: -0.01em;
@@ -441,52 +439,89 @@
 
 /* ── 7. Signal 2.0 — editorial rows, full-width, expand in place ──────── */
 
-/* The ten-second countdown. A hairline that drains across the full width of
-   the block plus a mono read-out — no numerals ticking down, because a running
-   digit is a thing you WATCH, and the point is to read the reasons while it
-   runs, not to watch a clock. */
-.signal-run {
+/* The signature path carries the same BUILD → VERIFY → SHIP grammar out of
+   Hero. It never changes content automatically: the line is choreography, the
+   accordion remains entirely reader-controlled. */
+.signal-path {
   position: relative;
   margin-top: 26px;
+  display: grid;
+  grid-template-columns: minmax(180px, 0.72fr) minmax(0, 2.28fr);
+  align-items: center;
+  gap: var(--space-8);
+  min-height: 42px;
+  border-bottom: 1px solid var(--line-strong);
+}
+.signal-path-label {
+  font-size: 9px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.signal-path-steps {
+  position: relative;
+  grid-column: 2;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  min-height: 42px;
+}
+.signal-path-steps::before,
+.signal-path-steps::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  top: 50%;
+  height: 1px;
+}
+.signal-path-steps::before { background: var(--line-strong); }
+.signal-path-steps::after {
+  background: linear-gradient(90deg, var(--proof-build), var(--proof-verify), var(--proof-ship));
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.sec-in .signal-path-steps::after {
+  animation: signalPathDraw var(--d-scene) var(--ease-emphasized) 180ms both;
+}
+.signal-path-steps li {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  padding-bottom: 8px;
+  gap: var(--space-2);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: var(--ink-secondary);
 }
-.signal-run-bar {
-  position: absolute;
-  left: 0; bottom: 0;
-  height: 1px;
-  width: 100%;
-  transform-origin: 0 50%;
-  background: linear-gradient(90deg,
-    rgba(var(--act-accent-rgb, var(--accent-rgb)) / 0.75),
-    rgba(var(--act-accent-rgb, var(--accent-rgb)) / 0.18));
-  /* scaleX rather than width: a width animation relayouts every frame for ten
-     seconds straight, a transform does not touch layout at all. */
-  transform: scaleX(0);
+.signal-path-steps li > span {
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--surface-canvas);
+  border-radius: 50%;
+  background: var(--proof-verify);
+  box-shadow: 0 0 0 1px var(--proof-verify);
 }
-.signal-run--running .signal-run-bar {
-  animation: signalRun var(--run-ms, 10000ms) linear forwards;
+.signal-path-steps li:first-child > span { background: var(--proof-build); box-shadow: 0 0 0 1px var(--proof-build); }
+.signal-path-steps li:last-child > span { background: var(--proof-ship); box-shadow: 0 0 0 1px var(--proof-ship); }
+@keyframes signalPathDraw { to { transform: scaleX(1); } }
+@media (max-width: 640px) {
+  .signal-path {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+    padding-block: var(--space-3);
+  }
+  .signal-path-steps {
+    grid-column: 1;
+    position: relative;
+    min-height: 28px;
+  }
+  .signal-path-label { font-size: 8.5px; }
+  .signal-path-steps li { font-size: 8px; gap: 5px; }
 }
-.signal-run--done .signal-run-bar { transform: scaleX(1); opacity: 0.28; transition: opacity .8s ease; }
-@keyframes signalRun { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-.signal-run-read {
-  font-size: 10.5px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text-mute);
-  transition: color .6s ease;
-}
-.signal-run--running .signal-run-read { color: var(--act-accent, var(--accent)); }
-/* Idle is the pre-arrival state — nothing has started, so the rule reads as a
-   plain divider rather than an empty progress bar waiting to be noticed. */
-.signal-run--idle .signal-run-bar { transform: scaleX(1); opacity: 0.14; }
 @media (prefers-reduced-motion: reduce) {
-  /* The run never starts under reduced motion (see Signal's effect); the
-     hairline stays a divider so the block doesn't lose its top edge. */
-  .signal-run-bar { animation: none; transform: scaleX(1); opacity: 0.14; }
+  .signal-path-steps::after { transform: scaleX(1); animation: none; }
 }
 
 .signal-rows {
@@ -729,14 +764,11 @@
   .signal-row.is-open .signal-row-arrow { transform: rotate(90deg); }
 }
 
-/* Reduced motion / low tier — every row statically expanded, no interaction
-   required to reach the content, no transitions. */
+/* Reduced motion / low tier changes motion only, never information state.
+   React remains the single owner of expanded/collapsed + ARIA state. */
 @media (prefers-reduced-motion: reduce) {
   .signal-row, .signal-row::before, .signal-row-k, .signal-row-num,
   .signal-row-detail, .signal-row-v, .signal-row-arrow, .signal-row-tail-text { transition: none; }
-  .signal-row-detail { grid-template-rows: 1fr; }
-  .signal-row-v { opacity: 1; transform: none; }
-  .signal-row-tail-text { opacity: 0.75; }
   .signal-rows:hover .signal-row:not(:hover):not(.is-open) .signal-row-k { opacity: 1; }
   /* Ghost numeral / glow / hinge — decoration only, shown at their settled
      "open" values statically (never hidden behind an animation that won't
@@ -755,9 +787,6 @@ html[data-motion-lite] .signal-row-detail,
 html[data-motion-lite] .signal-row-v,
 html[data-motion-lite] .signal-row-arrow,
 html[data-motion-lite] .signal-row-tail-text { transition: none; }
-html[data-motion-lite] .signal-row-detail { grid-template-rows: 1fr; }
-html[data-motion-lite] .signal-row-v { opacity: 1; transform: none; }
-html[data-motion-lite] .signal-row-tail-text { opacity: 0.75; }
 html[data-motion-lite] .signal-rows:hover .signal-row:not(:hover):not(.is-open) .signal-row-k { opacity: 1; }
 html[data-motion-lite] .row-ghost, html[data-motion-lite] .signal-row::after { transition: none; }
 html[data-motion-lite] .signal-row.is-open .row-ghost { opacity: 0.11; transform: translateY(-42%) scale(1); }
@@ -904,7 +933,7 @@ html[data-theme="claude"] body {
   flex-shrink: 0;
 }
 .cc-title {
-  font-family: var(--f-display, "Instrument Serif", serif);
+  font-family: var(--f-display, "Cormorant Garamond", serif);
   font-size: clamp(18px, 1.8vw, 22px);
   letter-spacing: -0.01em;
   color: rgba(255, 240, 220, 0.96);
@@ -996,7 +1025,7 @@ html[data-theme="claude"] body {
   pointer-events: none;
 }
 .cc-counter [data-cc-counter-num] {
-  font-family: var(--f-display, "Instrument Serif", serif);
+  font-family: var(--f-display, "Cormorant Garamond", serif);
   font-size: 16px;
   color: var(--accent, #D97757);
   letter-spacing: -0.01em;
@@ -1111,7 +1140,7 @@ html[data-theme="claude"] body {
   background: rgba(28, 18, 14, 0.72);
 }
 .cc-ro-num {
-  font-family: var(--f-display, "Instrument Serif", serif);
+  font-family: var(--f-display, "Cormorant Garamond", serif);
   font-size: 16px;
   color: var(--accent, #D97757);
 }

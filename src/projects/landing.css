@@ -18,8 +18,8 @@
   --lp-line-strong: rgba(245, 240, 230, .2);
   --lp-accent: #d97757;
   --lp-accent-rgb: 217 119 87;
-  --lp-display: "Geist", "Inter", system-ui, sans-serif;
-  --lp-serif: "Instrument Serif", Georgia, serif;
+  --lp-display: "Oswald", "Inter", system-ui, sans-serif;
+  --lp-serif: "Cormorant Garamond", Georgia, serif;
   --lp-body: "Inter", system-ui, sans-serif;
   --lp-mono: "JetBrains Mono", ui-monospace, monospace;
   --lp-ease: cubic-bezier(.2, .74, .16, 1);

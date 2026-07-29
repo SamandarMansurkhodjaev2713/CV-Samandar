@@ -206,8 +206,13 @@ function Hero({
   //     timelines like the intro's indefinitely, and "the name never appears"
   //     is the worst possible failure mode for the hero.
   useEffect(() => {
-    const curtain = window.__SM_INTRO && window.__SM_INTRO.panel;
+    const intro = window.__SM_INTRO;
+    const curtain = intro && intro.panel;
     if (!curtain || !curtain.parentNode) {
+      setLit(true);
+      return undefined;
+    }
+    if (intro.prepared) {
       setLit(true);
       return undefined;
     }
@@ -217,9 +222,11 @@ function Hero({
       fired = true;
       setLit(true);
     };
+    window.addEventListener("sm:intro-prep", light);
     window.addEventListener("sm:intro-done", light);
     const backstop = window.setTimeout(light, 4200);
     return () => {
+      window.removeEventListener("sm:intro-prep", light);
       window.removeEventListener("sm:intro-done", light);
       window.clearTimeout(backstop);
     };
@@ -293,6 +300,66 @@ function Hero({
   // Trailing full stops are dropped: they belonged to the stacked reading and
   // read as noise inside a slash-separated rule.
   const roles = (t.hero.title_lines || []).map(s => s.replace(/\.\s*$/, ""));
+  const proofSteps = Array.isArray(t.hero.proof_steps) && t.hero.proof_steps.length ? t.hero.proof_steps : [{
+    code: "01",
+    k: "BUILD",
+    v: "full-stack"
+  }, {
+    code: "02",
+    k: "VERIFY",
+    v: "QA"
+  }, {
+    code: "03",
+    k: "SHIP",
+    v: "production"
+  }];
+
+  // Mobile roles are justified character-by-character, so a font size chosen
+  // from character count alone breaks as soon as a locale contains wider
+  // glyphs. Fit the actual loaded Oswald metrics to the available line width.
+  // This runs under the intro curtain on first load and again after a language
+  // switch; the conservative CSS fallback keeps the pre-fit frame contained.
+  useEffect(() => {
+    const heroEl = document.getElementById("hero");
+    if (!heroEl) return undefined;
+    let cancelled = false;
+    let resizeRaf = 0;
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    function fitRoles() {
+      if (cancelled || !ctx || !window.matchMedia("(max-width: 900px)").matches) return;
+      const list = heroEl.querySelector(".hero-roles");
+      if (!list) return;
+      const available = list.clientWidth;
+      if (!available) return;
+      list.querySelectorAll(".hero-role").forEach(role => {
+        const copy = role.querySelector(".a11y-only");
+        const text = (copy ? copy.textContent : role.textContent || "").toUpperCase();
+        const family = getComputedStyle(role).fontFamily;
+        ctx.font = `600 100px ${family}`;
+        let units = 0;
+        for (const ch of text) units += /\s/.test(ch) ? 16 : ctx.measureText(ch).width;
+        if (!units) return;
+        const cap = Math.min(76, window.innerWidth * 0.188);
+        const fitted = Math.max(30, Math.min(cap, available * 0.985 * 100 / units));
+        role.style.setProperty("--role-size", `${fitted.toFixed(2)}px`);
+      });
+    }
+    function scheduleFit() {
+      if (resizeRaf) cancelAnimationFrame(resizeRaf);
+      resizeRaf = requestAnimationFrame(fitRoles);
+    }
+    scheduleFit();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleFit);
+    window.addEventListener("resize", scheduleFit, {
+      passive: true
+    });
+    return () => {
+      cancelled = true;
+      if (resizeRaf) cancelAnimationFrame(resizeRaf);
+      window.removeEventListener("resize", scheduleFit);
+    };
+  }, [t]);
   return /*#__PURE__*/React.createElement("section", {
     "data-section": "hero",
     id: "hero",
@@ -339,7 +406,10 @@ function Hero({
     className: "hero-roles-sep",
     "aria-hidden": "true"
   }, "/") : null, /*#__PURE__*/React.createElement("span", {
-    className: "hero-role"
+    className: "hero-role",
+    style: {
+      "--role-size": "12vw"
+    }
   }, /*#__PURE__*/React.createElement("span", {
     className: "a11y-only"
   }, r), /*#__PURE__*/React.createElement("span", {
@@ -396,46 +466,26 @@ function Hero({
     className: "hero-scroll-hint mono",
     "aria-hidden": "true"
   }, "scroll"), /*#__PURE__*/React.createElement("div", {
-    className: "hero-marquee",
-    "aria-hidden": "true"
+    className: "hero-proof",
+    "aria-label": t.hero.proof_label || "Build, verify, ship"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "hero-marquee-track"
-  }, Array.from({
-    length: 2
-  }).map((_, dup) => /*#__PURE__*/React.createElement("div", {
-    className: "hero-marquee-group mono",
-    key: dup
-  }, /*#__PURE__*/React.createElement("span", null, "TypeScript"), /*#__PURE__*/React.createElement("span", {
-    className: "hero-marquee-sep"
-  }, "\xB7"), /*#__PURE__*/React.createElement("span", null, "React"), /*#__PURE__*/React.createElement("span", {
-    className: "hero-marquee-sep"
-  }, "\xB7"), /*#__PURE__*/React.createElement("span", null, "Next.js"), /*#__PURE__*/React.createElement("span", {
-    className: "hero-marquee-sep"
-  }, "\xB7"), /*#__PURE__*/React.createElement("span", null, "Node.js"), /*#__PURE__*/React.createElement("span", {
-    className: "hero-marquee-sep"
-  }, "\xB7"), /*#__PURE__*/React.createElement("span", null, "Postgres"), /*#__PURE__*/React.createElement("span", {
-    className: "hero-marquee-sep"
-  }, "\xB7"), /*#__PURE__*/React.createElement("span", null, "OpenAI"), /*#__PURE__*/React.createElement("span", {
-    className: "hero-marquee-sep"
-  }, "\xB7"), /*#__PURE__*/React.createElement("span", null, "Anthropic"), /*#__PURE__*/React.createElement("span", {
-    className: "hero-marquee-sep"
-  }, "\xB7"), /*#__PURE__*/React.createElement("span", null, "LangChain"), /*#__PURE__*/React.createElement("span", {
-    className: "hero-marquee-sep"
-  }, "\xB7"), /*#__PURE__*/React.createElement("span", null, "n8n"), /*#__PURE__*/React.createElement("span", {
-    className: "hero-marquee-sep"
-  }, "\xB7"), /*#__PURE__*/React.createElement("span", null, "Three.js"), /*#__PURE__*/React.createElement("span", {
-    className: "hero-marquee-sep"
-  }, "\xB7"), /*#__PURE__*/React.createElement("span", null, "Telegram Bot API"), /*#__PURE__*/React.createElement("span", {
-    className: "hero-marquee-sep"
-  }, "\xB7"), /*#__PURE__*/React.createElement("span", null, "Docker"), /*#__PURE__*/React.createElement("span", {
-    className: "hero-marquee-sep"
-  }, "\xB7"), /*#__PURE__*/React.createElement("span", null, "Redis"), /*#__PURE__*/React.createElement("span", {
-    className: "hero-marquee-sep"
-  }, "\xB7"), /*#__PURE__*/React.createElement("span", null, "RAG"), /*#__PURE__*/React.createElement("span", {
-    className: "hero-marquee-sep"
-  }, "\xB7"), /*#__PURE__*/React.createElement("span", null, "Vector DBs"), /*#__PURE__*/React.createElement("span", {
-    className: "hero-marquee-sep"
-  }, "\xB7"))))));
+    className: "shell hero-proof-inner"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "hero-proof-label mono"
+  }, t.hero.proof_label || "One ownership loop"), /*#__PURE__*/React.createElement("ol", {
+    className: "hero-proof-steps"
+  }, proofSteps.map((step, index) => /*#__PURE__*/React.createElement("li", {
+    className: "hero-proof-step",
+    style: {
+      "--proof-i": index
+    },
+    key: `${step.code}-${step.k}`
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "hero-proof-node",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "hero-proof-code mono"
+  }, step.code), /*#__PURE__*/React.createElement("strong", null, step.k), /*#__PURE__*/React.createElement("span", null, step.v)))))));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -518,20 +568,6 @@ function SignalRow({
     d: "M5 12h14M13 6l6 6-6 6"
   }))));
 }
-
-// The section's eyebrow has always read "10-second signal". It was a figure of
-// speech attached to a static accordion — the one thing on the page that made a
-// concrete promise and then didn't keep it. Now it is literal: arriving in the
-// section starts a real ten-second run that opens each of the six reasons in
-// turn, roughly 1.6s apart, with a hairline counting the ten seconds down. Read
-// nothing, do nothing, and you still get every reason inside ten seconds.
-//
-// It yields immediately and permanently to the reader. Any hover, focus or tap
-// cancels the run for good — a timer that fights you for control of what you
-// are reading is worse than no timer. It also only ever runs once, and only
-// while the section is actually on screen (an IntersectionObserver gate), so
-// scrolling back never restarts a show you already sat through.
-const SIGNAL_RUN_MS = 10000;
 function Signal({
   t
 }) {
@@ -541,101 +577,19 @@ function Signal({
   // clicked. Click/tap toggles (accordion behavior on touch — see SignalRow's
   // hasHover branching for why desktop click doesn't use the toggle path).
   const [openIndex, setOpenIndex] = useState(-1);
-  // "idle" before the section is reached, "running" during the ten seconds,
-  // "done" once it finishes or the reader takes over. Drives the countdown
-  // hairline and the state read-out beside it.
-  const [runState, setRunState] = useState("idle");
-  const timersRef = useRef([]);
   const hasHoverRef = useRef(null);
   if (hasHoverRef.current === null) {
     hasHoverRef.current = typeof window.matchMedia === "function" && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   }
   const cards = t.signal.cards;
   const total = cards.length;
-  function stopRun() {
-    timersRef.current.forEach(window.clearTimeout);
-    timersRef.current = [];
-  }
+  const pathSteps = Array.isArray(t.hero && t.hero.proof_steps) ? t.hero.proof_steps : [];
   const handleToggle = (i, isHover) => {
-    // The reader touched it — the run is over, permanently.
-    stopRun();
-    setRunState("done");
     setOpenIndex(prev => {
       if (isHover) return i;
       return prev === i ? -1 : i;
     });
   };
-  useEffect(() => {
-    const el = document.getElementById("signal");
-    let reduced = false;
-    try {
-      reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    } catch (e) {/* opportunistic */}
-    // Reduced motion gets the whole point without the performance: opening all
-    // six at once is not an option (six expanded rows is a wall), so instead
-    // nothing auto-opens and the countdown never appears. The rows are still
-    // fully readable on hover/tap — the content was never gated on the run.
-    if (!el || reduced) return undefined;
-
-    // ── The trigger is motion.js's `.sec-in`, not an IntersectionObserver of
-    // our own. Two reasons, and the second is the important one:
-    //
-    //   1. A private IO needs its own answer to "how much of this section
-    //      counts as arrived", and both obvious answers are wrong here. A
-    //      ratio threshold is unreachable on a section taller than a couple of
-    //      viewports (this one is 1256px against a 900px window — max possible
-    //      ratio 0.72, so `threshold: 0.35` was one added row away from
-    //      silently never firing). A rootMargin band works, but then two
-    //      different definitions of "in view" live on the same section.
-    //   2. motion.js's version already has a fallback for environments where
-    //      IntersectionObserver callbacks never arrive — measured here: a raw
-    //      IO on this exact element with these exact options delivered ZERO
-    //      entries in 500ms while `.sec-in` was already on the section. IO
-    //      callbacks are delivered on a rendering-lifecycle step, so a tab
-    //      that is not compositing frames never gets them; motion.js's
-    //      scroll/poll path covers that, and this now inherits it for free.
-    //
-    // MutationObserver is used to watch for the class because IT is delivered
-    // on a microtask — no rendering step required, so the observer works in
-    // exactly the situation that broke the IO.
-    let started = false;
-    function begin() {
-      if (started) return;
-      started = true;
-      setRunState("running");
-      const step = SIGNAL_RUN_MS / (total + 1);
-      for (let i = 0; i < total; i++) {
-        timersRef.current.push(window.setTimeout(function () {
-          setOpenIndex(i);
-        }, step * (i + 1)));
-      }
-      // Land on the last reason rather than closing everything: the run ends
-      // with something to read, not with an empty list.
-      timersRef.current.push(window.setTimeout(function () {
-        setRunState("done");
-      }, SIGNAL_RUN_MS));
-    }
-    if (el.classList.contains("sec-in")) {
-      begin();
-      return function () {
-        stopRun();
-      };
-    }
-    const mo = new MutationObserver(function () {
-      if (el.classList.contains("sec-in")) {
-        mo.disconnect();
-        begin();
-      }
-    });
-    mo.observe(el, {
-      attributes: true,
-      attributeFilter: ["class"]
-    });
-    return function () {
-      mo.disconnect();
-      stopRun();
-    };
-  }, [total]);
   return /*#__PURE__*/React.createElement("section", {
     "data-section": "signal",
     id: "signal",
@@ -648,18 +602,21 @@ function Signal({
     eyebrow: t.signal.eyebrow,
     title: t.signal.title,
     em: t.signal.title.split(" ").pop(),
-    meta: `${total} · signal`
+    meta: t.signal.meta || `${total} · signal`
   }), /*#__PURE__*/React.createElement("div", {
-    className: `signal-run signal-run--${runState}`,
-    "aria-hidden": "true"
+    className: "signal-path"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "signal-run-bar",
-    style: {
-      "--run-ms": `${SIGNAL_RUN_MS}ms`
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "signal-run-read mono"
-  }, runState === "running" ? "10s · signal running" : runState === "done" ? "signal complete" : "10s · signal")), /*#__PURE__*/React.createElement("div", {
+    className: "signal-path-label mono"
+  }, t.signal.run_idle || "10s · read the essentials"), /*#__PURE__*/React.createElement("ol", {
+    className: "signal-path-steps",
+    "aria-label": t.hero.proof_label || "Build, verify, ship"
+  }, pathSteps.map(step => /*#__PURE__*/React.createElement("li", {
+    key: `${step.code}-${step.k}`
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("strong", {
+    className: "mono"
+  }, step.k))))), /*#__PURE__*/React.createElement("div", {
     className: "signal-rows"
   }, cards.map((c, i) => /*#__PURE__*/React.createElement(SignalRow, {
     key: i,
