@@ -219,8 +219,13 @@
 
 /* Magnetic pull */
 [data-magnetic] {
-  transition: transform .35s cubic-bezier(.2,.7,.2,1);
-  will-change: transform;
+  --mag-x: 0px;
+  --mag-y: 0px;
+  /* Individual transform properties compose with authored hover/press
+     transforms instead of overwriting them from inline JavaScript. */
+  translate: var(--mag-x) var(--mag-y);
+  transition: translate var(--d-fast, .2s) var(--ease-out, cubic-bezier(.2,.7,.2,1));
+  will-change: translate;
 }
 
 /* Sticky pin */
@@ -319,13 +324,13 @@
   [data-reveal].rv-bound:not(.rv-in) { opacity: 1; transform: none; }
   [data-reveal].rv-bound { transition: none; }
   .rv-w, .rv-c { opacity: 1; transform: none; transition: none; }
-  [data-magnetic] { transition: none; }
+  [data-magnetic] { transition: none; translate: none; }
 }
 
 /* Mobile / touch: no smart cursor, no magnetic */
 @media (hover: none), (max-width: 900px) {
   .sc-cursor { display: none; }
-  [data-magnetic] { transform: none !important; }
+  [data-magnetic] { translate: none !important; }
 }
 
 

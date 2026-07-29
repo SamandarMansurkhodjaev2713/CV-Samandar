@@ -37,35 +37,8 @@ window.FONT_STACKS = {
   },
 };
 
-// ── Device performance tier ──────────────────────────────────────────────
-// Heuristic detection used to scale back GPU/CPU-heavy effects on weak
-// hardware. Computed once and cached. Signals:
-//   • navigator.hardwareConcurrency — logical CPU cores (widely supported).
-//   • navigator.deviceMemory        — approx RAM in GB (Chromium only;
-//                                     capped at 8, undefined elsewhere).
-// Unknown values default to "capable" so we never needlessly degrade a
-// device we simply can't measure.
-const DEVICE_TIER_CORE_THRESHOLD = 4;   // ≤ this many cores → low tier
-const DEVICE_TIER_MEMORY_THRESHOLD = 4; // ≤ this many GB    → low tier
-let cachedDeviceTier = null;
-window.getDeviceTier = function () {
-  if (cachedDeviceTier) return cachedDeviceTier;
-  let cores = 8;
-  let memory = 8;
-  if (typeof navigator !== "undefined") {
-    if (typeof navigator.hardwareConcurrency === "number" && navigator.hardwareConcurrency > 0) {
-      cores = navigator.hardwareConcurrency;
-    }
-    if (typeof navigator.deviceMemory === "number" && navigator.deviceMemory > 0) {
-      memory = navigator.deviceMemory;
-    }
-  }
-  cachedDeviceTier =
-    (cores <= DEVICE_TIER_CORE_THRESHOLD || memory <= DEVICE_TIER_MEMORY_THRESHOLD)
-      ? "low"
-      : "normal";
-  return cachedDeviceTier;
-};
+// Performance and motion policy live in perf.js. That module owns the legacy
+// getDeviceTier() compatibility reader so there is only one runtime decision.
 
 window.applyTheme = function(themeKey) {
   // CSS is the sole source of colour truth. Runtime only resolves a stale

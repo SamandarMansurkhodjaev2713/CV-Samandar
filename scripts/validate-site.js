@@ -208,7 +208,39 @@ function validateScriptOrder() {
   const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
   const registryAt = html.indexOf("src/content/product-registry.js");
   const contentAt = html.indexOf("src/content/content.js");
+  const perfAt = html.indexOf("src/engine/perf.js");
+  const runtimeAt = html.indexOf("src/engine/motion-runtime.js");
+  const motionAt = html.indexOf("src/engine/motion.js");
+  const shaderAt = html.indexOf("src/engine/img-fx.js");
+  const cinemaAt = html.indexOf("src/engine/scene-cinema.js");
   assert(registryAt >= 0 && contentAt >= 0 && registryAt < contentAt, "product registry must load before content.js");
+  assert(
+    perfAt >= 0 && runtimeAt > perfAt && motionAt > runtimeAt && shaderAt > runtimeAt && cinemaAt > runtimeAt,
+    "motion policy and runtime must load before every authored motion consumer"
+  );
+}
+
+function validateMotionArchitecture() {
+  const motionSource = fs.readFileSync(path.join(ROOT, "src", "engine", "motion.js"), "utf8");
+  const shaderSource = fs.readFileSync(path.join(ROOT, "src", "engine", "img-fx.js"), "utf8");
+  const runtimeSource = fs.readFileSync(path.join(ROOT, "src", "engine", "motion-runtime.js"), "utf8");
+  const perfSource = fs.readFileSync(path.join(ROOT, "src", "engine", "perf.js"), "utf8");
+
+  [
+    ["motion.js", motionSource],
+    ["img-fx.js", shaderSource],
+  ].forEach(function rejectPrivateLoops(entry) {
+    const name = entry[0];
+    const source = entry[1];
+    assert(!/\brequestAnimationFrame\s*\(/.test(source), name + " must use motion-runtime instead of a private RAF");
+    assert(!/\bsetInterval\s*\(/.test(source), name + " must not create an always-on timer");
+    assert(!/addEventListener\s*\(\s*["'](?:scroll|resize|pointermove|mousemove)["']/.test(source), name + " must use the shared input stream");
+  });
+
+  assert(/bind\s*\(\s*window\s*,\s*["']scroll["']/.test(runtimeSource), "motion-runtime must own the scroll input");
+  assert(/bind\s*\(\s*window\s*,\s*["']pointermove["']/.test(runtimeSource), "motion-runtime must own the pointer input");
+  assert(!/bind\s*\(\s*window\s*,\s*["']scroll["']/.test(perfSource), "motion policy must not duplicate the runtime scroll listener");
+  assert(perfSource.includes("window.__SM_PERF = api") && perfSource.includes("window.__SM_MOTION_POLICY = api"), "motion policy aliases must share one source of truth");
 }
 
 function validateRuntimeShell() {
@@ -238,6 +270,7 @@ function validate(options) {
   validateMainContent(registry, content);
   validateLandings(registry, landings, Boolean(options && options.generated));
   validateScriptOrder();
+  validateMotionArchitecture();
   validateRuntimeShell();
   return {
     products: registry.length,

@@ -1,323 +1,255 @@
-// scene-cinema.js — View Transitions API integration for nav-anchored
-// section navigation. Native cross-fade + blur between sections when the
-// user clicks a nav link, giving the page a "film cut" feel.
+// scene-cinema.js — interruptible navigation transactions for section cuts.
 //
-// ════════════════════════════════════════════════════════════════════════════
-// WHY THIS EXISTS
-// ─────────────────────────────────────────────────────────────────────────────
-// Plain `scrollIntoView({behavior:'smooth'})` is functional but flat — every
-// nav click looks the same. The 2025-baseline View Transitions API
-// (Chrome 111+, Edge 111+, Safari 18+, Firefox 138+) lets us cross-fade
-// between section "shots" by:
-//   1. snapshotting the current viewport,
-//   2. running a sync callback (instant scroll + state mutation),
-//   3. snapshotting the new viewport,
-//   4. cross-fading both via auto-generated CSS animations.
-//
-// We intercept clicks on `a[href^="#"]` (excluding `#`), and on `popstate`,
-// to drive the transition. Existing `IntersectionObserver` listeners in
-// `app.jsx` (`useScrollEngine`) keep working — they only react to actual
-// scroll, which still happens inside our VT callback.
-//
-// BROWSER SUPPORT
-// ─────────────────────────────────────────────────────────────────────────────
-// `'startViewTransition' in document` → progressive enhancement. Older
-// browsers fall back to native smooth-scroll. `prefers-reduced-motion: reduce`
-// users skip the transition entirely (instant jump).
-//
-// PUBLIC API
-// ─────────────────────────────────────────────────────────────────────────────
-//   window.SceneCinema.init()       → bind global click + popstate handlers
-//   window.SceneCinema.dispose()    → unbind handlers, cancel active VT
-//   window.SceneCinema.navigate(id) → trigger a transition programmatically
-//   window.SceneCinema.isSupported  → boolean, true if VT API present
-// ════════════════════════════════════════════════════════════════════════════
-
+// Every accepted intent wins. A newer intent cancels the previous transition,
+// lands on its own target and owns the URL. Every sm:cinema-start has exactly
+// one sm:cinema-done, including rejection, background-tab, timeout and dispose.
 (function () {
   "use strict";
   if (window.__SM_TEST_MODE) return;
 
-  // ── Configuration ──────────────────────────────────────────────────────
-  // Time between accepted nav clicks. Below this we drop subsequent clicks
-  // so a fast double-tap doesn't queue two transitions (which the API
-  // serialises but visually looks janky).
-  const NAV_DEBOUNCE_MS = 220;
+  var ACTIVE_CLASS = "is-cinema-transitioning";
+  var BODY_SECTION_ATTR = "data-active-section";
+  var HARD_TIMEOUT_MS = 1800;
+  var supportsVT = typeof document.startViewTransition === "function";
+  var policy = window.__SM_MOTION_POLICY || window.__SM_PERF || null;
+  var runtime = window.__SM_MOTION_RUNTIME || null;
+  var active = null;
+  var sequence = 0;
+  var bound = false;
+  var unsubscribePolicy = function () {};
 
-  // Cooldown after a transition completes before the next one starts. Keeps
-  // the page from looking strobed if the user clicks every nav link in a row.
-  const POST_TRANSITION_COOLDOWN_MS = 120;
-
-  // CSS class added to <html> while a transition is running. Lets stylesheets
-  // pin-and-disable any rAF-driven backgrounds (bg-fx, etc.) for a clean shot.
-  const ACTIVE_CLASS = "is-cinema-transitioning";
-
-  // Marker we add to <body> so CSS can use [data-active-section="X"] for
-  // section-keyed view-transition-name pairs.
-  const BODY_SECTION_ATTR = "data-active-section";
-
-  // The reduced-motion media query — we cache the MediaQueryList so we can
-  // both read it synchronously and listen for changes.
-  const MEDIA_REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
-
-  // ── State ──────────────────────────────────────────────────────────────
-  const supportsVT = typeof document !== "undefined" && typeof document.startViewTransition === "function";
-  const motionMedia = typeof window !== "undefined" && window.matchMedia
-    ? window.matchMedia(MEDIA_REDUCED_MOTION)
-    : { matches: false, addEventListener: function () {}, removeEventListener: function () {} };
-
-  let lastNavAt = 0;
-  let activeTransition = null;
-  let bound = false;
-  let clickHandler = null;
-  let popHandler = null;
-  let motionListener = null;
-
-  // ── Helpers ────────────────────────────────────────────────────────────
-  function shouldSkipMotion() {
-    return motionMedia.matches === true;
+  function reducedMotion() {
+    if (policy && typeof policy.getState === "function") return !!policy.getState().reducedMotion;
+    try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
+    catch (error) { return false; }
   }
 
-  function getSectionId(hashOrId) {
-    if (!hashOrId) return null;
-    const id = hashOrId.charAt(0) === "#" ? hashOrId.slice(1) : hashOrId;
-    return id || null;
+  function sectionId(value) {
+    if (!value) return null;
+    var id = String(value).charAt(0) === "#" ? String(value).slice(1) : String(value);
+    try { return decodeURIComponent(id) || null; }
+    catch (error) { return id || null; }
   }
 
-  function resolveTarget(id) {
-    if (!id) return null;
+  function targetFor(id) {
+    return id ? document.getElementById(id) : null;
+  }
+
+  function setActiveSection(id) {
+    if (document.body) document.body.setAttribute(BODY_SECTION_ATTR, id);
+  }
+
+  function instantScroll(target) {
+    if (!target || typeof target.scrollIntoView !== "function") return;
+    var previous = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = "auto";
     try {
-      return document.getElementById(id);
-    } catch (err) {
-      console.warn("[SceneCinema] resolveTarget failed for id=", id, err);
-      return null;
-    }
-  }
-
-  /**
-   * Hard-instant scroll to a target element. The project's CSS sets
-   * `html { scroll-behavior: smooth }` which would make `behavior:'auto'`
-   * resolve to smooth and defeat View Transitions capture (the cross-fade
-   * needs the scroll to land *before* the VT API snapshots the "new"
-   * frame). We temporarily override the inline style for the duration of
-   * the scroll, then restore. `behavior:'instant'` is the spec keyword
-   * for force-instant scrolls and is supported in Chrome 80+, Firefox
-   * 109+, Safari 15.4+ — the same baseline as VT itself.
-   * @param {HTMLElement} el
-   */
-  function instantScrollIntoView(el) {
-    if (!el || typeof el.scrollIntoView !== "function") return;
-    const htmlEl = document.documentElement;
-    const prevBehavior = htmlEl.style.scrollBehavior;
-    htmlEl.style.scrollBehavior = "auto";
-    try {
-      // Prefer the explicit "instant" keyword; fall back to "auto" (now safe
-      // because we just overrode the CSS).
-      el.scrollIntoView({ behavior: "instant", block: "start", inline: "nearest" });
-    } catch (err) {
-      // Older Safari may not accept "instant" — auto + the inline override
-      // above gets us the same effect.
-      try { el.scrollIntoView({ behavior: "auto", block: "start", inline: "nearest" }); }
-      catch (err2) { console.warn("[SceneCinema] instantScrollIntoView fallback failed:", err2 && err2.message); }
+      target.scrollIntoView({ behavior: "instant", block: "start", inline: "nearest" });
+    } catch (error) {
+      try { target.scrollIntoView({ behavior: "auto", block: "start", inline: "nearest" }); }
+      catch (fallbackError) { /* URL and active marker still remain correct */ }
     } finally {
-      htmlEl.style.scrollBehavior = prevBehavior;
+      document.documentElement.style.scrollBehavior = previous;
     }
   }
 
-  /**
-   * Trigger a View Transitions–driven navigation. Falls back to native
-   * smooth scroll if VT is unsupported or motion is reduced. Idempotent
-   * when called twice in rapid succession (returns early on debounce).
-   * @param {string} id  Section id (without the `#`)
-   * @returns {Promise<void>}
-   */
-  function navigate(id) {
-    const target = resolveTarget(id);
-    if (!target) return Promise.resolve();
+  function fallbackScroll(target, reduced) {
+    if (reduced) {
+      instantScroll(target);
+      return;
+    }
+    try { target.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" }); }
+    catch (error) { instantScroll(target); }
+  }
 
-    const now = Date.now();
-    if (now - lastNavAt < NAV_DEBOUNCE_MS) return Promise.resolve();
-    lastNavAt = now;
-
-    // Always reflect the chosen section in the URL so deep links work.
+  function updateHistory(id, mode) {
+    if (mode === "none") return;
+    var hash = "#" + encodeURIComponent(id);
+    if (window.location.hash === hash) return;
     try {
-      if (window.location.hash !== "#" + id) {
-        history.pushState({ section: id }, "", "#" + id);
-      }
-    } catch (err) {
-      // Some sandboxed contexts forbid history mutations; fine to ignore.
-      console.warn("[SceneCinema] history.pushState refused:", err && err.message);
+      if (mode === "replace") history.replaceState({ section: id }, "", hash);
+      else history.pushState({ section: id }, "", hash);
+    } catch (error) {
+      // Sandboxed previews can reject history writes. Navigation still works.
     }
-
-    // Fallback path: no VT, or user wants reduced motion.
-    if (!supportsVT || shouldSkipMotion()) {
-      const behavior = shouldSkipMotion() ? "auto" : "smooth";
-      try {
-        target.scrollIntoView({ behavior: behavior, block: "start", inline: "nearest" });
-      } catch (err) {
-        console.warn("[SceneCinema] scrollIntoView fallback failed:", err && err.message);
-      }
-      document.body.setAttribute(BODY_SECTION_ATTR, id);
-      return Promise.resolve();
-    }
-
-    // Cancel any in-flight transition so the new one starts immediately.
-    if (activeTransition && typeof activeTransition.skipTransition === "function") {
-      try { activeTransition.skipTransition(); }
-      catch (err) { console.warn("[SceneCinema] skipTransition failed:", err && err.message); }
-    }
-
-    document.documentElement.classList.add(ACTIVE_CLASS);
-    try { window.dispatchEvent(new CustomEvent("sm:cinema-start")); } catch (eventErr) { /* optional */ }
-
-    const transition = document.startViewTransition(function applyMutation() {
-      // Inside the callback all DOM mutations are synchronous. The browser
-      // captures the OLD state just before this runs, then the NEW state
-      // right after — so the scroll position change becomes the "cut".
-      instantScrollIntoView(target);
-      document.body.setAttribute(BODY_SECTION_ATTR, id);
-    });
-    activeTransition = transition;
-
-    // When the cross-fade ends, drop the marker class. `finished` resolves
-    // after the animation phase; `ready` resolves earlier (after capture).
-    return transition.finished
-      .catch(function onTransitionError(err) {
-        // VT can reject when interrupted by another startViewTransition; that
-        // is not an error condition for us — but unexpected rejects are.
-        console.warn("[SceneCinema] transition rejected:", err && err.message);
-      })
-      .then(function onTransitionDone() {
-        if (activeTransition === transition) {
-          activeTransition = null;
-          document.documentElement.classList.remove(ACTIVE_CLASS);
-          try { window.dispatchEvent(new CustomEvent("sm:cinema-done")); } catch (eventErr) { /* optional */ }
-        }
-        // Hold a short cooldown so the next click doesn't immediately start
-        // another transition mid-frame — feels less strobed.
-        return new Promise(function (resolve) {
-          window.setTimeout(resolve, POST_TRANSITION_COOLDOWN_MS);
-        });
-      });
   }
 
-  // ── Event handlers ─────────────────────────────────────────────────────
-  function onAnchorClick(event) {
-    // Respect modifier-clicks (open in new tab, etc.) and non-primary buttons.
+  function emit(type, transaction, reason) {
+    try {
+      window.dispatchEvent(new CustomEvent(type, {
+        detail: {
+          token: transaction.token,
+          id: transaction.id,
+          source: transaction.source,
+          reason: reason || null,
+        },
+      }));
+    } catch (error) { /* optional event channel */ }
+  }
+
+  function skipNative(transaction) {
+    var transition = transaction && transaction.transition;
+    if (transition && typeof transition.skipTransition === "function") {
+      try { transition.skipTransition(); } catch (error) { /* already settled */ }
+    }
+  }
+
+  function finish(transaction, reason) {
+    if (!transaction || transaction.finished) return;
+    transaction.finished = true;
+    if (transaction.timer) clearTimeout(transaction.timer);
+    transaction.timer = 0;
+    if (active === transaction) {
+      active = null;
+      document.documentElement.classList.remove(ACTIVE_CLASS);
+      if (runtime) runtime.resume("cinema");
+    }
+    emit("sm:cinema-done", transaction, reason || "complete");
+    transaction.resolve({ id: transaction.id, token: transaction.token, reason: reason || "complete" });
+  }
+
+  function cancelActive(reason) {
+    if (!active) return;
+    var previous = active;
+    skipNative(previous);
+    finish(previous, reason || "interrupted");
+  }
+
+  function begin(id, target, source) {
+    cancelActive("superseded");
+    var transaction = {
+      token: ++sequence,
+      id: id,
+      target: target,
+      source: source || "programmatic",
+      transition: null,
+      timer: 0,
+      finished: false,
+      resolve: null,
+      promise: null,
+    };
+    transaction.promise = new Promise(function (resolve) { transaction.resolve = resolve; });
+    active = transaction;
+    document.documentElement.classList.add(ACTIVE_CLASS);
+    if (runtime) runtime.suspend("cinema");
+    emit("sm:cinema-start", transaction, "start");
+
+    transaction.timer = setTimeout(function () {
+      if (transaction.finished) return;
+      skipNative(transaction);
+      // The mutation callback may never have run in a broken implementation.
+      instantScroll(target);
+      setActiveSection(id);
+      finish(transaction, "timeout");
+    }, HARD_TIMEOUT_MS);
+
+    try {
+      transaction.transition = document.startViewTransition(function () {
+        if (transaction.finished || active !== transaction) return;
+        instantScroll(target);
+        setActiveSection(id);
+      });
+      var completion = transaction.transition && transaction.transition.finished;
+      Promise.resolve(completion).then(function () {
+        finish(transaction, "complete");
+      }, function () {
+        // Interruption is expected. If this is still the active transaction,
+        // recover to the requested final pose before releasing the shell.
+        if (!transaction.finished) {
+          instantScroll(target);
+          setActiveSection(id);
+          finish(transaction, active === transaction ? "rejected" : "superseded");
+        }
+      });
+    } catch (error) {
+      instantScroll(target);
+      setActiveSection(id);
+      finish(transaction, "start-error");
+    }
+    return transaction.promise;
+  }
+
+  function navigate(value, options) {
+    options = options || {};
+    var id = sectionId(value);
+    var target = targetFor(id);
+    if (!id || !target) return Promise.resolve({ id: id, reason: "missing-target" });
+
+    updateHistory(id, options.history || "push");
+    if (active && active.id === id && !active.finished) return active.promise;
+
+    var reduced = reducedMotion();
+    if (!supportsVT || reduced || options.instant) {
+      cancelActive("fallback");
+      fallbackScroll(target, reduced || options.instant);
+      setActiveSection(id);
+      return Promise.resolve({ id: id, reason: reduced ? "reduced-motion" : "fallback" });
+    }
+    return begin(id, target, options.source || "programmatic");
+  }
+
+  function onClick(event) {
     if (event.defaultPrevented) return;
     if (event.button != null && event.button !== 0) return;
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-
-    const anchor = event.target && event.target.closest ? event.target.closest("a[href]") : null;
-    if (!anchor) return;
-    const href = anchor.getAttribute("href") || "";
+    var anchor = event.target && event.target.closest ? event.target.closest("a[href]") : null;
+    if (!anchor || anchor.hasAttribute("download") || anchor.getAttribute("target") === "_blank" || anchor.hasAttribute("data-no-cinema")) return;
+    var href = anchor.getAttribute("href") || "";
     if (href.length < 2 || href.charAt(0) !== "#") return;
-
-    const id = getSectionId(href);
-    if (!id) return;
-    const target = resolveTarget(id);
-    if (!target) return;
-
+    var id = sectionId(href);
+    if (!targetFor(id)) return;
     event.preventDefault();
-    navigate(id);
+    navigate(id, { history: "push", source: "anchor" });
   }
 
-  function onPopState(event) {
-    // Browser back/forward: animate to the new hash section.
-    const id = getSectionId(window.location.hash);
-    if (!id) return;
-    if (!resolveTarget(id)) return;
-    // popstate is implicit — no new history entry. Bypass the pushState in
-    // navigate() by calling the same animated path but without adding history.
-    if (shouldSkipMotion() || !supportsVT) {
-      const target = resolveTarget(id);
-      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-      document.body.setAttribute(BODY_SECTION_ATTR, id);
-      return;
-    }
-    if (activeTransition && typeof activeTransition.skipTransition === "function") {
-      try { activeTransition.skipTransition(); }
-      catch (err) { console.warn("[SceneCinema] popstate skip failed:", err && err.message); }
-    }
-    document.documentElement.classList.add(ACTIVE_CLASS);
-    try { window.dispatchEvent(new CustomEvent("sm:cinema-start")); } catch (eventErr) { /* optional */ }
-    const transition = document.startViewTransition(function () {
-      const target = resolveTarget(id);
-      if (target) instantScrollIntoView(target);
-      document.body.setAttribute(BODY_SECTION_ATTR, id);
-    });
-    activeTransition = transition;
-    transition.finished
-      .catch(function (err) { console.warn("[SceneCinema] popstate transition rejected:", err && err.message); })
-      .then(function () {
-        if (activeTransition === transition) {
-          activeTransition = null;
-          document.documentElement.classList.remove(ACTIVE_CLASS);
-          try { window.dispatchEvent(new CustomEvent("sm:cinema-done")); } catch (eventErr) { /* optional */ }
-        }
-      });
+  function onPopState() {
+    var id = sectionId(window.location.hash) || "hero";
+    if (!targetFor(id)) return;
+    navigate(id, { history: "none", source: "popstate" });
   }
 
-  function onMotionChange() {
-    // No state to update — the navigate() function re-reads the media query
-    // on each call. This handler exists to clear any in-flight transition
-    // if the user toggles reduced-motion mid-transition.
-    if (motionMedia.matches && activeTransition && typeof activeTransition.skipTransition === "function") {
-      try { activeTransition.skipTransition(); }
-      catch (err) { console.warn("[SceneCinema] motion change skip failed:", err && err.message); }
+  function onVisibilityChange() {
+    if (document.hidden && active) {
+      var transaction = active;
+      skipNative(transaction);
+      instantScroll(transaction.target);
+      setActiveSection(transaction.id);
+      finish(transaction, "hidden");
     }
   }
 
-  // ── Lifecycle ──────────────────────────────────────────────────────────
-  /**
-   * Wire up the global click + popstate listeners. Safe to call multiple
-   * times — re-binding is a no-op.
-   */
   function init() {
     if (bound) return;
     bound = true;
-    clickHandler = onAnchorClick;
-    popHandler = onPopState;
-    motionListener = onMotionChange;
-    // Bubble phase is intentional: React handlers get first refusal. If a
-    // component already called preventDefault() and delegated to navigate(),
-    // onAnchorClick exits via event.defaultPrevented, so one click can never
-    // start two competing scroll/transition transactions.
-    document.addEventListener("click", clickHandler, false);
-    window.addEventListener("popstate", popHandler);
-    if (motionMedia.addEventListener) motionMedia.addEventListener("change", motionListener);
-    else if (motionMedia.addListener) motionMedia.addListener(motionListener);
-
-    // Set initial active-section marker based on the current URL hash, so
-    // CSS rules keyed on `body[data-active-section]` don't see undefined.
-    const initialId = getSectionId(window.location.hash) || "hero";
-    document.body.setAttribute(BODY_SECTION_ATTR, initialId);
+    document.addEventListener("click", onClick, false);
+    window.addEventListener("popstate", onPopState);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    if (policy && typeof policy.on === "function") {
+      unsubscribePolicy = policy.on(function (tier, state) {
+        if (state.reducedMotion && active) {
+          var transaction = active;
+          skipNative(transaction);
+          instantScroll(transaction.target);
+          setActiveSection(transaction.id);
+          finish(transaction, "reduced-motion");
+        }
+      });
+    }
+    setActiveSection(sectionId(window.location.hash) || "hero");
   }
 
   function dispose() {
-    if (!bound) return;
-    bound = false;
-    if (clickHandler) document.removeEventListener("click", clickHandler, false);
-    if (popHandler) window.removeEventListener("popstate", popHandler);
-    if (motionListener) {
-      if (motionMedia.removeEventListener) motionMedia.removeEventListener("change", motionListener);
-      else if (motionMedia.removeListener) motionMedia.removeListener(motionListener);
+    if (bound) {
+      document.removeEventListener("click", onClick, false);
+      window.removeEventListener("popstate", onPopState);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      unsubscribePolicy();
+      unsubscribePolicy = function () {};
+      bound = false;
     }
-    clickHandler = null;
-    popHandler = null;
-    motionListener = null;
-    const wasTransitioning = !!activeTransition || document.documentElement.classList.contains(ACTIVE_CLASS);
-    if (activeTransition && typeof activeTransition.skipTransition === "function") {
-      try { activeTransition.skipTransition(); }
-      catch (err) { console.warn("[SceneCinema] dispose skip failed:", err && err.message); }
-    }
-    activeTransition = null;
+    cancelActive("dispose");
     document.documentElement.classList.remove(ACTIVE_CLASS);
-    // Consumers pause expensive rendering on cinema-start. Always balance that
-    // event if teardown interrupts the transition, otherwise a remount can
-    // inherit a permanently paused background or robot.
-    if (wasTransitioning) {
-      try { window.dispatchEvent(new CustomEvent("sm:cinema-done")); } catch (eventErr) { /* optional */ }
-    }
+    if (runtime) runtime.resume("cinema");
   }
 
   window.SceneCinema = {
@@ -325,5 +257,14 @@
     dispose: dispose,
     navigate: navigate,
     isSupported: supportsVT,
+    __debug: function () {
+      return {
+        active: active ? { token: active.token, id: active.id, source: active.source } : null,
+        sequence: sequence,
+        bound: bound,
+        transitioning: document.documentElement.classList.contains(ACTIVE_CLASS),
+        timeoutMs: HARD_TIMEOUT_MS,
+      };
+    },
   };
 })();

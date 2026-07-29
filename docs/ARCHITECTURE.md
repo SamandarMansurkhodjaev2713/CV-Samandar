@@ -170,6 +170,23 @@ The authoritative visual and motion rules are in `docs/DESIGN-SYSTEM.md`;
 verified implementation checkpoints are recorded in
 `docs/IMPLEMENTATION-LOG.md`.
 
+## Motion runtime contract
+
+`src/engine/perf.js` publishes the only reactive motion/performance policy.
+`src/engine/motion-runtime.js` owns the scroll, pointer and viewport input
+stream and runs subscribers in strict `measure → compute → mutate → render`
+phases. Authored motion and image shaders may not create private animation
+loops or duplicate high-frequency input listeners.
+
+Scene navigation is latest-intent-wins, interruptible and guarded by a
+wall-clock recovery timeout. WebGL always keeps the semantic image underneath,
+uses a finite texture cache and disposes renderer, geometry, material and
+textures during teardown or context recovery.
+
+The complete tier, ownership, fallback and acceptance rules are defined in
+`docs/MOTION-PERFORMANCE.md` and enforced by source validation plus lifecycle
+tests.
+
 ## Versioning
 
 Static browser assets use one cache version in `index.html`. A release-changing

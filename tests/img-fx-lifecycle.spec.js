@@ -1,0 +1,134 @@
+"use strict";
+
+const { test, expect } = require("@playwright/test");
+
+async function settleProjects(page) {
+  await page.goto("/?imgfx-contract=1#projects", { waitUntil: "domcontentloaded" });
+  await page.locator("#main").waitFor({ state: "attached" });
+  await page.locator(".proj-card [data-imgfx]").first().waitFor({ state: "attached" });
+  await expect.poll(() => page.evaluate(() => Boolean(window.__SM_IMGFX))).toBe(true);
+}
+
+test("image shader owns one renderer subscriber and latest host wins", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "WebGL lifecycle is engine-independent");
+  await settleProjects(page);
+
+  const result = await page.evaluate(async () => {
+    const policy = window.__SM_MOTION_POLICY;
+    const effect = window.__SM_IMGFX;
+    policy.__set("high");
+    const boxes = Array.from(document.querySelectorAll(".proj-card [data-imgfx]")).slice(0, 2);
+    const first = effect.attach(boxes[0]);
+    const second = effect.attach(boxes[1]);
+    await Promise.all([first, second]);
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const debug = effect.__debug();
+    const hostIndex = boxes.indexOf(effect.hostEl());
+    const runtimeIds = window.__SM_MOTION_RUNTIME.__debug().subscriberIds;
+    return {
+      debug,
+      hostIndex,
+      shaderSubscriberCount: runtimeIds.filter((id) => id === "image-shader").length,
+      canvasCount: document.querySelectorAll(".imgfx-canvas").length,
+      activeSurfaceCount: document.querySelectorAll(".has-imgfx").length,
+    };
+  });
+
+  expect(result.debug.active).toBe(true);
+  expect(result.debug.rendererReady).toBe(true);
+  expect(result.debug.ownsAnimationFrame).toBe(false);
+  expect(result.debug.runtimeSubscriber).toBe(true);
+  expect(result.debug.buildCount).toBe(1);
+  expect(result.hostIndex).toBe(1);
+  expect(result.shaderSubscriberCount).toBe(1);
+  expect(result.canvasCount).toBe(1);
+  expect(result.activeSurfaceCount).toBe(1);
+});
+
+test("tier downgrade parks the shader without hiding the real image", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "policy lifecycle is engine-independent");
+  await settleProjects(page);
+
+  await page.evaluate(async () => {
+    const policy = window.__SM_MOTION_POLICY;
+    policy.__set("high");
+    const box = document.querySelector(".proj-card [data-imgfx]");
+    await window.__SM_IMGFX.attach(box);
+    policy.__set("low");
+  });
+
+  await expect.poll(() => page.evaluate(() => window.__SM_IMGFX.active())).toBe(false);
+  await expect(page.locator(".has-imgfx")).toHaveCount(0);
+  await expect(page.locator(".proj-card [data-imgfx] img").first()).toBeVisible();
+  const debug = await page.evaluate(() => window.__SM_IMGFX.__debug());
+  expect(debug.ownsAnimationFrame).toBe(false);
+});
+
+test("context loss and restore degrade safely, rebuild once, and dispose resources", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "context lifecycle is engine-independent");
+  await settleProjects(page);
+
+  const result = await page.evaluate(async () => {
+    const policy = window.__SM_MOTION_POLICY;
+    const effect = window.__SM_IMGFX;
+    const box = document.querySelector(".proj-card [data-imgfx]");
+    policy.__set("high");
+    await effect.attach(box);
+    const oldCanvas = box.querySelector(".imgfx-canvas");
+    const lost = new Event("webglcontextlost", { cancelable: true });
+    oldCanvas.dispatchEvent(lost);
+    const afterLoss = effect.__debug();
+    oldCanvas.dispatchEvent(new Event("webglcontextrestored"));
+    const afterRestore = effect.__debug();
+    await effect.attach(box);
+    const afterRebuild = effect.__debug();
+    effect.dispose();
+    const afterDispose = effect.__debug();
+    return {
+      lossPrevented: lost.defaultPrevented,
+      afterLoss,
+      afterRestore,
+      afterRebuild,
+      afterDispose,
+      imageVisible: getComputedStyle(box.querySelector("img")).display !== "none",
+      canvasCount: document.querySelectorAll(".imgfx-canvas").length,
+      activeSurfaceCount: document.querySelectorAll(".has-imgfx").length,
+    };
+  });
+
+  expect(result.lossPrevented).toBe(true);
+  expect(result.afterLoss.contextLost).toBe(true);
+  expect(result.afterLoss.active).toBe(false);
+  expect(result.afterRestore.contextLost).toBe(false);
+  expect(result.afterRestore.rendererReady).toBe(false);
+  expect(result.afterRebuild.rendererReady).toBe(true);
+  expect(result.afterRebuild.buildCount).toBe(2);
+  expect(result.afterDispose.disposed).toBe(true);
+  expect(result.afterDispose.textureCount).toBe(0);
+  expect(result.afterDispose.runtimeSubscriber).toBe(false);
+  expect(result.imageVisible).toBe(true);
+  expect(result.canvasCount).toBe(0);
+  expect(result.activeSurfaceCount).toBe(0);
+});
+
+test("reduced motion keeps project imagery static and readable", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "one browser covers preference behavior");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await settleProjects(page);
+
+  const result = await page.evaluate(async () => {
+    const box = document.querySelector(".proj-card [data-imgfx]");
+    const attached = await window.__SM_IMGFX.attach(box);
+    return {
+      attached,
+      debug: window.__SM_IMGFX.__debug(),
+      policy: window.__SM_MOTION_POLICY.getState(),
+    };
+  });
+
+  expect(result.attached).toBe(false);
+  expect(result.debug.active).toBe(false);
+  expect(result.debug.rendererReady).toBe(false);
+  expect(result.policy.reducedMotion).toBe(true);
+  await expect(page.locator(".proj-card [data-imgfx] img").first()).toBeVisible();
+});

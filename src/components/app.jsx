@@ -617,23 +617,23 @@ function App() {
   // isInViewport check in motion.js handles the "no-flash" problem for visible elements.
   useE(() => {
     document.body.classList.add("page-loaded");
-    // Motion-lite flag: set on <html> when the device is weak OR the user
-    // prefers reduced motion. CSS keys the heaviest scroll effects (pinned
-    // overlap, scale reveals) off this so they degrade automatically.
-    var tierLow = (typeof window.getDeviceTier === "function") && window.getDeviceTier() === "low";
-    var prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (tierLow || prefersReduced) {
-      document.documentElement.setAttribute("data-motion-lite", "");
-    }
-    // On low-tier devices strip the pinned-overlap hosts entirely — the
-    // sticky/scroll-linked overlap is the heaviest scroll effect and not
-    // worth its cost on weak hardware. (CSS handles reduced-motion via the
-    // data-motion-lite attribute + @media query.)
-    if (tierLow) {
-      document.querySelectorAll("[data-pin]").forEach(function (p) {
-        p.removeAttribute("data-pin");
-        p.removeAttribute("data-pinned");
-      });
+    // One reactive policy owns reduced motion and measured performance. Low
+    // tier trims expensive continuous movement through CSS, but never removes
+    // semantic DOM or sticky contracts irreversibly — a device may recover and
+    // earn a higher tier during the same visit.
+    var motionPolicy = window.__SM_MOTION_POLICY || window.__SM_PERF;
+    var applyMotionPolicy = function (tier, state) {
+      var reduced = !!(state && state.reducedMotion);
+      var lite = tier === "low" || reduced;
+      document.documentElement.toggleAttribute("data-motion-lite", lite);
+      document.documentElement.toggleAttribute("data-reduced-motion", reduced);
+    };
+    var unsubscribeMotionPolicy = function () {};
+    if (motionPolicy && typeof motionPolicy.on === "function") {
+      unsubscribeMotionPolicy = motionPolicy.on(applyMotionPolicy);
+    } else {
+      var prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      applyMotionPolicy(prefersReduced ? "low" : "high", { reducedMotion: prefersReduced });
     }
     if (window.Motion) window.Motion.init();
     // Wire the View Transitions API navigator. It binds a global click handler
@@ -643,8 +643,12 @@ function App() {
       window.SceneCinema.init();
     }
     return () => {
+      unsubscribeMotionPolicy();
       if (window.SceneCinema && typeof window.SceneCinema.dispose === "function") {
         window.SceneCinema.dispose();
+      }
+      if (window.Motion && typeof window.Motion.dispose === "function") {
+        window.Motion.dispose();
       }
     };
   }, []);

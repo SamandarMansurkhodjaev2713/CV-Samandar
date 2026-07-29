@@ -1,54 +1,53 @@
-// img-fx.js — living project imagery. The site's signature moment.
+// img-fx.js — one reusable WebGL image surface with a finite lifecycle.
 //
-// Every project illustration becomes a piece of glass: the pointer pushes a
-// ripple through it, a scroll carries a wave across it, and the accent light of
-// the current act pools where the hand is. Static in a screenshot, alive the
-// moment you touch it.
-//
-// ════════════════════════════════════════════════════════════════════════════
-// WHY ONE CONTEXT, NOT ONE PER CARD
-// ─────────────────────────────────────────────────────────────────────────────
-// The obvious build — a WebGL canvas per card — dies at 21 cards: browsers cap
-// live contexts (~16) and silently kill the oldest, and each one costs memory
-// and a draw call whether or not anyone is looking at it.
-//
-// But a pointer can only be in ONE place. So there is exactly one renderer for
-// the whole site, and it MOVES: on hover it re-parents into that card, uploads
-// that card's texture, and fades in over the plain <img> underneath. On leave
-// it fades out, stops its loop and parks. One context, one draw call, and only
-// while a human is actually looking at the thing.
-//
-// The <img> is never removed — it stays as the real, indexable, printable
-// content. The canvas is a decorative overlay on top of it, so a WebGL failure,
-// a blocked context or a low-power device degrades to exactly what the site
-// looked like before: a sharp still image.
-//
-// TOUCH: there is no hover, so the effect follows the centre-stage card (the
-// one crossing the middle of the viewport — see motion.js initCenterStage),
-// and only when the frame governor says a shader is affordable at all.
-// ════════════════════════════════════════════════════════════════════════════
+// The real <img> always remains underneath. This module owns at most one
+// renderer, never owns a private RAF, caches only a small LRU of textures and
+// degrades to the still image on reduced motion, low tier or context loss.
 (function () {
   "use strict";
 
-  if (window.__SM_TEST_MODE) return;
-
   var THREE = window.THREE;
-  if (!THREE) return;
-
-  var reduced = false;
-  try { reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { /* opportunistic */ }
-  if (reduced) return; // a rippling image is motion, and motion was declined
-
+  var policy = window.__SM_MOTION_POLICY || window.__SM_PERF || null;
+  var runtime = window.__SM_MOTION_RUNTIME || null;
+  var MAX_TEXTURES = 6;
+  var FADE_BACKSTOP_MS = 900;
+  var disposed = false;
+  var contextLost = false;
+  var renderer = null;
+  var scene = null;
+  var camera = null;
+  var mesh = null;
+  var material = null;
+  var geometry = null;
+  var uniforms = null;
+  var canvas = null;
+  var host = null;
+  var hostRect = null;
+  var hostToken = 0;
+  var textureSerial = 0;
+  var loader = THREE ? new THREE.TextureLoader() : null;
+  var textureCache = Object.create(null);
+  var textureCount = 0;
+  var currentTexture = null;
+  var parkTimer = 0;
+  var hover = 0;
+  var hoverTarget = 0;
+  var velocity = 0;
+  var mouse = { x: 0.5, y: 0.5 };
+  var target = { x: 0.5, y: 0.5 };
+  var clock = 0;
+  var renderFrames = 0;
+  var buildCount = 0;
+  var unsubscribePolicy = function () {};
+  var unsubscribeRuntime = function () {};
   var coarse = false;
-  try { coarse = window.matchMedia("(pointer: coarse)").matches; } catch (e) { /* opportunistic */ }
+  try { coarse = window.matchMedia("(pointer: coarse)").matches; } catch (error) { /* capability probe */ }
 
   var VERT = [
     "varying vec2 vUv;",
     "void main(){ vUv = uv; gl_Position = vec4(position.xy * 2.0, 0.0, 1.0); }",
   ].join("\n");
 
-  // The ripple is a ring travelling out from the pointer, not a blob: a blob
-  // reads as a smudge, a ring reads as a surface responding.
   var FRAG = [
     "precision mediump float;",
     "varying vec2 vUv;",
@@ -60,7 +59,6 @@
     "uniform float uHover;",
     "uniform float uVel;",
     "void main(){",
-    // object-fit: cover, done in UV space so the plane never distorts the art
     "  vec2 uv = (vUv - 0.5) * uCover + 0.5;",
     "  vec2 d = uv - uMouse;",
     "  float dist = length(d);",
@@ -68,42 +66,61 @@
     "  float ring = sin(dist * 24.0 - uTime * 3.2) * 0.5 + 0.5;",
     "  vec2 dir = d / max(dist, 0.0001);",
     "  vec2 disp = dir * ring * falloff * 0.020 * uHover;",
-    // a scroll drags a slow swell across the whole surface
     "  disp.y += sin(uv.x * 5.5 + uTime * 0.9) * uVel * 0.018;",
     "  vec2 suv = clamp(uv - disp, 0.002, 0.998);",
-    // chromatic split tied to the SAME falloff — glass, not an RGB glitch
     "  float ca = falloff * uHover * 0.0038 + abs(uVel) * 0.0022;",
     "  vec4 col = vec4(0.0);",
     "  col.r = texture2D(uTex, clamp(suv + vec2(ca, 0.0), 0.002, 0.998)).r;",
     "  col.g = texture2D(uTex, suv).g;",
     "  col.b = texture2D(uTex, clamp(suv - vec2(ca, 0.0), 0.002, 0.998)).b;",
     "  col.a = 1.0;",
-    // the current act's light pools under the hand
     "  col.rgb += uAccent * falloff * uHover * 0.11;",
     "  gl_FragColor = col;",
     "}",
   ].join("\n");
 
-  var renderer = null, scene = null, camera = null, mesh = null, uniforms = null;
-  var canvas = null, host = null, raf = 0, disposed = false;
-  var loader = new THREE.TextureLoader();
-  var textures = {};                 // src → THREE.Texture (shared; images repeat across views)
-  var mouse = { x: 0.5, y: 0.5 }, target = { x: 0.5, y: 0.5 };
-  var hover = 0, hoverTarget = 0, vel = 0;
-  var clock = 0;
+  function stateAllows() {
+    if (disposed || contextLost || !THREE || !runtime) return false;
+    if (!policy) return !document.hidden;
+    return policy.allows("shader");
+  }
 
-  function tierAllows() {
-    var P = window.__SM_PERF;
-    return !P || P.allows("shader");
+  function emitState(reason) {
+    try {
+      window.dispatchEvent(new CustomEvent("sm:imgfx-state", {
+        detail: { reason: reason, active: !!host, contextLost: contextLost },
+      }));
+    } catch (error) { /* optional diagnostics */ }
+  }
+
+  function onContextLost(event) {
+    if (event && event.preventDefault) event.preventDefault();
+    contextLost = true;
+    park("context-lost");
+    emitState("context-lost");
+  }
+
+  function onContextRestored() {
+    contextLost = false;
+    destroyRenderer(false);
+    emitState("context-restored");
   }
 
   function build() {
     if (renderer) return true;
+    if (!stateAllows()) return false;
     try {
       canvas = document.createElement("canvas");
       canvas.className = "imgfx-canvas";
       canvas.setAttribute("aria-hidden", "true");
-      renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: false, powerPreference: "low-power" });
+      canvas.addEventListener("webglcontextlost", onContextLost, false);
+      canvas.addEventListener("webglcontextrestored", onContextRestored, false);
+      renderer = new THREE.WebGLRenderer({
+        canvas: canvas,
+        alpha: true,
+        antialias: false,
+        powerPreference: "low-power",
+      });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       scene = new THREE.Scene();
       camera = new THREE.Camera();
@@ -116,174 +133,350 @@
         uHover: { value: 0 },
         uVel: { value: 0 },
       };
-      mesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(1, 1),
-        new THREE.ShaderMaterial({ vertexShader: VERT, fragmentShader: FRAG, uniforms: uniforms, transparent: true })
-      );
+      geometry = new THREE.PlaneGeometry(1, 1);
+      material = new THREE.ShaderMaterial({
+        vertexShader: VERT,
+        fragmentShader: FRAG,
+        uniforms: uniforms,
+        transparent: true,
+      });
+      mesh = new THREE.Mesh(geometry, material);
       scene.add(mesh);
+      buildCount += 1;
       return true;
-    } catch (e) {
-      // No WebGL / context creation refused → the plain <img> is the experience.
-      renderer = null;
+    } catch (error) {
+      destroyRenderer(false);
       return false;
     }
   }
 
-  // Replicate CSS `object-fit: cover` as UV scale factors.
-  function coverFactors(imgW, imgH, boxW, boxH) {
-    if (!imgW || !imgH || !boxW || !boxH) return [1, 1];
-    var imgA = imgW / imgH, boxA = boxW / boxH;
-    return imgA > boxA ? [boxA / imgA, 1] : [1, imgA / boxA];
+  function destroyRenderer(markDisposed) {
+    if (host) park("renderer-destroy");
+    if (mesh && scene) {
+      try { scene.remove(mesh); } catch (error) { /* optional */ }
+    }
+    if (geometry) {
+      try { geometry.dispose(); } catch (error) { /* optional */ }
+    }
+    if (material) {
+      try { material.dispose(); } catch (error) { /* optional */ }
+    }
+    if (renderer) {
+      try { renderer.dispose(); } catch (error) { /* optional */ }
+    }
+    if (canvas) {
+      canvas.removeEventListener("webglcontextlost", onContextLost, false);
+      canvas.removeEventListener("webglcontextrestored", onContextRestored, false);
+      if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+    }
+    renderer = null;
+    scene = null;
+    camera = null;
+    mesh = null;
+    geometry = null;
+    material = null;
+    uniforms = null;
+    canvas = null;
+    currentTexture = null;
+    if (markDisposed) disposed = true;
+  }
+
+  function disposeTexture(entry) {
+    if (!entry || !entry.texture) return;
+    try { entry.texture.dispose(); } catch (error) { /* optional */ }
+    entry.texture = null;
+  }
+
+  function evictTextures() {
+    var keys = Object.keys(textureCache);
+    if (keys.length <= MAX_TEXTURES) return;
+    keys.sort(function (a, b) { return textureCache[a].lastUsed - textureCache[b].lastUsed; });
+    for (var i = 0; i < keys.length && Object.keys(textureCache).length > MAX_TEXTURES; i += 1) {
+      var key = keys[i];
+      var entry = textureCache[key];
+      if (!entry || entry.texture === currentTexture || entry.promise) continue;
+      disposeTexture(entry);
+      delete textureCache[key];
+      textureCount = Math.max(0, textureCount - 1);
+    }
+  }
+
+  function loadTexture(src) {
+    var existing = textureCache[src];
+    if (existing) {
+      existing.lastUsed = ++textureSerial;
+      if (existing.texture) return Promise.resolve(existing.texture);
+      return existing.promise;
+    }
+    var entry = { texture: null, promise: null, lastUsed: ++textureSerial };
+    textureCache[src] = entry;
+    entry.promise = new Promise(function (resolve, reject) {
+      loader.load(src, function (texture) {
+        entry.promise = null;
+        entry.texture = texture;
+        entry.lastUsed = ++textureSerial;
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.generateMipmaps = false;
+        textureCount += 1;
+        evictTextures();
+        resolve(texture);
+      }, undefined, function (error) {
+        entry.promise = null;
+        delete textureCache[src];
+        reject(error || new Error("Texture load failed"));
+      });
+    });
+    return entry.promise;
+  }
+
+  function coverFactors(imageWidth, imageHeight, boxWidth, boxHeight) {
+    if (!imageWidth || !imageHeight || !boxWidth || !boxHeight) return [1, 1];
+    var imageAspect = imageWidth / imageHeight;
+    var boxAspect = boxWidth / boxHeight;
+    return imageAspect > boxAspect ? [boxAspect / imageAspect, 1] : [1, imageAspect / boxAspect];
   }
 
   function readAccent() {
     try {
-      var v = getComputedStyle(document.documentElement).getPropertyValue("--act-accent-rgb").trim() ||
-              getComputedStyle(document.documentElement).getPropertyValue("--accent-rgb").trim();
-      var p = v.split(/[\s,/]+/).map(Number).filter(function (n) { return !isNaN(n); });
-      if (p.length >= 3) return [p[0] / 255, p[1] / 255, p[2] / 255];
-    } catch (e) { /* opportunistic */ }
+      var styles = getComputedStyle(document.documentElement);
+      var value = styles.getPropertyValue("--act-accent-rgb").trim() || styles.getPropertyValue("--accent-rgb").trim();
+      var parts = value.split(/[\s,/]+/).map(Number).filter(function (number) { return !isNaN(number); });
+      if (parts.length >= 3) return [parts[0] / 255, parts[1] / 255, parts[2] / 255];
+    } catch (error) { /* token fallback */ }
     return [0.85, 0.47, 0.34];
   }
 
-  function attach(el) {
-    if (disposed || !tierAllows() || !el || el === host) return;
-    var img = el.querySelector("img");
-    if (!img || !img.getAttribute("src")) return;
-    if (!build()) return;
+  function removeHostSurface(previous) {
+    if (!previous) return;
+    previous.classList.remove("has-imgfx");
+    if (canvas && canvas.parentNode === previous) previous.removeChild(canvas);
+  }
 
-    host = el;
-    var src = img.getAttribute("src");
+  function park(reason) {
+    clearTimeout(parkTimer);
+    parkTimer = 0;
+    hostToken += 1;
+    hover = 0;
+    hoverTarget = 0;
+    velocity = 0;
+    removeHostSurface(host);
+    host = null;
+    hostRect = null;
+    if (runtime) runtime.wake("imgfx-park");
+    emitState(reason || "park");
+  }
 
-    function ready(tex) {
-      if (host !== el) return; // pointer already moved on — drop this late load
-      tex.minFilter = THREE.LinearFilter;
-      tex.magFilter = THREE.LinearFilter;
-      tex.generateMipmaps = false;
-      uniforms.uTex.value = tex;
-      var box = el.getBoundingClientRect();
-      var iw = (tex.image && tex.image.width) || 1536, ih = (tex.image && tex.image.height) || 512;
-      var cf = coverFactors(iw, ih, box.width, box.height);
-      uniforms.uCover.value.set(cf[0], cf[1]);
-      var a = readAccent();
-      uniforms.uAccent.value.setRGB(a[0], a[1], a[2]);
-      resize();
-      window.clearTimeout(parkTimer); // a re-entry cancels a pending park
-      el.appendChild(canvas);
-      el.classList.add("has-imgfx");
+  function resizeRenderer(rect) {
+    if (!renderer || !rect || rect.width < 2 || rect.height < 2) return;
+    var width = Math.round(rect.width);
+    var height = Math.round(rect.height);
+    var size = renderer.getSize ? renderer.getSize(new THREE.Vector2()) : null;
+    if (!size || Math.round(size.x) !== width || Math.round(size.y) !== height) {
+      renderer.setSize(width, height, false);
+    }
+  }
+
+  function applyTexture(texture, element, token) {
+    if (disposed || contextLost || host !== element || token !== hostToken || !uniforms) return;
+    currentTexture = texture;
+    uniforms.uTex.value = texture;
+    hostRect = element.getBoundingClientRect();
+    var imageWidth = texture.image && texture.image.width ? texture.image.width : 1536;
+    var imageHeight = texture.image && texture.image.height ? texture.image.height : 512;
+    var cover = coverFactors(imageWidth, imageHeight, hostRect.width, hostRect.height);
+    uniforms.uCover.value.set(cover[0], cover[1]);
+    var accent = readAccent();
+    uniforms.uAccent.value.setRGB(accent[0], accent[1], accent[2]);
+    resizeRenderer(hostRect);
+    clearTimeout(parkTimer);
+    if (canvas.parentNode !== element) element.appendChild(canvas);
+    element.classList.add("has-imgfx");
+    hoverTarget = 1;
+    runtime.wake("imgfx-ready");
+    emitState("attached");
+  }
+
+  function attach(element) {
+    if (!stateAllows() || !element) {
+      if (host) park("policy");
+      return Promise.resolve(false);
+    }
+    var image = element.querySelector("img");
+    var src = image && image.getAttribute("src");
+    if (!src || !build()) return Promise.resolve(false);
+    if (host === element && currentTexture) {
+      clearTimeout(parkTimer);
       hoverTarget = 1;
-      loop();
+      runtime.wake("imgfx-reenter");
+      return Promise.resolve(true);
     }
 
-    if (textures[src]) { ready(textures[src]); return; }
-    loader.load(src, function (tex) { textures[src] = tex; ready(tex); }, undefined, function () { detach(el); });
-  }
-
-  var parkTimer = 0;
-  function detach(el) {
-    if (el && host !== el) return;
-    hoverTarget = 0; // the loop fades out, then parks the canvas (see loop())
-    // Wall-clock backstop. The fade-and-park lives inside the rAF loop, and rAF
-    // stops in a backgrounded tab — without this, leaving the page mid-hover
-    // would strand the canvas mounted (and the still image hidden under it)
-    // until the tab was focused again. park() is idempotent.
-    window.clearTimeout(parkTimer);
-    parkTimer = window.setTimeout(park, 900);
-  }
-
-  function park() {
-    window.clearTimeout(parkTimer);
-    hover = 0; hoverTarget = 0;
-    if (host) {
-      host.classList.remove("has-imgfx");
-      if (canvas && canvas.parentNode === host) host.removeChild(canvas);
-      host = null;
-    }
-    if (raf) { cancelAnimationFrame(raf); raf = 0; }
-  }
-
-  function resize() {
-    if (!host || !renderer) return;
-    var b = host.getBoundingClientRect();
-    if (b.width < 2 || b.height < 2) return;
-    renderer.setSize(b.width, b.height, false);
-  }
-
-  function loop() {
-    raf = requestAnimationFrame(loop);
-    if (!renderer || !host) { park(); return; }
-    clock += 0.016;
-
-    // Critically damped follow — the ripple trails the hand instead of snapping
-    // to it, which is what makes it read as a material rather than a cursor.
-    mouse.x += (target.x - mouse.x) * 0.09;
-    mouse.y += (target.y - mouse.y) * 0.09;
-    hover += (hoverTarget - hover) * 0.13;
-    vel *= 0.92;
-
-    uniforms.uTime.value = clock;
-    uniforms.uMouse.value.set(mouse.x, mouse.y);
-    uniforms.uHover.value = hover;
-    uniforms.uVel.value = vel;
-    renderer.render(scene, camera);
-
-    if (hoverTarget === 0 && hover < 0.01) park(); // fully faded → release
-  }
-
-  // ── Pointer wiring (delegated: React re-renders replace these nodes) ──────
-  if (!coarse) {
-    document.addEventListener("pointerover", function (e) {
-      var el = e.target.closest && e.target.closest("[data-imgfx]");
-      if (el) attach(el);
-    }, { passive: true });
-
-    document.addEventListener("pointerout", function (e) {
-      var el = e.target.closest && e.target.closest("[data-imgfx]");
-      if (el && (!e.relatedTarget || !el.contains(e.relatedTarget))) detach(el);
-    }, { passive: true });
-
-    document.addEventListener("pointermove", function (e) {
-      if (!host) return;
-      var b = host.getBoundingClientRect();
-      target.x = (e.clientX - b.left) / b.width;
-      target.y = 1 - (e.clientY - b.top) / b.height; // GL origin is bottom-left
-    }, { passive: true });
-  } else {
-    // Touch: follow the centre-stage card. motion.js toggles .in-focus on the
-    // card crossing the middle of the viewport; we mirror that here.
-    window.addEventListener("sm:focus-card", function (e) {
-      var card = e && e.detail && e.detail.el;
-      if (!card) { if (host) detach(host); return; }
-      var box = card.querySelector("[data-imgfx]");
-      if (box) { target.x = 0.5; target.y = 0.55; attach(box); }
-      else if (host) detach(host);
+    removeHostSurface(host);
+    host = element;
+    hostRect = null;
+    currentTexture = null;
+    var token = ++hostToken;
+    return loadTexture(src).then(function (texture) {
+      applyTexture(texture, element, token);
+      return host === element && token === hostToken;
+    }, function () {
+      if (host === element && token === hostToken) park("texture-error");
+      return false;
     });
   }
 
-  // Scroll velocity feeds the swell. Cheap: two reads and a subtraction.
-  var lastY = window.pageYOffset || 0;
-  window.addEventListener("scroll", function () {
-    var y = window.pageYOffset || 0;
-    var dy = y - lastY;
-    lastY = y;
-    if (host) vel = Math.max(-1, Math.min(1, vel + dy * 0.006));
-  }, { passive: true });
+  function detach(element) {
+    if (!host || (element && element !== host)) return;
+    hoverTarget = 0;
+    clearTimeout(parkTimer);
+    parkTimer = setTimeout(function () { park("fade-backstop"); }, FADE_BACKSTOP_MS);
+    if (runtime) runtime.wake("imgfx-detach");
+  }
 
-  window.addEventListener("resize", resize, { passive: true });
+  function measureFrame(context) {
+    if (!host || !renderer || !currentTexture) return;
+    if (!host.isConnected || !stateAllows()) {
+      park("unavailable");
+      return;
+    }
+    if (!hostRect || context.input.resized || context.input.scrolled) {
+      hostRect = host.getBoundingClientRect();
+    }
+  }
 
-  // A tier drop mid-session must actually take the effect off screen.
-  if (window.__SM_PERF) {
-    window.__SM_PERF.on(function (t) { if (t === "low" && host) { hoverTarget = 0; park(); } });
+  function computeFrame(context) {
+    if (!host || !renderer || !currentTexture || !hostRect) return;
+    var input = context.input;
+    if (!coarse && input.pointerActive && hostRect.width > 0 && hostRect.height > 0) {
+      target.x = Math.max(0, Math.min(1, (input.pointerX - hostRect.left) / hostRect.width));
+      target.y = Math.max(0, Math.min(1, 1 - (input.pointerY - hostRect.top) / hostRect.height));
+    }
+    if (input.scrolled) velocity = Math.max(-1, Math.min(1, velocity + input.scrollDeltaY * 0.006));
+    var follow = 1 - Math.exp(-context.deltaSeconds * 7.2);
+    var fade = 1 - Math.exp(-context.deltaSeconds * 8.4);
+    mouse.x += (target.x - mouse.x) * follow;
+    mouse.y += (target.y - mouse.y) * follow;
+    hover += (hoverTarget - hover) * fade;
+    velocity *= Math.pow(0.92, context.delta / 16.667);
+    clock += context.deltaSeconds;
+    if (hoverTarget === 0 && hover < 0.01) park("fade-complete");
+  }
+
+  function mutateFrame() {
+    if (!host || !renderer || !uniforms || !hostRect) return;
+    resizeRenderer(hostRect);
+    uniforms.uTime.value = clock;
+    uniforms.uMouse.value.set(mouse.x, mouse.y);
+    uniforms.uHover.value = hover;
+    uniforms.uVel.value = velocity;
+  }
+
+  function renderFrame() {
+    if (!host || !renderer || !scene || !camera || !currentTexture || contextLost) return;
+    try {
+      renderer.render(scene, camera);
+      renderFrames += 1;
+    } catch (error) {
+      park("render-error");
+    }
+  }
+
+  function onPointerOver(event) {
+    if (coarse) return;
+    var element = event.target && event.target.closest ? event.target.closest("[data-imgfx]") : null;
+    if (element) attach(element);
+  }
+
+  function onPointerOut(event) {
+    if (coarse) return;
+    var element = event.target && event.target.closest ? event.target.closest("[data-imgfx]") : null;
+    if (element && (!event.relatedTarget || !element.contains(event.relatedTarget))) detach(element);
+  }
+
+  function onFocusCard(event) {
+    if (!coarse) return;
+    var card = event && event.detail && event.detail.el;
+    if (!card) {
+      detach(host);
+      return;
+    }
+    var element = card.querySelector("[data-imgfx]");
+    if (element) {
+      target.x = 0.5;
+      target.y = 0.55;
+      attach(element);
+    } else {
+      detach(host);
+    }
+  }
+
+  document.addEventListener("pointerover", onPointerOver, { passive: true });
+  document.addEventListener("pointerout", onPointerOut, { passive: true });
+  window.addEventListener("sm:focus-card", onFocusCard);
+
+  if (runtime) {
+    unsubscribeRuntime = runtime.subscribe({
+      id: "image-shader",
+      priority: 90,
+      enabled: function () { return !disposed; },
+      continuous: function () {
+        return !!host && !!currentTexture && stateAllows() && (hoverTarget > 0 || hover > 0.01 || Math.abs(velocity) > 0.005);
+      },
+      measure: measureFrame,
+      compute: computeFrame,
+      mutate: mutateFrame,
+      render: renderFrame,
+    });
+  }
+
+  if (policy && typeof policy.on === "function") {
+    unsubscribePolicy = policy.on(function (tier, state) {
+      coarse = state.pointerClass === "coarse";
+      if (!state.documentVisible || state.reducedMotion || state.saveData || tier === "low") {
+        park("policy-change");
+      }
+    });
+  }
+
+  function dispose() {
+    if (disposed) return;
+    disposed = true;
+    clearTimeout(parkTimer);
+    parkTimer = 0;
+    document.removeEventListener("pointerover", onPointerOver, { passive: true });
+    document.removeEventListener("pointerout", onPointerOut, { passive: true });
+    window.removeEventListener("sm:focus-card", onFocusCard);
+    unsubscribePolicy();
+    unsubscribeRuntime();
+    park("dispose");
+    Object.keys(textureCache).forEach(function (key) {
+      disposeTexture(textureCache[key]);
+      delete textureCache[key];
+    });
+    textureCount = 0;
+    destroyRenderer(true);
   }
 
   window.__SM_IMGFX = {
     attach: attach,
-    detach: function () { if (host) detach(host); },
+    detach: detach,
     active: function () { return !!host; },
     hostEl: function () { return host; },
-    dispose: function () {
-      disposed = true; park();
-      if (renderer) { try { renderer.dispose(); } catch (e) { /* opportunistic */ } renderer = null; }
+    dispose: dispose,
+    __debug: function () {
+      return {
+        active: !!host,
+        disposed: disposed,
+        contextLost: contextLost,
+        rendererReady: !!renderer,
+        textureCount: textureCount,
+        maxTextures: MAX_TEXTURES,
+        renderFrames: renderFrames,
+        buildCount: buildCount,
+        ownsAnimationFrame: false,
+        runtimeSubscriber: runtime ? runtime.__debug().subscriberIds.indexOf("image-shader") !== -1 : false,
+      };
     },
   };
 })();

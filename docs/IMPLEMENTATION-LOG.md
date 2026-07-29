@@ -71,3 +71,35 @@ Awwwards-переработки. План и критерии готовност
 4. interruptible section transitions с timeout/finally;
 5. desktop/mobile menu, hash/history и active-section contract;
 6. проверки pointer, keyboard, back gesture и reduced motion.
+
+## Motion-runtime checkpoint
+
+Проверенная инженерная часть глобальной оболочки:
+
+- один реактивный источник tier/reduced-motion/save-data/visibility;
+- один общий scroll/pointer/viewport input stream;
+- один фазовый планировщик `measure → compute → mutate → render`;
+- authored cursor, magnetic controls, parallax и reveal без частных RAF;
+- shader с ограниченным LRU-кэшем, context-loss recovery и полным dispose;
+- interruptible latest-intent-wins переход с hard timeout 1800 ms;
+- hidden tab, runtime dispose/re-init, responsive resize и tier change не
+  оставляют скрытый контент или orphaned subscribers;
+- source-validator блокирует возврат конкурирующих циклов и listeners.
+
+Целевой lifecycle-набор: 32 сценария, 18 успешно, 14 осознанно пропущены на
+нерелевантном viewport/engine.
+
+Полный regression gate `v215`: 92 сценария, 59 успешно, 33 осознанно пропущены,
+0 падений. Дважды выполненная сборка детерминирована; source/generated drift и
+ошибки `git diff --check` отсутствуют.
+
+Production-mode browser QA дополнительно подтвердил:
+
+- desktop Hero, Signal и полноэкранное меню без overflow и console errors;
+- mobile Hero и прокручиваемое меню на 390×844 без имитации cursor;
+- TTYL case-page без mobile overflow и touch-target меньше 44 px;
+- возврат `TTYL → #proj-ttyl` пропускает intro, раскрывает полный каталог и
+  помещает исходную карточку в видимую область.
+
+Следующий шаг: визуальная режиссура меню, section navigation и переходов поверх
+уже проверенного runtime, затем последовательная переработка всех сцен.
