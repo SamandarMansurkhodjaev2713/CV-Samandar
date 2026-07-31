@@ -67,6 +67,7 @@
     signal:   { bg: "#18181A", accent: BONE,   glow: topGlow(BONE, 0.030) },
     about:    { bg: "#1A1A19", accent: ASH,    glow: topGlow(BONE, 0.028) },
     projects: { bg: "#1E1B17", accent: COPPER, glow: topGlow(EMBER, 0.055) },              // reserved warmth — the heart
+    builder:  { bg: "#1B1916", accent: SAND,   glow: topGlow(BRASS, 0.038) },              // scope becomes a delivery sketch
     skills:   { bg: "#171819", accent: SLATE,  glow: topGlow(SLATE, 0.040) },              // the one cool dip
     services: { bg: "#1B1A17", accent: ASH,    glow: topGlow(BONE, 0.030) },
     cv:       { bg: "#E8E6E1", accent: ASH,    glow: "none", light: true },                // LIGHT — the document

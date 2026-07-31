@@ -847,10 +847,7 @@ function App() {
     const previousAriaHidden = root ? root.getAttribute("aria-hidden") : null;
     const previousInert = root ? root.inert : false;
     let restored = false;
-    let heroSettled = false;
     let fontTimer = 0;
-    let heroTimer = 0;
-    const heroImage = new Image();
     if (root) {
       root.inert = true;
       root.setAttribute("aria-hidden", "true");
@@ -882,14 +879,11 @@ function App() {
       root.inert = previousInert;
       if (previousAriaHidden == null) root.removeAttribute("aria-hidden");else root.setAttribute("aria-hidden", previousAriaHidden);
     }
-    function settleHero(fallback) {
-      if (heroSettled) return;
-      heroSettled = true;
-      if (heroTimer) window.clearTimeout(heroTimer);
-      document.documentElement.toggleAttribute("data-hero-media-fallback", !!fallback);
-      markReady("hero", fallback);
-    }
     markReady("shell", false);
+    // Hero is CSS-native: its complete semantic and visual frame ships with
+    // the mounted shell, so there is no decorative image decode to pretend to
+    // wait for. The readiness gate still waits for local type metrics.
+    markReady("hero", false);
     fontTimer = window.setTimeout(() => markReady("fonts", true), 1250);
     if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === "function") {
       document.fonts.ready.then(() => {
@@ -900,23 +894,11 @@ function App() {
       window.clearTimeout(fontTimer);
       markReady("fonts", true);
     }
-    heroImage.onload = () => {
-      if (typeof heroImage.decode === "function") {
-        heroImage.decode().then(() => settleHero(false)).catch(() => settleHero(false));
-      } else {
-        settleHero(false);
-      }
-    };
-    heroImage.onerror = () => settleHero(true);
-    heroTimer = window.setTimeout(() => settleHero(true), 1500);
-    heroImage.src = window.matchMedia && window.matchMedia("(max-width: 900px)").matches ? "assets/orbital-station.webp" : "assets/hero-cockpit.webp";
-    if (heroImage.complete && heroImage.naturalWidth > 0) settleHero(false);
     window.addEventListener("sm:intro-done", restoreShell, {
       once: true
     });
     return () => {
       window.clearTimeout(fontTimer);
-      window.clearTimeout(heroTimer);
       window.removeEventListener("sm:intro-done", restoreShell);
       restoreShell();
     };
@@ -929,20 +911,20 @@ function App() {
       ru: {
         id: {
           name: "Самандар",
-          role: "Full-Stack · AI Automation · QA",
+          role: "Software Engineer · Product Builder · QA Engineer",
           meta: ["Ташкент · UTC+5", "Открыт к проектам", "3 курс · Software Engineering"],
           stats: [{
             k: "опыт",
-            v: "2 года"
+            v: "1 год 8 мес"
           }, {
-            k: "проектов",
+            k: "продуктов",
             v: "10+"
           }, {
-            k: "стек",
-            v: "TS / Py / SQL"
+            k: "фокус",
+            v: "Builder + QA"
           }, {
-            k: "ответ",
-            v: "< 24h"
+            k: "языки",
+            v: "RU · UZ · EN"
           }]
         },
         exp_title: "опыт",
@@ -963,36 +945,33 @@ function App() {
         }],
         langs: [{
           k: "Русский",
-          lv: 100,
-          label: "native"
+          label: "свободное владение"
         }, {
           k: "Oʻzbek",
-          lv: 92,
-          label: "свободный"
+          label: "хороший рабочий"
         }, {
           k: "English",
-          lv: 85,
-          label: "C1 · продвинутый"
+          label: "хороший рабочий"
         }],
-        foot: "сгенерировано 2026 · подписанная версия по запросу"
+        foot: "обновлено 2026 · PDF доступен для скачивания"
       },
       en: {
         id: {
           name: "Samandar",
-          role: "Full-Stack · AI Automation · QA",
+          role: "Software Engineer · Product Builder · QA Engineer",
           meta: ["Tashkent · UTC+5", "Open to projects", "3rd-year · Software Engineering"],
           stats: [{
             k: "experience",
-            v: "2 yrs"
+            v: "1 yr 8 mos"
           }, {
-            k: "projects",
+            k: "products",
             v: "10+"
           }, {
-            k: "stack",
-            v: "TS / Py / SQL"
+            k: "focus",
+            v: "Builder + QA"
           }, {
-            k: "reply",
-            v: "< 24h"
+            k: "languages",
+            v: "RU · UZ · EN"
           }]
         },
         exp_title: "experience",
@@ -1013,36 +992,33 @@ function App() {
         }],
         langs: [{
           k: "Russian",
-          lv: 100,
-          label: "native"
-        }, {
-          k: "Uzbek",
-          lv: 92,
           label: "fluent"
         }, {
+          k: "Uzbek",
+          label: "good working"
+        }, {
           k: "English",
-          lv: 85,
-          label: "C1 · advanced"
+          label: "good working"
         }],
-        foot: "generated 2026 · signed copy on request"
+        foot: "updated 2026 · PDF available to download"
       },
       uz: {
         id: {
           name: "Samandar",
-          role: "Full-Stack · AI Automation · QA",
+          role: "Software Engineer · Product Builder · QA Engineer",
           meta: ["Toshkent · UTC+5", "Loyihalarga ochiq", "3-kurs · Software Engineering"],
           stats: [{
             k: "tajriba",
-            v: "2 yil"
+            v: "1 yil 8 oy"
           }, {
-            k: "loyiha",
+            k: "mahsulot",
             v: "10+"
           }, {
-            k: "stek",
-            v: "TS / Py / SQL"
+            k: "fokus",
+            v: "Builder + QA"
           }, {
-            k: "javob",
-            v: "< 24h"
+            k: "tillar",
+            v: "RU · UZ · EN"
           }]
         },
         exp_title: "tajriba",
@@ -1063,18 +1039,15 @@ function App() {
         }],
         langs: [{
           k: "Ruscha",
-          lv: 100,
-          label: "native"
-        }, {
-          k: "Oʻzbek",
-          lv: 92,
           label: "erkin"
         }, {
+          k: "Oʻzbek",
+          label: "yaxshi ishchi"
+        }, {
           k: "English",
-          lv: 85,
-          label: "C1 · ilg'or"
+          label: "yaxshi ishchi"
         }],
-        foot: "2026 yil · imzolangan nusxa so'rov asosida"
+        foot: "2026 yil yangilangan · PDF yuklash mumkin"
       }
     };
     Object.entries(I18N).forEach(([L, patch]) => {

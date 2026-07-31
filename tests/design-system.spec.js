@@ -5,14 +5,19 @@ const { settleMain, expectNoHorizontalOverflow } = require("./helpers");
 
 test("Builder + QA proof rail and local type system survive every viewport", async ({ page }) => {
   const remoteFontRequests = [];
+  const retiredHeroMediaRequests = [];
   page.on("request", (request) => {
     const host = new URL(request.url()).hostname;
     if (host === "fonts.googleapis.com" || host === "fonts.gstatic.com") {
       remoteFontRequests.push(request.url());
     }
+    if (/hero-cockpit|orbital-station/.test(request.url())) {
+      retiredHeroMediaRequests.push(request.url());
+    }
   });
 
   await settleMain(page, "#hero");
+  await expect(page.locator(".hero-material-field")).toBeVisible();
   await expect(page.locator(".hero-proof-step")).toHaveCount(3);
   await expect(page.locator(".hero-roles")).toContainText(/Builder/i);
   await expect(page.locator(".hero-roles")).toContainText("QA");
@@ -26,6 +31,7 @@ test("Builder + QA proof rail and local type system survive every viewport", asy
   expect(type.body).toContain("Inter");
   expect(type.mono).toContain("JetBrains Mono");
   expect(remoteFontRequests).toEqual([]);
+  expect(retiredHeroMediaRequests).toEqual([]);
   await expectNoHorizontalOverflow(expect, page, "design-system hero");
 });
 
@@ -37,6 +43,29 @@ test("Signal remains reader-controlled instead of auto-changing disclosure state
   await page.waitForTimeout(1200);
   const expanded = await rows.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-expanded")));
   expect(expanded).toEqual(["false", "false", "false", "false", "false", "false"]);
+});
+
+test("the twelve chapters keep one canonical order and truthful numbering", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "DOM order is engine-independent");
+  await settleMain(page, "#hero");
+  const chapters = await page.locator("section[data-section]").evaluateAll((sections) => sections.map((section) => ({
+    id: section.getAttribute("data-section"),
+    number: section.querySelector(".sec-head .num")?.textContent.trim().slice(0, 2) || "01",
+  })));
+  expect(chapters).toEqual([
+    { id: "hero", number: "01" },
+    { id: "signal", number: "02" },
+    { id: "about", number: "03" },
+    { id: "projects", number: "04" },
+    { id: "builder", number: "05" },
+    { id: "skills", number: "06" },
+    { id: "services", number: "07" },
+    { id: "cv", number: "08" },
+    { id: "process", number: "09" },
+    { id: "faq", number: "10" },
+    { id: "trust", number: "11" },
+    { id: "contact", number: "12" },
+  ]);
 });
 
 test("fullscreen menu owns the interaction layer and its language controls receive real pointer input", async ({ page }) => {
@@ -168,43 +197,72 @@ test("mobile Hero keeps its CTA, proof rail and Signal handoff collision-free", 
     { width: 360, height: 800 },
     { width: 390, height: 844 },
     { width: 430, height: 932 },
+    { width: 568, height: 320 },
     { width: 844, height: 390 },
+    { width: 920, height: 720 },
+    { width: 1024, height: 768 },
+    { width: 1440, height: 1000 },
   ];
-  for (const viewport of viewports) {
-    await page.setViewportSize(viewport);
-    await page.evaluate(() => window.scrollTo(0, 0));
-    const geometry = await page.evaluate(() => {
-      const hero = document.getElementById("hero").getBoundingClientRect();
-      const signal = document.getElementById("signal").getBoundingClientRect();
-      const proof = document.querySelector(".hero-proof").getBoundingClientRect();
-      const buttons = Array.from(document.querySelectorAll(".hero-ctas .btn")).map((button) => {
-        const rect = button.getBoundingClientRect();
+  for (const language of ["RU", "EN", "UZ"]) {
+    await page.setViewportSize({ width: 390, height: 844 });
+    if ((await page.locator("html").getAttribute("lang")) !== language.toLowerCase()) {
+      await page.locator(".nav-burger").click();
+      await page.locator(".nav-menu-lang button").filter({ hasText: new RegExp(`^${language}$`) }).click();
+      await expect(page.locator("html")).toHaveAttribute("lang", language.toLowerCase());
+      await page.locator(".nav-menu-close").click();
+    }
+
+    for (const viewport of viewports) {
+      await page.setViewportSize(viewport);
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.waitForTimeout(60);
+      const geometry = await page.evaluate(() => {
+        const hero = document.getElementById("hero").getBoundingClientRect();
+        const signal = document.getElementById("signal").getBoundingClientRect();
+        const proof = document.querySelector(".hero-proof").getBoundingClientRect();
+        const name = document.querySelector(".hero-name");
+        const ink = Array.from(document.querySelectorAll(".hero-name .hn-i"))
+          .map((node) => node.getBoundingClientRect());
+        const buttons = Array.from(document.querySelectorAll(".hero-ctas .btn")).map((button) => {
+          const rect = button.getBoundingClientRect();
+          return {
+            bottom: rect.bottom,
+            height: rect.height,
+            fontSize: Number.parseFloat(getComputedStyle(button).fontSize),
+            textFits: button.scrollWidth <= button.clientWidth + 1,
+          };
+        });
         return {
-          top: rect.top,
-          bottom: rect.bottom,
-          width: rect.width,
-          height: rect.height,
-          textFits: button.scrollWidth <= button.clientWidth + 1,
+          heroHeight: hero.height,
+          signalPeek: innerHeight - signal.top,
+          proofTop: proof.top,
+          proofBottom: proof.bottom,
+          nameOverflow: name.scrollWidth - name.clientWidth,
+          inkLeft: Math.min(...ink.map((rect) => rect.left)),
+          inkRight: Math.max(...ink.map((rect) => rect.right)),
+          buttons,
+          overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
         };
       });
-      return {
-        heroHeight: hero.height,
-        signalPeek: innerHeight - signal.top,
-        proofTop: proof.top,
-        buttons,
-        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      };
-    });
-    expect(geometry.overflow, `overflow at ${viewport.width}x${viewport.height}`).toBeLessThanOrEqual(1);
-    expect(geometry.buttons).toHaveLength(2);
-    geometry.buttons.forEach((button) => {
-      expect(button.height, `touch target at ${viewport.width}x${viewport.height}`).toBeGreaterThanOrEqual(44);
-      expect(button.textFits, `CTA clipping at ${viewport.width}x${viewport.height}`).toBe(true);
-      expect(button.bottom + 8, `CTA/proof overlap at ${viewport.width}x${viewport.height}`).toBeLessThanOrEqual(geometry.proofTop);
-    });
-    if (viewport.height > viewport.width) {
-      expect(geometry.signalPeek, `Signal cue at ${viewport.width}x${viewport.height}`).toBeGreaterThanOrEqual(64);
-      expect(geometry.heroHeight, `curtain distance at ${viewport.width}x${viewport.height}`).toBeLessThanOrEqual(viewport.height * 0.9);
+      const caseId = `${language} ${viewport.width}x${viewport.height}`;
+      expect(geometry.overflow, `page overflow at ${caseId}`).toBeLessThanOrEqual(1);
+      expect(geometry.nameOverflow, `masthead overflow at ${caseId}`).toBeLessThanOrEqual(1);
+      expect(geometry.inkLeft, `left masthead ink at ${caseId}`).toBeGreaterThanOrEqual(-1);
+      expect(geometry.inkRight, `right masthead ink at ${caseId}`).toBeLessThanOrEqual(viewport.width + 1);
+      expect(geometry.proofBottom, `proof below viewport at ${caseId}`).toBeLessThanOrEqual(viewport.height + 1);
+      expect(geometry.buttons).toHaveLength(2);
+      geometry.buttons.forEach((button) => {
+        expect(button.height, `touch target at ${caseId}`).toBeGreaterThanOrEqual(44);
+        expect(button.textFits, `CTA clipping at ${caseId}`).toBe(true);
+        expect(button.bottom + 7, `CTA/proof overlap at ${caseId}`).toBeLessThanOrEqual(geometry.proofTop);
+        if (language === "UZ" && viewport.width <= 430) {
+          expect(button.fontSize, `readable UZ CTA at ${caseId}`).toBeGreaterThanOrEqual(10.5);
+        }
+      });
+      if (viewport.height > viewport.width && viewport.width <= 430) {
+        expect(geometry.signalPeek, `Signal cue at ${caseId}`).toBeGreaterThanOrEqual(64);
+        expect(geometry.heroHeight, `curtain distance at ${caseId}`).toBeLessThanOrEqual(viewport.height * 0.9);
+      }
     }
   }
 });

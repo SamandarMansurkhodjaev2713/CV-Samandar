@@ -2,6 +2,8 @@
 
 const { useEffect: useEffect2, useRef: useRef2, useState: useState2, useMemo: useMemoFromComponents1 } = React;
 
+const CV_PDF_PATH = "assets/docs/Samandar_Mansurkhodjaev_CV_QA.pdf";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SERVICES 2.0 — panel switcher.
 //   Desktop: WAI-ARIA tablist (left) + tabpanel (right), roving tabindex,
@@ -154,7 +156,7 @@ function Services({ t }) {
   return (
     <section data-section="services" id="services" data-enter="slide-left" ref={ref}>
       <div className="shell">
-        <SecHead num="05" eyebrow={t.services.eyebrow} title={t.services.title} meta={`${items.length} services`} />
+        <SecHead num="07" eyebrow={t.services.eyebrow} title={t.services.title} meta={`${items.length} services`} />
 
         <div className={`svc ${isMobile ? "is-acc" : "is-panel"}`} data-reveal>
           {/* ── LEFT: tablist (desktop) ─────────────────────────────── */}
@@ -361,10 +363,36 @@ function CV({ t, links }) {
   const [docTab, setDocTab] = useState2("cv");
   const hasReadme = !!(t.cv && t.cv.readme && t.cv.readme.intro);
   const showReadme = hasReadme && docTab === "readme";
+  const tabRefs = useRef2({});
+  const docLabels = t.cv.document || {};
   // Roles are an accordion: only one open at a time normally. For print we
   // force ALL open so the printed PDF shows the full timeline, then restore
   // the user's previous state after the print dialog closes.
   const restoreOpenIdx = useRef2(0);
+
+  function setDocumentTab(nextTab, moveFocus) {
+    if (nextTab !== "cv" && nextTab !== "readme") return;
+    if (nextTab === "readme" && !hasReadme) return;
+    setDocTab(nextTab);
+    if (moveFocus) {
+      requestAnimationFrame(function focusSelectedDocumentTab() {
+        tabRefs.current[nextTab]?.focus();
+      });
+    }
+  }
+
+  function onDocumentTabKeyDown(event) {
+    const tabs = hasReadme ? ["cv", "readme"] : ["cv"];
+    const current = tabs.indexOf(docTab);
+    let next = current;
+    if (event.key === "ArrowRight") next = (current + 1) % tabs.length;
+    else if (event.key === "ArrowLeft") next = (current - 1 + tabs.length) % tabs.length;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = tabs.length - 1;
+    else return;
+    event.preventDefault();
+    setDocumentTab(tabs[next], true);
+  }
 
   function onPrint() {
     restoreOpenIdx.current = openIdx;
@@ -412,7 +440,7 @@ function CV({ t, links }) {
   return (
     <section data-section="cv" id="cv" data-enter="curtain" ref={ref}>
       <div className="shell">
-        <SecHead num="06" eyebrow={t.cv.eyebrow} title={t.cv.title} em={t.cv.title.split(" ").pop()} meta={`v.2026 · ${years || "active"}`} />
+        <SecHead num="08" eyebrow={t.cv.eyebrow} title={t.cv.title} em={t.cv.title.split(" ").pop()} meta={`v.2026 · ${years || "active"}`} />
 
         <article className="cv-doc" data-reveal>
           {/* Doc chrome */}
@@ -420,24 +448,34 @@ function CV({ t, links }) {
             {/* Segmented toggle — clicking switches the document view. The
                 pill-with-highlighted-segment shape reads as switchable on
                 sight; hover + cursor reinforce it. */}
-            <div className="cv-doc-tabs mono" role="tablist" aria-label="document view">
+            <div className="cv-doc-tabs mono" role="tablist" aria-label={docLabels.tabs_label || "CV documents"}>
               <button
+                id="cv-tab-cv"
                 type="button"
                 role="tab"
+                aria-controls="cv-panel-cv"
                 aria-selected={!showReadme}
+                tabIndex={!showReadme ? 0 : -1}
                 className={`cv-doc-tab ${!showReadme ? "is-active" : ""}`}
-                onClick={() => setDocTab("cv")}
+                onClick={() => setDocumentTab("cv", false)}
+                onKeyDown={onDocumentTabKeyDown}
+                ref={(node) => { tabRefs.current.cv = node; }}
                 data-cursor="link"
               >
                 samandar.cv
               </button>
               {hasReadme ? (
                 <button
+                  id="cv-tab-readme"
                   type="button"
                   role="tab"
+                  aria-controls="cv-panel-readme"
                   aria-selected={showReadme}
+                  tabIndex={showReadme ? 0 : -1}
                   className={`cv-doc-tab ${showReadme ? "is-active" : ""}`}
-                  onClick={() => setDocTab("readme")}
+                  onClick={() => setDocumentTab("readme", false)}
+                  onKeyDown={onDocumentTabKeyDown}
+                  ref={(node) => { tabRefs.current.readme = node; }}
                   data-cursor="link"
                 >
                   readme.md
@@ -445,14 +483,20 @@ function CV({ t, links }) {
               ) : null}
             </div>
             <div className="cv-doc-actions mono">
-              <button className="cv-action" type="button" onClick={onPrint} data-cursor="link" data-cursor-label="print / pdf">
-                <span className="cv-action-ico" aria-hidden="true">⌘P</span>
-                <span>print · pdf</span>
-              </button>
-              <a className="cv-action" href={links?.email ? `mailto:${links.email}?subject=CV%20request` : "#"} data-cursor="send" data-cursor-label="request signed cv">
-                <span className="cv-action-ico" aria-hidden="true">↗</span>
-                <span>request</span>
+              <a
+                className="cv-action cv-action--primary"
+                href={CV_PDF_PATH}
+                download="Samandar_Mansurkhodjaev_CV_QA.pdf"
+                data-cursor="link"
+                data-cursor-label={docLabels.download || "download PDF"}
+              >
+                <span className="cv-action-ico" aria-hidden="true">↓</span>
+                <span>{docLabels.download || "download PDF"}</span>
               </a>
+              <button className="cv-action" type="button" onClick={onPrint} data-cursor="link" data-cursor-label={docLabels.print || "print CV"}>
+                <span className="cv-action-ico" aria-hidden="true">⌘P</span>
+                <span>{docLabels.print || "print"}</span>
+              </button>
             </div>
           </header>
 
@@ -480,12 +524,18 @@ function CV({ t, links }) {
             </dl>
           </div>
 
-          {/* Body: the two-column résumé (samandar.cv) OR the readme.md view */}
-          {showReadme ? (
-            <CvReadme r={t.cv.readme} />
-          ) : (
+          {/* Both tabpanels stay in the DOM so every aria-controls target is
+              stable. The browser's native hidden state handles inactive views. */}
+          <div
+            id="cv-panel-cv"
+            className="cv-panel"
+            role="tabpanel"
+            aria-labelledby="cv-tab-cv"
+            tabIndex={0}
+            hidden={showReadme}
+          >
           <div className="cv-doc-body">
-            <main className="cv-main">
+            <div className="cv-main">
               <h4 className="cv-block-h mono">{t.cv.exp_title || "experience"}</h4>
 
               <ol className="cv-roles">
@@ -523,7 +573,7 @@ function CV({ t, links }) {
                   );
                 })}
               </ol>
-            </main>
+            </div>
 
             <aside className="cv-side">
               {/* Education */}
@@ -578,10 +628,7 @@ function CV({ t, links }) {
                   <ul className="cv-langs">
                     {t.cv.langs.map((l, i) => (
                       <li key={i} className="cv-lang">
-                        <span>{l.k}</span>
-                        <span className="cv-lang-bar" aria-hidden="true">
-                          <span className="cv-lang-bar-fill" style={{ width: `${l.lv}%` }} />
-                        </span>
+                        <span className="cv-lang-name">{l.k}</span>
                         <span className="mono cv-lang-lvl">{l.label}</span>
                       </li>
                     ))}
@@ -590,7 +637,20 @@ function CV({ t, links }) {
               ) : null}
             </aside>
           </div>
-          )}
+          </div>
+
+          {hasReadme ? (
+            <div
+              id="cv-panel-readme"
+              className="cv-panel"
+              role="tabpanel"
+              aria-labelledby="cv-tab-readme"
+              tabIndex={0}
+              hidden={!showReadme}
+            >
+              <CvReadme r={t.cv.readme} />
+            </div>
+          ) : null}
 
           <footer className="cv-doc-foot mono">
             <span>— end of file —</span>
@@ -603,132 +663,63 @@ function CV({ t, links }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PROCESS — the delivery pipeline as a static terminal. Nine stages, each a
-// confident line: command → phase → the artifact it yields. No fake CI
-// run-lifecycle (queued/running/done, invented times, random output) anymore.
+// PROCESS — a gate-driven delivery ledger. Each phase names the decision,
+// durable artifact and QA condition required to move forward. It communicates
+// how the engagement is controlled without simulating terminal activity.
 // ─────────────────────────────────────────────────────────────────────────────
-function ProcStage({ step, index }) {
-  // Static, honest pipeline stage. The old version simulated a live CI run
-  // (queued → running → done with an invented completion time + a random CI
-  // output line) that read as fake — and, worse, got stuck on "queued" wherever
-  // the scroll animation didn't fire, i.e. "nothing ran". Now each stage is a
-  // confident, stable line: the command, the phase → what it covers, and the
-  // concrete artifact it yields. Terminal look kept; the fakery is gone.
-  return (
-    <li
-      className="proc-stage proc-stage--ready"
-      data-reveal-delay={(index * 0.06).toFixed(2)}
-    >
-      <span className="proc-stage-gutter mono">{String(index + 1).padStart(2, "0")}</span>
-      <div className="proc-stage-main">
-        <div className="proc-stage-cmd mono">{step.cmd}</div>
-        <div className="proc-stage-meta">
-          <span className="proc-stage-k">{step.k}</span>
-          <span className="proc-stage-arrow">→</span>
-          <span className="proc-stage-v">{step.v}</span>
-        </div>
-        {step.out ? (
-          <div className="proc-stage-output mono">
-            <span className="proc-stage-output-prompt">›</span>
-            <span>{step.out}</span>
-          </div>
-        ) : null}
-      </div>
-      <span className="proc-stage-status mono" aria-hidden="true">
-        <span className="proc-stage-pill proc-stage-pill--ready">ready</span>
-      </span>
-    </li>
-  );
-}
-
 function Process({ t }) {
   const ref = useRevealRoot([t]);
-
-  const steps = useMemoFromComponents1(function buildSteps() {
-    return t.process.steps.map(function buildStep(s) {
-      const slug = String(s.k || "step").toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      return {
-        k: s.k,
-        v: s.v,
-        out: s.out,
-        cmd: `$ ./pipeline run --stage ${slug}`,
-      };
-    });
-  }, [t]);
-
-  // Four frames over the same nine stages. `take` walks the step list in
-  // order, so each frame's artifacts ARE that frame's steps' own `out` fields
-  // — one source, no second copy to fall out of sync. A frame whose `take`
-  // runs past the end simply gets fewer artifacts rather than throwing, so a
-  // content edit that removes a stage degrades instead of breaking the page.
-  const outLabel = (t.process && t.process.phase_out_label) || "you get";
-  const phases = useMemoFromComponents1(function buildPhases() {
-    const src = (t.process && Array.isArray(t.process.phases)) ? t.process.phases : [];
-    let cursor = 0;
-    return src.map(function (ph) {
-      const take = Math.max(0, ph.take | 0);
-      const slice = t.process.steps.slice(cursor, cursor + take);
-      cursor += take;
-      return { k: ph.k, v: ph.v, arts: slice.map((s) => s.out).filter(Boolean) };
-    });
-  }, [t]);
+  const p = t.process;
+  const phases = Array.isArray(p.phases) ? p.phases : [];
 
   return (
     <section data-section="process" id="process" data-enter="line-stagger" ref={ref}>
       <div className="shell">
-        <SecHead num="07" eyebrow={t.process.eyebrow} title={t.process.title} meta="pipeline.run()" />
-        <p className="lead-line" data-reveal>{t.process.lead}</p>
+        <SecHead num="09" eyebrow={p.eyebrow} title={p.title} meta={p.meta} titleId="process-title" />
+        <p className="lead-line" data-reveal>{p.lead}</p>
 
-        {/* ── FOUR FRAMES ───────────────────────────────────────────────
-            The nine pipeline stages are still below, and still real — but
-            nine equal lines is a process diagram, and a process diagram tells
-            a client the work is thorough while telling them nothing about the
-            shape of the engagement they are buying. These are the four beats
-            they actually experience, each one naming what it hands over. The
-            artifacts are not a second copy of the content: they are the same
-            `out` fields, grouped, so the two can never drift apart. */}
-        {phases.length ? (
-          <ol className="proc-frames">
-            {phases.map((ph, i) => (
-              <li className="proc-frame" key={i} data-reveal data-reveal-delay={(i * 0.07).toFixed(2)}>
-                <span className="proc-frame-n mono" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
-                <div className="proc-frame-body">
-                  <h3 className="proc-frame-k">{ph.k}</h3>
-                  <p className="proc-frame-v">{ph.v}</p>
-                </div>
-                <div className="proc-frame-out">
-                  <span className="mono proc-frame-out-label">{outLabel}</span>
-                  <ul className="proc-frame-arts">
-                    {ph.arts.map((a, k) => (
-                      <li key={k} className="proc-frame-art">
-                        <span className="proc-frame-art-mark" aria-hidden="true">→</span>
-                        <span>{a}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </li>
-            ))}
-          </ol>
-        ) : null}
-
-        <div className="proc-terminal card" data-reveal>
-          <div className="proc-terminal-head">
-            <div className="proc-terminal-dots"><i /><i /><i /></div>
-            <span className="mono proc-terminal-title">/usr/local/bin/ship — pipeline.v26</span>
-            <span className="mono proc-terminal-meta">{steps.length} stages</span>
-          </div>
-          <ol className="proc-terminal-body">
-            {steps.map(function renderStage(s, i) {
-              return <ProcStage key={i} step={s} index={i} />;
-            })}
-          </ol>
-          <div className="proc-terminal-foot mono">
-            <span className="proc-terminal-prompt">›</span>
-            <span>READY · listening on :443</span>
-            <span className="proc-terminal-cursor">▌</span>
-          </div>
+        <div className="proc-principle" data-reveal>
+          <span className="proc-principle-mark" aria-hidden="true"><i /><i /><i /><i /></span>
+          <p>{p.principle}</p>
+          <span className="mono proc-principle-code">GATE-DRIVEN DELIVERY</span>
         </div>
+
+        <ol className="proc-ledger" aria-labelledby="process-title">
+          {phases.map((phase, index) => (
+            <li
+              className="proc-ledger-row"
+              key={`${phase.k}-${index}`}
+              style={{ "--proc-i": index }}
+              data-reveal
+              data-reveal-delay={(index * 0.07).toFixed(2)}
+            >
+              <span className="proc-ledger-index mono" aria-hidden="true">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <div className="proc-ledger-body">
+                <span className="proc-ledger-kicker mono">0{index + 1} / 04</span>
+                <h3 className={phase.k.length > 12 ? "is-long" : undefined}>{phase.k}</h3>
+                <p>{phase.v}</p>
+              </div>
+              <dl className="proc-ledger-proof">
+                <div className="proc-ledger-proof-row proc-ledger-proof-row--artifact">
+                  <dt className="mono">{p.artifact_label}</dt>
+                  <dd>{phase.artifact}</dd>
+                </div>
+                <div className="proc-ledger-proof-row proc-ledger-proof-row--gate">
+                  <dt className="mono"><span className="proc-gate-node" aria-hidden="true" />{p.gate_label}</dt>
+                  <dd>{phase.gate}</dd>
+                </div>
+              </dl>
+            </li>
+          ))}
+        </ol>
+
+        <aside className="proc-boundary" data-reveal>
+          <span className="mono proc-boundary-label">{p.boundary_label}</span>
+          <p>{p.boundary}</p>
+          <span className="proc-boundary-seal mono" aria-hidden="true">SCOPE / EVIDENCE / RELEASE</span>
+        </aside>
       </div>
     </section>
   );
@@ -749,169 +740,75 @@ function Process({ t }) {
 // animates smoothly, and it can never misalign on resize or font swap.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Neutral (language-independent) tech vocabulary — real tools, matched to what
-// the rest of the site already claims (see skills.groups / projects[].stack).
-const BUILDER_TECH = {
-  frontend: ["Next.js", "React", "Tailwind"],
-  telegram: ["Bot API", "Web App"],
-  triggers: ["Webhooks", "n8n", "Cron"],
-  api: ["FastAPI", "Node", "tRPC"],
-  bot: ["Node", "Python", "Queue"],
-  pipeline: ["Python", "Workers", "Queue"],
-  ai: ["Claude", "GPT-4o", "LangChain", "RAG"],
-};
-
-// Maps scale → the Contact form's budget bucket index
-// (["< $200","$200-600","$600-1.5k","$1.5-3k","$3k+"]) plus a display range.
-// Ranges confirmed directly against the actual Uzbekistan market (client's
-// own numbers, 2026-07) — even the FIRST pricing pass (grounded in solo/
-// CIS-remote research) still read as agency-inflated for local UZ clients.
-const BUILDER_SCALE_META = {
-  mvp: { budgetIdx: 1, budget: "$250–1k" },
-  prod: { budgetIdx: 2, budget: "$500–2k" },
-  product: { budgetIdx: 4, budget: "$2–5k" },
-};
-
-function builderDedupe(arr) {
-  const seen = {}; const out = [];
-  for (let i = 0; i < arr.length; i++) { if (!seen[arr[i]]) { seen[arr[i]] = 1; out.push(arr[i]); } }
-  return out;
-}
-
-// Pure function: which layers exist + their tech, given (type, scale, priority).
-// priority ("что критично") meaningfully bends the stack — this is the depth the
-// client asked for, not cosmetic: e.g. AI-depth forces the intelligence layer on
-// even for a plain web app; Load adds queues/CDN/cache; Design adds motion libs.
-function builderModel(typeKey, scaleKey, priorityKey, sub) {
-  const isAIType = typeKey === "ai" || typeKey === "automation";
-  const isAI = isAIType || priorityKey === "ai";
-  const prod = scaleKey === "prod" || scaleKey === "product";
-  const product = scaleKey === "product";
-  const heavyLoad = priorityKey === "scale";
-  const designFirst = priorityKey === "design";
-
-  let clientSub, clientTech;
-  if (typeKey === "bot") { clientSub = sub.telegram; clientTech = BUILDER_TECH.telegram.slice(); }
-  else if (typeKey === "automation") { clientSub = sub.triggers; clientTech = BUILDER_TECH.triggers.slice(); }
-  else { clientSub = sub.frontend; clientTech = BUILDER_TECH.frontend.slice(); }
-  if (designFirst && typeKey !== "bot" && typeKey !== "automation") clientTech.push("Framer Motion", "GSAP");
-
-  let logicSub, logicTech;
-  if (typeKey === "bot") { logicSub = sub.bot; logicTech = BUILDER_TECH.bot.slice(); }
-  else if (typeKey === "automation") { logicSub = sub.pipeline; logicTech = BUILDER_TECH.pipeline.slice(); }
-  else { logicSub = sub.api; logicTech = BUILDER_TECH.api.slice(); }
-
-  const aiTech = BUILDER_TECH.ai.slice();
-  if (priorityKey === "ai") aiTech.push("Evals");
-
-  const dataTech = ["Postgres"];
-  if (prod || heavyLoad) dataTech.push("Redis");
-  if (isAI) dataTech.push("pgvector");
-
-  const infraTech = ["Docker", "Deploy"];
-  if (prod) infraTech.push("Auth · RBAC", "Sentry", "GitHub Actions");
-  if (product) infraTech.push("Analytics");
-  if (heavyLoad) infraTech.push("Queue", "CDN", "Load balancer");
-
-  return [
-    { id: "client", sub: clientSub, tech: builderDedupe(clientTech), active: true },
-    { id: "logic", sub: logicSub, tech: builderDedupe(logicTech), active: true },
-    { id: "ai", sub: sub.ai, tech: builderDedupe(aiTech), active: isAI },
-    { id: "data", sub: "", tech: builderDedupe(dataTech), active: true },
-    { id: "infra", sub: "", tech: builderDedupe(infraTech), active: true },
-  ];
-}
-
-// One representative tech per active layer, in flow order — the readout summary.
-function builderStackSummary(layers) {
-  const picks = [];
-  layers.forEach(function pick(L) {
-    if (L.active && L.tech && L.tech.length) picks.push(L.tech[0]);
-  });
-  return picks.join(" · ");
-}
-
-// Builder type → Contact scope_opts label (for chip pre-select on handoff).
-const BUILDER_SCOPE_MAP = { web: "Web App / MVP", ai: "AI Automation", bot: "Telegram Bot", automation: "AI Automation" };
-
 function ProjectBuilder({ t, links }) {
   const ref = useRevealRoot([t]);
   const b = t.builder;
-  const [typeKey, setTypeKey] = useState2("web");
-  const [scaleKey, setScaleKey] = useState2("mvp");
-  const [priorityKey, setPriorityKey] = useState2("speed");
-  // Sequential-assembly driver: `shown` counts how many active layers have
-  // dropped into place. On any choice change we reset to 0 and re-reveal them
-  // top-down on a timer, so the system visibly RE-ASSEMBLES every time.
-  const [shown, setShown] = useState2(0);
+  const estimator = window.BUILDER_ESTIMATOR;
+  const [typeId, setTypeId] = useState2("web");
+  const [stageId, setStageId] = useState2("mvp");
+  const [driverIds, setDriverIds] = useState2(() => new Set());
+  const [readinessIds, setReadinessIds] = useState2(() => new Set());
+  const [architectureOpen, setArchitectureOpen] = useState2(() =>
+    typeof window.matchMedia === "function" && window.matchMedia("(min-width: 901px)").matches
+  );
 
-  // Defensive: if a content bundle predates the builder v2 block, render nothing
-  // rather than throwing (keeps older cached content.js from white-screening).
-  if (!b || !b.priorities || !b.verdictLead) return null;
+  useEffect2(function syncArchitectureBreakpoint() {
+    if (typeof window.matchMedia !== "function") return undefined;
+    const query = window.matchMedia("(min-width: 901px)");
+    function sync(event) { setArchitectureOpen(event.matches); }
+    if (query.addEventListener) query.addEventListener("change", sync);
+    else if (query.addListener) query.addListener(sync);
+    return function cleanup() {
+      if (query.removeEventListener) query.removeEventListener("change", sync);
+      else if (query.removeListener) query.removeListener(sync);
+    };
+  }, []);
 
-  const layers = builderModel(typeKey, scaleKey, priorityKey, b.sub);
-  const scaleMeta = BUILDER_SCALE_META[scaleKey] || BUILDER_SCALE_META.mvp;
-  const stackSummary = builderStackSummary(layers);
-  const timeText = (b.times && b.times[scaleKey]) || "";
-  const activeCount = layers.reduce(function (n, L) { return n + (L.active ? 1 : 0); }, 0);
-  const moduleCount = layers.reduce(function (n, L) { return n + (L.active ? L.tech.length : 0); }, 0);
-  const verdict = (b.verdictLead[typeKey] || "") + " — " + (b.verdictTail[priorityKey] || "");
-  // Richer output: concrete deliverables (derived from the ACTIVE layers so it
-  // always matches the assembled system), the process stages, and an honest
-  // scope boundary per scale ("what's NOT in this pass" — expectation-setting
-  // reads as professional, not evasive).
-  const includes = layers
-    .filter(function (L) { return L.active; })
-    .map(function (L) { return (b.deliverables && b.deliverables[L.id]) || ""; })
-    .filter(Boolean);
-  // Priority also produces a concrete deliverable, so "что входит" reflects ALL
-  // three choices (design/scale/ai), not just the layers — except AI-depth,
-  // which is already spoken for by the active intelligence layer.
-  const aiLayerActive = layers.some(function (L) { return L.id === "ai" && L.active; });
-  const prioDeliverable = (b.priorityDeliverable && b.priorityDeliverable[priorityKey]) || "";
-  const includesFull = (prioDeliverable && !(priorityKey === "ai" && aiLayerActive))
-    ? includes.concat(prioDeliverable)
-    : includes;
-  const stages = Array.isArray(b.stages) ? b.stages : [];
-  const scopeNote = (b.scopeNote && b.scopeNote[scaleKey]) || "";
+  if (!b || !estimator || !Array.isArray(b.drivers) || !Array.isArray(b.readiness)) return null;
 
-  // Build-status HUD: turns the silent layer cascade into a legible "machine
-  // computing" — a progress track fills as active layers drop in, and the
-  // status flips from "assembling…" to "assembled" on completion.
-  const building = shown < activeCount;
-  const buildPct = activeCount ? Math.round((shown / activeCount) * 100) : 0;
-  const status = b.status || {};
+  const result = estimator.estimateProject({
+    typeId: typeId,
+    stageId: stageId,
+    driverIds: Array.from(driverIds),
+    readinessIds: Array.from(readinessIds),
+  });
+  const type = b.types.find(function find(item) { return item.k === typeId; });
+  const stage = b.stages.find(function find(item) { return item.k === stageId; });
+  const driverLabels = result.driverIds.map(function label(id) {
+    const item = b.drivers.find(function find(driver) { return driver.k === id; });
+    return item ? item.label : id;
+  });
+  const capabilityLabels = result.capabilityIds.map(function label(id) { return b.capabilities[id] || id; });
+  const riskLabels = result.exclusionIds.map(function label(id) { return b.risks[id] || id; });
+  const budgetText = `$${result.budget.min.toLocaleString("en-US")}–${result.budget.max.toLocaleString("en-US")}`;
+  const weeksText = `${result.weeks.min}–${result.weeks.max} ${b.units.weeks}`;
+  const confidenceText = b.confidence[result.confidence.band] || result.confidence.band;
 
-  useEffect2(function runAssembly() {
-    const reduce =
-      (typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) ||
-      document.documentElement.hasAttribute("data-motion-lite");
-    if (reduce) { setShown(activeCount); return undefined; }
-    setShown(0);
-    const timers = [];
-    let i = 0;
-    function step() { i += 1; setShown(i); if (i < activeCount) timers.push(window.setTimeout(step, 130)); }
-    timers.push(window.setTimeout(step, 90));
-    return function () { timers.forEach(function (id) { window.clearTimeout(id); }); };
-    // Re-run on any choice change (activeCount captures type/priority AI toggling).
-  }, [typeKey, scaleKey, priorityKey, activeCount]);
-
-  // Reset the cascade SYNCHRONOUSLY on any choice so the machine visibly
-  // "recomputes" — layers AND readout tear down and re-resolve together,
-  // instead of flashing the finished new state for one frame first.
-  function choose(setter, k) {
+  function choose(setter, value) {
     if (typeof navigator !== "undefined" && navigator.vibrate) {
       try { navigator.vibrate(6); } catch (err) { /* opportunistic haptic */ }
     }
-    setter(k); setShown(0);
+    setter(value);
   }
 
-  function pick(list, k) { const f = list.filter(function (x) { return x.k === k; })[0]; return f ? f.label : k; }
+  function toggleSet(setter, value) {
+    setter(function update(previous) {
+      const next = new Set(previous);
+      if (next.has(value)) next.delete(value);
+      else next.add(value);
+      return next;
+    });
+  }
+
   function summaryLine() {
-    return pick(b.types, typeKey) + " · " + pick(b.scales, scaleKey) + " · " + pick(b.priorities, priorityKey) + "\n" +
-      verdict + "\n" +
-      b.readout.stack + ": " + stackSummary + "\n" +
-      b.readout.time + ": " + timeText + " · " + b.readout.budget + ": " + scaleMeta.budget;
+    return [
+      b.summaryTitle,
+      `${type ? type.label : typeId} · ${stage ? stage.label : stageId}`,
+      driverLabels.length ? `${b.labels.drivers}: ${driverLabels.join(", ")}` : `${b.labels.drivers}: ${b.labels.none}`,
+      `${b.readout.time}: ${weeksText}`,
+      `${b.readout.budget}: ${budgetText}`,
+      b.notice,
+    ].join("\n");
   }
 
   function onHandoff() {
@@ -920,109 +817,162 @@ function ProjectBuilder({ t, links }) {
     }
     try {
       window.dispatchEvent(new CustomEvent("sm:builder-config", {
-        detail: { scope: BUILDER_SCOPE_MAP[typeKey], budgetIdx: scaleMeta.budgetIdx, summary: summaryLine() },
+        detail: {
+          typeId: typeId,
+          stageId: stageId,
+          driverIds: result.driverIds,
+          readinessIds: result.readinessIds,
+          estimateBandId: result.estimateBandId,
+          timelineBandId: result.timelineBandId,
+          budgetLabel: budgetText,
+          timelineLabel: weeksText,
+          result: result,
+          summary: summaryLine(),
+        },
       }));
     } catch (err) { /* opportunistic */ }
-    const el = document.getElementById("contact");
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    function focusContact() {
+      const target = document.querySelector("#contact .ff-textarea");
+      if (target) target.focus({ preventScroll: true });
+    }
+    if (window.SceneCinema && typeof window.SceneCinema.navigate === "function") {
+      window.SceneCinema.navigate("contact", { source: "builder-handoff" }).then(focusContact, focusContact);
+    } else {
+      const el = document.getElementById("contact");
+      try { window.history.pushState(null, "", "#contact"); } catch (err) { /* opportunistic */ }
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.setTimeout(focusContact, 500);
+    }
   }
-
-  // Assign each active layer its position among the active set so the cascade
-  // (and the `shown` gate) can reveal them strictly top-down.
-  let activeIdx = -1;
-  const rows = layers.map(function (L) {
-    let ai = -1;
-    if (L.active) { activeIdx += 1; ai = activeIdx; }
-    return { L: L, activeIdx: ai, shown: L.active && ai < shown };
-  });
 
   return (
     <section data-section="builder" id="builder" className="builder-sec" data-enter="assemble" ref={ref}>
       <div className="shell">
-        <SecHead num="08" eyebrow={b.eyebrow} title={b.title} meta="build.preview()" />
+        <SecHead num="05" eyebrow={b.eyebrow} title={b.title} meta={b.meta} titleId="builder-title" />
         <p className="lead-line" data-reveal>{b.lead}</p>
 
-        <div className="builder card" data-reveal>
+        <form className="builder card" aria-labelledby="builder-title" onSubmit={function preventSubmit(event) { event.preventDefault(); }} data-reveal>
           {/* CHOICES */}
           <div className="builder-choices">
-            <div className="builder-step">
-              <div className="builder-step-k mono"><span className="builder-step-n">01</span>{b.step1}</div>
+            <fieldset className="builder-step">
+              <legend className="builder-step-k mono"><span className="builder-step-n">01</span>{b.step1}</legend>
               <div className="builder-opts builder-opts--type">
                 {b.types.map(function renderType(o) {
-                  const on = typeKey === o.k;
+                  const on = typeId === o.k;
                   return (
-                    <button key={o.k} type="button" className={`builder-opt ${on ? "is-active" : ""}`} aria-pressed={on} onClick={function () { choose(setTypeKey, o.k); }}>
-                      <span className="builder-opt-label">{o.label}</span>
-                      <span className="builder-opt-note mono">{o.note}</span>
-                    </button>
+                    <label key={o.k} className={`builder-opt ${on ? "is-active" : ""}`}>
+                      <input className="builder-control" type="radio" name="builder-type" value={o.k} checked={on} onChange={function () { choose(setTypeId, o.k); }} />
+                      <span className="builder-opt-copy"><span className="builder-opt-label">{o.label}</span><span className="builder-opt-note mono">{o.note}</span></span>
+                    </label>
                   );
                 })}
               </div>
-            </div>
+            </fieldset>
 
-            <div className="builder-step">
-              <div className="builder-step-k mono"><span className="builder-step-n">02</span>{b.step2}</div>
+            <fieldset className="builder-step">
+              <legend className="builder-step-k mono"><span className="builder-step-n">02</span>{b.step2}</legend>
               <div className="builder-opts builder-opts--scale">
-                {b.scales.map(function renderScale(o) {
-                  const on = scaleKey === o.k;
+                {b.stages.map(function renderStage(o) {
+                  const on = stageId === o.k;
                   return (
-                    <button key={o.k} type="button" className={`builder-opt builder-opt--pill ${on ? "is-active" : ""}`} aria-pressed={on} onClick={function () { choose(setScaleKey, o.k); }}>
-                      <span className="builder-opt-label">{o.label}</span>
-                      <span className="builder-opt-note mono">{o.note}</span>
-                    </button>
+                    <label key={o.k} className={`builder-opt builder-opt--pill ${on ? "is-active" : ""}`}>
+                      <input className="builder-control" type="radio" name="builder-stage" value={o.k} checked={on} onChange={function () { choose(setStageId, o.k); }} />
+                      <span className="builder-opt-copy"><span className="builder-opt-label">{o.label}</span><span className="builder-opt-note mono">{o.note}</span></span>
+                    </label>
                   );
                 })}
               </div>
-            </div>
+            </fieldset>
 
-            <div className="builder-step">
-              <div className="builder-step-k mono"><span className="builder-step-n">03</span>{b.step3}</div>
-              <div className="builder-opts builder-opts--prio">
-                {b.priorities.map(function renderPrio(o) {
-                  const on = priorityKey === o.k;
+            <fieldset className="builder-step">
+              <legend className="builder-step-k mono"><span className="builder-step-n">03</span>{b.step3}</legend>
+              <div className="builder-opts builder-opts--drivers">
+                {b.drivers.map(function renderDriver(o) {
+                  const on = driverIds.has(o.k);
                   return (
-                    <button key={o.k} type="button" className={`builder-opt builder-opt--pill ${on ? "is-active" : ""}`} aria-pressed={on} onClick={function () { choose(setPriorityKey, o.k); }}>
-                      <span className="builder-opt-label">{o.label}</span>
-                      <span className="builder-opt-note mono">{o.note}</span>
-                    </button>
+                    <label key={o.k} className={`builder-opt builder-opt--compact ${on ? "is-active" : ""}`}>
+                      <input className="builder-control" type="checkbox" value={o.k} checked={on} onChange={function () { toggleSet(setDriverIds, o.k); }} />
+                      <span className="builder-opt-copy"><span className="builder-opt-label">{o.label}</span><span className="builder-opt-note mono">{o.note}</span></span>
+                    </label>
                   );
                 })}
               </div>
+            </fieldset>
+
+            <fieldset className="builder-step builder-step--readiness">
+              <legend className="builder-step-k mono"><span className="builder-step-n">04</span>{b.step4}</legend>
+              <div className="builder-ready-list">
+                {b.readiness.map(function renderReady(o) {
+                  const on = readinessIds.has(o.k);
+                  return (
+                    <label key={o.k} className="builder-ready">
+                      <input type="checkbox" checked={on} onChange={function () { toggleSet(setReadinessIds, o.k); }} />
+                      <span>{o.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
+          </div>
+
+          <div className="builder-readout-block">
+            <p className="builder-notice">{b.notice}</p>
+            <dl className="builder-readout">
+              <div className="builder-readout-row"><dt className="builder-readout-k mono">{b.readout.time}</dt><dd className="builder-readout-v mono">{weeksText}</dd></div>
+              <div className="builder-readout-row"><dt className="builder-readout-k mono">{b.readout.budget}</dt><dd className="builder-readout-v mono">{budgetText}</dd></div>
+              <div className="builder-readout-row"><dt className="builder-readout-k mono">{b.readout.confidence}</dt><dd className="builder-readout-v mono">{confidenceText}</dd></div>
+            </dl>
+            <div className="builder-result-group">
+              <h3 className="builder-spec-h mono">{b.labels.includes}</h3>
+              <ul className="builder-includes">
+                {(capabilityLabels.length ? capabilityLabels : [b.labels.core]).map(function renderCapability(label, index) {
+                  return <li key={index} className="builder-include"><span className="builder-include-tick" aria-hidden="true">✓</span><span>{label}</span></li>;
+                })}
+              </ul>
+            </div>
+            <div className="builder-boundary">
+              <span className="builder-boundary-k mono">{b.labels.risks}</span>
+              <span className="builder-boundary-v">{riskLabels.length ? riskLabels.join(" · ") : b.labels.ready}</span>
+            </div>
+            <div className="a11y-only" role="status" aria-live="polite" aria-atomic="true">
+              {`${type ? type.label : typeId}. ${stage ? stage.label : stageId}. ${weeksText}. ${budgetText}. ${confidenceText}.`}
             </div>
           </div>
 
-          {/* STAGE — the assembling blueprint */}
-          <div className="builder-stage" aria-hidden="true">
-            <div className={`builder-hud ${building ? "is-building" : "is-ready"}`}>
-              <div className="builder-hud-top mono">
-                <span className="builder-hud-status">
-                  <span className="builder-hud-dot" aria-hidden="true" />
-                  {building ? (status.building || "…") : (status.ready || "ok")}
-                </span>
-                <span className="builder-hud-count">
-                  {activeCount} {b.metric.layers} · {moduleCount} {b.metric.modules}
-                </span>
-              </div>
-              <div className="builder-hud-track">
-                <span className="builder-hud-fill" style={{ width: buildPct + "%" }} />
-              </div>
+          <div className="builder-cta-block">
+            <div className="builder-cta">
+              <button type="button" className="btn btn-primary builder-cta-tg" onClick={onHandoff}>
+                <span>{b.cta_form}</span><span className="arrow">→</span>
+              </button>
+              <a className="builder-cta-alt" href={`https://${links.telegram}`} target="_blank" rel="noopener noreferrer">
+                {b.cta_tg} <span className="arrow">↗</span>
+              </a>
             </div>
+            <button type="button" className="builder-architecture-toggle" aria-expanded={architectureOpen} aria-controls="builder-architecture" onClick={function () { setArchitectureOpen(function (value) { return !value; }); }}>
+              {architectureOpen ? b.hideArchitecture : b.showArchitecture}<span aria-hidden="true">{architectureOpen ? "−" : "+"}</span>
+            </button>
+          </div>
+
+          <div id="builder-architecture" className={`builder-stage ${architectureOpen ? "is-open" : ""}`} hidden={!architectureOpen}>
+            <div className="builder-stage-head">
+              <span className="mono">{b.architecture}</span>
+              <span className="mono">v{result.estimateVersion}</span>
+            </div>
+            <ol className="builder-proof-mini" aria-label={b.proofLabel}>
+              {b.proof.map(function renderProof(item, index) { return <li key={index}><span className="mono">{String(index + 1).padStart(2, "0")}</span><strong>{item}</strong></li>; })}
+            </ol>
             <div className="builder-layers">
               <span className="builder-backbone" />
-              <span className="builder-flow" />
-              {rows.filter(function keepShown(r) { return r.shown; }).map(function renderLayer(r) {
-                const L = r.L;
+              {result.layers.filter(function keepActive(layer) { return layer.active; }).map(function renderLayer(L, index) {
                 return (
-                  <div key={L.id} className={`builder-layer builder-layer--${L.id}`} style={{ "--li": r.activeIdx }}>
+                  <div key={L.id} className={`builder-layer builder-layer--${L.id}`} style={{ "--li": index }}>
                     <div className="builder-layer-body">
                       <div className="builder-layer-head">
                         <span className="builder-layer-name mono">{b.layers[L.id]}</span>
-                        {L.sub ? <span className="builder-layer-sub">{L.sub}</span> : null}
                       </div>
-                      {b.layerNote && b.layerNote[L.id] ? <div className="builder-layer-note">{b.layerNote[L.id]}</div> : null}
                       <div className="builder-layer-tech">
-                        {L.tech.map(function renderChip(tch, i) {
-                          return <span key={i} className="builder-chip mono" style={{ "--ci": i }}>{tch}</span>;
+                        {L.tech.map(function renderChip(tech, chipIndex) {
+                          return <span key={chipIndex} className="builder-chip mono" style={{ "--ci": chipIndex }}>{tech}</span>;
                         })}
                       </div>
                     </div>
@@ -1031,87 +981,7 @@ function ProjectBuilder({ t, links }) {
               })}
             </div>
           </div>
-
-          {/* READOUT — crystallizing stack/timeline/budget + expert verdict */}
-          <div className="builder-readout-block">
-            {/* Readout crystallizes IN STEP with the layer cascade: each row
-                resolves as the assembly reaches it (shown counter), and the
-                verdict lands once the whole system is built. Same `shown` that
-                drives the layers → one machine computing an answer. */}
-            <div className="builder-readout" aria-live="polite">
-              <div className={`builder-readout-row ${shown >= 1 ? "is-in" : ""}`}>
-                <span className="builder-readout-k mono">{b.readout.stack}</span>
-                <span className="builder-readout-v mono">{stackSummary}</span>
-              </div>
-              <div className={`builder-readout-row ${shown >= 2 ? "is-in" : ""}`}>
-                <span className="builder-readout-k mono">{b.readout.time}</span>
-                <span className="builder-readout-v mono">{timeText}</span>
-              </div>
-              <div className={`builder-readout-row ${shown >= 3 ? "is-in" : ""}`}>
-                <span className="builder-readout-k mono">{b.readout.budget}</span>
-                <span className="builder-readout-v mono">{scaleMeta.budget}</span>
-              </div>
-            </div>
-
-            {/* SPEC — concrete deliverables, process, and honest scope boundary.
-                Resolves once the system is fully assembled (shown ≥ activeCount),
-                staggered by CSS so it reads as the machine "printing the spec". */}
-            <div className={`builder-spec ${shown >= activeCount ? "is-in" : ""}`}>
-              {includesFull.length && b.lbl ? (
-                <div className="builder-spec-group">
-                  <div className="builder-spec-h mono">{b.lbl.includes}</div>
-                  <ul className="builder-includes">
-                    {includesFull.map(function renderInclude(d, i) {
-                      return (
-                        <li key={i} className="builder-include" style={{ "--si": i }}>
-                          <span className="builder-include-tick" aria-hidden="true">✓</span>
-                          <span>{d}</span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ) : null}
-
-              {stages.length && b.lbl ? (
-                <div className="builder-spec-group">
-                  <div className="builder-spec-h mono">{b.lbl.stages}</div>
-                  <div className="builder-proc">
-                    {stages.map(function renderStage(s, i) {
-                      return <span key={i} className="builder-proc-node" style={{ "--si": i }}>{s}</span>;
-                    })}
-                  </div>
-                </div>
-              ) : null}
-
-              {scopeNote && b.lbl ? (
-                <div className="builder-boundary">
-                  <span className="builder-boundary-k mono">{b.lbl.boundary}</span>
-                  <span className="builder-boundary-v">{scopeNote}</span>
-                </div>
-              ) : null}
-            </div>
-
-            <div className={`builder-verdict ${shown >= activeCount ? "is-in" : ""}`}>
-              <span className="builder-verdict-mark" aria-hidden="true">“</span>
-              <p className="builder-verdict-text">{verdict}</p>
-            </div>
-          </div>
-
-          {/* CTA */}
-          <div className="builder-cta-block">
-            <div className="builder-cta">
-              <a className="btn btn-primary builder-cta-tg" data-magnetic href={`https://${links.telegram}`} target="_blank" rel="noopener noreferrer">
-                <span>{b.cta_tg}</span>
-                <span className="arrow">→</span>
-              </a>
-              <button type="button" className="builder-cta-alt" onClick={onHandoff}>
-                {b.cta_form} <span className="arrow">→</span>
-              </button>
-            </div>
-            <div className="builder-hint mono">{b.hint}</div>
-          </div>
-        </div>
+        </form>
       </div>
     </section>
   );
@@ -1197,7 +1067,7 @@ function Faq({ t }) {
   return (
     <section data-section="faq" id="faq" data-enter="transcript" ref={ref}>
       <div className="shell">
-        <SecHead num="09" eyebrow={t.faq.eyebrow} title={t.faq.title} meta={`${items.length} · transcript`} />
+        <SecHead num="10" eyebrow={t.faq.eyebrow} title={t.faq.title} meta={`${items.length} · transcript`} />
         <p className="lead-line" data-reveal>{t.faq.lead}</p>
 
         <div className="dlg">
@@ -1262,7 +1132,7 @@ function Trust({ t }) {
   return (
     <section data-section="trust" id="trust" data-enter="slide-right" ref={ref}>
       <div className="shell">
-        <SecHead num="10" eyebrow={t.trust.eyebrow} title={t.trust.title} meta={`${proof.length} · protocol`} />
+        <SecHead num="11" eyebrow={t.trust.eyebrow} title={t.trust.title} meta={`${proof.length} · protocol`} />
         <p className="lead-line" data-reveal>{t.trust.lead}</p>
 
         <div className="proto" data-reveal>
@@ -1315,24 +1185,13 @@ function Trust({ t }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // CONTACT
 // ─────────────────────────────────────────────────────────────────────────────
-// Contact form EMAIL delivery endpoint. Create a free form at
-// https://formspree.io and replace YOUR_FORM_ID with the real id (e.g.
-// "xeozabcd") to enable email delivery. Until then the form does NOT fake a
-// success — the submit button routes honestly to the Telegram hand-off
-// (composeMessage → clipboard + open chat), which works with no backend. The
-// dedicated "✈ Telegram" button always does the same, regardless of this id.
-const CONTACT_FORM_ENDPOINT = "https://formspree.io/f/YOUR_FORM_ID";
-const FORM_ENDPOINT_CONFIGURED = CONTACT_FORM_ENDPOINT.indexOf("YOUR_FORM_ID") === -1;
-const CONTACT_FETCH_TIMEOUT_MS = 12000;
-
 function Contact({ t, links }) {
   const ref = useRevealRoot([t]);
-  const [sent, setSent] = useState2(false);
-  const [sending, setSending] = useState2(false);
-  const [errorMsg, setErrorMsg] = useState2("");
-  const [copied, setCopied] = useState2(false);
+  const [briefText, setBriefText] = useState2("");
+  const [copyState, setCopyState] = useState2("idle");
   const [copiedIdx, setCopiedIdx] = useState2(-1);
   const formRef = useRef2(null);
+  const briefRef = useRef2(null);
   const TELEGRAM_URL = "https://" + (links.telegram || "t.me/killallofthem13");
 
   // Copy a contact value (email/telegram/github handle) to the clipboard.
@@ -1355,10 +1214,12 @@ function Contact({ t, links }) {
   // numbers, 2026-07) — see BUILDER_SCALE_META above for the same pass.
   const BUDGET_BUCKETS = ["< $200", "$200-600", "$600-1.5k", "$1.5-3k", "$3k+"];
   const [budgetIdx, setBudgetIdx] = useState2(1);
+  const [builderBudget, setBuilderBudget] = useState2("");
   // Timeline preference — small chip row for urgency, helps scoping.
   const TIMELINE_LABEL = t.contact.form.timeline || "Сроки";
   const TIMELINE_OPTS = t.contact.timeline_opts || ["ASAP", "1–2 недели", "1–2 месяца", "гибко"];
   const [timelineIdx, setTimelineIdx] = useState2(3);
+  const [builderTimeline, setBuilderTimeline] = useState2("");
   const BUDGET_LABEL = t.contact.form.budget || "Бюджет";
   // Handoff target: the project builder above dispatches "sm:builder-config"
   // when the visitor clicks "перенести в заявку" — we pre-fill the matching
@@ -1369,8 +1230,12 @@ function Contact({ t, links }) {
     function onConfig(e) {
       const d = e && e.detail;
       if (!d) return;
-      if (d.scope) setScopeSet(new Set([d.scope]));
-      if (typeof d.budgetIdx === "number") setBudgetIdx(d.budgetIdx);
+      const scopeIndex = { web: 0, ai: 1, bot: 2, automation: 1 }[d.typeId];
+      if (typeof scopeIndex === "number" && t.contact.scope_opts[scopeIndex]) {
+        setScopeSet(new Set([t.contact.scope_opts[scopeIndex]]));
+      }
+      setBuilderBudget(d.budgetLabel || "");
+      setBuilderTimeline(d.timelineLabel || "");
       if (d.summary && msgRef.current) {
         msgRef.current.value = d.summary;
         // nudge the reveal/validation state so the filled field looks alive
@@ -1379,7 +1244,7 @@ function Contact({ t, links }) {
     }
     window.addEventListener("sm:builder-config", onConfig);
     return function () { window.removeEventListener("sm:builder-config", onConfig); };
-  }, []);
+  }, [t]);
 
   function toggleScope(v) {
     setScopeSet(function (prev) {
@@ -1390,48 +1255,26 @@ function Contact({ t, links }) {
     });
   }
 
-  // v51: full form reset on submit so the visitor sees a clean slate after
-  // the "sent" confirmation expires. We reset the native form (clears
-  // <input> / <textarea>) AND all our React state (chip selections, slider,
-  // timeline). Previous behaviour kept the text fields populated, which
-  // looked broken — the success message overlay didn't visually consume
-  // the form below it.
-  const SENT_HIDE_DELAY_MS = 4500;
-  const FORM_ERROR_FALLBACK = (t.contact.form && t.contact.form.error) ||
-    "Не удалось отправить — напишите в Telegram.";
-
-  // Mark sent + wipe the form (native fields + React-controlled chips/slider).
-  function finishSent(formEl) {
-    setSent(true);
-    if (typeof navigator !== "undefined" && navigator.vibrate) {
-      try { navigator.vibrate(14); } catch (err) { /* opportunistic */ }
-    }
-    try { formEl.reset(); }
-    catch (err) { console.warn("[Contact] form.reset failed:", err && err.message); }
-    setScopeSet(new Set());
-    setBudgetIdx(1);
-    setTimelineIdx(3);
-    window.setTimeout(function hideSentBanner() { setSent(false); }, SENT_HIDE_DELAY_MS);
-  }
-
   // Collect native fields (name/email/message via their `name=` attrs) plus
   // the React-controlled selections that aren't native inputs.
   function buildFd(formEl) {
     const fd = new FormData(formEl);
     fd.append("scope", Array.from(scopeSet).join(", "));
-    fd.append("budget", BUDGET_BUCKETS[budgetIdx]);
-    fd.append("timeline", TIMELINE_OPTS[timelineIdx]);
+    fd.append("budget", builderBudget || BUDGET_BUCKETS[budgetIdx]);
+    fd.append("timeline", builderTimeline || TIMELINE_OPTS[timelineIdx]);
     return fd;
   }
 
-  // Build a readable brief from the form fields for the Telegram hand-off.
+  // Build a readable, locale-aware brief. The site never claims that a
+  // backend accepted it: the visitor sees this exact text before handing it
+  // to Telegram or their mail client.
   function composeMessage(fd) {
     const g = function (k) { return (fd.get(k) || "").toString().trim(); };
     const L = t.contact.form || {};
     return [
-      "Заявка с сайта — SM",
+      L.brief_title || "Project brief — SM",
       g("name") ? (L.name || "Имя") + ": " + g("name") : "",
-      g("email") ? (L.email || "Email") + ": " + g("email") : "",
+      g("contact") ? (L.email || "Email / Telegram") + ": " + g("contact") : "",
       g("scope") ? (L.scope || "Scope") + ": " + g("scope") : "",
       g("budget") ? (L.budget || "Бюджет") + ": " + g("budget") : "",
       g("timeline") ? (L.timeline || "Сроки") + ": " + g("timeline") : "",
@@ -1440,70 +1283,72 @@ function Contact({ t, links }) {
     ].filter(function (line) { return line !== ""; }).join("\n");
   }
 
-  // Telegram delivery: a personal @username can't accept prefilled DM text via
-  // a link, so we copy the composed brief to the clipboard (the visitor pastes
-  // it) AND open the chat. Honest + no backend required.
-  function openTelegram(formEl) {
-    if (typeof navigator !== "undefined" && navigator.vibrate) {
-      try { navigator.vibrate(10); } catch (err) { /* opportunistic */ }
-    }
-    const text = composeMessage(buildFd(formEl));
+  function focusBriefFallback() {
+    if (!briefRef.current) return;
+    briefRef.current.focus();
+    briefRef.current.select();
+  }
+
+  function copyBrief(text) {
+    setCopyState("ready");
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(function () {
-          setCopied(true);
-          window.setTimeout(function () { setCopied(false); }, 4500);
-        }, function () { /* clipboard denied — still open the chat */ });
+          setCopyState("copied");
+        }, function () {
+          setCopyState("manual");
+          window.setTimeout(focusBriefFallback, 0);
+        });
+        return;
       }
-    } catch (err) { /* opportunistic */ }
+    } catch (err) { /* fall through to the visible brief */ }
+    setCopyState("manual");
+    window.setTimeout(focusBriefFallback, 0);
+  }
+
+  function prepareBrief(formEl) {
+    if (!formEl || !formEl.reportValidity()) return "";
+    const text = composeMessage(buildFd(formEl));
+    setBriefText(text);
+    copyBrief(text);
+    return text;
+  }
+
+  function openTelegram(formEl) {
+    const text = prepareBrief(formEl);
+    if (!text) return;
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      try { navigator.vibrate(10); } catch (err) { /* opportunistic */ }
+    }
     try { window.open(TELEGRAM_URL, "_blank", "noopener,noreferrer"); } catch (err) { /* opportunistic */ }
   }
 
-  function onSubmit(e) {
-    e.preventDefault();
-    const formEl = e.currentTarget;
-    setErrorMsg("");
-    const fd = buildFd(formEl);
+  function openEmail(formEl) {
+    const text = prepareBrief(formEl);
+    if (!text) return;
+    const L = t.contact.form || {};
+    const href = `mailto:${links.email}?subject=${encodeURIComponent(L.brief_subject || "Project brief")}&body=${encodeURIComponent(text)}`;
+    try { window.location.href = href; } catch (err) { /* the visible brief remains available */ }
+  }
 
-    // Endpoint not configured yet → route HONESTLY to Telegram (never a fake
-    // "sent"). Once a real Formspree id is set, email delivery takes over.
-    if (!FORM_ENDPOINT_CONFIGURED) {
-      openTelegram(formEl);
-      return;
-    }
+  function onSubmit(event) {
+    event.preventDefault();
+    openTelegram(event.currentTarget);
+  }
 
-    // Real delivery via Formspree — with a hard timeout so a hung network
-    // can't leave the button stuck in "sending" forever (R-02).
-    setSending(true);
-    const controller = ("AbortController" in window) ? new AbortController() : null;
-    const timeoutId = window.setTimeout(function () { if (controller) controller.abort(); }, CONTACT_FETCH_TIMEOUT_MS);
-    const opts = { method: "POST", body: fd, headers: { "Accept": "application/json" } };
-    if (controller) opts.signal = controller.signal;
-
-    fetch(CONTACT_FORM_ENDPOINT, opts)
-      .then(function (res) {
-        window.clearTimeout(timeoutId);
-        setSending(false);
-        if (res.ok) { finishSent(formEl); return undefined; }
-        return res.json().catch(function () { return null; }).then(function (data) {
-          setErrorMsg((data && data.error) || FORM_ERROR_FALLBACK);
-        });
-      })
-      .catch(function (err) {
-        window.clearTimeout(timeoutId);
-        setSending(false);
-        console.warn("[Contact] submit failed:", err && err.message);
-        setErrorMsg(FORM_ERROR_FALLBACK);
-      });
+  function clearPreparedBrief() {
+    if (!briefText && copyState === "idle") return;
+    setBriefText("");
+    setCopyState("idle");
   }
   return (
     <section data-section="contact" id="contact" data-enter="rise-bright" ref={ref}>
       <div className="shell">
-        <SecHead num="11" eyebrow={t.contact.eyebrow} title={t.contact.title} em={t.contact.title.split(" ").pop()} meta="status: receiving" />
+        <SecHead num="12" eyebrow={t.contact.eyebrow} title={t.contact.title} em={t.contact.title.split(" ").pop()} meta="Tashkent · UTC+5" titleId="contact-title" />
         <p className="lead-line" data-reveal>{t.contact.lead}</p>
 
         <div className="contact-layout">
-          <form ref={formRef} className="contact-form card" onSubmit={onSubmit} data-reveal>
+          <form ref={formRef} className="contact-form card" aria-labelledby="contact-title" onSubmit={onSubmit} onInput={clearPreparedBrief} data-reveal>
             <div className="contact-form-row">
               <label className="ff">
                 <span className="ff-k mono">{t.contact.form.name}</span>
@@ -1511,7 +1356,7 @@ function Contact({ t, links }) {
               </label>
               <label className="ff">
                 <span className="ff-k mono">{t.contact.form.email}</span>
-                <input type="email" name="email" required className="ff-input" autoComplete="email" inputMode="email" />
+                <input type="text" name="contact" required className="ff-input" autoComplete="email" />
               </label>
             </div>
 
@@ -1522,15 +1367,15 @@ function Contact({ t, links }) {
                 {t.contact.scope_opts.map(function renderChip(o, i) {
                   const active = scopeSet.has(o);
                   return (
-                    <button
-                      key={i}
-                      type="button"
-                      className={`ff-chip ${active ? "is-active" : ""}`}
-                      aria-pressed={active}
-                      onClick={() => toggleScope(o)}
-                    >
-                      {o}
-                    </button>
+                    <label key={i} className={`ff-chip ff-choice ${active ? "is-active" : ""}`}>
+                      <input
+                        className="a11y-only ff-choice-control"
+                        type="checkbox"
+                        checked={active}
+                        onChange={() => toggleScope(o)}
+                      />
+                      <span>{o}</span>
+                    </label>
                   );
                 })}
               </div>
@@ -1541,7 +1386,7 @@ function Contact({ t, links }) {
             <div className="ff">
               <span className="ff-k mono">
                 {BUDGET_LABEL}
-                <span className="ff-k-val">{BUDGET_BUCKETS[budgetIdx]}</span>
+                <span className="ff-k-val">{builderBudget || BUDGET_BUCKETS[budgetIdx]}</span>
               </span>
               <div className="ff-range-wrap">
                 <input
@@ -1552,8 +1397,8 @@ function Contact({ t, links }) {
                   step="1"
                   value={budgetIdx}
                   aria-label={BUDGET_LABEL}
-                  aria-valuetext={BUDGET_BUCKETS[budgetIdx]}
-                  onChange={(e) => setBudgetIdx(parseInt(e.target.value, 10))}
+                  aria-valuetext={builderBudget || BUDGET_BUCKETS[budgetIdx]}
+                  onChange={(e) => { setBudgetIdx(parseInt(e.target.value, 10)); setBuilderBudget(""); }}
                   style={{ "--val-pct": `${(budgetIdx / (BUDGET_BUCKETS.length - 1)) * 100}%` }}
                 />
                 <div className="ff-range-track-marks" aria-hidden="true">
@@ -1577,19 +1422,19 @@ function Contact({ t, links }) {
             {/* Timeline urgency chips. */}
             <div className="ff">
               <span className="ff-k mono">{TIMELINE_LABEL}</span>
-              <div className="ff-chips" role="radiogroup" aria-label={TIMELINE_LABEL}>
+              <div className="ff-chips" aria-label={TIMELINE_LABEL}>
                 {TIMELINE_OPTS.map(function renderTimeline(o, i) {
                   return (
-                    <button
-                      key={i}
-                      type="button"
-                      role="radio"
-                      aria-checked={i === timelineIdx}
-                      className={`ff-chip ${i === timelineIdx ? "is-active" : ""}`}
-                      onClick={() => setTimelineIdx(i)}
-                    >
-                      {o}
-                    </button>
+                    <label key={i} className={`ff-chip ff-choice ${i === timelineIdx ? "is-active" : ""}`}>
+                      <input
+                        className="a11y-only ff-choice-control"
+                        type="radio"
+                        name="timeline-ui"
+                        checked={i === timelineIdx}
+                        onChange={() => { setTimelineIdx(i); setBuilderTimeline(""); }}
+                      />
+                      <span>{o}</span>
+                    </label>
                   );
                 })}
               </div>
@@ -1599,39 +1444,39 @@ function Contact({ t, links }) {
               <span className="ff-k mono">{t.contact.form.msg}</span>
               <textarea ref={msgRef} name="message" required rows="4" className="ff-input ff-textarea" placeholder={t.contact.form.msg_placeholder || ""} />
             </label>
-            {errorMsg ? (
-              <div className="contact-form-error mono" role="alert">{errorMsg}</div>
-            ) : null}
-            {copied ? (
-              <div className="contact-copied mono" role="status">
-                {(t.contact.form && t.contact.form.copied) || "Заявка скопирована — вставь в чат Telegram"}
-              </div>
-            ) : null}
-            {/* Telegram leads, the form's own submit follows. The hierarchy
-                used to be the other way round, which described the wrong
-                reality: the Telegram button already carries everything typed
-                above it (openTelegram builds the brief from these same
-                fields), Telegram is where the reply actually happens, and it
-                is the channel this audience uses. The form is the input, not
-                the destination — so the button that opens the conversation is
-                the primary one and the one that posts a form is the fallback. */}
             <div className="contact-actions">
-              <button type="button" className="btn btn-primary contact-tg" data-magnetic onClick={function () { if (formRef.current) openTelegram(formRef.current); }}>
-                <span>✈ {(t.contact.form && t.contact.form.telegram) || "В Telegram"}</span>
+              <button type="submit" className="btn btn-primary contact-submit" data-magnetic>
+                <span>{t.contact.form.submit}</span>
                 <span className="arrow">→</span>
               </button>
-              <button type="submit" className={`btn btn-ghost contact-submit ${sent ? "is-sent" : ""}`} disabled={sent || sending}>
-                <span>{sending ? (t.contact.form.sending || "Отправка…") : sent ? t.contact.form.sent : t.contact.form.submit}</span>
-                <span className="arrow">{sent ? "✓" : "→"}</span>
+              <button type="button" className="btn btn-ghost contact-email" onClick={function () { if (formRef.current) openEmail(formRef.current); }}>
+                <span>{t.contact.form.email_action}</span>
+                <span className="arrow">↗</span>
               </button>
             </div>
+
+            {briefText ? (
+              <div className="contact-brief" role="region" aria-label={t.contact.form.preview_label}>
+                <div className="contact-brief-head">
+                  <span className="mono">{t.contact.form.preview_label}</span>
+                  <button type="button" className="contact-brief-copy mono" onClick={function () { copyBrief(briefText); }}>
+                    {t.contact.form.copy_brief}
+                  </button>
+                </div>
+                <textarea ref={briefRef} className="contact-brief-text mono" value={briefText} readOnly rows="8" />
+                <p className="contact-brief-status mono" role="status" aria-live="polite">
+                  {copyState === "copied" ? t.contact.form.copied :
+                    copyState === "manual" ? t.contact.form.copy_manual : t.contact.form.preview_note}
+                </p>
+              </div>
+            ) : null}
           </form>
 
           <aside className="contact-side" data-reveal>
             <div className="contact-deploy">
               <div className="mono contact-deploy-head">
-                <span className="chip"><span className="chip-dot" />ready</span>
-                <span>deploy.endpoint</span>
+                <span className="chip"><span className="chip-dot" />direct</span>
+                <span>{t.contact.channel_label}</span>
               </div>
               <div className="contact-deploy-body">
                 {t.contact.links.map((l, i) => (
@@ -1662,9 +1507,9 @@ function Contact({ t, links }) {
             <div className="contact-signal">
               <div className="signal-pulse"><i></i><i></i><i></i></div>
               <div className="signal-meta mono">
-                <div>UTC+5 · Tashkent</div>
-                <div>response &lt; 24h</div>
-                <div>EN · RU · UZ</div>
+                {(t.contact.signal_meta || ["UTC+5 · Tashkent", "remote · contract", "RU · UZ · EN"]).map(function renderMeta(item, index) {
+                  return <div key={index}>{item}</div>;
+                })}
               </div>
             </div>
           </aside>

@@ -10,7 +10,7 @@ function useRevealRoot(deps) {
 }
 
 // ── Reusable section header
-function SecHead({ num, eyebrow, title, meta, em }) {
+function SecHead({ num, eyebrow, title, meta, em, titleId }) {
   // em: substring within title to render as italic accent
   let titleNode = title;
   if (em && title && title.includes(em)) {
@@ -31,7 +31,7 @@ function SecHead({ num, eyebrow, title, meta, em }) {
     <header className="sec-head" data-reveal data-reveal-from="none" data-plx="0.045">
       <div>
         <div className="num">{num ? <>{num} · </> : null}{eyebrow}</div>
-        <h2 style={{ marginTop: 14 }}>
+        <h2 id={titleId} style={{ marginTop: 14 }}>
           <span className="lm"><span className="lm-i">{titleNode}</span></span>
         </h2>
       </div>
@@ -123,34 +123,6 @@ function Hero({ t, links }) {
   // whole point of the letter assembly is that it happens where you can see it.
   const [lit, setLit] = useState(false);
 
-  // ── Hero as ONE scene ────────────────────────────────────────────────────
-  // The pointer drives a single depth field: every letter, the roles rule and
-  // the tagline read the same --hx/--hy, each at its own --hd multiplier.
-  // Written straight to CSS custom properties on the section: no React state,
-  // so pointer movement never triggers a re-render of the most expensive
-  // component on the page. rAF-throttled; skipped entirely on touch (no hover)
-  // and under reduced-motion.
-  const heroFxRef = useRef({ raf: 0, x: 0, y: 0 });
-  function writeHeroDepth(el, nx, ny) {
-    el.style.setProperty("--hx", nx.toFixed(3));
-    el.style.setProperty("--hy", ny.toFixed(3));
-  }
-  function onHeroMove(e) {
-    if (e.pointerType === "touch") return;
-    const el = e.currentTarget;
-    const st = heroFxRef.current;
-    const r = el.getBoundingClientRect();
-    st.x = (e.clientX - r.left) / r.width - 0.5;   // -0.5 … 0.5
-    st.y = (e.clientY - r.top) / r.height - 0.5;
-    if (st.raf) return;
-    st.raf = requestAnimationFrame(() => { st.raf = 0; writeHeroDepth(el, st.x, st.y); });
-  }
-  function onHeroLeave(e) {
-    const el = e.currentTarget;
-    const st = heroFxRef.current;
-    if (st.raf) { cancelAnimationFrame(st.raf); st.raf = 0; }
-    writeHeroDepth(el, 0, 0); // CSS transitions the scene back to rest
-  }
   // The masthead notices the primary action: `.cta-live` on the section
   // tightens the accent hairline under the name while the CTA is hovered or
   // keyboard-focused, so the two ends of the composition are visibly connected.
@@ -184,50 +156,49 @@ function Hero({ t, links }) {
     };
   }, []);
 
-  // Hero photo parallax — depth from a slow scroll drift + a subtle cursor lean.
-  // Desktop + full-motion only (skipped on reduced-motion, low tier, and mobile,
-  // where the static backdrop + entrance zoom is enough). GPU-only: writes the
-  // `translate` property so it composes with the CSS entrance `scale`.
-  // Target is `.hero-photo-inner` — the mask lives on the non-transformed
-  // `.hero-photo-wrap` parent so the dissolve edge never drifts with parallax.
+  // Hero depth consumes the shared motion runtime. It never owns scroll,
+  // pointer or resize listeners and never creates a private animation loop.
+  // The semantic frame remains fully readable when the runtime is absent,
+  // reduced or parked on a low tier.
   useEffect(() => {
-    const photo = document.querySelector(".hero-photo-inner");
     const heroEl = document.getElementById("hero");
-    if (!photo || !heroEl) return undefined;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const low = (typeof window.getDeviceTier === "function") && window.getDeviceTier() === "low";
-    const desktop = window.matchMedia("(min-width: 901px)").matches;
-    if (reduce || low || !desktop) return undefined;
-
-    let raf = 0, mx = 0, my = 0, inView = true, io = null;
-    if ("IntersectionObserver" in window) {
-      io = new IntersectionObserver(function (es) { es.forEach(function (e) { inView = e.isIntersecting; }); }, { threshold: 0 });
-      io.observe(heroEl);
-    }
-    function apply() {
-      raf = 0;
-      if (!inView) return;
-      const r = heroEl.getBoundingClientRect();
-      const prog = Math.max(0, Math.min(1, -r.top / Math.max(1, r.height)));
-      const ty = prog * 90 + my * 9;   // slow downward drift + cursor lean
-      const tx = mx * 9;
-      photo.style.translate = tx.toFixed(1) + "px " + ty.toFixed(1) + "px";
-    }
-    function onScroll() { if (!raf) raf = requestAnimationFrame(apply); }
-    function onMove(e) {
-      mx = (e.clientX / window.innerWidth - 0.5) * 2;
-      my = (e.clientY / window.innerHeight - 0.5) * 2;
-      if (!raf) raf = requestAnimationFrame(apply);
-    }
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("mousemove", onMove, { passive: true });
-    apply();
-    return function () {
-      if (raf) cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("mousemove", onMove);
-      if (io) io.disconnect();
-    };
+    const runtime = window.__SM_MOTION_RUNTIME;
+    if (!heroEl || !runtime || typeof runtime.subscribe !== "function") return undefined;
+    const state = { rect: null, hx: 0, hy: 0, fieldX: 0, fieldY: 0 };
+    const unsubscribe = runtime.subscribe({
+      id: "hero-depth-field",
+      priority: 34,
+      measure(context) {
+        if (context.input.scrolled || context.input.resized || context.input.pointerMoved || !state.rect) {
+          state.rect = heroEl.getBoundingClientRect();
+        }
+      },
+      compute(context) {
+        const rect = state.rect;
+        const active = rect && rect.bottom > 0 && rect.top < context.input.viewportHeight;
+        const canLean = active && !context.policy.reducedMotion && context.policy.tier !== "low" &&
+          context.policy.pointerClass === "fine" && context.input.pointerActive;
+        state.hx = canLean ? (context.input.pointerX / Math.max(1, context.input.viewportWidth) - 0.5) : 0;
+        state.hy = canLean ? (context.input.pointerY / Math.max(1, context.input.viewportHeight) - 0.5) : 0;
+        const progress = active && rect ? Math.max(0, Math.min(1, -rect.top / Math.max(1, rect.height))) : 0;
+        state.fieldX = state.hx * 10;
+        state.fieldY = progress * 24 + state.hy * 8;
+      },
+      mutate() {
+        heroEl.style.setProperty("--hx", state.hx.toFixed(3));
+        heroEl.style.setProperty("--hy", state.hy.toFixed(3));
+        heroEl.style.setProperty("--hero-field-x", state.fieldX.toFixed(1) + "px");
+        heroEl.style.setProperty("--hero-field-y", state.fieldY.toFixed(1) + "px");
+      },
+      dispose() {
+        heroEl.style.removeProperty("--hx");
+        heroEl.style.removeProperty("--hy");
+        heroEl.style.removeProperty("--hero-field-x");
+        heroEl.style.removeProperty("--hero-field-y");
+      },
+    });
+    runtime.wake("hero-depth-ready");
+    return unsubscribe;
   }, []);
 
   // The roles were an <h1> of three stacked lines ("Full-stack." / "AI
@@ -254,7 +225,6 @@ function Hero({ t, links }) {
     const heroEl = document.getElementById("hero");
     if (!heroEl) return undefined;
     let cancelled = false;
-    let resizeRaf = 0;
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
 
@@ -278,35 +248,29 @@ function Hero({ t, links }) {
       });
     }
 
-    function scheduleFit() {
-      if (resizeRaf) cancelAnimationFrame(resizeRaf);
-      resizeRaf = requestAnimationFrame(fitRoles);
-    }
-
-    scheduleFit();
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleFit);
-    window.addEventListener("resize", scheduleFit, { passive: true });
+    const list = heroEl.querySelector(".hero-roles");
+    fitRoles();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitRoles);
+    const ro = list && "ResizeObserver" in window ? new ResizeObserver(fitRoles) : null;
+    if (ro) ro.observe(list);
     return () => {
       cancelled = true;
-      if (resizeRaf) cancelAnimationFrame(resizeRaf);
-      window.removeEventListener("resize", scheduleFit);
+      if (ro) ro.disconnect();
     };
   }, [t]);
 
   return (
     <section
       data-section="hero" id="hero" className={`hero${lit ? " is-lit" : ""}`} ref={ref}
-      onPointerMove={onHeroMove}
-      onPointerLeave={onHeroLeave}
     >
-      {/* Cockpit-view photo backdrop (desktop) / orbital (mobile). Opaque, so it
-          covers the WebGL canvas in the hero; the canvas returns below. The mask
-          lives on the static `-wrap` so the dissolve edge never moves; parallax
-          `translate` + entrance scale are applied to the `-inner` image layer.
-          `.hero-seam` bridges the bottom edge into the page background color so
-          there's no tonal jump into the next section. */}
-      <div className="hero-photo-wrap" aria-hidden="true">
-        <div className="hero-photo-inner" />
+      {/* A material calibration field, not borrowed sci-fi imagery. The three
+          physical checkpoints echo the Build → Verify → Ship proof rail while
+          the angled slab gives the full-bleed type real depth. Everything is
+          CSS-native, so frame zero and reduced motion stay equally complete. */}
+      <div className="hero-material-field" aria-hidden="true">
+        <span className="hero-material-plane" />
+        <span className="hero-material-cut" />
+        <span className="hero-material-spine"><i /><i /><i /></span>
       </div>
       <div className="hero-seam" aria-hidden="true" />
 
@@ -367,14 +331,14 @@ function Hero({ t, links }) {
               data-cursor="send" data-cursor-label="send → contact"
               onMouseEnter={onCtaFocus} onMouseLeave={onCtaBlur}
               onFocus={onCtaFocus} onBlur={onCtaBlur}
-            >
-              {t.hero.cta_primary}
-              <span className="arrow">→</span>
-            </a>
-            <a href="#projects" className="btn btn-ghost" data-magnetic data-cursor="link" data-cursor-label="→ projects">
-              {t.hero.cta_secondary}
-              <span className="arrow">↘</span>
-            </a>
+              >
+                <span className="btn-label">{t.hero.cta_primary}</span>
+                <span className="arrow">→</span>
+              </a>
+              <a href="#projects" className="btn btn-ghost" data-magnetic data-cursor="link" data-cursor-label="→ projects">
+                <span className="btn-label">{t.hero.cta_secondary}</span>
+                <span className="arrow">↘</span>
+              </a>
           </div>
         </div>
       </div>
@@ -409,8 +373,8 @@ function Hero({ t, links }) {
 // SIGNAL — 6 editorial rows, full-width, that expand in place to reveal their
 // description. Replaces the old bento grid of 6 tilting mini-schema cards: the
 // schemas read as decoration without real meaning, and the constant per-card
-// tilt/shine had no purpose beyond motion. One row open at a time; desktop
-// opens on hover/focus, mobile is a tap-accordion.
+// tilt/shine had no purpose beyond motion. One row opens by explicit click,
+// tap or keyboard activation; hover never changes disclosure state.
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Short right-hand descriptor per row — a compression of the row's own `v`
@@ -424,7 +388,7 @@ const SIGNAL_TAILS = [
   "идея → прод",
 ];
 
-function SignalRow({ card, index, total, open, onToggle, hasHover }) {
+function SignalRow({ card, index, total, open, onToggle }) {
   // Prefer the card's own localized tail (identity signals); fall back to the
   // legacy hardcoded list only if a cached content bundle lacks per-card tails.
   const tail = card.tail || SIGNAL_TAILS[index] || "";
@@ -433,9 +397,6 @@ function SignalRow({ card, index, total, open, onToggle, hasHover }) {
   // toggled, it would immediately re-close whatever hover just opened. So on
   // those devices click behaves like hover (ensures open, never closes);
   // only touch (no real hover) gets a true open/close toggle on tap.
-  const hoverHandlers = hasHover
-    ? { onMouseEnter: () => onToggle(index, true), onFocus: () => onToggle(index, true) }
-    : {};
   return (
     <button
       type="button"
@@ -446,8 +407,7 @@ function SignalRow({ card, index, total, open, onToggle, hasHover }) {
       data-reveal-from="translateY(28px)"
       data-reveal-delay={(index * 0.06).toFixed(2)}
       aria-expanded={open}
-      {...hoverHandlers}
-      onClick={() => onToggle(index, hasHover)}
+      onClick={() => onToggle(index)}
     >
       {/* Oversized background numeral + procedural accent glow — driven only
           by this row's own real index/total (--row-i/--row-total), never an
@@ -483,11 +443,6 @@ function Signal({ t }) {
   // clicked. Click/tap toggles (accordion behavior on touch — see SignalRow's
   // hasHover branching for why desktop click doesn't use the toggle path).
   const [openIndex, setOpenIndex] = useState(-1);
-  const hasHoverRef = useRef(null);
-  if (hasHoverRef.current === null) {
-    hasHoverRef.current = typeof window.matchMedia === "function"
-      && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-  }
 
   const cards = t.signal.cards;
   const total = cards.length;
@@ -495,9 +450,8 @@ function Signal({ t }) {
     ? t.hero.proof_steps
     : [];
 
-  const handleToggle = (i, isHover) => {
+  const handleToggle = (i) => {
     setOpenIndex((prev) => {
-      if (isHover) return i;
       return prev === i ? -1 : i;
     });
   };
@@ -506,7 +460,7 @@ function Signal({ t }) {
     <section data-section="signal" id="signal" data-enter="emerge" ref={ref}>
       <div className="shell">
         <SecHead
-          num="01"
+          num="02"
           eyebrow={t.signal.eyebrow}
           title={t.signal.title}
           em={t.signal.title.split(" ").pop()}
@@ -538,7 +492,6 @@ function Signal({ t }) {
               total={total}
               open={openIndex === i}
               onToggle={handleToggle}
-              hasHover={hasHoverRef.current}
             />
           ))}
         </div>
@@ -560,112 +513,16 @@ function Signal({ t }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 
-function useAnimatedCounter(target, durationMs, runWhen, precision) {
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    if (!runWhen) return;
-    const startedAt = performance.now();
-    let raf = 0;
-    function step(now) {
-      const elapsed = now - startedAt;
-      const t = Math.min(1, elapsed / durationMs);
-      // ease-out cubic
-      const eased = 1 - Math.pow(1 - t, 3);
-      const factor = Math.pow(10, precision || 0);
-      setValue(Math.round(eased * target * factor) / factor);
-      if (t < 1) raf = requestAnimationFrame(step);
-    }
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [target, durationMs, runWhen]);
-  return value;
-}
-
-// Pull numeric "target" out of a string like "1.5+", "30+", "12", "RU/EN/UZ".
-// Non-numeric strings render as-is (RU/EN/UZ).
-function extractCounterTarget(stat) {
-  const v = String(stat.v || "");
-  const m = v.match(/(\d+(?:[.,]\d+)?)/);
-  if (!m) return { kind: "text", text: v };
-  const normalized = m[1].replace(",", ".");
-  const fraction = normalized.split(".")[1] || "";
-  return { kind: "num", number: Number(normalized), precision: fraction.length, suffix: v.slice(m.index + m[1].length) };
-}
-
-function AboutStat({ stat, runCounters, index }) {
-  const parsed = extractCounterTarget(stat);
-  const counterValue = useAnimatedCounter(
-    parsed.kind === "num" ? parsed.number : 0,
-    1100 + index * 90,
-    parsed.kind === "num" && runCounters,
-    parsed.kind === "num" ? parsed.precision : 0,
-  );
+function AboutStat({ stat, index }) {
   return (
     <div className="about-stat" data-reveal data-reveal-delay={(index * 0.05).toFixed(2)}>
-      <div className="about-stat-v num-tab">
-        {parsed.kind === "num" ? `${counterValue.toFixed(parsed.precision)}${parsed.suffix}` : parsed.text}
-      </div>
+      <div className="about-stat-v num-tab">{stat.v}</div>
       <div className="about-stat-k mono">{stat.k}</div>
     </div>
   );
 }
 
-const CURRENTLY_ROTATE_INTERVAL_MS = 5200;
-const CURRENTLY_TYPE_INTERVAL_MS = 30;
 const TECH_CHIPS = ["TypeScript", "React", "Next.js", "Node.js", "Postgres", "OpenAI", "Anthropic", "LangChain", "n8n", "Three.js", "Telegram Bot", "Docker"];
-
-// Currently-rotator — types/erases the active phrase with a soft typewriter.
-// `active` (default true) pauses the whole loop while false — About passes
-// its own in-view state so this stops re-rendering React state every 30ms
-// while scrolled off-screen; it simply resumes typing where it left off once
-// back in view, rather than restarting the phrase.
-function useCurrentlyRotator(phrases, active) {
-  const [text, setText] = useState("");
-  const [phase, setPhase] = useState("typing"); // typing | hold | erasing
-  const idxRef = useRef(0);
-  const cursorRef = useRef(0);
-  useEffect(() => {
-    if (!phrases || phrases.length === 0) return undefined;
-    if (active === false) return undefined;
-    let timer = 0;
-    let cancelled = false;
-    function step() {
-      if (cancelled) return;
-      const active = phrases[idxRef.current % phrases.length] || "";
-      if (phase === "typing") {
-        cursorRef.current += 1;
-        const next = active.slice(0, cursorRef.current);
-        setText(next);
-        if (cursorRef.current >= active.length) {
-          setPhase("hold");
-          timer = window.setTimeout(step, CURRENTLY_ROTATE_INTERVAL_MS);
-        } else {
-          timer = window.setTimeout(step, CURRENTLY_TYPE_INTERVAL_MS);
-        }
-      } else if (phase === "hold") {
-        setPhase("erasing");
-        timer = window.setTimeout(step, CURRENTLY_TYPE_INTERVAL_MS);
-      } else if (phase === "erasing") {
-        cursorRef.current = Math.max(0, cursorRef.current - 1);
-        const next = active.slice(0, cursorRef.current);
-        setText(next);
-        if (cursorRef.current === 0) {
-          idxRef.current = (idxRef.current + 1) % phrases.length;
-          setPhase("typing");
-          timer = window.setTimeout(step, CURRENTLY_TYPE_INTERVAL_MS * 2);
-        } else {
-          timer = window.setTimeout(step, CURRENTLY_TYPE_INTERVAL_MS * 0.65);
-        }
-      }
-    }
-    timer = window.setTimeout(step, CURRENTLY_TYPE_INTERVAL_MS);
-    return function cleanup() {
-      cancelled = true;
-      if (timer) window.clearTimeout(timer);
-    };
-  }, [phrases, phase, active]);
-  return text;
-}
 
 // Coarse relative age for the "last push" read-out. Coarse on purpose: a
 // minute-accurate figure invites the reader to watch it tick, which is not what
@@ -687,38 +544,33 @@ function relativeAge(ts, words) {
 function About({ t }) {
   const ref = useRevealRoot([t]);
   const cardRef = useRef(null);
-  const [runCounters, setRunCounters] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [clock, setClock] = useState(() => formatTashkentTime(new Date()));
   // null until the GitHub fetch resolves, and null forever if it fails. The
   // section renders its static copy in that case — never a synthetic graph.
   const [gh, setGh] = useState(null);
   const currentlyPhrases = t.about.currently || [];
-  const currentlyText = useCurrentlyRotator(currentlyPhrases, isVisible);
 
-  // Section-in-view: `runCounters` latches once (counters/pulses only ever
-  // animate their first run-in); `isVisible` tracks continuously so the
-  // typewriter above can pause its 30ms setState loop while off-screen
-  // instead of quietly re-rendering React forever in the background.
+  // Section-in-view only controls time-sensitive telemetry. Static content is
+  // present in frame zero; the clock sleeps while About is off-screen.
   useEffect(() => {
     if (!cardRef.current) return undefined;
     const io = new IntersectionObserver((entries) => {
       entries.forEach((e) => {
         setIsVisible(e.isIntersecting);
-        if (e.isIntersecting && e.intersectionRatio > 0.3) {
-          setRunCounters(true);
-        }
       });
-    }, { threshold: [0, 0.3, 0.5] });
+    }, { threshold: [0, 0.15] });
     io.observe(cardRef.current);
     return () => io.disconnect();
   }, []);
 
   // Tashkent clock — ticks once per second. Uses fixed UTC+5 offset.
   useEffect(() => {
+    if (!isVisible) return undefined;
+    setClock(formatTashkentTime(new Date()));
     const id = setInterval(() => setClock(formatTashkentTime(new Date())), 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [isVisible]);
 
   // Live GitHub telemetry. Fired on mount rather than on scroll-into-view: the
   // request is two cached GETs against a CDN, it costs nothing to have the
@@ -744,7 +596,7 @@ function About({ t }) {
   return (
     <section data-section="about" id="about" data-enter="develop" ref={ref}>
       <div className="shell">
-        <SecHead num="02" eyebrow={t.about.eyebrow} title={t.about.title} meta="readme.md" />
+        <SecHead num="03" eyebrow={t.about.eyebrow} title={t.about.title} meta="readme.md" />
 
         <article ref={cardRef} className="about-readme card" data-reveal>
           {/* Header: avatar + handle + status */}
@@ -768,17 +620,21 @@ function About({ t }) {
             </div>
           </header>
 
-          {/* Currently rotator */}
+          {/* Current focus — stable, truthful and readable without waiting for
+              a typewriter loop to reveal the rest of the sentence. */}
           <div className="about-currently mono">
             <span className="about-currently-key">{currentlyLabel}:</span>
-            <span className="about-currently-val">{currentlyText}</span>
-            <span className="about-currently-caret" aria-hidden="true" />
+            <ul className="about-currently-list">
+              {currentlyPhrases.slice(0, 3).map((item, index) => (
+                <li key={index} className="about-currently-val">{item}</li>
+              ))}
+            </ul>
           </div>
 
           {/* Stats counters */}
           <div className="about-stats">
             {t.about.stats.map((s, i) => (
-              <AboutStat key={i} stat={s} runCounters={runCounters} index={i} />
+              <AboutStat key={i} stat={s} index={i} />
             ))}
           </div>
 
@@ -912,36 +768,6 @@ const PROJ_CARD = (window.PRODUCT_REGISTRY || []).reduce((cards, product) => {
 
 function ProjectCard({ p, i, labels }) {
   const cardRef = useRef(null);
-  const moveFrameRef = useRef(0);
-  const cardRectRef = useRef(null);
-  const latestPointerRef = useRef({ x: 0, y: 0 });
-  function onMove(e) {
-    const el = cardRef.current;
-    if (!el) return;
-    if (!cardRectRef.current) cardRectRef.current = el.getBoundingClientRect();
-    latestPointerRef.current = { x: e.clientX, y: e.clientY };
-    if (moveFrameRef.current) return;
-    moveFrameRef.current = requestAnimationFrame(() => {
-      moveFrameRef.current = 0;
-      const r = cardRectRef.current;
-      if (!r || !r.width || !r.height) return;
-      const x = (latestPointerRef.current.x - r.left) / r.width - 0.5;
-      const y = (latestPointerRef.current.y - r.top) / r.height - 0.5;
-      el.style.setProperty("--rx", `${(-y * 2.8).toFixed(2)}deg`);
-      el.style.setProperty("--ry", `${(x * 2.8).toFixed(2)}deg`);
-      el.style.setProperty("--mx", `${((x + 0.5) * 100).toFixed(1)}%`);
-      el.style.setProperty("--my", `${((y + 0.5) * 100).toFixed(1)}%`);
-    });
-  }
-  function onLeave() {
-    const el = cardRef.current;
-    if (!el) return;
-    cardRectRef.current = null;
-    if (moveFrameRef.current) cancelAnimationFrame(moveFrameRef.current);
-    moveFrameRef.current = 0;
-    el.style.setProperty("--rx", `0deg`);
-    el.style.setProperty("--ry", `0deg`);
-  }
 
   // Cards that open an in-site landing get a stable anchor (id="proj-<slug>") so
   // returning from that landing lands the reader back on THIS exact card (see
@@ -993,11 +819,9 @@ function ProjectCard({ p, i, labels }) {
       // are opposite on purpose: same-sign values at different magnitudes read
       // as "one column is slightly broken", opposite signs read as depth.
       // motion.js writes --plx from this; the card's own transform composes it
-      // with the hover tilt (see `.proj-grid > .proj-card` in sections.css).
+      // with the card's CSS hover/focus states (see sections.css).
       data-plx={i % 2 === 0 ? "0.05" : "-0.03"}
       style={{ "--proj-i": i, "--proj-accent": (PROJ_CARD[p.slug] && PROJ_CARD[p.slug].accent) || "var(--accent)" }}
-      onMouseMove={onMove}
-      onMouseLeave={onLeave}
     >
       <div className="proj-glow" />
       <span className="proj-num mono" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
@@ -1135,8 +959,10 @@ function ProjectChapterDots({ items, gridRef, label }) {
       setDotWindow(Math.max(3, Math.min(9, fit)));
     }
     measure();
-    window.addEventListener("resize", measure, { passive: true });
-    return function cleanup() { window.removeEventListener("resize", measure); };
+    if (!("ResizeObserver" in window)) return undefined;
+    const ro = new ResizeObserver(measure);
+    ro.observe(dotsRef.current);
+    return function cleanup() { ro.disconnect(); };
   }, []);
 
   function onDot(i) {
@@ -1232,7 +1058,7 @@ function Projects({ t }) {
   return (
     <section data-section="projects" id="projects" data-enter="rise" ref={ref}>
       <div className="shell">
-        <SecHead num="03" eyebrow={t.projects.eyebrow} title={t.projects.title} meta={`${items.length} cases · 2024–26`} />
+        <SecHead num="04" eyebrow={t.projects.eyebrow} title={t.projects.title} meta={`${items.length} cases · 2024–26`} />
         <div className={`proj-grid ${expanded ? "is-expanded" : "is-collapsed"}`} ref={gridRef}>
           {items.map((p, i) => <ProjectCard key={p.slug || i} p={p} i={i} labels={t.projects} />)}
         </div>
@@ -1333,7 +1159,7 @@ function Skills({ t }) {
   return (
     <section data-section="skills" id="skills" data-enter="converge" ref={ref}>
       <div className="shell">
-        <SecHead num="04" eyebrow={t.skills.eyebrow} title={t.skills.title} meta="stack.matrix" />
+        <SecHead num="06" eyebrow={t.skills.eyebrow} title={t.skills.title} meta="stack.matrix" />
         <p className="lead-line" data-reveal>{t.skills.lead}</p>
 
         <div

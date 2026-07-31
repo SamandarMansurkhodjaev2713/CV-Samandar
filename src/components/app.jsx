@@ -663,10 +663,7 @@ function App() {
     const previousAriaHidden = root ? root.getAttribute("aria-hidden") : null;
     const previousInert = root ? root.inert : false;
     let restored = false;
-    let heroSettled = false;
     let fontTimer = 0;
-    let heroTimer = 0;
-    const heroImage = new Image();
 
     if (root) {
       root.inert = true;
@@ -700,15 +697,11 @@ function App() {
       else root.setAttribute("aria-hidden", previousAriaHidden);
     }
 
-    function settleHero(fallback) {
-      if (heroSettled) return;
-      heroSettled = true;
-      if (heroTimer) window.clearTimeout(heroTimer);
-      document.documentElement.toggleAttribute("data-hero-media-fallback", !!fallback);
-      markReady("hero", fallback);
-    }
-
     markReady("shell", false);
+    // Hero is CSS-native: its complete semantic and visual frame ships with
+    // the mounted shell, so there is no decorative image decode to pretend to
+    // wait for. The readiness gate still waits for local type metrics.
+    markReady("hero", false);
 
     fontTimer = window.setTimeout(() => markReady("fonts", true), 1250);
     if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === "function") {
@@ -721,24 +714,9 @@ function App() {
       markReady("fonts", true);
     }
 
-    heroImage.onload = () => {
-      if (typeof heroImage.decode === "function") {
-        heroImage.decode().then(() => settleHero(false)).catch(() => settleHero(false));
-      } else {
-        settleHero(false);
-      }
-    };
-    heroImage.onerror = () => settleHero(true);
-    heroTimer = window.setTimeout(() => settleHero(true), 1500);
-    heroImage.src = window.matchMedia && window.matchMedia("(max-width: 900px)").matches
-      ? "assets/orbital-station.webp"
-      : "assets/hero-cockpit.webp";
-    if (heroImage.complete && heroImage.naturalWidth > 0) settleHero(false);
-
     window.addEventListener("sm:intro-done", restoreShell, { once: true });
     return () => {
       window.clearTimeout(fontTimer);
-      window.clearTimeout(heroTimer);
       window.removeEventListener("sm:intro-done", restoreShell);
       restoreShell();
     };
@@ -749,9 +727,9 @@ function App() {
   useE(() => {
     const I18N = {
       ru: {
-        id: { name: "Самандар", role: "Full-Stack · AI Automation · QA",
+        id: { name: "Самандар", role: "Software Engineer · Product Builder · QA Engineer",
               meta: ["Ташкент · UTC+5", "Открыт к проектам", "3 курс · Software Engineering"],
-              stats: [{ k: "опыт", v: "2 года" }, { k: "проектов", v: "10+" }, { k: "стек", v: "TS / Py / SQL" }, { k: "ответ", v: "< 24h" }] },
+              stats: [{ k: "опыт", v: "1 год 8 мес" }, { k: "продуктов", v: "10+" }, { k: "фокус", v: "Builder + QA" }, { k: "языки", v: "RU · UZ · EN" }] },
         exp_title: "опыт", langs_title: "языки", strengths_title: "сильные стороны",
         strengths: [
           { t: "Системное мышление от прод-идеи до прод-деплоя", p: "TTYL Platform — от архитектуры и API до деплоя и багфиксов в проде: весь цикл на одном человеке." },
@@ -759,13 +737,13 @@ function App() {
           { t: "Качество как часть разработки, а не отдельный этап", p: "QA на TTYL: test plans, Playwright E2E со скриншотами и traces, контроль регрессий перед релизом." },
           { t: "Тёплая коммуникация с клиентами — проверено на практике", p: "UniCall: специалист по работе с клиентами, лучший сотрудник месяца за качество коммуникации." },
         ],
-        langs: [{ k: "Русский", lv: 100, label: "native" }, { k: "Oʻzbek", lv: 92, label: "свободный" }, { k: "English", lv: 85, label: "C1 · продвинутый" }],
-        foot: "сгенерировано 2026 · подписанная версия по запросу",
+        langs: [{ k: "Русский", label: "свободное владение" }, { k: "Oʻzbek", label: "хороший рабочий" }, { k: "English", label: "хороший рабочий" }],
+        foot: "обновлено 2026 · PDF доступен для скачивания",
       },
       en: {
-        id: { name: "Samandar", role: "Full-Stack · AI Automation · QA",
+        id: { name: "Samandar", role: "Software Engineer · Product Builder · QA Engineer",
               meta: ["Tashkent · UTC+5", "Open to projects", "3rd-year · Software Engineering"],
-              stats: [{ k: "experience", v: "2 yrs" }, { k: "projects", v: "10+" }, { k: "stack", v: "TS / Py / SQL" }, { k: "reply", v: "< 24h" }] },
+              stats: [{ k: "experience", v: "1 yr 8 mos" }, { k: "products", v: "10+" }, { k: "focus", v: "Builder + QA" }, { k: "languages", v: "RU · UZ · EN" }] },
         exp_title: "experience", langs_title: "languages", strengths_title: "strengths",
         strengths: [
           { t: "End-to-end ownership from product idea to prod deploy", p: "TTYL Platform — from architecture and API to deploy and prod bugfixes: the whole cycle on one person." },
@@ -773,13 +751,13 @@ function App() {
           { t: "Quality baked into building, not a separate stage", p: "QA at TTYL: test plans, Playwright E2E with screenshots and traces, regression control before release." },
           { t: "Warm client communication — proven in practice", p: "UniCall: customer support specialist, employee of the month for communication quality." },
         ],
-        langs: [{ k: "Russian", lv: 100, label: "native" }, { k: "Uzbek", lv: 92, label: "fluent" }, { k: "English", lv: 85, label: "C1 · advanced" }],
-        foot: "generated 2026 · signed copy on request",
+        langs: [{ k: "Russian", label: "fluent" }, { k: "Uzbek", label: "good working" }, { k: "English", label: "good working" }],
+        foot: "updated 2026 · PDF available to download",
       },
       uz: {
-        id: { name: "Samandar", role: "Full-Stack · AI Automation · QA",
+        id: { name: "Samandar", role: "Software Engineer · Product Builder · QA Engineer",
               meta: ["Toshkent · UTC+5", "Loyihalarga ochiq", "3-kurs · Software Engineering"],
-              stats: [{ k: "tajriba", v: "2 yil" }, { k: "loyiha", v: "10+" }, { k: "stek", v: "TS / Py / SQL" }, { k: "javob", v: "< 24h" }] },
+              stats: [{ k: "tajriba", v: "1 yil 8 oy" }, { k: "mahsulot", v: "10+" }, { k: "fokus", v: "Builder + QA" }, { k: "tillar", v: "RU · UZ · EN" }] },
         exp_title: "tajriba", langs_title: "tillar", strengths_title: "kuchli tomonlar",
         strengths: [
           { t: "Mahsulot g'oyasidan prod-deploygacha to'liq egalik", p: "TTYL Platform — arxitektura va API'dan deploy va prod-bagfikslargacha: butun sikl bitta odamda." },
@@ -787,8 +765,8 @@ function App() {
           { t: "Sifat — bosqich emas, ishlab chiqishning bir qismi", p: "TTYL'da QA: test-rejalar, Playwright E2E skrinshot va traces bilan, relizdan oldin regressiya nazorati." },
           { t: "Mijozlar bilan iliq muloqot — amaliyotda sinalgan", p: "UniCall: mijozlar bilan ishlash bo'yicha mutaxassis, muloqot sifati uchun oyning eng yaxshi xodimi." },
         ],
-        langs: [{ k: "Ruscha", lv: 100, label: "native" }, { k: "Oʻzbek", lv: 92, label: "erkin" }, { k: "English", lv: 85, label: "C1 · ilg'or" }],
-        foot: "2026 yil · imzolangan nusxa so'rov asosida",
+        langs: [{ k: "Ruscha", label: "erkin" }, { k: "Oʻzbek", label: "yaxshi ishchi" }, { k: "English", label: "yaxshi ishchi" }],
+        foot: "2026 yil yangilangan · PDF yuklash mumkin",
       },
     };
     Object.entries(I18N).forEach(([L, patch]) => {

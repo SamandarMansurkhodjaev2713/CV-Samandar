@@ -168,7 +168,7 @@
       if (value < 44) return "ASSEMBLING SYSTEM";
       if (!ready.shell) return "MOUNTING SHELL";
       if (!ready.fonts) return "VERIFYING TYPE";
-      if (!ready.hero) return "DECODING HERO";
+      if (!ready.hero) return "CALIBRATING SCENE";
       if (value < 90) return "SYSTEMS VERIFIED";
       return "READY TO SHIP";
     }
