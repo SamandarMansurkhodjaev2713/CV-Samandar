@@ -61,17 +61,6 @@ Awwwards-переработки. План и критерии готовност
 Визуальные сравнения находятся в `screenshots/audit-stage3/`. Эта папка
 хранится как QA-доказательство и не входит в Pages deployment artifact.
 
-## Следующая контрольная точка
-
-Глобальная оболочка и motion-runtime:
-
-1. единая политика производительности и жизненного цикла анимаций;
-2. единственный управляемый animation loop на подсистему;
-3. cleanup при unmount, hidden tab, resize и context loss;
-4. interruptible section transitions с timeout/finally;
-5. desktop/mobile menu, hash/history и active-section contract;
-6. проверки pointer, keyboard, back gesture и reduced motion.
-
 ## Motion-runtime checkpoint
 
 Проверенная инженерная часть глобальной оболочки:
@@ -103,3 +92,48 @@ Production-mode browser QA дополнительно подтвердил:
 
 Следующий шаг: визуальная режиссура меню, section navigation и переходов поверх
 уже проверенного runtime, затем последовательная переработка всех сцен.
+
+## Intro and navigation checkpoint
+
+Проверенная глобальная оболочка `v217`:
+
+- frame-zero интро появляется из `head` до исполнения application bundle;
+- прогресс зависит от готовности shell, локальных шрифтов и Hero-media;
+- первый сеанс сохраняет режиссуру 2–3 секунды, повторный — тот же характер в
+  более коротком ритме;
+- deep link полностью обходит интро, reduced motion сохраняет композицию без
+  canvas и длительного движения;
+- hard timeout выводит либо уже собранный сайт, либо полезную recovery-сцену;
+- поздно загрузившееся приложение безопасно заменяет recovery;
+- scroll lock, `inert`, `aria-hidden` и `aria-busy` освобождаются ровно один
+  раз на всех путях;
+- полноэкранное меню стало настоящим modal dialog: внешний shell inert, фокус
+  замкнут внутри, Escape возвращает его на trigger;
+- переход из меню после закрытия фокусирует заголовок выбранной главы;
+- skip link минует cinematic interception и переводит фокус в `main`;
+- desktop navigation не обрезает ссылки на 920–1160 px, а переключается на
+  компактный счётчик;
+- один DOM-порядок из 12 глав питает menu, counter и mobile rail;
+- mobile Hero на 320–430 px и 844×390 сохраняет две CTA, минимум 44 px,
+  Proof Rail и видимый handoff в Signal без лишних свайпов;
+- mobile dock появляется только после Signal и не закрывает его первые строки;
+- safe-area и горизонтальный overflow проверены на портретных и landscape
+  размерах.
+
+Контрольная автоматическая матрица этапа:
+
+- design shell desktop: 10/10 применимых проверок;
+- design shell mobile: 8/8 применимых проверок;
+- accessibility: 6/6, без critical/serious axe violations;
+- reduced motion: 1/1;
+- iPhone WebKit: 2/2, включая реальный first-load intro;
+- полный единый gate `v217`: 113 сценариев, 71 успешно, 42 осознанно
+  пропущены на нерелевантных viewport/engine, 0 падений;
+- сборка: 24 продукта, 15 case routes, 3 локали;
+- пользовательский `_otvety_extracted.txt` не изменялся и не входит в commit.
+
+Полный контракт описан в `docs/INTRO-NAVIGATION.md`.
+
+Следующий этап: двенадцать отдельных сцен главной и конфигуратор. Работа идёт
+сверху вниз, но каждый блок принимается только после desktop/mobile,
+keyboard/reduced-motion, visual и regression-проверок.

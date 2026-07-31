@@ -56,7 +56,7 @@ test("primary navigation and language controls are keyboard reachable", async ({
     ? page.locator(".nav-menu-lang button").filter({ hasText: /^EN$/ })
     : page.locator(".nav .lang button").filter({ hasText: /^EN$/ });
   if (isMobile) {
-    const menuButton = page.getByRole("button", { name: "Open menu" });
+    const menuButton = page.locator(".nav-burger");
     await menuButton.focus();
     await page.keyboard.press("Enter");
     await expect(page.locator(".nav-menu")).toHaveAttribute("aria-hidden", "false");

@@ -49,7 +49,7 @@ test.describe("project catalog", () => {
   test("RU, EN and UZ keep all cards and canonical routes", async ({ page, isMobile }) => {
     await settleMain(page, "#projects");
     if (isMobile) {
-      await page.getByRole("button", { name: "Open menu" }).evaluate((button) => button.click());
+      await page.locator(".nav-burger").evaluate((button) => button.click());
       await expect(page.locator(".nav-menu")).toHaveAttribute("aria-hidden", "false");
     }
 

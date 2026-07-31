@@ -209,8 +209,8 @@ section[data-section="hero"] { padding-block: 0; }
 .hero {
   display: flex;
   flex-direction: column;
-  min-height: 100svh;
   min-height: 100vh; /* fallback for browsers without svh */
+  min-height: 100svh;
 }
 .hero-stack {
   position: relative;
@@ -221,7 +221,7 @@ section[data-section="hero"] { padding-block: 0; }
   flex-direction: column;
   justify-content: center;
   gap: clamp(14px, 2.1vh, 30px);
-  padding-top: calc(var(--nav-h) + clamp(12px, 2vh, 30px));
+  padding-top: calc(var(--nav-safe-h) + clamp(12px, 2vh, 30px));
   padding-bottom: clamp(12px, 2vh, 28px);
 }
 /* `width: 100%` is load-bearing, not tidiness. `.shell` carries `margin: 0
@@ -582,6 +582,7 @@ section[data-section="hero"] { padding-block: 0; }
     margin: 0;
     background: rgba(25, 24, 21, 0.82);
     border-bottom: 0;
+    pointer-events: none;
   }
   .hero-proof-inner {
     min-height: 32px;
@@ -648,8 +649,8 @@ section[data-section="hero"] { padding-block: 0; }
        resolves in ~one comfortable swipe with a deliberate warm peek of Signal
        at the bottom edge cueing "scroll". Desktop keeps the full-height
        takeover + full-length curtain (this rule is inside max-width:900px). */
-    min-height: 86svh;
     min-height: 86vh; /* fallback for browsers without svh */
+    min-height: 86svh;
   }
   /* ONE left margin for the whole composition. The bands carry `.shell`, whose
      gutter is 30px at 390px, while the full-bleed name sits at its own 12px
@@ -657,11 +658,16 @@ section[data-section="hero"] { padding-block: 0; }
      supposed to continue, and the wall read as two misaligned blocks. On this
      screen the hero IS the grid: everything lines up on the name's edge. */
   .hero > .shell { width: 100%; box-sizing: border-box; }
-  .hero-stack > .shell { padding-inline: clamp(12px, 1.9vw, 30px); max-width: none; margin-inline: 0; }
+  .hero-stack > .shell {
+    padding-left: max(clamp(12px, 1.9vw, 30px), calc(env(safe-area-inset-left) + 12px));
+    padding-right: max(clamp(12px, 1.9vw, 30px), calc(env(safe-area-inset-right) + 12px));
+    max-width: none;
+    margin-inline: 0;
+  }
 
   .hero-stack {
     gap: 0;
-    padding-top: calc(var(--nav-h) + 10px);
+    padding-top: calc(var(--nav-safe-h) + 10px);
     padding-bottom: 46px; /* room for the scroll cue */
   }
   .hero-band { gap: 10px 16px; }
@@ -765,8 +771,8 @@ section[data-section="hero"] { padding-block: 0; }
     min-height: 48px;
     white-space: nowrap;
   }
-  .hero-ctas .btn:first-child { flex: 1.2 1 0; }
-  .hero-ctas .btn:last-child { flex: 0.9 1 0; }
+  .hero-ctas .btn:first-child,
+  .hero-ctas .btn:last-child { flex: 1 1 0; }
   html[lang="uz"] .hero-ctas .btn { font-size: 9.5px; letter-spacing: 0.055em; }
 
   /* The proof rail now owns the bottom edge and already communicates direction;
@@ -776,10 +782,18 @@ section[data-section="hero"] { padding-block: 0; }
 @media (max-width: 480px) {
   /* Compact phones: the vw coefficients still hold (they are width-relative),
      but the supporting rows tighten so the type block keeps its share. */
-  .hero-stack { padding-bottom: 40px; gap: clamp(8px, 1.2vh, 14px); }
+  .hero-stack { padding-bottom: 42px; gap: clamp(8px, 1.2vh, 14px); }
   .hero-band--top .eyebrow { font-size: 9.5px; letter-spacing: 0.16em; }
   .hero-status { font-size: 10px; }
   .hero-ctas .btn { min-height: 50px; }
+}
+@media (max-width: 360px) {
+  .hero-ctas { gap: 8px; }
+  .hero-ctas .btn {
+    padding-inline: 8px;
+    font-size: 10px;
+    letter-spacing: .055em;
+  }
 }
 
 /* Short landscape is a separate composition, not the portrait stack squeezed
@@ -787,10 +801,10 @@ section[data-section="hero"] { padding-block: 0; }
    not fit, so the name goes back to desktop behaviour (height-capped, roles as
    a caption rule) while the section keeps the full viewport. */
 @media (max-width: 900px) and (orientation: landscape) and (max-height: 520px) {
-  .hero { min-height: 100svh; min-height: 100vh; justify-content: flex-start; }
+  .hero { min-height: 100vh; min-height: 100svh; justify-content: flex-start; }
   .hero-stack {
-    padding-top: calc(var(--nav-h) + 8px);
-    padding-bottom: 14px;
+    padding-top: calc(var(--nav-safe-h) + 8px);
+    padding-bottom: 50px;
     gap: 8px;
   }
   .hero-band--top { flex-direction: row; align-items: center; }
@@ -4096,11 +4110,14 @@ html[data-motion-lite] .builder-chip { animation: none; }
   position: fixed; inset: 0;
   z-index: 2147483000; /* above nav + everything */
   background: var(--bg-0, #1F1E1B);
+  color: var(--text, #F5F0E6);
   pointer-events: auto;
   overflow: hidden;
   isolation: isolate;
+  contain: paint;
+  will-change: clip-path, opacity;
 }
-#sm-intro canvas { position: absolute; inset: 0; }
+#sm-intro canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 @media (prefers-reduced-motion: reduce) {
   /* Primary path is the head-boot's 'fade' mode (no canvas is ever created
      when reduced-motion is set) — this just hardens against any edge case. */
@@ -4117,20 +4134,21 @@ html[data-motion-lite] .builder-chip { animation: none; }
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  width: min(86vw, 400px);
-  text-align: center;
-  animation: smBootIn .7s cubic-bezier(.2, .6, .18, 1) both;
+  align-items: stretch;
+  gap: 14px;
+  width: min(82vw, 520px);
+  text-align: left;
+  z-index: 1;
+  animation: smBootIn .52s cubic-bezier(.2, .6, .18, 1) both;
 }
 @keyframes smBootIn {
   from { opacity: 0; transform: translate(-50%, calc(-50% + 14px)); }
   to   { opacity: 1; transform: translate(-50%, -50%); }
 }
 .sm-boot-label {
-  display: flex; align-items: center; gap: 9px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
   font-size: 11px;
-  letter-spacing: 0.28em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--text-mute);
 }
@@ -4145,20 +4163,54 @@ html[data-motion-lite] .builder-chip { animation: none; }
   color: rgba(var(--accent-rgb) / 0.9);
   transition: color .35s ease;
 }
+.sm-boot-proof {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding-top: 2px;
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: .16em;
+  color: var(--text-mute);
+}
+.sm-boot-proof span {
+  position: relative;
+  padding-top: 8px;
+  transition: color .22s ease;
+}
+.sm-boot-proof span::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: rgba(245, 240, 230, .13);
+  transform-origin: left;
+  transition: background-color .22s ease, transform .22s ease;
+}
+.sm-boot-proof span.is-active { color: var(--text); }
+.sm-boot-proof span.is-active::before {
+  background: var(--accent);
+  transform: scaleX(.68);
+}
+.sm-boot-proof span.is-done { color: var(--text-dim); }
+.sm-boot-proof span.is-done::before {
+  background: rgba(var(--accent-rgb) / .58);
+  transform: scaleX(1);
+}
 .sm-boot-pct {
   display: flex;
   align-items: baseline;
   gap: 2px;
   font-family: var(--f-display);
   font-weight: 600;
-  line-height: 1;
+  line-height: .86;
   color: var(--text);
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.055em;
   text-shadow: 0 0 32px rgba(var(--accent-rgb) / 0.22);
   transition: color .4s ease, text-shadow .4s ease;
 }
-.sm-boot-pct-n { font-size: clamp(52px, 12vw, 94px); }
+.sm-boot-pct-n { font-size: clamp(64px, 12vw, 112px); }
 .sm-boot-pct-sign {
   font-size: clamp(18px, 3vw, 26px);
   color: var(--accent);
@@ -4179,14 +4231,21 @@ html[data-motion-lite] .builder-chip { animation: none; }
   border-radius: 2px;
   background: linear-gradient(90deg, var(--accent), var(--accent-2));
   box-shadow: 0 0 14px rgba(var(--accent-rgb) / 0.7);
-  transition: width .3s cubic-bezier(.2, .6, .18, 1);
+  transition: width .08s linear;
+}
+.sm-boot-status {
+  min-height: 1.5em;
+  font-size: 10px;
+  line-height: 1.5;
+  letter-spacing: .16em;
+  color: var(--text-mute);
+  text-transform: uppercase;
 }
 /* ONLINE — one warm accent pulse across the readout as it locks in */
 .sm-boot.is-online .sm-boot-pct {
   color: var(--accent);
   text-shadow: 0 0 46px rgba(var(--accent-rgb) / 0.5);
 }
-.sm-boot { position: relative; z-index: 1; }
 
 /* ── Core pulse ───────────────────────────────────────────────
    Concentric "reactor" rings breathing out from the same focal point the
@@ -4195,23 +4254,23 @@ html[data-motion-lite] .builder-chip { animation: none; }
 .sm-boot-core {
   position: absolute; left: 50%;
   transform: translate(-50%, -50%);
-  width: clamp(200px, 42vw, 340px); height: clamp(200px, 42vw, 340px);
+  width: clamp(190px, 32vw, 310px); height: clamp(190px, 32vw, 310px);
   pointer-events: none; z-index: 0;
+  opacity: .58;
 }
 .sm-boot-core b {
   position: absolute; inset: 0; margin: auto;
   width: 46%; height: 46%; border-radius: 50%;
-  background: radial-gradient(circle, rgba(var(--accent-rgb) / 0.20), transparent 70%);
-  animation: smCoreGlow 3.4s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(var(--accent-rgb) / 0.14), transparent 72%);
+  animation: smCoreGlow 2.8s ease-in-out infinite;
 }
 .sm-boot-core i {
   position: absolute; inset: 0; margin: auto;
   width: 34%; height: 34%; border-radius: 50%;
-  border: 1px solid rgba(var(--accent-rgb) / 0.34);
+  border: 1px solid rgba(var(--accent-rgb) / 0.26);
   opacity: 0;
-  animation: smCoreRing 3.4s cubic-bezier(.2, .6, .18, 1) infinite;
+  animation: smCoreRing 2.8s cubic-bezier(.2, .6, .18, 1) infinite;
 }
-.sm-boot-core i:nth-child(3) { animation-delay: 1.7s; }
 @keyframes smCoreRing {
   0%   { transform: scale(0.5); opacity: 0; }
   15%  { opacity: 0.5; }
@@ -4226,7 +4285,7 @@ html[data-motion-lite] .builder-chip { animation: none; }
    Rolling technical console under the progress line. Fixed height so
    revealing a line never nudges the percentage above it. */
 .sm-boot-log {
-  width: 100%; height: 58px; overflow: hidden;
+  width: 100%; height: 54px; overflow: hidden;
   display: flex; flex-direction: column; justify-content: flex-end; gap: 3px;
   font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.02em;
   text-align: left;
@@ -4244,22 +4303,68 @@ html[data-motion-lite] .builder-chip { animation: none; }
    Mission-console corners: fixed coordinates + build tag + live T+ clock,
    framing the readout so the whole panel reads as one instrument. */
 .sm-boot-tele {
-  position: absolute; bottom: clamp(16px, 4vh, 30px);
-  font-family: var(--f-mono); font-size: 9.5px; letter-spacing: 0.16em;
+  position: absolute;
+  bottom: max(clamp(18px, 4vh, 34px), calc(env(safe-area-inset-bottom) + 12px));
+  font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.13em;
   text-transform: uppercase; color: var(--text-mute); line-height: 1.85;
   opacity: 0; animation: smTeleIn .9s ease .35s forwards;
 }
-.sm-boot-tele--l { left: clamp(16px, 4vw, 36px); text-align: left; }
-.sm-boot-tele--r { right: clamp(16px, 4vw, 36px); text-align: right; }
+.sm-boot-tele--l {
+  left: max(clamp(18px, 4vw, 38px), calc(env(safe-area-inset-left) + 12px));
+  text-align: left;
+}
+.sm-boot-tele--r {
+  right: max(clamp(18px, 4vw, 38px), calc(env(safe-area-inset-right) + 12px));
+  text-align: right;
+}
 .sm-boot-tele b { color: var(--text-dim); font-weight: 500; }
 .sm-boot-clock b { color: rgba(var(--accent-rgb) / 0.85); }
 @keyframes smTeleIn { to { opacity: 0.85; } }
 
+.sm-boot-skip {
+  position: absolute;
+  top: max(18px, calc(env(safe-area-inset-top) + 10px));
+  right: max(18px, calc(env(safe-area-inset-right) + 10px));
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 1px solid rgba(245, 240, 230, .24);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 10px;
+  letter-spacing: .14em;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(-5px);
+  pointer-events: none;
+  transition: opacity .22s ease, transform .22s ease, color .2s ease, border-color .2s ease;
+}
+.sm-boot-skip.is-visible {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.sm-boot-skip:hover,
+.sm-boot-skip:focus-visible {
+  color: var(--text);
+  border-color: var(--accent);
+  outline: none;
+}
+
 @media (max-width: 480px) {
-  .sm-boot { gap: 15px; }
-  .sm-boot-label { font-size: 10px; letter-spacing: 0.24em; }
+  .sm-boot { width: calc(100vw - 48px); gap: 13px; }
+  .sm-boot-label { font-size: 10px; letter-spacing: 0.18em; }
+  .sm-boot-proof { font-size: 9px; letter-spacing: .1em; gap: 8px; }
   .sm-boot-log { height: 50px; font-size: 10px; }
-  .sm-boot-tele { font-size: 8px; letter-spacing: 0.1em; bottom: 14px; line-height: 1.7; }
+  .sm-boot-tele { font-size: 9px; letter-spacing: 0.08em; line-height: 1.65; }
+  .sm-boot-tele--l div:last-child { max-width: 17ch; }
+}
+@media (max-height: 520px) and (orientation: landscape) {
+  .sm-boot { top: 47% !important; gap: 8px; width: min(58vw, 500px); }
+  .sm-boot-pct-n { font-size: clamp(48px, 16vh, 72px); }
+  .sm-boot-log { display: none; }
+  .sm-boot-tele { bottom: max(8px, calc(env(safe-area-inset-bottom) + 6px)); }
 }
 @media (prefers-reduced-motion: reduce) {
   .sm-boot { animation: none; }
@@ -4267,6 +4372,10 @@ html[data-motion-lite] .builder-chip { animation: none; }
   .sm-boot-core { display: none; }
   .sm-boot-log > div { animation: none; }
   .sm-boot-tele { animation: none; opacity: 0.85; }
+  .sm-boot-proof span,
+  .sm-boot-proof span::before,
+  .sm-boot-line > i,
+  .sm-boot-skip { transition: none; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -4365,10 +4474,31 @@ html[data-motion-lite] .builder-chip { animation: none; }
     box-shadow: 0 18px 46px rgba(0,0,0,.46);
     backdrop-filter: blur(18px) saturate(115%);
   }
-  .mobile-dock-dots { gap: 4px; flex: 1 1 auto; min-width: 74px; }
-  .mobile-dock .mobile-dock-dot { padding: 10px 3px; }
-  .mobile-dock-dot { width: 5px; height: 5px; }
-  .mobile-dock-dot.is-active { width: 18px; }
+  .mobile-dock-dots {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(3px, 1fr));
+    gap: 3px;
+    flex: 1 1 auto;
+    min-width: 78px;
+  }
+  .mobile-dock-dots li { display: block; min-width: 0; }
+  .mobile-dock .mobile-dock-dot {
+    display: block;
+    width: 100%;
+    height: 3px;
+    padding: 0;
+    border-radius: 999px;
+    background: rgba(var(--doc-ink-rgb, 244 241 234) / .16);
+    box-shadow: none;
+    pointer-events: none;
+    transform-origin: center;
+  }
+  .mobile-dock-dot.is-active {
+    width: 100%;
+    background: var(--accent);
+    box-shadow: 0 0 8px rgba(var(--accent-rgb) / .45);
+    transform: scaleY(1.65);
+  }
   .mobile-dock-label { flex: 0 1 auto; max-width: 82px; overflow: hidden; font-size: 9px; }
   .mobile-dock-label > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mobile-dock-cta {
@@ -4386,13 +4516,17 @@ html[data-motion-lite] .builder-chip { animation: none; }
     font-weight: 600;
     white-space: nowrap;
   }
+  .mobile-dock-cta-short { display: none; }
   .mobile-dock-cta:active { transform: scale(.975); }
 }
 
 @media (max-width: 360px) {
-  .mobile-dock-label > span:last-child { display: none; }
-  .mobile-dock-label { max-width: 30px; }
-  .mobile-dock-cta { padding-inline: 12px; font-size: 10px; }
+  .mobile-dock { gap: 7px; padding-left: 9px; }
+  .mobile-dock-dots { min-width: 52px; gap: 2px; }
+  .mobile-dock-label { max-width: 74px; font-size: 9px; }
+  .mobile-dock-cta { padding-inline: 10px; font-size: 10px; }
+  .mobile-dock-cta-long { display: none; }
+  .mobile-dock-cta-short { display: inline; }
 }
 
 /* ── THE RING — the page's closing signature ────────────────────────────────

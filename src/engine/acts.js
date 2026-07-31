@@ -84,6 +84,9 @@
   var veilA, veilB, frontIsA = false, light;
   var current = null;
   var currentId = null;
+  var unsubscribeRuntime = function () {};
+  var fallbackPointerHandler = null;
+  var sectionHandler = null;
 
   // ── Shutters — the "instrument hatch" beat at the two MAJOR act changes
   // (entering the projects heart, arriving at contact). Two thin plates blink
@@ -188,9 +191,54 @@
       "transition:transform 1.1s cubic-bezier(.22,.6,.18,1);will-change:transform;";
     document.body.appendChild(light);
     var HALF = SIZE / 2;
-    window.addEventListener("pointermove", function (e) {
-      light.style.transform = "translate3d(" + (e.clientX - HALF) + "px," + (e.clientY - HALF) + "px,0)";
-    }, { passive: true });
+    var runtime = window.__SM_MOTION_RUNTIME;
+    if (runtime && typeof runtime.subscribe === "function") {
+      unsubscribeRuntime = runtime.subscribe({
+        id: "act-pointer-light",
+        priority: 46,
+        enabled: function (context) {
+          return Boolean(light) && !context.policy.reducedMotion && context.policy.pointerClass === "fine";
+        },
+        mutate: function (context) {
+          if (!context.input.pointerMoved && context.input.reason !== "subscribe:act-pointer-light") return;
+          light.style.transform =
+            "translate3d(" + (context.input.pointerX - HALF) + "px," +
+            (context.input.pointerY - HALF) + "px,0)";
+        },
+      });
+      runtime.wake("act-pointer-light-init");
+      return;
+    }
+
+    // Recovery only: production uses the shared pointer stream above.
+    fallbackPointerHandler = function (event) {
+      light.style.transform =
+        "translate3d(" + (event.clientX - HALF) + "px," +
+        (event.clientY - HALF) + "px,0)";
+    };
+    window.addEventListener("pointermove", fallbackPointerHandler, { passive: true });
+  }
+
+  function dispose() {
+    unsubscribeRuntime();
+    unsubscribeRuntime = function () {};
+    if (fallbackPointerHandler) {
+      window.removeEventListener("pointermove", fallbackPointerHandler);
+      fallbackPointerHandler = null;
+    }
+    if (sectionHandler) {
+      window.removeEventListener("sm:section", sectionHandler);
+      sectionHandler = null;
+    }
+    window.clearTimeout(shutterTimer);
+    [shutterTop, shutterBot, veilA, veilB, light].forEach(function (element) {
+      if (element && element.parentNode) element.parentNode.removeChild(element);
+    });
+    shutterTop = null;
+    shutterBot = null;
+    veilA = null;
+    veilB = null;
+    light = null;
   }
 
   function boot() {
@@ -200,9 +248,10 @@
     makeShutters();
     initLight();
     apply(DEFAULT_ACT);
-    window.addEventListener("sm:section", function (e) {
+    sectionHandler = function (e) {
       if (e && e.detail && e.detail.id) apply(e.detail.id);
-    });
+    };
+    window.addEventListener("sm:section", sectionHandler);
     // Sync hook: verification in headless preview (IO frozen) + public API.
     window.__SM_ACTS = {
       set: apply,
@@ -215,6 +264,7 @@
         return null;
       },
       acts: Object.keys(ACTS),
+      dispose: dispose,
     };
   }
 

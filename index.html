@@ -33,28 +33,86 @@
       // visit the intro silently never appeared again in that tab — which read
       // as "the intro is broken / doesn't show". This is a single-page site
       // (anchor links don't reload), so per-load only fires on a genuine fresh
-      // load, and the intro is skippable (click/scroll/key), so re-showing it
-      // is cheap. The whole thing is still gated by reduced-motion / low-tier
-      // into the cheap fade mode below.
+      // load, and the intro can be shortened with wheel/touch/Escape, so
+      // re-showing it stays predictable. Reduced motion keeps the same proof
+      // structure but releases through a short opacity transition.
       var mm = window.matchMedia;
       var reduced = mm && mm("(prefers-reduced-motion: reduce)").matches;
-      // Inline tier heuristic — themes.js (getDeviceTier) hasn't loaded yet at
-      // this point, so this duplicates its thresholds (cores<=4 || mem<=4).
-      // Keep in sync with src/engine/themes.js DEVICE_TIER_*_THRESHOLD.
-      // Some hardened/privacy browsers deliberately omit `navigator`. Treat
-      // that as an unknown capable device instead of aborting the entire intro.
-      var nav = (typeof navigator !== "undefined" && navigator) ? navigator : {};
-      var cores = (nav.hardwareConcurrency | 0) || 8;
-      var mem = (typeof nav.deviceMemory === "number") ? nav.deviceMemory : 8;
-      var lowTier = cores <= 4 || mem <= 4;
+      var createdAt = performance && performance.now ? performance.now() : Date.now();
+      var previousOverflow = document.documentElement.style.overflow;
+      var doneFired = false;
       var panel = document.createElement("div");
       panel.id = "sm-intro";
-      panel.setAttribute("aria-hidden", "true");
-      panel.setAttribute("data-intro-mode", (reduced || lowTier) ? "fade" : "full");
+      panel.setAttribute("role", "dialog");
+      panel.setAttribute("aria-modal", "true");
+      panel.setAttribute("aria-label", "Portfolio loading sequence");
+      panel.setAttribute("aria-busy", "true");
+      panel.setAttribute("data-intro-mode", reduced ? "reduced" : "full");
       panel.style.cssText =
-        "position:fixed;inset:0;z-index:2147483000;background:#1F1E1B;pointer-events:auto;contain:strict;";
-      window.__SM_INTRO = { mode: (reduced || lowTier) ? "fade" : "full", panel: panel };
+        "position:fixed;inset:0;z-index:2147483000;background:#1F1E1B;color:#F5F0E6;" +
+        "pointer-events:auto;overflow:hidden;isolation:isolate;font-family:Arial,sans-serif;";
+      panel.innerHTML =
+        '<div class="sm-boot sm-boot--head" style="position:absolute;left:50%;top:42%;width:min(520px,82vw);transform:translate(-50%,-50%);display:flex;flex-direction:column;gap:16px">' +
+          '<div class="sm-boot-label" style="font:600 10px/1.4 monospace;letter-spacing:.22em;color:#B8AC97">SAMANDAR / PRODUCT LAB <span class="sm-boot-state" style="color:#D97757">BUILD</span></div>' +
+          '<div class="sm-boot-proof" aria-hidden="true" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font:500 10px/1.4 monospace;letter-spacing:.14em;color:#6B6353"><span style="color:#F5F0E6">BUILD</span><span>VERIFY</span><span>SHIP</span></div>' +
+          '<div class="sm-boot-pct" aria-hidden="true" style="display:flex;align-items:flex-start;font-weight:600;line-height:.8;letter-spacing:-.06em"><span class="sm-boot-pct-n" style="font-size:clamp(64px,12vw,112px)">00</span><span class="sm-boot-pct-sign" style="margin:.08em 0 0 .12em;font:500 clamp(18px,3vw,28px)/1 monospace;color:#D97757">%</span></div>' +
+          '<div class="sm-boot-line" aria-hidden="true" style="height:1px;background:rgba(217,119,87,.18);overflow:hidden"><i style="display:block;width:0;height:100%;background:#D97757"></i></div>' +
+          '<div class="sm-boot-status" role="status" aria-live="polite" style="font:500 10px/1.4 monospace;letter-spacing:.16em;color:#6B6353">INITIALIZING</div>' +
+        '</div>';
+      window.__SM_INTRO = {
+        mode: reduced ? "reduced" : "full",
+        panel: panel,
+        createdAt: createdAt,
+        ready: { shell: false, fonts: false, hero: false },
+        fallback: {},
+        previousOverflow: previousOverflow,
+        doneFired: false,
+      };
+      window.__SM_INTRO.notify = function () {
+        try {
+          window.dispatchEvent(new CustomEvent("sm:intro-readiness", {
+            detail: window.__SM_INTRO.ready,
+          }));
+        } catch (e) { /* optional channel */ }
+      };
+      window.__SM_INTRO.release = function (reason) {
+        if (doneFired) return;
+        doneFired = true;
+        window.__SM_INTRO.doneFired = true;
+        window.__SM_INTRO.reason = reason || "complete";
+        document.documentElement.classList.remove("intro-lock");
+        document.documentElement.style.overflow = previousOverflow;
+        document.documentElement.removeAttribute("aria-busy");
+        panel.setAttribute("aria-busy", "false");
+        try {
+          window.dispatchEvent(new CustomEvent("sm:intro-done", {
+            detail: { reason: window.__SM_INTRO.reason },
+          }));
+        } catch (e) { /* optional channel */ }
+      };
+      window.__SM_INTRO.recover = function (code) {
+        window.__SM_INTRO.prepared = true;
+        if (!panel.parentNode) document.documentElement.appendChild(panel);
+        panel.setAttribute("role", "alert");
+        panel.setAttribute("aria-busy", "false");
+        panel.style.cssText =
+          "position:fixed;inset:0;z-index:2147483000;background:#1F1E1B;color:#F5F0E6;" +
+          "display:grid;place-items:center;padding:24px;overflow:auto;font-family:Arial,sans-serif;";
+        panel.innerHTML =
+          '<div style="width:min(620px,100%);border-top:1px solid #D97757;padding-top:24px">' +
+            '<div style="font:600 11px/1.4 monospace;letter-spacing:.18em;color:#D97757">RECOVERY · ' + (code || "00") + '</div>' +
+            '<h1 style="font:600 clamp(34px,8vw,72px)/.98 Arial,sans-serif;margin:22px 0 18px">Сайт не загрузился</h1>' +
+            '<p style="max-width:52ch;color:#B8AC97;line-height:1.6;margin:0 0 28px">Обновите страницу. Если соединение нестабильно, напишите мне напрямую — контакты работают независимо от интерфейса.</p>' +
+            '<div style="display:flex;flex-wrap:wrap;gap:12px">' +
+              '<button type="button" onclick="window.location.reload()" style="min-height:44px;padding:0 18px;border:1px solid #D97757;background:#D97757;color:#1F1E1B;font-weight:700;cursor:pointer">Обновить страницу</button>' +
+              '<a href="https://t.me/killallofthem13" style="min-height:44px;padding:0 18px;border:1px solid #6B6353;color:#F5F0E6;display:inline-flex;align-items:center;text-decoration:none">Написать в Telegram</a>' +
+            '</div>' +
+          '</div>';
+        window.__SM_INTRO.release("recovery");
+      };
       document.documentElement.classList.add("intro-lock");
+      document.documentElement.setAttribute("aria-busy", "true");
+      document.documentElement.style.overflow = "hidden";
       document.documentElement.appendChild(panel);
       // Safety net: if intro.js never runs (blocked/slow script/404), self-clear
       // after 3.2s so the page is never permanently curtained. Critically, this
@@ -67,14 +125,21 @@
       // right away rather than after the 420ms fade so recovery isn't delayed
       // by an animation nobody asked for in this already-degraded path.
       window.__SM_INTRO.safety = setTimeout(function () {
-        if (panel && panel.parentNode) {
-          panel.style.transition = "opacity .4s";
+        if (!panel.parentNode || window.__SM_INTRO.doneFired) return;
+        var root = document.getElementById("root");
+        if (root && root.childElementCount) {
+          var revealShell = function () {
+            if (panel.parentNode) panel.remove();
+            window.__SM_INTRO.release("head-safety-shell");
+          };
+          panel.addEventListener("transitionend", revealShell, { once: true });
+          panel.style.transition = "opacity .14s ease";
           panel.style.opacity = "0";
-          setTimeout(function () { panel.remove(); }, 420);
+          setTimeout(revealShell, 190);
+        } else {
+          window.__SM_INTRO.recover("00");
         }
-        document.documentElement.classList.remove("intro-lock");
-        try { window.dispatchEvent(new CustomEvent("sm:intro-done")); } catch (e) { /* opportunistic */ }
-      }, 3200);
+      }, 3150);
     } catch (e) { /* DOM/matchMedia unavailable → just skip the intro entirely */ }
   })();
   </script>
@@ -137,11 +202,10 @@
 
   <!-- Self-hosted Cyrillic + Latin Extended type system. No CDN dependency and
        no RU-only fallback to a different editorial face. -->
-  <link rel="stylesheet" href="src/styles/fonts.css?v=215" />
+  <link rel="stylesheet" href="src/styles/fonts.css?v=217" />
 
-  <!-- The intro's iris opens onto the hero photo — preload it so the porthole
-       reveals a decoded image, not a late-arriving blank. Desktop only; mobile
-       uses orbital-station.webp (much smaller, arrives well within 2.4s). -->
+  <!-- Preload exactly the Hero media selected by the current layout. The
+       readiness gate decodes this resource before it releases the shell. -->
   <link rel="preload" as="image" href="assets/hero-cockpit.webp" fetchpriority="high" media="(min-width: 901px)" />
   <link rel="preload" as="image" href="assets/orbital-station.webp" fetchpriority="high" media="(max-width: 900px)" />
 
@@ -156,11 +220,11 @@
        ═══════════════════════════════════════════════════════════════════ -->
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="src/styles/styles.css?v=215" />
-  <link rel="stylesheet" href="src/styles/sections.css?v=215" />
-  <link rel="stylesheet" href="src/styles/cursor.css?v=215" />
-  <link rel="stylesheet" href="src/styles/cv-doc.css?v=215" />
-  <link rel="stylesheet" href="src/styles/features.css?v=215" />
+  <link rel="stylesheet" href="src/styles/styles.css?v=217" />
+  <link rel="stylesheet" href="src/styles/sections.css?v=217" />
+  <link rel="stylesheet" href="src/styles/cursor.css?v=217" />
+  <link rel="stylesheet" href="src/styles/cv-doc.css?v=217" />
+  <link rel="stylesheet" href="src/styles/features.css?v=217" />
 
   <!-- Three.js r128 -->
   <script src="vendor/three.min.js"></script>
@@ -193,6 +257,7 @@
     if (!root || root.childElementCount) return;
     var intro = document.getElementById("sm-intro");
     if (intro) intro.remove();
+    document.documentElement.classList.remove("intro-lock");
     root.innerHTML =
       '<main class="fatal-shell" role="alert">' +
         '<span class="fatal-code mono">RECOVERY · 00</span>' +
@@ -203,36 +268,36 @@
           '<a href="https://t.me/killallofthem13">Написать в Telegram</a>' +
         '</div>' +
       '</main>';
-  }, 9000);
+  }, 4200);
   </script>
 
   <!-- Content + i18n -->
-  <script src="src/content/product-registry.js?v=215"></script>
-  <script src="src/content/content.js?v=215"></script>
+  <script src="src/content/product-registry.js?v=217"></script>
+  <script src="src/content/content.js?v=217"></script>
 
   <!-- Intro timeline — consumes window.__SM_INTRO stashed by the head-boot
        script above. Loads before the other engine scripts so it can start
        its rAF loop as early as possible; it needs no content/theme state. -->
-  <script src="src/engine/intro.js?v=215"></script>
+  <script src="src/engine/intro.js?v=217"></script>
 
   <!-- Engine: theming, motion observers, background WebGL, view transitions.
        (v56 — single Ember theme; theme-transition.js + the multi-theme
        switcher removed.) -->
-  <script src="src/engine/themes.js?v=215"></script>
-  <script src="src/engine/perf.js?v=215"></script>
-  <script src="src/engine/motion-runtime.js?v=215"></script>
-  <script src="src/engine/acts.js?v=215"></script>
-  <script src="src/engine/sound.js?v=215"></script>
-  <script src="src/engine/gh.js?v=215"></script>
-  <script src="src/engine/motion.js?v=215"></script>
-  <script src="src/engine/img-fx.js?v=215"></script>
-  <script src="src/engine/scene-cinema.js?v=215"></script>
+  <script src="src/engine/themes.js?v=217"></script>
+  <script src="src/engine/perf.js?v=217"></script>
+  <script src="src/engine/motion-runtime.js?v=217"></script>
+  <script src="src/engine/acts.js?v=217"></script>
+  <script src="src/engine/sound.js?v=217"></script>
+  <script src="src/engine/gh.js?v=217"></script>
+  <script src="src/engine/motion.js?v=217"></script>
+  <script src="src/engine/img-fx.js?v=217"></script>
+  <script src="src/engine/scene-cinema.js?v=217"></script>
 
   <!-- Components + app — PRE-COMPILED plain JS (generated by build.js from
        the .jsx sources). After editing any .jsx, run `node build.js`. -->
-  <script src="src/components/tweaks-panel.js?v=215"></script>
-  <script src="src/components/components-1.js?v=215"></script>
-  <script src="src/components/components-2.js?v=215"></script>
-  <script src="src/components/app.js?v=215"></script>
+  <script src="src/components/tweaks-panel.js?v=217"></script>
+  <script src="src/components/components-1.js?v=217"></script>
+  <script src="src/components/components-2.js?v=217"></script>
+  <script src="src/components/app.js?v=217"></script>
 </body>
 </html>

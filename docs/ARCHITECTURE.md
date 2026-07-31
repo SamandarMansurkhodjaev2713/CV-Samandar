@@ -187,6 +187,37 @@ The complete tier, ownership, fallback and acceptance rules are defined in
 `docs/MOTION-PERFORMANCE.md` and enforced by source validation plus lifecycle
 tests.
 
+## Intro and navigation contract
+
+The first-load scene is a readiness gate, not a fake progress timer.
+`index.html` paints its semantic frame before the application bundle executes;
+`src/engine/intro.js` owns the visual sequence; the mounted application reports
+three independent readiness states:
+
+```text
+shell mounted
+local fonts ready or timed fallback
+Hero image decoded or timed fallback
+```
+
+The application root is inert and hidden from assistive technology only while
+the intro dialog owns interaction. Release is idempotent and always removes the
+scroll lock, `inert`, `aria-hidden` and `aria-busy`. A deep link bypasses the
+scene entirely. If the application cannot mount, the intro promotes a useful
+recovery surface; if it mounts after that recovery, the healthy application
+replaces the fallback automatically.
+
+Navigation has one canonical order: the real
+`section[data-section]` DOM sequence. The desktop counter, fullscreen menu and
+mobile twelve-part rail consume that same order. Active chapter state is
+published by the shared motion runtime. The fullscreen menu is a real modal:
+all outside controls become inert, focus is trapped inside, Escape restores the
+trigger and a chapter choice restores focus to that chapter's heading after the
+closing transition.
+
+The complete timing, focus, hash, safe-area and recovery rules are defined in
+`docs/INTRO-NAVIGATION.md`.
+
 ## Versioning
 
 Static browser assets use one cache version in `index.html`. A release-changing

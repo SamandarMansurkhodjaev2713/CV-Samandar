@@ -51,7 +51,10 @@ const LINKS = {
   email: "sam4k27@gmail.com"
 };
 const NAV_SECTIONS = ["about", "projects", "skills", "services", "cv", "faq", "contact"];
-const FULL_MENU_SECTIONS = ["hero", "signal", "about", "projects", "skills", "services", "cv", "process", "builder", "faq", "trust", "contact"];
+// Canonical narrative order. Keep this identical to the section order in
+// <main>; tests reject drift so menu numbering, capsule telemetry and the
+// mobile rail can never describe three different pages.
+const FULL_MENU_SECTIONS = ["hero", "signal", "about", "projects", "builder", "skills", "services", "cv", "process", "faq", "trust", "contact"];
 const FULL_MENU_LABELS = {
   ru: {
     hero: "Старт",
@@ -103,45 +106,102 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 function useScrollEngine(setActiveSection) {
   useE(() => {
     const progressEl = document.querySelector(".scroll-progress");
+    const sections = [...document.querySelectorAll("section[data-section]")];
+    const runtime = window.__SM_MOTION_RUNTIME;
+    let current = null;
+    let pending = null;
+    let metrics = [];
+    let maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    let progress = 0;
+    let layoutDirty = true;
+    function publish(id) {
+      if (!id || id === current) return;
+      current = id;
+      setActiveSection(id);
+      document.body.setAttribute("data-active-section", id);
+      try {
+        window.dispatchEvent(new CustomEvent("sm:section", {
+          detail: {
+            id
+          }
+        }));
+      } catch (err) {/* optional event channel */}
+    }
+    if (runtime && typeof runtime.subscribe === "function") {
+      const unsubscribe = runtime.subscribe({
+        id: "app-scroll-state",
+        priority: 4,
+        measure(context) {
+          if (layoutDirty || context.input.resized || !metrics.length) {
+            const scrollY = context.input.scrollY;
+            metrics = sections.map(section => {
+              const rect = section.getBoundingClientRect();
+              return {
+                id: section.getAttribute("data-section"),
+                top: rect.top + scrollY,
+                bottom: rect.bottom + scrollY
+              };
+            });
+            maxScroll = Math.max(0, document.documentElement.scrollHeight - context.input.viewportHeight);
+            layoutDirty = false;
+          }
+          progress = maxScroll > 0 ? context.input.scrollY / maxScroll : 0;
+          const anchor = context.input.scrollY + Math.min(320, Math.max(112, context.input.viewportHeight * 0.32));
+          pending = metrics.length ? metrics[0].id : "hero";
+          for (let i = 0; i < metrics.length; i += 1) {
+            if (metrics[i].top <= anchor) pending = metrics[i].id;else break;
+          }
+        },
+        mutate() {
+          if (progressEl) progressEl.style.transform = `scaleX(${Math.max(0, Math.min(1, progress)).toFixed(4)})`;
+          publish(pending);
+        }
+      });
+      let resizeObserver = null;
+      if (typeof ResizeObserver === "function") {
+        resizeObserver = new ResizeObserver(() => {
+          layoutDirty = true;
+          runtime.wake("app-layout");
+        });
+        const main = document.getElementById("main");
+        if (main) resizeObserver.observe(main);
+      }
+      runtime.wake("app-scroll-init");
+      return () => {
+        unsubscribe();
+        if (resizeObserver) resizeObserver.disconnect();
+      };
+    }
+
+    // Recovery path for old/embedded browsers where the shared runtime did not
+    // initialize. It keeps content navigable; production uses the path above.
     let raf = 0;
-    function tick() {
+    function fallbackTick() {
       raf = 0;
       const max = document.documentElement.scrollHeight - window.innerHeight;
-      const y = max > 0 ? window.scrollY / max : 0;
-      if (progressEl) progressEl.style.transform = `scaleX(${y.toFixed(4)})`;
+      const ratio = max > 0 ? window.scrollY / max : 0;
+      if (progressEl) progressEl.style.transform = `scaleX(${ratio.toFixed(4)})`;
+      const anchor = window.scrollY + Math.min(320, Math.max(112, window.innerHeight * 0.32));
+      let next = sections[0] && sections[0].getAttribute("data-section");
+      sections.forEach(section => {
+        if (section.offsetTop <= anchor) next = section.getAttribute("data-section");
+      });
+      publish(next);
     }
     function onScroll() {
-      if (!raf) raf = requestAnimationFrame(tick);
+      if (!raf) raf = requestAnimationFrame(fallbackTick);
     }
     window.addEventListener("scroll", onScroll, {
       passive: true
     });
-    tick();
-    const sections = document.querySelectorAll("section[data-section]");
-    const io = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (e.isIntersecting && e.intersectionRatio > 0.3) {
-          const id = e.target.getAttribute("data-section");
-          setActiveSection(id);
-          // Single source of truth for "which section is the reader in" —
-          // acts.js (colour dramaturgy) and future engines subscribe to this.
-          try {
-            window.dispatchEvent(new CustomEvent("sm:section", {
-              detail: {
-                id
-              }
-            }));
-          } catch (err) {/* opportunistic */}
-        }
-      });
-    }, {
-      threshold: [0.3, 0.5, 0.7]
+    window.addEventListener("resize", onScroll, {
+      passive: true
     });
-    sections.forEach(s => io.observe(s));
+    fallbackTick();
     return () => {
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
       if (raf) cancelAnimationFrame(raf);
-      io.disconnect();
     };
   }, []);
 }
@@ -247,7 +307,16 @@ function Nav({
   active
 }) {
   const [open, setOpen] = useS(false);
+  const [menuPresent, setMenuPresent] = useS(false);
   const [peek, setPeek] = useS(null);
+  const burgerRef = useR(null);
+  const closeRef = useR(null);
+  const menuRef = useR(null);
+  const destinationRef = useR(null);
+  const menuReleaseRef = useR({
+    timer: 0,
+    release: null
+  });
   // Capsule state — the bar condenses into a floating pill once the reader
   // leaves the very top. Passive + rAF-throttled; no layout reads besides scrollY.
   const [capsule, setCapsule] = useS(false);
@@ -256,8 +325,52 @@ function Nav({
   // disagree with the actual page.
   const [secOrder, setSecOrder] = useS([]);
   const [clock, setClock] = useS("");
+  const menuCopy = {
+    ru: {
+      dialog: "Навигация по сайту",
+      open: "Открыть меню",
+      close: "Закрыть меню",
+      language: "Язык",
+      sound: "Звук интерфейса"
+    },
+    en: {
+      dialog: "Site navigation",
+      open: "Open menu",
+      close: "Close menu",
+      language: "Language",
+      sound: "Interface sound"
+    },
+    uz: {
+      dialog: "Sayt bo‘yicha navigatsiya",
+      open: "Menyuni ochish",
+      close: "Menyuni yopish",
+      language: "Til",
+      sound: "Interfeys ovozi"
+    }
+  }[lang] || {
+    dialog: "Site navigation",
+    open: "Open menu",
+    close: "Close menu",
+    language: "Language",
+    sound: "Interface sound"
+  };
   useE(() => {
     setSecOrder([...document.querySelectorAll("section[data-section]")].map(el => el.getAttribute("data-section")));
+    const runtime = window.__SM_MOTION_RUNTIME;
+    if (runtime && typeof runtime.subscribe === "function") {
+      const unsubscribe = runtime.subscribe({
+        id: "nav-capsule",
+        priority: 5,
+        mutate(context) {
+          setCapsule(context.input.scrollY > 64);
+        }
+      });
+      runtime.wake("nav-capsule-init");
+      return unsubscribe;
+    }
+
+    // Degraded fallback only. Production navigation consumes the shared input
+    // stream and does not install a second high-frequency scroll listener.
     let raf = 0;
     function read() {
       raf = 0;
@@ -280,25 +393,109 @@ function Nav({
   // Tashkent clock only ticks while the menu is visible (zero idle cost).
   useE(() => {
     if (!open) return;
+    if (menuReleaseRef.current.timer) {
+      window.clearTimeout(menuReleaseRef.current.timer);
+      menuReleaseRef.current.timer = 0;
+    }
+    if (menuReleaseRef.current.release) {
+      menuReleaseRef.current.release();
+      menuReleaseRef.current.release = null;
+    }
+    const previouslyFocused = document.activeElement;
+    const root = document.documentElement;
+    const inertTargets = [document.getElementById("main"), document.querySelector("footer"), document.querySelector(".skip-link"), document.querySelector(".mobile-dock"), document.querySelector(".nav .brand"), document.querySelector(".nav .nav-counter"), document.querySelector(".nav .nav-links"), document.querySelector(".nav .lang"), document.querySelector(".nav .nav-cta"), burgerRef.current].filter(Boolean);
+    const inertState = inertTargets.map(element => ({
+      element,
+      inert: Boolean(element.inert),
+      ariaHidden: element.getAttribute("aria-hidden")
+    }));
     const prev = document.body.style.overflow;
+    const prevRoot = root.style.overflow;
     document.body.style.overflow = "hidden";
+    root.style.overflow = "hidden";
+    root.classList.add("menu-lock");
+    inertTargets.forEach(element => {
+      element.inert = true;
+      element.setAttribute("aria-hidden", "true");
+    });
     const onKey = e => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        e.preventDefault();
+        destinationRef.current = null;
+        setOpen(false);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const menu = menuRef.current;
+      const controls = (menu ? [...menu.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')] : []).filter((element, index, all) => element && !element.inert && all.indexOf(element) === index);
+      if (!controls.length) return;
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener("keydown", onKey);
+    window.requestAnimationFrame(() => {
+      if (closeRef.current) closeRef.current.focus({
+        preventScroll: true
+      });
+    });
     function tick() {
       const d = new Date(Date.now() + (5 * 60 + new Date().getTimezoneOffset()) * 60000);
       setClock([d.getHours(), d.getMinutes(), d.getSeconds()].map(n => String(n).padStart(2, "0")).join(":"));
     }
     tick();
     const iv = window.setInterval(tick, 1000);
-    return () => {
+    const release = () => {
       document.body.style.overflow = prev;
+      root.style.overflow = prevRoot;
+      root.classList.remove("menu-lock");
+      inertState.forEach(({
+        element,
+        inert,
+        ariaHidden
+      }) => {
+        element.inert = inert;
+        if (ariaHidden === null) element.removeAttribute("aria-hidden");else element.setAttribute("aria-hidden", ariaHidden);
+      });
       window.removeEventListener("keydown", onKey);
       window.clearInterval(iv);
+      const destination = destinationRef.current;
+      destinationRef.current = null;
+      if (destination) {
+        const target = document.getElementById(destination);
+        const focusTarget = target && (target.querySelector("h1, h2, h3") || target);
+        if (focusTarget && focusTarget.isConnected) {
+          focusTarget.setAttribute("tabindex", "-1");
+          focusTarget.focus({
+            preventScroll: true
+          });
+          focusTarget.addEventListener("blur", () => focusTarget.removeAttribute("tabindex"), {
+            once: true
+          });
+        }
+      } else if (previouslyFocused && previouslyFocused.isConnected && typeof previouslyFocused.focus === "function") {
+        previouslyFocused.focus({
+          preventScroll: true
+        });
+      }
+      menuReleaseRef.current.release = null;
+      menuReleaseRef.current.timer = 0;
+      setMenuPresent(false);
+    };
+    menuReleaseRef.current.release = release;
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.clearInterval(iv);
+      menuReleaseRef.current.timer = window.setTimeout(release, 580);
     };
   }, [open]);
-  const total = secOrder.length || 11;
+  const total = secOrder.length || FULL_MENU_SECTIONS.length;
   const idx = Math.max(0, secOrder.indexOf(active));
   const num = String(idx + 1).padStart(2, "0");
   const extra = EXTRA_SECTION_LABELS[lang] || EXTRA_SECTION_LABELS.ru;
@@ -306,8 +503,23 @@ function Nav({
   const progress = total > 1 ? idx / (total - 1) : 0;
   function go(e, id) {
     e.preventDefault();
+    if (open) destinationRef.current = id;
     setOpen(false);
     flyTo(id);
+  }
+  function closeMenu() {
+    destinationRef.current = null;
+    haptic("toggle");
+    setOpen(false);
+  }
+  function toggleMenu() {
+    if (open) {
+      closeMenu();
+      return;
+    }
+    haptic("toggle");
+    setMenuPresent(true);
+    setOpen(true);
   }
   return (
     /*#__PURE__*/
@@ -356,6 +568,7 @@ function Nav({
       href: `#${k}`,
       onClick: e => go(e, k),
       className: active === k ? "active" : "",
+      "aria-current": active === k ? "location" : undefined,
       "data-cursor": "link",
       "data-cursor-label": `→ ${t.nav[k]}`
     }, t.nav[k])))), /*#__PURE__*/React.createElement("div", {
@@ -363,7 +576,7 @@ function Nav({
     }, /*#__PURE__*/React.createElement("div", {
       className: "lang",
       role: "group",
-      "aria-label": "language"
+      "aria-label": menuCopy.language
     }, ["ru", "en", "uz"].map(L => /*#__PURE__*/React.createElement("button", {
       key: L,
       onClick: () => setLang(L),
@@ -380,18 +593,33 @@ function Nav({
       className: "nav-cta-dot",
       "aria-hidden": "true"
     }), t.hero.cta_primary), /*#__PURE__*/React.createElement("button", {
+      ref: burgerRef,
       type: "button",
       className: "nav-burger",
-      "aria-label": open ? "Close menu" : "Open menu",
+      "aria-label": open ? menuCopy.close : menuCopy.open,
       "aria-expanded": open,
-      onClick: () => {
-        haptic("toggle");
-        setOpen(o => !o);
-      }
+      "aria-controls": "site-menu",
+      onClick: toggleMenu
     }, /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null))))), /*#__PURE__*/React.createElement("div", {
+      ref: menuRef,
+      id: "site-menu",
       className: `nav-menu ${open ? "is-open" : ""}`,
-      "aria-hidden": !open
-    }, /*#__PURE__*/React.createElement("div", {
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-label": menuCopy.dialog,
+      "aria-hidden": !menuPresent
+    }, /*#__PURE__*/React.createElement("button", {
+      ref: closeRef,
+      type: "button",
+      className: "nav-menu-close",
+      "aria-label": menuCopy.close,
+      onClick: closeMenu
+    }, /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null)), /*#__PURE__*/React.createElement("div", {
+      className: "nav-menu-brand mono",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "brand-mark"
+    }), /*#__PURE__*/React.createElement("span", null, "SAMANDAR \xB7 INDEX / ", num)), /*#__PURE__*/React.createElement("div", {
       className: "nav-menu-glow",
       "aria-hidden": "true"
     }), /*#__PURE__*/React.createElement("div", {
@@ -408,6 +636,7 @@ function Nav({
       href: `#${k}`,
       onClick: e => go(e, k),
       className: active === k ? "active" : "",
+      "aria-current": active === k ? "location" : undefined,
       onMouseEnter: () => setPeek({
         k,
         i
@@ -455,14 +684,15 @@ function Nav({
     }, "\u2192")), /*#__PURE__*/React.createElement("button", {
       type: "button",
       className: "sound-toggle mono",
-      "aria-label": "Toggle UI sound"
+      "aria-label": menuCopy.sound,
+      "aria-pressed": document.documentElement.classList.contains("sm-sound")
     }, /*#__PURE__*/React.createElement("span", {
       className: "sound-toggle-dot",
       "aria-hidden": "true"
     }), "SOUND"), /*#__PURE__*/React.createElement("div", {
       className: "lang nav-menu-lang",
       role: "group",
-      "aria-label": "language"
+      "aria-label": menuCopy.language
     }, ["ru", "en", "uz"].map(L => /*#__PURE__*/React.createElement("button", {
       key: L,
       onClick: () => setLang(L),
@@ -473,142 +703,47 @@ function Nav({
     }, /*#__PURE__*/React.createElement("span", null, "TASHKENT \xB7 41.31\xB0N 69.24\xB0E"), /*#__PURE__*/React.createElement("span", null, "UTC+5 \xB7 ", clock), /*#__PURE__*/React.createElement("span", null, "EXECUTIVE AI CODE LAB \xB7 v.2026"))))))
   );
 }
-
-// ── Mobile UI overlay primitives ──────────────────────────────────────────
-// Both dock + sticky CTA share the same visibility rule: appear after the user
-// scrolls past hero, hide near contact. We use the SAME hooks rather than two
-// observers to keep the truth source single and avoid races between them.
-
-function useMidScrollVisibility() {
-  const [visible, setVisible] = useS(false);
-  useE(() => {
-    const heroEl = document.getElementById("hero");
-    const contactEl = document.getElementById("contact");
-    if (!heroEl || !contactEl) return undefined;
-
-    // Truth source: IntersectionObserver where available.
-    let inHero = true;
-    let inContact = false;
-    const io = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (e.target.id === "hero") inHero = e.isIntersecting;else if (e.target.id === "contact") inContact = e.isIntersecting;
-      });
-      setVisible(!inHero && !inContact);
-    }, {
-      threshold: 0.1
-    });
-    io.observe(heroEl);
-    io.observe(contactEl);
-
-    // Scroll-based fallback — covers environments where IO is unreliable
-    // (some embedded webviews, headless previews). Computes visibility from
-    // bounding rects each rAF-throttled scroll event.
-    let raf = 0;
-    function recompute() {
-      raf = 0;
-      const vh = window.innerHeight;
-      const heroRect = heroEl.getBoundingClientRect();
-      const contactRect = contactEl.getBoundingClientRect();
-      const heroVisible = heroRect.top < vh && heroRect.bottom > 0;
-      const contactVisible = contactRect.top < vh && contactRect.bottom > 0;
-      inHero = heroVisible;
-      inContact = contactVisible;
-      setVisible(!heroVisible && !contactVisible);
-    }
-    function onScroll() {
-      if (!raf) raf = requestAnimationFrame(recompute);
-    }
-    window.addEventListener("scroll", onScroll, {
-      passive: true
-    });
-    window.addEventListener("resize", onScroll, {
-      passive: true
-    });
-    recompute();
-    return function cleanup() {
-      io.disconnect();
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, []);
-  return visible;
-}
-
-// The page has 11 real [data-section] chapters, but the dock only has room for
-// the 7 that mirror the primary nav menu (about/projects/skills/services/cv/
-// faq/contact) — signal, process ("Method") and trust ("Quality") ride between
-// them with no dot of their own. The OLD logic compared activeSection to
-// NAV_SECTIONS with a plain `indexOf`: for any of those 3 "gap" sections that
-// returns -1, which silently fell back to index 0 ("about") for BOTH the label
-// text and (via a separate, un-synced comparison) left every dot unlit — so a
-// reader deep in Method or Quality saw the indicator confidently claim "01 · О
-// себе" while no dot agreed with it. That's the "misleading" bug.
-// Fix: resolve every real section to the nearest NAV_SECTIONS entry AT OR
-// BEFORE it in actual DOM order (standard scrollspy behavior — highlight the
-// last landmark the reader has passed) and derive BOTH the dot and the label
-// from that single resolved index, so they can never disagree.
-function useSectionOrder() {
-  const [order, setOrder] = useS(null);
-  useE(() => {
-    setOrder([...document.querySelectorAll("[data-section]")].map(el => el.getAttribute("data-section")));
-  }, []);
-  return order;
-}
-function resolveNavIndex(activeSection, order) {
-  if (!order) return 0;
-  const pos = order.indexOf(activeSection);
-  if (pos === -1) return 0;
-  for (let i = pos; i >= 0; i--) {
-    const navIdx = NAV_SECTIONS.indexOf(order[i]);
-    if (navIdx !== -1) return navIdx;
-  }
-  return 0; // nothing but hero/signal precede us — next landmark is "about"
-}
 function MobileScrollDock({
   t,
   lang,
   activeSection,
   visible
 }) {
-  // 6 dots for the main NAV sections. Tap → smooth scroll + light haptic.
-  function onDotClick(id) {
-    haptic("tap");
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({
-      behavior: "smooth",
-      block: "start"
-    });
-  }
-  const order = useSectionOrder();
-  const activeIdx = resolveNavIndex(activeSection, order);
-  const activeId = NAV_SECTIONS[activeIdx];
+  // The rail is a truthful 12-chapter status map, not twelve tiny fake
+  // buttons. Navigation lives in the persistent menu; the dock communicates
+  // exact position and preserves one clear touch action.
+  const activeIdx = Math.max(0, FULL_MENU_SECTIONS.indexOf(activeSection));
   const extra = EXTRA_SECTION_LABELS[lang] || EXTRA_SECTION_LABELS.ru;
-  const activeLabel = t.nav && t.nav[activeSection] || extra[activeSection] || t.nav && t.nav[activeId] || "";
-  const chapterIdx = Math.max(0, (order || []).indexOf(activeSection));
+  const activeLabel = t.nav && t.nav[activeSection] || extra[activeSection] || "";
+  function onContactClick(e) {
+    e.preventDefault();
+    haptic("toggle");
+    flyTo("contact");
+  }
   return /*#__PURE__*/React.createElement("div", {
     className: `mobile-dock ${visible ? "is-visible" : ""}`,
-    role: "navigation",
-    "aria-label": "sections"
+    role: "region",
+    "aria-label": lang === "ru" ? "Положение на странице" : lang === "uz" ? "Sahifadagi joylashuv" : "Page position"
   }, /*#__PURE__*/React.createElement("ol", {
-    className: "mobile-dock-dots"
-  }, NAV_SECTIONS.map((id, i) => /*#__PURE__*/React.createElement("li", {
+    className: "mobile-dock-dots",
+    "aria-hidden": "true"
+  }, FULL_MENU_SECTIONS.map((id, i) => /*#__PURE__*/React.createElement("li", {
     key: id
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: `mobile-dock-dot ${i === activeIdx ? "is-active" : ""}`,
-    "aria-label": t.nav && t.nav[id] ? t.nav[id] : id,
-    onClick: () => onDotClick(id)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: `mobile-dock-dot ${i === activeIdx ? "is-active" : ""}`
   })))), /*#__PURE__*/React.createElement("div", {
-    className: "mobile-dock-label mono",
-    "aria-live": "polite"
+    className: "mobile-dock-label mono"
   }, /*#__PURE__*/React.createElement("span", {
     className: "mobile-dock-label-num"
-  }, "/", String(chapterIdx + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("span", null, activeLabel)), /*#__PURE__*/React.createElement("a", {
+  }, "/", String(activeIdx + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("span", null, activeLabel)), /*#__PURE__*/React.createElement("a", {
     className: "mobile-dock-cta",
     href: "#contact",
-    onClick: () => haptic("toggle")
-  }, /*#__PURE__*/React.createElement("span", null, t.hero.cta_primary), /*#__PURE__*/React.createElement("span", {
+    onClick: onContactClick
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mobile-dock-cta-long"
+  }, t.hero.cta_primary), /*#__PURE__*/React.createElement("span", {
+    className: "mobile-dock-cta-short"
+  }, lang === "ru" ? "Обсудить" : lang === "uz" ? "Muhokama" : "Discuss"), /*#__PURE__*/React.createElement("span", {
     className: "arrow",
     "aria-hidden": "true"
   }, "\u2192")));
@@ -671,6 +806,121 @@ function App() {
   const canvasRef = useR(null);
   const lang = tweaks.lang in window.CONTENT ? tweaks.lang : "ru";
   const t = window.CONTENT[lang];
+
+  // The opening sequence is a real readiness gate, not a decorative timer.
+  // While it owns the viewport the application shell is removed from the
+  // accessibility tree; readiness is published as three explicit signals.
+  useE(() => {
+    const intent = window.__SM_INTRO;
+    const root = document.getElementById("root");
+    if (!intent || !intent.panel) return;
+
+    // The hard ceiling may have shown recovery milliseconds before React
+    // mounted. If the shell subsequently arrives, promote it immediately
+    // instead of leaving a stale recovery dialog over a healthy application.
+    if (intent.doneFired) {
+      if (intent.reason === "recovery" && intent.panel.parentNode && root && root.childElementCount) {
+        root.inert = true;
+        root.setAttribute("aria-hidden", "true");
+        intent.prepared = true;
+        let promoted = false;
+        const promoteShell = () => {
+          if (promoted) return;
+          promoted = true;
+          if (intent.panel.parentNode) intent.panel.remove();
+          root.inert = false;
+          root.removeAttribute("aria-hidden");
+        };
+        intent.panel.addEventListener("transitionend", promoteShell, {
+          once: true
+        });
+        intent.panel.style.transition = "opacity .16s ease";
+        intent.panel.style.opacity = "0";
+        window.setTimeout(promoteShell, 210);
+      } else if (root) {
+        root.inert = false;
+        root.removeAttribute("aria-hidden");
+      }
+      return;
+    }
+    if (!intent.panel.parentNode) return;
+    const previousAriaHidden = root ? root.getAttribute("aria-hidden") : null;
+    const previousInert = root ? root.inert : false;
+    let restored = false;
+    let heroSettled = false;
+    let fontTimer = 0;
+    let heroTimer = 0;
+    const heroImage = new Image();
+    if (root) {
+      root.inert = true;
+      root.setAttribute("aria-hidden", "true");
+    }
+    function markReady(key, fallback) {
+      if (!intent.ready) intent.ready = {
+        shell: false,
+        fonts: false,
+        hero: false
+      };
+      if (fallback) {
+        if (!intent.fallback) intent.fallback = {};
+        intent.fallback[key] = true;
+      }
+      if (intent.ready[key]) return;
+      intent.ready[key] = true;
+      if (typeof intent.notify === "function") intent.notify();else {
+        try {
+          window.dispatchEvent(new CustomEvent("sm:intro-readiness", {
+            detail: intent.ready
+          }));
+        } catch (e) {/* optional channel */}
+      }
+    }
+    function restoreShell() {
+      if (restored) return;
+      restored = true;
+      if (!root) return;
+      root.inert = previousInert;
+      if (previousAriaHidden == null) root.removeAttribute("aria-hidden");else root.setAttribute("aria-hidden", previousAriaHidden);
+    }
+    function settleHero(fallback) {
+      if (heroSettled) return;
+      heroSettled = true;
+      if (heroTimer) window.clearTimeout(heroTimer);
+      document.documentElement.toggleAttribute("data-hero-media-fallback", !!fallback);
+      markReady("hero", fallback);
+    }
+    markReady("shell", false);
+    fontTimer = window.setTimeout(() => markReady("fonts", true), 1250);
+    if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === "function") {
+      document.fonts.ready.then(() => {
+        window.clearTimeout(fontTimer);
+        markReady("fonts", false);
+      }).catch(() => markReady("fonts", true));
+    } else {
+      window.clearTimeout(fontTimer);
+      markReady("fonts", true);
+    }
+    heroImage.onload = () => {
+      if (typeof heroImage.decode === "function") {
+        heroImage.decode().then(() => settleHero(false)).catch(() => settleHero(false));
+      } else {
+        settleHero(false);
+      }
+    };
+    heroImage.onerror = () => settleHero(true);
+    heroTimer = window.setTimeout(() => settleHero(true), 1500);
+    heroImage.src = window.matchMedia && window.matchMedia("(max-width: 900px)").matches ? "assets/orbital-station.webp" : "assets/hero-cockpit.webp";
+    if (heroImage.complete && heroImage.naturalWidth > 0) settleHero(false);
+    window.addEventListener("sm:intro-done", restoreShell, {
+      once: true
+    });
+    return () => {
+      window.clearTimeout(fontTimer);
+      window.clearTimeout(heroTimer);
+      window.removeEventListener("sm:intro-done", restoreShell);
+      restoreShell();
+    };
+  }, []);
 
   // Backfill CV doc fields (id, langs, strengths, foot) so the resume layout
   // renders even if the content bundles haven't been extended yet.
@@ -861,8 +1111,21 @@ function App() {
     }
     let cancelled = false;
     const timers = [];
+    let resizeObserver = null;
+    let layoutTimer = 0;
+    function stopSettling() {
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+        resizeObserver = null;
+      }
+      if (layoutTimer) {
+        window.clearTimeout(layoutTimer);
+        layoutTimer = 0;
+      }
+    }
     function cancelOnIntent() {
       cancelled = true;
+      stopSettling();
     }
     window.addEventListener("wheel", cancelOnIntent, {
       passive: true,
@@ -891,7 +1154,7 @@ function App() {
         root.style.scrollBehavior = "auto";
         try {
           el.scrollIntoView({
-            behavior: "instant",
+            behavior: "auto",
             block: id.indexOf("proj-") === 0 ? "center" : "start"
           });
         } finally {
@@ -903,11 +1166,27 @@ function App() {
     // a different moment. Re-assert the same deterministic target across those
     // milestones, but stop instantly on any real user intent so the page never
     // fights manual scrolling.
-    [0, 120, 360, 760, 1280].forEach(delay => {
+    [0, 120, 360, 760, 1280, 2200].forEach(delay => {
       timers.push(window.setTimeout(tryScroll, delay));
     });
+    const main = document.getElementById("main");
+    if (main && typeof ResizeObserver === "function") {
+      resizeObserver = new ResizeObserver(() => {
+        if (cancelled) return;
+        if (layoutTimer) window.clearTimeout(layoutTimer);
+        layoutTimer = window.setTimeout(tryScroll, 40);
+      });
+      resizeObserver.observe(main);
+    }
+    if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === "function") {
+      document.fonts.ready.then(() => {
+        if (!cancelled) tryScroll();
+      }).catch(() => {});
+    }
+    timers.push(window.setTimeout(stopSettling, 4200));
     return () => {
       cancelled = true;
+      stopSettling();
       timers.forEach(timer => window.clearTimeout(timer));
       window.removeEventListener("wheel", cancelOnIntent);
       window.removeEventListener("touchstart", cancelOnIntent);
@@ -970,6 +1249,9 @@ function App() {
       if (window.Motion && typeof window.Motion.dispose === "function") {
         window.Motion.dispose();
       }
+      if (window.__SM_ACTS && typeof window.__SM_ACTS.dispose === "function") {
+        window.__SM_ACTS.dispose();
+      }
     };
   }, []);
   useE(() => {
@@ -978,11 +1260,28 @@ function App() {
     return () => cancelAnimationFrame(id);
   }, [lang, tweaks.density]);
 
-  // Mid-scroll visibility for mobile dock + sticky CTA.
-  const midScrollVisible = useMidScrollVisibility();
+  // Active section is the only source of truth for the mobile command dock.
+  const midScrollVisible = activeSection !== "hero" && activeSection !== "signal" && activeSection !== "contact";
+  function skipToMain(event) {
+    event.preventDefault();
+    const main = document.getElementById("main");
+    if (!main) return;
+    try {
+      history.replaceState(null, "", "#main");
+    } catch (e) {/* optional history */}
+    main.focus({
+      preventScroll: true
+    });
+    main.scrollIntoView({
+      behavior: "auto",
+      block: "start"
+    });
+  }
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("a", {
     href: "#main",
-    className: "skip-link"
+    className: "skip-link",
+    "data-no-cinema": true,
+    onClick: skipToMain
   }, t.nav && t.nav.skip || "К содержимому"), /*#__PURE__*/React.createElement("div", {
     className: "bg-noise"
   }), /*#__PURE__*/React.createElement("div", {
@@ -993,7 +1292,8 @@ function App() {
     setLang: v => setTweak("lang", v),
     active: activeSection
   }), /*#__PURE__*/React.createElement("main", {
-    id: "main"
+    id: "main",
+    tabIndex: "-1"
   }, /*#__PURE__*/React.createElement("div", {
     className: "pin-host pin-host--hero"
   }, /*#__PURE__*/React.createElement(Hero, {

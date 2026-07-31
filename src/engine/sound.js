@@ -20,6 +20,13 @@
   var master = null;
   var on = false;
 
+  function syncControls() {
+    var controls = document.querySelectorAll(".sound-toggle");
+    for (var i = 0; i < controls.length; i++) {
+      controls[i].setAttribute("aria-pressed", on ? "true" : "false");
+    }
+  }
+
   function ensureCtx() {
     if (ctx) return true;
     try {
@@ -89,6 +96,7 @@
   function setOn(next) {
     on = !!next && ensureCtx();
     document.documentElement.classList.toggle("sm-sound", on);
+    syncControls();
     try { localStorage.setItem(KEY, on ? "1" : "0"); } catch (e) { /* opportunistic */ }
     if (on) play("tick"); // immediate confirmation beat
   }
@@ -111,6 +119,7 @@
   var saved = null;
   try { saved = localStorage.getItem(KEY); } catch (e) { /* opportunistic */ }
   if (saved === "1") {
+    on = true;
     // Defer creation to the first real interaction (autoplay policy).
     var arm = function () {
       window.removeEventListener("pointerdown", arm, true);
@@ -122,5 +131,11 @@
     document.documentElement.classList.add("sm-sound"); // visual state now
   }
 
-  window.SMSound = { play: play, set: setOn, isOn: function () { return on; } };
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", syncControls, { once: true });
+  } else {
+    syncControls();
+  }
+
+  window.SMSound = { play: play, set: setOn, isOn: function () { return on; }, sync: syncControls };
 })();

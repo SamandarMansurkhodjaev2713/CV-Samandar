@@ -1,411 +1,576 @@
-// intro.js — "Boot Sequence" loader.
-// Runs on every full page load (head-boot in index.html creates #sm-intro and
-// stashes window.__SM_INTRO = {mode, panel}; this file only runs the
-// timeline — it never decides whether to show).
+// Readiness-driven opening sequence.
 //
-// Design: an honest-feeling technical boot readout (activetheory.net-style —
-// a real loader, not a cinematic "story"). CORE.AI status label, a large
-// percentage counter, a thin progress line, warm ambient light + a few
-// drifting motes. Replaces the earlier "Core Ignition" concept (aperture
-// blades, embers, lock-ring flash) — that was a decorative narrative
-// animation; this is a loader that actually behaves like one.
-//
-// How the percentage works: the number is a calibrated boot timeline, not raw
-// byte progress (which jumps and stalls across many independent assets). The
-// real app, WebGL scene and Spline runtime load concurrently underneath. The
-// curtain has a deterministic 2–3s first-load ceiling and a shorter repeat
-// cadence, so it masks the cold start without ever holding the page hostage.
-//
-// Modes: intent.mode "full" = rich (particles + iris reveal), "fade" =
-// reduced-motion/low-tier (no particle canvas, plain fade reveal instead of
-// the spatial iris). Both show the same percentage/label/line — that part is
-// cheap (DOM + CSS transitions, no canvas) and isn't a motion concern.
+// The head script paints a complete frame zero immediately and publishes
+// window.__SM_INTRO. This module enriches that frame, but never treats elapsed
+// time as proof that the application is ready. BUILD is the visual timeline;
+// VERIFY waits for the mounted shell, critical fonts and the selected Hero
+// media (or an explicit fallback); SHIP performs the reveal.
 (function () {
   "use strict";
 
-  let CFG = {
-    EASE_MS: 1850,       // first visit: 0 → EASE_TARGET while the critical shell settles
-    EASE_TARGET: 92,
-    CREEP_MS: 340,       // visible 92 → 99 settle; never jump straight to 100
-    CEILING_MS: 2190,    // motion phase; hold + reveal lands just under three seconds
-    HOLD_MS: 180,        // brief hold at real 100% before the reveal starts
-    REVEAL_MS: 480,
-    SKIP_GRACE_MS: 500,
-    CORE_Y: 0.42,        // matches hero photo's own focal point
-    PARTICLES: 22,
+  var FIRST = {
+    visualMs: 1750,
+    minMs: 2100,
+    skipMinMs: 1300,
+    hardRevealMs: 2550,
+    recoveryMs: 2750,
+    revealMs: 420,
+    holdMs: 90,
   };
+  var REPEAT = {
+    visualMs: 1050,
+    minMs: 1350,
+    skipMinMs: 900,
+    hardRevealMs: 1650,
+    recoveryMs: 1850,
+    revealMs: 330,
+    holdMs: 60,
+  };
+  var CORE_Y = 0.42;
+  var PARTICLE_COUNT = 9;
 
-  function easeOutCubic(t) { t = t < 0 ? 0 : t > 1 ? 1 : t; return 1 - Math.pow(1 - t, 3); }
-  function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+  function clamp01(value) {
+    return value < 0 ? 0 : value > 1 ? 1 : value;
+  }
 
-  function readRGB(varName, fallback) {
+  function easeOutCubic(value) {
+    var t = clamp01(value);
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  function readRGB(name, fallback) {
     try {
-      var v = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
-      if (v) {
-        var parts = v.split(/[\s,/]+/).map(Number).filter(function (n) { return !isNaN(n); });
-        if (parts.length >= 3) return parts.slice(0, 3);
-      }
-    } catch (e) { /* opportunistic */ }
+      var raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      var values = raw.split(/[\s,/]+/).map(Number).filter(function (value) {
+        return !isNaN(value);
+      });
+      if (values.length >= 3) return values.slice(0, 3);
+    } catch (error) { /* CSS is an enhancement, not a gate. */ }
     return fallback;
   }
 
   function run() {
-    // The DOM marker is the source of truth. The window hand-off is the fast
-    // path, while the fallback keeps the loader working in hardened browsers
-    // that isolate globals between inline and external script worlds.
     var intent = window.__SM_INTRO;
-    if (!intent || !intent.panel) {
-      var discoveredPanel = document.getElementById("sm-intro");
-      if (discoveredPanel) {
-        intent = {
-          mode: discoveredPanel.getAttribute("data-intro-mode") || "full",
-          panel: discoveredPanel,
-        };
-        try { window.__SM_INTRO = intent; } catch (e) { /* optional hand-off */ }
-      }
-    }
-    if (!intent || !intent.panel || !intent.panel.parentNode) return;
-    if (intent.__started) return;
+    var panel = intent && intent.panel;
+    if (!intent || !panel || !panel.parentNode || intent.__started) return;
     intent.__started = true;
 
-    var panel = intent.panel;
-    var reduced = intent.mode === "fade"; // reuses the existing head-boot flag
+    if (intent.safety) {
+      window.clearTimeout(intent.safety);
+      intent.safety = 0;
+    }
 
-    // The loader appears on every full load. A repeat in the same tab is still
-    // cinematic, but shorter; the first visit keeps the approved 2–3 second
-    // loading window. The Spline scene loads independently underneath and can
-    // never hold this curtain hostage.
     var repeatVisit = false;
     try {
       repeatVisit = sessionStorage.getItem("sm-intro-seen") === "1";
       sessionStorage.setItem("sm-intro-seen", "1");
-    } catch (e) { /* storage can be unavailable in privacy modes */ }
+    } catch (error) { /* Storage may be unavailable. */ }
 
-    var isMobile = false;
-    try { isMobile = window.matchMedia("(max-width: 900px)").matches; } catch (e) { /* opportunistic */ }
-    if (repeatVisit) {
-      CFG = Object.assign({}, CFG, {
-        EASE_MS: isMobile ? 1350 : 1450,
-        CREEP_MS: isMobile ? 240 : 250,
-        CEILING_MS: isMobile ? 1590 : 1700,
-        HOLD_MS: 130,
-        REVEAL_MS: 400,
-      });
-    } else if (isMobile) {
-      CFG = Object.assign({}, CFG, {
-        EASE_MS: 1700,
-        CREEP_MS: 300,
-        CEILING_MS: 2000,
-        HOLD_MS: 170,
-        REVEAL_MS: 460,
-      });
-    }
+    var reduced = intent.mode === "reduced";
+    var timing = repeatVisit ? REPEAT : FIRST;
+    var createdAt = Number(intent.createdAt) || performance.now();
+    var accent = readRGB("--accent-rgb", [217, 119, 87]);
+    var accent2 = readRGB("--accent-2-rgb", [200, 155, 94]);
 
-    var forcedTimer = setTimeout(forceRemove, CFG.CEILING_MS + 1200);
-    function forceRemove() {
-      forcedTimer = 0;
-      if (panel && panel.parentNode) panel.remove();
-      document.documentElement.classList.remove("intro-lock");
-      try { window.dispatchEvent(new CustomEvent("sm:intro-done")); } catch (e) { /* opportunistic */ }
-    }
+    var frameId = 0;
+    var timerId = 0;
+    var hardTimer = 0;
+    var resizeHandler = null;
+    var readinessHandler = null;
+    var skipTimer = 0;
+    var finished = false;
+    var revealing = false;
+    var skipRequested = false;
+    var prepared = false;
+    var displayed = -1;
+    var logIndex = -1;
+    var lastStatus = "";
 
-    if (intent.safety) { clearTimeout(intent.safety); intent.safety = 0; }
+    var boot;
+    var percent;
+    var progress;
+    var state;
+    var status;
+    var proofSteps;
+    var log;
+    var clock;
+    var skipButton;
+    var canvas;
+    var context;
+    var particles;
+    var width = 0;
+    var height = 0;
+    var dpr = 1;
 
-    var a1 = readRGB("--accent-rgb", [217, 119, 87]);
-    var a2 = readRGB("--accent-2-rgb", [200, 155, 94]);
-
-    var elPct, elLine, elLabelState, smBoot, particleCv, particleCtx;
-    var elLog, elClock, logIdx = -1;
-    var particles = null, pW = 0, pH = 0, pDpr = 1;
-    var start = 0, raf = 0, resizeHandler = null;
-    var exitFrom = 0, finished = false, revealing = false;
-    var displayed = -1, prepDispatched = false;
-
-    // Boot-log lines: reuse the hero's real boot readout (technical, language-
-    // independent) so the loader narrates the same "system coming online" story
-    // the hero implies. Content.js loads before this script (see index.html), so
-    // window.CONTENT is available; fall back to a built-in list if not.
     var BOOT_LINES = (function () {
       try {
-        var b = window.CONTENT && window.CONTENT.ru && window.CONTENT.ru.hero && window.CONTENT.ru.hero.boot_lines;
-        if (b && b.length) return b.slice();
-      } catch (e) { /* fall through to default */ }
+        var lines = window.CONTENT && window.CONTENT.ru &&
+          window.CONTENT.ru.hero && window.CONTENT.ru.hero.boot_lines;
+        if (lines && lines.length) return lines.slice();
+      } catch (error) { /* Use the stable fallback below. */ }
       return [
-        "init core.engine ... ok",
-        "load /modules/full-stack ... ok",
-        "load /modules/ai-automation ... ok",
-        "compile build ... ok",
-        "deploy READY",
+        "init product.system ... ok",
+        "mount semantic.shell ... ok",
+        "verify type.and.media ... ok",
+        "bind quality.runtime ... ok",
+        "ship READY",
       ];
     })();
-    // Real build tag — pulled from the ?v= cache-buster on any app script so the
-    // telemetry version tracks deploys automatically instead of drifting.
+
     var BUILD_TAG = (function () {
       try {
-        var s = document.querySelector('script[src*="?v="]');
-        var m = s && String(s.src).match(/[?&]v=(\w+)/);
-        return m ? ("BUILD " + m[1]) : "BUILD 2026";
-      } catch (e) { return "BUILD 2026"; }
+        var script = document.querySelector('script[src*="?v="]');
+        var match = script && String(script.src).match(/[?&]v=([^&]+)/);
+        return match ? "BUILD " + match[1] : "BUILD 2026";
+      } catch (error) {
+        return "BUILD 2026";
+      }
     })();
 
-    function esc(s) {
-      return String(s == null ? "" : s)
-        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    function escapeHtml(value) {
+      return String(value == null ? "" : value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
     }
-    // Colour the trailing status token (ok / READY / done) so each line reads
-    // like a real console echo.
-    function fmtLogLine(s) {
-      var str = String(s == null ? "" : s);
-      var m = str.match(/^(.*?)(ok|READY|done)\s*$/);
-      if (m) return esc(m[1]) + '<span class="sm-boot-ok">' + esc(m[2]) + "</span>";
-      return esc(str);
+
+    function formatLine(value) {
+      var text = String(value == null ? "" : value);
+      var match = text.match(/^(.*?)(ok|READY|done)\s*$/);
+      if (!match) return escapeHtml(text);
+      return escapeHtml(match[1]) +
+        '<span class="sm-boot-ok">' + escapeHtml(match[2]) + "</span>";
     }
-    function fmtClock(ms) {
-      var sec = Math.floor((ms < 0 ? 0 : ms) / 1000);
-      var mm = String(Math.floor(sec / 60) % 100).padStart(2, "0");
-      var ss = String(sec % 60).padStart(2, "0");
-      return "T+00:" + mm + ":" + ss;
+
+    function formatClock(milliseconds) {
+      var seconds = Math.max(0, Math.floor(milliseconds / 1000));
+      return "T+00:" +
+        String(Math.floor(seconds / 60) % 100).padStart(2, "0") + ":" +
+        String(seconds % 60).padStart(2, "0");
     }
+
+    function readiness() {
+      var ready = intent.ready || {};
+      return {
+        shell: ready.shell === true,
+        fonts: ready.fonts === true,
+        hero: ready.hero === true,
+      };
+    }
+
+    function isReady() {
+      var ready = readiness();
+      return ready.shell && ready.fonts && ready.hero;
+    }
+
+    function currentStatus(value) {
+      var ready = readiness();
+      if (value < 44) return "ASSEMBLING SYSTEM";
+      if (!ready.shell) return "MOUNTING SHELL";
+      if (!ready.fonts) return "VERIFYING TYPE";
+      if (!ready.hero) return "DECODING HERO";
+      if (value < 90) return "SYSTEMS VERIFIED";
+      return "READY TO SHIP";
+    }
+
+    function setStatus(next) {
+      if (!status || next === lastStatus) return;
+      lastStatus = next;
+      status.textContent = next;
+    }
+
     function renderLog() {
-      if (!elLog) return;
-      var startI = Math.max(0, logIdx - 2); // rolling window of the last 3 lines
+      if (!log || logIndex < 0) return;
+      var first = Math.max(0, logIndex - 2);
       var html = "";
-      for (var i = startI; i <= logIdx; i++) {
-        html += '<div class="' + (i === logIdx ? "cur" : "on") + '">' + fmtLogLine(BOOT_LINES[i]) + "</div>";
+      for (var index = first; index <= logIndex; index += 1) {
+        html += '<div class="' + (index === logIndex ? "cur" : "on") + '">' +
+          formatLine(BOOT_LINES[index]) + "</div>";
       }
-      elLog.innerHTML = html;
+      log.innerHTML = html;
     }
-    function revealLogTo(idx) {
-      if (idx <= logIdx) return;
-      logIdx = Math.min(idx, BOOT_LINES.length - 1);
+
+    function revealLogTo(index) {
+      var next = Math.min(index, BOOT_LINES.length - 1);
+      if (next <= logIndex) return;
+      logIndex = next;
       renderLog();
     }
-    // Reveal lines 0..n-2 spread across 0..90%; the final line (usually
-    // "deploy READY") is held back and revealed at ONLINE for the payoff.
-    function setLog(pct) {
-      var n = BOOT_LINES.length;
-      if (n < 2) return;
-      var idx = Math.floor(clamp01(pct / 90) * (n - 1));
-      if (idx > n - 2) idx = n - 2;
-      revealLogTo(idx);
+
+    function setLog(value) {
+      if (BOOT_LINES.length < 2) return;
+      var next = Math.floor(clamp01(value / 90) * (BOOT_LINES.length - 1));
+      revealLogTo(Math.min(next, BOOT_LINES.length - 2));
     }
 
-    function buildDom() {
-      panel.style.background =
-        "radial-gradient(circle at 50% " + (CFG.CORE_Y * 100).toFixed(0) + "%, " +
-        "rgba(" + a1[0] + "," + a1[1] + "," + a1[2] + ",0.15) 0%, transparent 55%), #1F1E1B";
-
-      if (!reduced) {
-        particleCv = document.createElement("canvas");
-        particleCv.className = "sm-boot-particles";
-        particleCv.style.cssText = "position:absolute;inset:0;width:100%;height:100%;display:block;";
-        panel.appendChild(particleCv);
-        setupParticles();
-
-        // Core pulse — reactor rings breathing from the focal point, behind the
-        // readout (rich path only; reduced-motion skips it and CSS hides it).
-        var core = document.createElement("div");
-        core.className = "sm-boot-core";
-        core.style.top = (CFG.CORE_Y * 100).toFixed(1) + "%";
-        core.setAttribute("aria-hidden", "true");
-        core.innerHTML = "<b></b><i></i><i></i>";
-        panel.appendChild(core);
+    function updateProof(value) {
+      if (!proofSteps || !proofSteps.length) return;
+      var active = value < 44 ? 0 : value < 90 ? 1 : 2;
+      var ready = readiness();
+      for (var index = 0; index < proofSteps.length; index += 1) {
+        proofSteps[index].classList.toggle("is-active", index === active);
+        var done = index < active;
+        if (index === 1 && ready.shell && ready.fonts && ready.hero) done = true;
+        if (revealing) done = true;
+        proofSteps[index].classList.toggle("is-done", done);
       }
+    }
 
-      var wrap = document.createElement("div");
-      wrap.className = "sm-boot";
-      wrap.style.top = (CFG.CORE_Y * 100).toFixed(1) + "%";
-      wrap.innerHTML =
-        '<div class="sm-boot-label mono">SAMANDAR / PRODUCT LAB <span class="sm-boot-state">BUILD</span></div>' +
-        '<div class="sm-boot-pct"><span class="sm-boot-pct-n">00</span><span class="sm-boot-pct-sign">%</span></div>' +
-        '<div class="sm-boot-line"><i></i></div>' +
-        '<div class="sm-boot-log mono" aria-hidden="true"></div>';
-      panel.appendChild(wrap);
-      smBoot = wrap;
-      elPct = wrap.querySelector(".sm-boot-pct-n");
-      elLine = wrap.querySelector(".sm-boot-line > i");
-      elLabelState = wrap.querySelector(".sm-boot-state");
-      elLog = wrap.querySelector(".sm-boot-log");
+    function setPercent(value) {
+      var next = Math.round(Math.max(0, Math.min(100, value)));
+      if (next === displayed) return;
+      displayed = next;
+      if (percent) percent.textContent = String(next).padStart(2, "0");
+      if (progress) progress.style.width = next + "%";
+      if (state && !revealing) {
+        state.textContent = next < 44 ? "BUILD" : next < 90 ? "VERIFY" : "SHIP";
+      }
+      updateProof(next);
+      setStatus(currentStatus(next));
 
-      // Telemetry corners — coordinates (Tashkent) + build tag + live T+ clock.
-      // Both modes (static, cheap); the clock ticks from the frame loop.
-      var teleL = document.createElement("div");
-      teleL.className = "sm-boot-tele sm-boot-tele--l mono";
-      teleL.setAttribute("aria-hidden", "true");
-      teleL.innerHTML = "<div><b>TASHKENT</b> · UZ</div><div>41.31°N · 69.24°E · UTC+5</div>";
-      panel.appendChild(teleL);
+      if (!prepared && next >= 78) {
+        prepared = true;
+        intent.prepared = true;
+        try {
+          window.dispatchEvent(new CustomEvent("sm:intro-prep"));
+        } catch (error) { /* Optional animation hand-off. */ }
+      }
+    }
 
-      var teleR = document.createElement("div");
-      teleR.className = "sm-boot-tele sm-boot-tele--r mono";
-      teleR.setAttribute("aria-hidden", "true");
-      teleR.innerHTML =
-        "<div>SM · " + esc(BUILD_TAG) + "</div>" +
-        '<div class="sm-boot-clock"><b>T+00:00:00</b></div>';
-      panel.appendChild(teleR);
-      elClock = teleR.querySelector(".sm-boot-clock b");
+    function sizeParticles() {
+      if (!canvas || !context) return;
+      width = window.innerWidth;
+      height = window.innerHeight;
+      dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      context.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
     function setupParticles() {
-      particleCtx = particleCv.getContext("2d");
-      if (!particleCtx) return;
-      pDpr = Math.min(window.devicePixelRatio || 1, 1.5);
-      function size() {
-        pW = window.innerWidth; pH = window.innerHeight;
-        particleCv.width = Math.round(pW * pDpr);
-        particleCv.height = Math.round(pH * pDpr);
-        particleCtx.setTransform(pDpr, 0, 0, pDpr, 0, 0);
-      }
-      size();
-      resizeHandler = size;
-      window.addEventListener("resize", resizeHandler, { passive: true });
-      particles = new Array(CFG.PARTICLES);
-      for (var i = 0; i < particles.length; i++) {
-        var s1 = ((i * 53) % 100) / 100, s2 = ((i * 29) % 100) / 100, s3 = ((i * 71) % 100) / 100;
-        particles[i] = {
-          x: s1, band: 0.28 + s2 * 0.5, speed: 0.5 + s3 * 0.7,
-          drift: (s2 - 0.5) * 0.25, size: 1 + s1 * 1.7, hot: (i % 6 === 0),
+      if (!canvas) return;
+      context = canvas.getContext("2d");
+      if (!context) return;
+      particles = new Array(PARTICLE_COUNT);
+      for (var index = 0; index < PARTICLE_COUNT; index += 1) {
+        particles[index] = {
+          x: 0.14 + (((index * 37) % 71) / 100),
+          y: 0.18 + (((index * 53) % 64) / 100),
+          speed: 0.35 + (((index * 19) % 30) / 100),
+          size: 0.8 + (((index * 29) % 14) / 10),
+          warm: index % 4 === 0,
         };
       }
+      sizeParticles();
+      resizeHandler = sizeParticles;
+      window.addEventListener("resize", resizeHandler, { passive: true });
     }
+
     function drawParticles(now) {
-      if (!particleCtx) return;
-      particleCtx.clearRect(0, 0, pW, pH);
-      particleCtx.globalCompositeOperation = "lighter";
-      for (var i = 0; i < particles.length; i++) {
-        var p = particles[i];
-        var life = ((now * 0.00006 * p.speed) + p.x) % 1;
-        var x = clamp01(p.x + p.drift * life) * pW;
-        var y = pH * (1 - life * p.band) ;
-        var alpha = Math.sin(life * Math.PI) * (p.hot ? 0.5 : 0.32);
-        var col = p.hot ? a2 : a1;
-        particleCtx.fillStyle = "rgba(" + col[0] + "," + col[1] + "," + col[2] + "," + alpha.toFixed(3) + ")";
-        particleCtx.beginPath(); particleCtx.arc(x, y, p.size, 0, Math.PI * 2); particleCtx.fill();
+      if (!context || !particles) return;
+      context.clearRect(0, 0, width, height);
+      context.globalCompositeOperation = "lighter";
+      for (var index = 0; index < particles.length; index += 1) {
+        var particle = particles[index];
+        var drift = Math.sin(now * 0.0004 * particle.speed + index) * 10;
+        var rise = ((now * 0.000015 * particle.speed + particle.y) % 0.78);
+        var x = particle.x * width + drift;
+        var y = height * (0.9 - rise);
+        var alpha = 0.12 + Math.sin(now * 0.001 + index) * 0.05;
+        var color = particle.warm ? accent2 : accent;
+        context.fillStyle = "rgba(" + color.join(",") + "," + alpha.toFixed(3) + ")";
+        context.beginPath();
+        context.arc(x, y, particle.size, 0, Math.PI * 2);
+        context.fill();
       }
-      particleCtx.globalCompositeOperation = "source-over";
+      context.globalCompositeOperation = "source-over";
+    }
+
+    function buildDom() {
+      panel.removeAttribute("style");
+      panel.setAttribute("role", "dialog");
+      panel.setAttribute("aria-modal", "true");
+      panel.setAttribute("aria-label", "Portfolio loading sequence");
+      panel.setAttribute("aria-busy", "true");
+      panel.innerHTML = "";
+      panel.style.background =
+        "linear-gradient(180deg, rgba(31,30,27,.96), #1F1E1B)," +
+        "radial-gradient(circle at 68% 42%, rgba(" + accent.join(",") + ",.12), transparent 42%)";
+
+      if (!reduced) {
+        canvas = document.createElement("canvas");
+        canvas.className = "sm-boot-particles";
+        canvas.setAttribute("aria-hidden", "true");
+        panel.appendChild(canvas);
+        setupParticles();
+
+        var core = document.createElement("div");
+        core.className = "sm-boot-core";
+        core.style.top = (CORE_Y * 100).toFixed(1) + "%";
+        core.setAttribute("aria-hidden", "true");
+        core.innerHTML = "<b></b><i></i>";
+        panel.appendChild(core);
+      }
+
+      boot = document.createElement("div");
+      boot.className = "sm-boot";
+      boot.style.top = (CORE_Y * 100).toFixed(1) + "%";
+      boot.innerHTML =
+        '<div class="sm-boot-label mono">SAMANDAR / PRODUCT LAB <span class="sm-boot-state">BUILD</span></div>' +
+        '<div class="sm-boot-proof mono" aria-hidden="true"><span>BUILD</span><span>VERIFY</span><span>SHIP</span></div>' +
+        '<div class="sm-boot-pct" aria-hidden="true"><span class="sm-boot-pct-n">00</span><span class="sm-boot-pct-sign">%</span></div>' +
+        '<div class="sm-boot-line" aria-hidden="true"><i></i></div>' +
+        '<div class="sm-boot-status mono" role="status" aria-live="polite">INITIALIZING</div>' +
+        '<div class="sm-boot-log mono" aria-hidden="true"></div>';
+      panel.appendChild(boot);
+
+      percent = boot.querySelector(".sm-boot-pct-n");
+      progress = boot.querySelector(".sm-boot-line > i");
+      state = boot.querySelector(".sm-boot-state");
+      status = boot.querySelector(".sm-boot-status");
+      proofSteps = Array.prototype.slice.call(boot.querySelectorAll(".sm-boot-proof span"));
+      log = boot.querySelector(".sm-boot-log");
+
+      var telemetryLeft = document.createElement("div");
+      telemetryLeft.className = "sm-boot-tele sm-boot-tele--l mono";
+      telemetryLeft.setAttribute("aria-hidden", "true");
+      telemetryLeft.innerHTML =
+        "<div><b>TASHKENT</b> · UZ</div><div>41.31°N · 69.24°E · UTC+5</div>";
+      panel.appendChild(telemetryLeft);
+
+      var telemetryRight = document.createElement("div");
+      telemetryRight.className = "sm-boot-tele sm-boot-tele--r mono";
+      telemetryRight.setAttribute("aria-hidden", "true");
+      telemetryRight.innerHTML =
+        "<div>SM · " + escapeHtml(BUILD_TAG) + "</div>" +
+        '<div class="sm-boot-clock"><b>T+00:00:00</b></div>';
+      panel.appendChild(telemetryRight);
+      clock = telemetryRight.querySelector(".sm-boot-clock b");
+
+      skipButton = document.createElement("button");
+      skipButton.className = "sm-boot-skip mono";
+      skipButton.type = "button";
+      skipButton.textContent = "SKIP INTRO";
+      skipButton.setAttribute("aria-label", "Пропустить интро");
+      skipButton.addEventListener("click", requestSkip);
+      panel.appendChild(skipButton);
+      skipTimer = window.setTimeout(function () {
+        if (skipButton) skipButton.classList.add("is-visible");
+      }, repeatVisit ? 450 : 760);
     }
 
     function requestSkip() {
-      if (finished || exitFrom) return;
-      if (performance.now() - start < CFG.SKIP_GRACE_MS) return;
-      exitFrom = performance.now();
-      detachSkipListeners();
-    }
-    function onKey(e) { if (e.key === "Escape" || e.key === "Enter" || e.key === " ") requestSkip(); }
-    function onSkip() { requestSkip(); }
-    function attachSkipListeners() {
-      window.addEventListener("keydown", onKey, true);
-      window.addEventListener("wheel", onSkip, { passive: true });
-      window.addEventListener("touchstart", onSkip, { passive: true });
-      window.addEventListener("pointerdown", onSkip, { passive: true });
-    }
-    function detachSkipListeners() {
-      window.removeEventListener("keydown", onKey, true);
-      window.removeEventListener("wheel", onSkip);
-      window.removeEventListener("touchstart", onSkip);
-      window.removeEventListener("pointerdown", onSkip);
+      if (finished || revealing) return;
+      skipRequested = true;
+      panel.setAttribute("data-skip-requested", "true");
+      setStatus(isReady() ? "READY TO SHIP" : "FINALIZING");
     }
 
-    function teardown() {
+    function onKeydown(event) {
+      if (event.key === "Escape") requestSkip();
+    }
+
+    function onGesture() {
+      var elapsed = performance.now() - createdAt;
+      if (elapsed >= (repeatVisit ? 450 : 760)) requestSkip();
+    }
+
+    function attachListeners() {
+      window.addEventListener("keydown", onKeydown, true);
+      window.addEventListener("wheel", onGesture, { passive: true });
+      window.addEventListener("touchstart", onGesture, { passive: true });
+      readinessHandler = function () {
+        updateProof(displayed < 0 ? 0 : displayed);
+        setStatus(currentStatus(displayed < 0 ? 0 : displayed));
+      };
+      window.addEventListener("sm:intro-readiness", readinessHandler);
+    }
+
+    function detachListeners() {
+      window.removeEventListener("keydown", onKeydown, true);
+      window.removeEventListener("wheel", onGesture);
+      window.removeEventListener("touchstart", onGesture);
+      if (readinessHandler) {
+        window.removeEventListener("sm:intro-readiness", readinessHandler);
+        readinessHandler = null;
+      }
+      if (skipButton) skipButton.removeEventListener("click", requestSkip);
+    }
+
+    function stopDrivers() {
+      if (frameId) {
+        window.cancelAnimationFrame(frameId);
+        frameId = 0;
+      }
+      if (timerId) {
+        window.clearTimeout(timerId);
+        timerId = 0;
+      }
+      if (hardTimer) {
+        window.clearTimeout(hardTimer);
+        hardTimer = 0;
+      }
+      if (skipTimer) {
+        window.clearTimeout(skipTimer);
+        skipTimer = 0;
+      }
+      if (resizeHandler) {
+        window.removeEventListener("resize", resizeHandler);
+        resizeHandler = null;
+      }
+    }
+
+    function teardown(reason) {
       if (finished) return;
       finished = true;
-      intent.durationMs = start ? Math.round(performance.now() - start) : 0;
-      if (forcedTimer) { clearTimeout(forcedTimer); forcedTimer = 0; }
-      if (raf) cancelAnimationFrame(raf);
-      detachSkipListeners();
-      if (resizeHandler) window.removeEventListener("resize", resizeHandler);
+      intent.durationMs = Math.round(performance.now() - createdAt);
+      stopDrivers();
+      detachListeners();
       if (panel.parentNode) panel.remove();
-      document.documentElement.classList.remove("intro-lock");
-      try { window.dispatchEvent(new CustomEvent("sm:intro-done")); } catch (e) { /* opportunistic */ }
-    }
-
-    function setPercent(p) {
-      var n = Math.round(clamp01(p / 100) * 100);
-      if (n === displayed) return;
-      displayed = n;
-      if (elPct) elPct.textContent = String(n).padStart(2, "0");
-      if (elLine) elLine.style.width = n + "%";
-      if (elLabelState && !revealing) {
-        elLabelState.textContent = n < 46 ? "BUILD" : n < 88 ? "VERIFY" : "SHIP";
-      }
-      // Assemble Hero underneath the opaque final beat so the reveal opens on
-      // a nearly settled composition instead of starting a second intro.
-      if (!prepDispatched && n >= 80) {
-        prepDispatched = true;
-        intent.prepared = true;
-        try { window.dispatchEvent(new CustomEvent("sm:intro-prep")); } catch (e) { /* opportunistic */ }
+      var inlineStyle = document.getElementById("sm-intro-frame-style");
+      if (inlineStyle) inlineStyle.remove();
+      if (typeof intent.release === "function") intent.release(reason || "complete");
+      else {
+        document.documentElement.classList.remove("intro-lock");
+        document.documentElement.style.overflow = intent.previousOverflow || "";
+        document.documentElement.removeAttribute("aria-busy");
+        try {
+          window.dispatchEvent(new CustomEvent("sm:intro-done"));
+        } catch (error) { /* Optional channel. */ }
       }
     }
 
-    function startReveal() {
-      if (revealing) return;
-      revealing = true;
-      if (raf) { cancelAnimationFrame(raf); raf = 0; }
-      if (elLabelState) elLabelState.textContent = "ONLINE";
-      if (smBoot) smBoot.classList.add("is-online");
-      setPercent(100);
-      revealLogTo(BOOT_LINES.length - 1); // release the held final line ("deploy READY")
-      setTimeout(function () {
-        panel.style.transition = "opacity " + (CFG.REVEAL_MS / 1000) + "s cubic-bezier(.2,.6,.18,1)";
-        if (reduced) {
-          panel.style.opacity = "0";
-        } else {
-          var rPct = "150";
-          var maskC = (CFG.CORE_Y * 100).toFixed(0);
-          var mask = "radial-gradient(circle at 50% " + maskC + "%, transparent 0%, transparent " + rPct + "%, #000 " + (parseFloat(rPct) + 8) + "%)";
-          panel.style.webkitMaskImage = mask;
-          panel.style.maskImage = mask;
-        }
-        setTimeout(teardown, CFG.REVEAL_MS + 60);
-      }, CFG.HOLD_MS);
-    }
-
-    function frame(now) {
-      raf = !reduced ? requestAnimationFrame(frame) : 0;
-      if (revealing) return;
-
-      if (!reduced) drawParticles(now);
-      if (elClock) elClock.textContent = fmtClock(now - start);
-
-      if (exitFrom) { startReveal(); return; }
-
-      var t = now - start;
-      var visualPct;
-      if (t < CFG.EASE_MS) {
-        visualPct = easeOutCubic(t / CFG.EASE_MS) * CFG.EASE_TARGET;
+    function recover() {
+      if (finished) return;
+      finished = true;
+      stopDrivers();
+      detachListeners();
+      if (typeof intent.recover === "function") {
+        intent.recover("01");
       } else {
-        var creepT = clamp01((t - CFG.EASE_MS) / CFG.CREEP_MS);
-        visualPct = CFG.EASE_TARGET + (99 - CFG.EASE_TARGET) * (1 - Math.pow(1 - creepT, 2));
+        teardown("recovery");
       }
-      setPercent(visualPct);
-      setLog(visualPct);
+    }
 
-      var pastCeiling = t >= CFG.CEILING_MS;
-      if (pastCeiling || visualPct >= 98.95) {
-        startReveal();
+    function startReveal(reason) {
+      if (finished || revealing) return;
+      revealing = true;
+      stopDrivers();
+      detachListeners();
+      intent.revealReason = reason;
+      setPercent(100);
+      revealLogTo(BOOT_LINES.length - 1);
+      if (state) state.textContent = "ONLINE";
+      setStatus("ONLINE");
+      if (boot) boot.classList.add("is-online");
+      updateProof(100);
+
+      window.setTimeout(function () {
+        if (reduced) {
+          var finishReduced = function () { teardown(reason); };
+          panel.addEventListener("transitionend", finishReduced, { once: true });
+          panel.style.transition = "opacity .14s ease";
+          panel.style.opacity = "0";
+          window.setTimeout(finishReduced, 190);
+          return;
+        }
+
+        // A real horizon shutter: the curtain collapses into the same visual
+        // line that continues through Hero. clip-path is interpolated in both
+        // Blink and WebKit, unlike the former one-frame radial mask swap.
+        var finishReveal = function () { teardown(reason); };
+        panel.addEventListener("transitionend", function onRevealEnd(event) {
+          if (event.target === panel &&
+              (event.propertyName === "clip-path" || event.propertyName === "-webkit-clip-path")) {
+            finishReveal();
+          }
+        });
+        panel.style.clipPath = "inset(0 0 0 0)";
+        panel.style.webkitClipPath = "inset(0 0 0 0)";
+        panel.getBoundingClientRect();
+        panel.style.transition =
+          "clip-path " + timing.revealMs + "ms cubic-bezier(.76,0,.24,1)," +
+          "-webkit-clip-path " + timing.revealMs + "ms cubic-bezier(.76,0,.24,1)," +
+          "opacity " + timing.revealMs + "ms ease";
+        window.requestAnimationFrame(function () {
+          panel.style.clipPath = "inset(50% 0 50% 0)";
+          panel.style.webkitClipPath = "inset(50% 0 50% 0)";
+          panel.style.opacity = "0.18";
+        });
+        window.setTimeout(finishReveal, timing.revealMs + 80);
+      }, timing.holdMs);
+    }
+
+    function visualProgress(elapsed) {
+      if (elapsed <= timing.visualMs) {
+        return easeOutCubic(elapsed / timing.visualMs) * 90;
+      }
+      var creep = clamp01((elapsed - timing.visualMs) /
+        Math.max(320, timing.hardRevealMs - timing.visualMs));
+      return 90 + (6 * easeOutCubic(creep));
+    }
+
+    function tick(now) {
+      if (finished || revealing) return;
+      var elapsed = now - createdAt;
+      var value = visualProgress(elapsed);
+      setPercent(value);
+      setLog(value);
+      if (clock) clock.textContent = formatClock(elapsed);
+      if (!reduced) drawParticles(now);
+
+      var ready = isReady();
+      var eligible = elapsed >= timing.minMs;
+      var skipEligible = skipRequested && elapsed >= timing.skipMinMs;
+
+      if (ready && (eligible || skipEligible)) {
+        startReveal(skipEligible ? "skip-ready" : "ready");
         return;
       }
-      // Reduced-motion still needs to keep polling without a canvas rAF loop —
-      // a cheap timer substitutes for the rAF driver above.
-      if (reduced) setTimeout(function () { frame(performance.now()); }, 90);
+
+      if (elapsed >= timing.hardRevealMs && readiness().shell) {
+        var readyState = readiness();
+        if (!readyState.fonts) intent.fallback.fonts = true;
+        if (!readyState.hero) intent.fallback.hero = true;
+        startReveal("deadline-fallback");
+        return;
+      }
+
+      if (elapsed >= timing.recoveryMs && !readiness().shell) {
+        recover();
+        return;
+      }
+
+      if (skipRequested && !ready) setStatus("FINALIZING");
+      if (reduced) {
+        timerId = window.setTimeout(function () {
+          tick(performance.now());
+        }, 60);
+      } else {
+        frameId = window.requestAnimationFrame(tick);
+      }
     }
 
     try {
       buildDom();
-    } catch (setupErr) {
-      forceRemove();
+      attachListeners();
+      setPercent(0);
+      setLog(0);
+    } catch (error) {
+      if (readiness().shell) teardown("setup-fallback");
+      else recover();
       return;
     }
-    attachSkipListeners();
-    start = performance.now();
-    if (reduced) {
-      frame(start);
-    } else {
-      raf = requestAnimationFrame(frame);
-    }
-    // Wall-clock backstop, independent of rAF/ready-state — a hidden/
-    // backgrounded tab (or a robot that never settles for some unforeseen
-    // reason) can't leave the curtain up forever. teardown() is idempotent.
-    setTimeout(teardown, CFG.CEILING_MS + 900);
+
+    var remainingRecovery = Math.max(50, timing.recoveryMs - (performance.now() - createdAt));
+    hardTimer = window.setTimeout(function () {
+      if (finished || revealing) return;
+      if (readiness().shell) startReveal("wall-clock-fallback");
+      else recover();
+    }, remainingRecovery + 40);
+
+    if (reduced) tick(performance.now());
+    else frameId = window.requestAnimationFrame(tick);
   }
 
   window.SMIntro = { run: run };

@@ -3,6 +3,39 @@
 const { test, expect } = require("@playwright/test");
 const { orderedProducts, expectNoHorizontalOverflow } = require("./helpers");
 
+test("iPhone WebKit releases the first-load intro into an interactive Hero", async ({ page }) => {
+  test.setTimeout(60000);
+
+  await page.addInitScript(() => {
+    window.__WEBKIT_INTRO = { frame: null, done: 0 };
+    const observer = new MutationObserver(() => {
+      const panel = document.getElementById("sm-intro");
+      if (panel && !window.__WEBKIT_INTRO.frame) {
+        window.__WEBKIT_INTRO.frame = {
+          mode: panel.getAttribute("data-intro-mode"),
+          role: panel.getAttribute("role"),
+          lock: document.documentElement.classList.contains("intro-lock"),
+        };
+      }
+    });
+    observer.observe(document, { childList: true, subtree: true });
+    window.addEventListener("sm:intro-done", () => {
+      window.__WEBKIT_INTRO.done += 1;
+    });
+  });
+
+  await page.goto("/?webkit-intro=1", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("#sm-intro")).toHaveCount(0, { timeout: 6000 });
+  await expect(page.locator("html")).not.toHaveClass(/intro-lock/);
+  await expect(page.locator("#root")).not.toHaveAttribute("aria-hidden", "true");
+  await expect(page.locator("#hero")).toHaveClass(/is-lit/);
+  await expect(page.locator(".hero-ctas .btn").first()).toBeEnabled();
+
+  const contract = await page.evaluate(() => window.__WEBKIT_INTRO);
+  expect(contract.frame).toMatchObject({ mode: "full", role: "dialog", lock: true });
+  expect(contract.done).toBe(1);
+});
+
 test("iPhone WebKit keeps the critical portfolio journey usable", async ({ page }) => {
   test.setTimeout(120000);
 
@@ -17,9 +50,9 @@ test("iPhone WebKit keeps the critical portfolio journey usable", async ({ page 
   await expand.evaluate((button) => button.click());
   await expect(page.locator(".proj-card:visible")).toHaveCount(orderedProducts.length);
 
-  await page.getByRole("button", { name: "Open menu" }).evaluate((button) => button.click());
+  await page.locator(".nav-burger").click();
   await expect(page.locator(".nav-menu")).toHaveAttribute("aria-hidden", "false");
-  await page.locator(".nav-menu-lang button").filter({ hasText: /^EN$/ }).evaluate((button) => button.click());
+  await page.locator(".nav-menu-lang button").filter({ hasText: /^EN$/ }).click();
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
 
   await page.goto("/projects/chat-app/?e2e=1", { waitUntil: "domcontentloaded" });

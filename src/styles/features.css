@@ -442,6 +442,7 @@
 /* The signature path carries the same BUILD → VERIFY → SHIP grammar out of
    Hero. It never changes content automatically: the line is choreography, the
    accordion remains entirely reader-controlled. */
+#signal { overflow-x: clip; }
 .signal-path {
   position: relative;
   margin-top: 26px;
@@ -517,8 +518,8 @@
     position: relative;
     min-height: 28px;
   }
-  .signal-path-label { font-size: 8.5px; }
-  .signal-path-steps li { font-size: 8px; gap: 5px; }
+  .signal-path-label { font-size: 9.5px; }
+  .signal-path-steps li { font-size: 9px; gap: 5px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .signal-path-steps::after { transform: scaleX(1); animation: none; }

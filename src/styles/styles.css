@@ -125,6 +125,7 @@
   --max-w: 1440px;
   --gutter: clamp(20px, 4vw, 64px);
   --nav-h: 60px;
+  --nav-safe-h: calc(var(--nav-h) + env(safe-area-inset-top));
   --z-base: 0;
   --z-content: 10;
   --z-sticky: 100;
@@ -355,12 +356,13 @@ section[data-section] {
   position: relative;
   padding: var(--gap-section) 0;
   z-index: 2;
+  overflow-x: clip;
   /* Every anchor jump on the site (nav links, drawer, mobile dock dots, the
      "Обсудить проект" sticky CTA, hero's "Смотреть работы") targets a
      section's top via #id. Without this, the fixed .nav (height var(--nav-h),
      z-index:100) covers the landed section's heading — the jump LOOKS broken
      even though the scroll itself is correct. */
-  scroll-margin-top: calc(var(--nav-h) + 16px);
+  scroll-margin-top: calc(var(--nav-safe-h) + 16px);
 }
 /* :first-of-type is scoped per DOM parent, not per-page — About/Services/Trust
    each happen to be the first <section> child of THEIR OWN wrapper (Hero's
@@ -373,15 +375,20 @@ section[data-section="hero"] { padding-top: 0; }
 /* — Nav — */
 .nav {
   position: fixed; top: 0; left: 0; right: 0;
-  height: var(--nav-h);
+  height: var(--nav-safe-h);
+  padding-top: env(safe-area-inset-top);
   z-index: var(--z-nav);
   display: flex; align-items: center;
-  background: linear-gradient(180deg, rgba(7,9,11,.88) 0%, rgba(7,9,11,.4) 80%, transparent);
+  background: linear-gradient(180deg, rgba(31,30,27,.92) 0%, rgba(31,30,27,.48) 80%, transparent);
   backdrop-filter: blur(14px) saturate(160%);
   -webkit-backdrop-filter: blur(14px) saturate(160%);
   border-bottom: 1px solid var(--line);
 }
-.nav.nav-open { z-index: calc(var(--z-overlay) + 1); }
+.nav.nav-open { z-index: var(--z-nav); }
+html.menu-lock {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
 .nav-inner {
   width: 100%;
   max-width: var(--max-w);
@@ -460,7 +467,7 @@ section[data-section="hero"] { padding-top: 0; }
   border: 1px solid var(--line-strong);
   border-radius: 999px;
   padding: 3px;
-  background: rgba(20,24,28,.6);
+  background: rgba(42, 38, 31, .72);
 }
 .lang button {
   appearance: none;
@@ -812,6 +819,7 @@ body.cursor-hover .cursor-dot { opacity: 0; }
 .nav-open .nav-burger span:nth-child(1) { transform: translate(-50%, -50%) rotate(45deg); }
 .nav-open .nav-burger span:nth-child(2) { opacity: 0; transform: translate(-50%, -50%) scaleX(0); }
 .nav-open .nav-burger span:nth-child(3) { transform: translate(-50%, -50%) rotate(-45deg); }
+.nav-open .nav-burger { opacity: 0; pointer-events: none; }
 @media (max-width: 900px) {
   .nav-burger { width: 44px; height: 44px; }
 }
@@ -870,6 +878,16 @@ body.cursor-hover .cursor-dot { opacity: 0; }
   transform-origin: left; transition: transform .6s var(--ease-out);
 }
 
+/* A full seven-link row stops fitting before the mobile breakpoint. At
+   intermediate desktop/tablet widths use truthful chapter telemetry instead
+   of visually clipping still-focusable links. */
+@media (min-width: 901px) and (max-width: 1160px) {
+  .nav-links { display: none; }
+  .nav-counter { max-width: 300px; opacity: 1; }
+  .brand-sub { display: none; }
+  .nav-inner { gap: 16px; }
+}
+
 /* ═══ Fullscreen menu — the navigation SCENE (desktop + mobile) ═════════════
    Opens with a top-down clip reveal; items line-mask in with a stagger; live
    Tashkent telemetry in the footer. The open nav bar is promoted above this
@@ -884,21 +902,66 @@ body.cursor-hover .cursor-dot { opacity: 0; }
     linear-gradient(180deg, #16140F 0%, #1D1B16 100%);
   clip-path: inset(0 0 100% 0);
   visibility: hidden;
-  transition: clip-path .65s var(--ease-emphasized, cubic-bezier(.2,.6,.18,1)), visibility 0s linear .65s;
+  transition: clip-path .52s var(--ease-emphasized, cubic-bezier(.2,.6,.18,1)), visibility 0s linear .52s;
 }
 .nav-menu.is-open {
   clip-path: inset(0 0 0% 0);
   visibility: visible;
   pointer-events: auto;
-  transition: clip-path .65s var(--ease-emphasized, cubic-bezier(.2,.6,.18,1));
+  transition: clip-path .52s var(--ease-emphasized, cubic-bezier(.2,.6,.18,1));
 }
+.nav-menu-close {
+  position: fixed;
+  top: max(8px, calc(env(safe-area-inset-top) + 8px));
+  right: max(var(--gutter), calc(env(safe-area-inset-right) + 12px));
+  z-index: 4;
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(245, 240, 230, .24);
+  border-radius: 12px;
+  background: rgba(31, 30, 27, .72);
+  color: var(--text);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(-8px) rotate(-5deg);
+  transition: opacity .22s ease .18s, transform .42s var(--ease-out) .12s, border-color .2s ease;
+}
+.nav-menu.is-open .nav-menu-close { opacity: 1; transform: none; }
+.nav-menu-close:hover,
+.nav-menu-close:focus-visible { border-color: var(--accent); outline: none; }
+.nav-menu-close span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 18px;
+  height: 1.5px;
+  background: currentColor;
+}
+.nav-menu-close span:first-child { transform: translate(-50%, -50%) rotate(45deg); }
+.nav-menu-close span:last-child { transform: translate(-50%, -50%) rotate(-45deg); }
+.nav-menu-brand {
+  position: fixed;
+  top: max(18px, calc(env(safe-area-inset-top) + 18px));
+  left: max(var(--gutter), calc(env(safe-area-inset-left) + 16px));
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-dim);
+  font-size: 11px;
+  letter-spacing: .12em;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity .22s ease .16s, transform .4s var(--ease-out) .12s;
+}
+.nav-menu.is-open .nav-menu-brand { opacity: 1; transform: none; }
 .nav-menu-glow {
   position: absolute; inset: 0; pointer-events: none;
   background: radial-gradient(ellipse 55% 45% at 12% 96%, rgba(var(--accent-2-rgb, 200 155 94) / 0.06), transparent 60%);
 }
 .nav-menu-inner {
   width: 100%; max-width: var(--max-w); margin: 0 auto;
-  padding: calc(var(--nav-h) + 3vh) var(--gutter) 3.5vh;
+  padding: calc(var(--nav-safe-h) + 3vh) max(var(--gutter), calc(env(safe-area-inset-right) + 16px)) max(3.5vh, calc(env(safe-area-inset-bottom) + 16px)) max(var(--gutter), calc(env(safe-area-inset-left) + 16px));
   display: flex; flex-direction: column; justify-content: space-between; gap: 20px;
   overflow-y: auto;
 }
@@ -927,11 +990,17 @@ body.cursor-hover .cursor-dot { opacity: 0; }
   transform: translateY(118%);
   transition: transform .55s var(--ease-out);
 }
-.nav-menu.is-open .nav-menu-word { transform: translateY(0); transition: transform .7s var(--ease-out) calc(var(--i) * 55ms + 160ms); }
+.nav-menu.is-open .nav-menu-word { transform: translateY(0); transition: transform .42s var(--ease-out) calc(var(--i) * 22ms + 80ms); }
 .nav-menu-links a:hover { color: var(--text); }
 .nav-menu-links a:hover .nav-menu-mask { transform: translateX(12px); }
 .nav-menu-links a.active { color: var(--text); }
 .nav-menu-links a.active .nav-menu-num { color: var(--accent); }
+.nav-menu-links a:focus-visible {
+  color: var(--text);
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.nav-menu-links a:focus-visible .nav-menu-mask { transform: translateX(12px); }
 .nav-menu-arrow {
   margin-left: auto; font-family: var(--f-mono);
   font-size: clamp(17px, 2.6vh, 24px); color: var(--accent);
@@ -985,7 +1054,7 @@ body.cursor-hover .cursor-dot { opacity: 0; }
   opacity: 0; transform: translateY(10px);
   transition: opacity .5s ease, transform .5s var(--ease-out);
 }
-.nav-menu.is-open .nav-menu-foot { opacity: 1; transform: none; transition-delay: .4s; }
+.nav-menu.is-open .nav-menu-foot { opacity: 1; transform: none; transition-delay: .22s; }
 .nav-menu-cta {
   display: inline-flex; align-items: center; gap: 10px;
   padding: 14px 26px; border-radius: 999px;
@@ -1011,6 +1080,7 @@ body.cursor-hover .cursor-dot { opacity: 0; }
   font-size: 10.5px; letter-spacing: 0.16em;
   color: var(--text-mute);
   transition: color var(--d-fast), border-color var(--d-fast);
+  min-height: 44px;
 }
 .sound-toggle:hover { color: var(--text); border-color: var(--accent); }
 .sound-toggle-dot {
@@ -1343,9 +1413,10 @@ html.act-light .bg-glow {
 
 /* — Touch tap-target boost (44px+ per Apple HIG) — */
 @media (pointer: coarse) {
-  .lang button { min-width: 38px; min-height: 38px; padding: 0 10px; }
+  .lang button { min-width: 44px; min-height: 44px; padding: 0 10px; }
   .btn { min-height: 48px; }
-  .nav-links a { min-height: 36px; }
+  .nav-links a { min-height: 44px; }
+  .sound-toggle { min-height: 48px; padding-inline: 16px; }
 }
 
 /* — Focus — */
@@ -1354,6 +1425,7 @@ html.act-light .bg-glow {
   outline-offset: 3px;
   border-radius: 4px;
 }
+#main:focus { outline: none; }
 
 ::selection { background: var(--accent); color: var(--bg-0); }
 
