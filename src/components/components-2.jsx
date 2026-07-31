@@ -46,10 +46,10 @@ function splitIo(io) {
 
 // The io flow: INPUT ─token→ OUTPUT. Pure CSS motion; decorative (aria-hidden
 // on the rail/token), the words themselves are real, readable text.
-function ServiceIoFlow({ io }) {
+function ServiceIoFlow({ io, toLabel }) {
   const io2 = splitIo(io);
   return (
-    <div className="svc-io" aria-label={`${io2.in} to ${io2.out}`}>
+    <div className="svc-io" aria-label={`${io2.in} ${toLabel || "to"} ${io2.out}`}>
       <span className="svc-io-node svc-io-in">{io2.in}</span>
       <span className="svc-io-rail" aria-hidden="true">
         <span className="svc-io-tok" />
@@ -112,10 +112,12 @@ function Services({ t }) {
   // Shared details renderer (desktop panel + mobile accordion body).
   function renderDetails(s, i) {
     const rel = relatedFor(i);
+    const relatedHref = rel && rel.url ? rel.url : "#projects";
+    const relatedExternal = /^https?:\/\//i.test(relatedHref);
     return (
       <div className="svc-detail-inner">
         <p className="svc-detail-v">{s.v}</p>
-        <ServiceIoFlow io={s.io} />
+        <ServiceIoFlow io={s.io} toLabel={t.services.flow_to} />
         {/* Advisory services have no shippable 1:1 case — instead of a related
             project card they list what the engagement covers (honest, and it
             gives the panel real content instead of empty reserved space). */}
@@ -134,9 +136,11 @@ function Services({ t }) {
         {rel ? (
           <a
             className="svc-related"
-            href="#projects"
+            href={relatedHref}
+            target={relatedExternal ? "_blank" : undefined}
+            rel={relatedExternal ? "noopener noreferrer" : undefined}
             data-cursor="link"
-            data-cursor-label="open case"
+            data-cursor-label={t.services.open_case || "open case"}
           >
             <span className="svc-related-eyebrow mono">
               {t.services.related_label || "related case"}
@@ -156,7 +160,7 @@ function Services({ t }) {
   return (
     <section data-section="services" id="services" data-enter="slide-left" ref={ref}>
       <div className="shell">
-        <SecHead num="07" eyebrow={t.services.eyebrow} title={t.services.title} meta={`${items.length} services`} />
+        <SecHead num="07" eyebrow={t.services.eyebrow} title={t.services.title} meta={t.services.meta || `${items.length} services`} />
 
         <div className={`svc ${isMobile ? "is-acc" : "is-panel"}`} data-reveal>
           {/* ── LEFT: tablist (desktop) ─────────────────────────────── */}
@@ -234,7 +238,7 @@ function Services({ t }) {
           {!isMobile ? (
             <div className="svc-panel-wrap">
               {items.map(function renderPanel(s, i) {
-                if (i !== activeIdx) return null;
+                const isActive = i === activeIdx;
                 return (
                   <div
                     key={i}
@@ -243,6 +247,7 @@ function Services({ t }) {
                     id={`svc-panel-${i}`}
                     aria-labelledby={`svc-tab-${i}`}
                     tabIndex={0}
+                    hidden={!isActive}
                   >
                     <div className="svc-panel-head">
                       <span className="svc-panel-num mono">/{String(i + 1).padStart(2, "0")}</span>
@@ -1067,7 +1072,7 @@ function Faq({ t }) {
   return (
     <section data-section="faq" id="faq" data-enter="transcript" ref={ref}>
       <div className="shell">
-        <SecHead num="10" eyebrow={t.faq.eyebrow} title={t.faq.title} meta={`${items.length} · transcript`} />
+        <SecHead num="10" eyebrow={t.faq.eyebrow} title={t.faq.title} meta={t.faq.meta || `${items.length} · transcript`} />
         <p className="lead-line" data-reveal>{t.faq.lead}</p>
 
         <div className="dlg">
@@ -1132,14 +1137,14 @@ function Trust({ t }) {
   return (
     <section data-section="trust" id="trust" data-enter="slide-right" ref={ref}>
       <div className="shell">
-        <SecHead num="11" eyebrow={t.trust.eyebrow} title={t.trust.title} meta={`${proof.length} · protocol`} />
+        <SecHead num="11" eyebrow={t.trust.eyebrow} title={t.trust.title} meta={t.trust.meta || `${proof.length} · protocol`} />
         <p className="lead-line" data-reveal>{t.trust.lead}</p>
 
         <div className="proto" data-reveal>
           <div className="proto-head mono">
-            <span className="proto-head-id">QA / PROTOCOL</span>
+            <span className="proto-head-id">{t.trust.protocol_id || "QA / PROTOCOL"}</span>
             <span className="proto-head-rule" aria-hidden="true" />
-            <span className="proto-head-rev">rev. 2026.1</span>
+            <span className="proto-head-rev">{t.trust.revision || "rev. 2026.1"}</span>
           </div>
 
           <ol className="proto-list">

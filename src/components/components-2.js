@@ -65,12 +65,13 @@ function splitIo(io) {
 // The io flow: INPUT ─token→ OUTPUT. Pure CSS motion; decorative (aria-hidden
 // on the rail/token), the words themselves are real, readable text.
 function ServiceIoFlow({
-  io
+  io,
+  toLabel
 }) {
   const io2 = splitIo(io);
   return /*#__PURE__*/React.createElement("div", {
     className: "svc-io",
-    "aria-label": `${io2.in} to ${io2.out}`
+    "aria-label": `${io2.in} ${toLabel || "to"} ${io2.out}`
   }, /*#__PURE__*/React.createElement("span", {
     className: "svc-io-node svc-io-in"
   }, io2.in), /*#__PURE__*/React.createElement("span", {
@@ -131,12 +132,15 @@ function Services({
   // Shared details renderer (desktop panel + mobile accordion body).
   function renderDetails(s, i) {
     const rel = relatedFor(i);
+    const relatedHref = rel && rel.url ? rel.url : "#projects";
+    const relatedExternal = /^https?:\/\//i.test(relatedHref);
     return /*#__PURE__*/React.createElement("div", {
       className: "svc-detail-inner"
     }, /*#__PURE__*/React.createElement("p", {
       className: "svc-detail-v"
     }, s.v), /*#__PURE__*/React.createElement(ServiceIoFlow, {
-      io: s.io
+      io: s.io,
+      toLabel: t.services.flow_to
     }), Array.isArray(s.covers) && s.covers.length ? /*#__PURE__*/React.createElement("ul", {
       className: "svc-covers"
     }, s.covers.map(function renderCover(c, ci) {
@@ -149,9 +153,11 @@ function Services({
       }, "\u2192"), /*#__PURE__*/React.createElement("span", null, c));
     })) : null, rel ? /*#__PURE__*/React.createElement("a", {
       className: "svc-related",
-      href: "#projects",
+      href: relatedHref,
+      target: relatedExternal ? "_blank" : undefined,
+      rel: relatedExternal ? "noopener noreferrer" : undefined,
       "data-cursor": "link",
-      "data-cursor-label": "open case"
+      "data-cursor-label": t.services.open_case || "open case"
     }, /*#__PURE__*/React.createElement("span", {
       className: "svc-related-eyebrow mono"
     }, t.services.related_label || "related case"), /*#__PURE__*/React.createElement("span", {
@@ -178,7 +184,7 @@ function Services({
     num: "07",
     eyebrow: t.services.eyebrow,
     title: t.services.title,
-    meta: `${items.length} services`
+    meta: t.services.meta || `${items.length} services`
   }), /*#__PURE__*/React.createElement("div", {
     className: `svc ${isMobile ? "is-acc" : "is-panel"}`,
     "data-reveal": true
@@ -263,14 +269,15 @@ function Services({
   })), !isMobile ? /*#__PURE__*/React.createElement("div", {
     className: "svc-panel-wrap"
   }, items.map(function renderPanel(s, i) {
-    if (i !== activeIdx) return null;
+    const isActive = i === activeIdx;
     return /*#__PURE__*/React.createElement("div", {
       key: i,
       className: "svc-panel",
       role: "tabpanel",
       id: `svc-panel-${i}`,
       "aria-labelledby": `svc-tab-${i}`,
-      tabIndex: 0
+      tabIndex: 0,
+      hidden: !isActive
     }, /*#__PURE__*/React.createElement("div", {
       className: "svc-panel-head"
     }, /*#__PURE__*/React.createElement("span", {
@@ -1230,7 +1237,7 @@ function Faq({
     num: "10",
     eyebrow: t.faq.eyebrow,
     title: t.faq.title,
-    meta: `${items.length} · transcript`
+    meta: t.faq.meta || `${items.length} · transcript`
   }), /*#__PURE__*/React.createElement("p", {
     className: "lead-line",
     "data-reveal": true
@@ -1303,7 +1310,7 @@ function Trust({
     num: "11",
     eyebrow: t.trust.eyebrow,
     title: t.trust.title,
-    meta: `${proof.length} · protocol`
+    meta: t.trust.meta || `${proof.length} · protocol`
   }), /*#__PURE__*/React.createElement("p", {
     className: "lead-line",
     "data-reveal": true
@@ -1314,12 +1321,12 @@ function Trust({
     className: "proto-head mono"
   }, /*#__PURE__*/React.createElement("span", {
     className: "proto-head-id"
-  }, "QA / PROTOCOL"), /*#__PURE__*/React.createElement("span", {
+  }, t.trust.protocol_id || "QA / PROTOCOL"), /*#__PURE__*/React.createElement("span", {
     className: "proto-head-rule",
     "aria-hidden": "true"
   }), /*#__PURE__*/React.createElement("span", {
     className: "proto-head-rev"
-  }, "rev. 2026.1")), /*#__PURE__*/React.createElement("ol", {
+  }, t.trust.revision || "rev. 2026.1")), /*#__PURE__*/React.createElement("ol", {
     className: "proto-list"
   }, proof.map(function renderClause(p, i) {
     return /*#__PURE__*/React.createElement("li", {
