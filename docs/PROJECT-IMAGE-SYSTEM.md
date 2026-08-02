@@ -9,9 +9,9 @@ but it must feel photographed in the same studio.
 
 The production contract is enforced by `scripts/validate-site.js`:
 
-- exactly one WebP per canonical product;
-- exactly `1536 × 512` pixels (`3:1`);
-- no file larger than `150,000` bytes;
+- exactly one canonical WebP plus two responsive derivatives per product;
+- exact `768 × 256`, `1152 × 384` and `1536 × 512` outputs (`3:1`);
+- byte budgets of 60, 100 and 150 KB respectively;
 - every registry path must resolve;
 - the full set currently contains 24 covers.
 
@@ -78,10 +78,12 @@ python scripts/process-project-images.py
 npm run validate
 ```
 
-`process-project-images.py` performs a centred 3:1 crop, a Lanczos resize to
-1536 × 512 and a per-file WebP quality search. It chooses the highest quality
-that fits the 150 KB budget, writes through a temporary file and verifies the
-format and dimensions before atomically replacing the production asset.
+`process-project-images.py` performs a centred 3:1 crop, Lanczos resizes to
+768, 1152 and 1536 pixels and a per-file WebP quality search. It chooses the
+highest quality that fits each output budget, writes through a temporary file
+and verifies format and dimensions before atomically replacing the asset.
+Responsive derivatives live in `assets/proj/responsive/`; the canonical
+1536-pixel source remains in `assets/proj/`.
 
 The centred crop is permitted only when the source was authored with the
 complete subject in the safe zone. Do not use the script to rescue a badly
@@ -92,6 +94,8 @@ composed source; regenerate that source instead.
 - Project-card images are decorative because the adjacent HTML already names,
   explains and links the product; use `alt=""` and keep the frame hidden from
   the accessibility tree.
+- Card and case-page markup must expose all three candidates through `srcset`,
+  an accurate `sizes` contract and explicit `width` / `height` attributes.
 - Case-page hero images follow the same rule because the semantic hero copy is
   immediately adjacent.
 - The original `<img>` is always the reliable fallback. Optional WebGL image

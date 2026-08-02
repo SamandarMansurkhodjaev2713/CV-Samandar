@@ -29,6 +29,21 @@ async function expectNoHorizontalOverflow(expect, page, label) {
   expect.soft(geometry.bodyWidth).toBeLessThanOrEqual(geometry.clientWidth + 1);
 }
 
+function expectResponsiveProjectImage(expect, image, label) {
+  const name = label || "project image";
+  expect(image.complete, name + " did not finish loading").toBe(true);
+  expect(image.width, name + " has no intrinsic width").toBeGreaterThan(0);
+  expect(image.height, name + " has no intrinsic height").toBeGreaterThan(0);
+  // With width descriptors Chromium may expose a density-corrected
+  // naturalWidth (the computed slot width), not the source file's pixel width.
+  // Physical dimensions are covered by validate-site; the browser check owns
+  // candidate selection and preservation of the 3:1 visual contract.
+  expect(image.currentSrc, name + " has no selected responsive source").toMatch(
+    /\/assets\/proj\/(?:responsive\/[^/?]+-(?:768|1152)|[^/?]+)\.webp(?:\?.*)?$/
+  );
+  expect(Math.abs(image.width / image.height - 3), name + " lost its 3:1 ratio").toBeLessThan(0.02);
+}
+
 module.exports = {
   registry,
   orderedProducts,
@@ -36,4 +51,5 @@ module.exports = {
   liveProducts,
   settleMain,
   expectNoHorizontalOverflow,
+  expectResponsiveProjectImage,
 };

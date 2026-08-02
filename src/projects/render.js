@@ -306,6 +306,44 @@
         ],
         edges: [e("data","walk"),e("walk","risk","out-of-sample"),e("risk","paper","pass"),e("risk","reject","fail"),e("paper","report","evidence")]
       };
+      case "vacation-control": return {
+        kind: "workflow",
+        nodes: [
+          n("schedule", "График Excel", "Excel schedule", "Excel jadvali", 24, 138, 148),
+          n("normalize", "Нормализация", "Normalization", "Normalizatsiya", 212, 138, 154),
+          n("state", "Workflow state", "Workflow state", "Workflow holati", 410, 138, 166),
+          n("document", "Документ Word", "Word document", "Word hujjati", 624, 52, 164),
+          n("confirm", "Подтверждение", "Confirmation", "Tasdiqlash", 824, 52, 148),
+          n("recovery", "SQLite recovery", "SQLite recovery", "SQLite tiklash", 624, 254, 164)
+        ],
+        edges: [e("schedule","normalize"),e("normalize","state","validated"),e("state","document","next step"),e("document","confirm"),e("state","recovery","persist"),e("recovery","state",tr(lang,"продолжить","resume","davom"),[704,364,482,364])]
+      };
+      case "b24-sales-analyst": return {
+        kind: "reconcile",
+        nodes: [
+          n("crm", "Bitrix24", "Bitrix24", "Bitrix24", 22, 144, 126),
+          n("adapter", "Read-only adapter", "Read-only adapter", "Read-only adapter", 188, 144, 166),
+          n("snapshot", "Source snapshot", "Source snapshot", "Source snapshot", 394, 144, 162),
+          n("metrics", "SQL-метрики", "SQL metrics", "SQL metrikalar", 604, 52, 154),
+          n("reconcile", "Сверка", "Reconciliation", "Solishtirish", 604, 254, 154),
+          n("facts", "Verified facts", "Verified facts", "Verified facts", 806, 144, 158)
+        ],
+        edges: [e("crm","adapter","read only"),e("adapter","snapshot"),e("snapshot","metrics","deterministic"),e("snapshot","reconcile","control totals"),e("metrics","facts"),e("reconcile","facts","match")],
+        zones: [{ x: 168, y: 92, w: 416, h: 174, label: tr(lang,"КОНТУР БЕЗ ЗАПИСИ","READ-ONLY BOUNDARY","READ-ONLY KONTUR") }]
+      };
+      case "chat-app": return {
+        kind: "outbox",
+        nodes: [
+          n("message", "Локальное сообщение", "Local message", "Lokal xabar", 22, 144, 168),
+          n("outbox", "SQLite outbox", "SQLite outbox", "SQLite outbox", 232, 144, 160),
+          n("worker", "Sync worker", "Sync worker", "Sync worker", 438, 144, 148),
+          n("firebase", "Firebase services", "Firebase services", "Firebase services", 638, 52, 168),
+          n("rules", "Security rules", "Security rules", "Security rules", 638, 254, 168),
+          n("delivery", "Delivery evidence", "Delivery evidence", "Delivery evidence", 852, 144, 132)
+        ],
+        edges: [e("message","outbox","durable"),e("outbox","worker","pending"),e("worker","firebase","bounded retry"),e("worker","rules","authorize"),e("rules","firebase","allow"),e("firebase","delivery","ack"),e("firebase","outbox",tr(lang,"сбой → retry","failure → retry","xato → retry"),[726,364,306,364])],
+        zones: [{ x: 8, y: 92, w: 404, h: 174, label: tr(lang,"OFFLINE-FIRST КОНТУР","OFFLINE-FIRST BOUNDARY","OFFLINE-FIRST KONTUR") }]
+      };
       default:
         return {
           kind: "pipeline",
@@ -366,9 +404,33 @@
       "growthops-ai": ["#5275A8", "82 117 168"],
       "car-superapp": ["#D47743", "212 119 67"],
       "ai-classroom": ["#6879BF", "104 121 191"],
-      laplacefx: ["#659575", "101 149 117"]
+      laplacefx: ["#659575", "101 149 117"],
+      "vacation-control": ["#A59755", "165 151 85"],
+      "b24-sales-analyst": ["#4E7A5C", "78 122 92"],
+      "chat-app": ["#A4423F", "164 66 63"]
     };
     return themes[slug] || ["#D97757", "217 119 87"];
+  }
+
+  function projectHeroProfile(slug) {
+    var profiles = {
+      ttyl: "offset",
+      "task-manager": "panorama",
+      marketbot: "split",
+      forge: "panorama",
+      belfproctor: "reverse",
+      "vfs-killer": "offset",
+      "med-exe": "gallery",
+      bioflux: "reverse",
+      "growthops-ai": "panorama",
+      "car-superapp": "split",
+      "ai-classroom": "offset",
+      laplacefx: "reverse",
+      "vacation-control": "gallery",
+      "b24-sales-analyst": "panorama",
+      "chat-app": "offset"
+    };
+    return profiles[slug] || "split";
   }
 
   // Build the full <body> inner HTML for one product in one language.
@@ -377,7 +439,13 @@
     var ui = UI[lang] || UI.ru;
     var c = (p.i18n && p.i18n[lang]) || (p.i18n && p.i18n.ru) || {};
     var base = "../../";               // pages live at /projects/<slug>/
-    var visual = base + "assets/proj/" + esc(p.visual);
+    var visualName = String(p.visual || "");
+    var visualStem = visualName.replace(/\.webp$/i, "");
+    var visual = base + "assets/proj/" + esc(visualName);
+    var visualSet =
+      base + "assets/proj/responsive/" + esc(visualStem) + "-768.webp 768w, " +
+      base + "assets/proj/responsive/" + esc(visualStem) + "-1152.webp 1152w, " +
+      visual + " 1536w";
     var langs = ["ru", "en", "uz"];
 
     var langBtns = langs
@@ -421,6 +489,7 @@
       : "";
 
     var theme = projectTheme(p.slug);
+    var heroProfile = projectHeroProfile(p.slug);
     var chapterIds = ["thesis", "context", "system", "evidence", "boundary"];
     var chapterNav = chapterIds.map(function (id, i) {
       return '<a href="#' + id + '" data-lp-chapter-link="' + id + '"><span class="mono">' + String(i + 1).padStart(2, "0") + '</span><b>' + esc(ui.chapters[i]) + '</b></a>';
@@ -438,7 +507,7 @@
         "</header>" +
 
         '<main class="lp" id="lp-main">' +
-          '<section class="lp-hero" id="thesis" data-lp-chapter="thesis">' +
+          '<section class="lp-hero lp-hero--' + esc(heroProfile) + '" id="thesis" data-lp-chapter="thesis" data-hero-profile="' + esc(heroProfile) + '">' +
             '<div class="lp-hero-text" data-lp-reveal>' +
               '<div class="lp-eyebrow mono">' + esc(c.tag || "") + "</div>" +
               '<h1 class="lp-title">' + esc(p.name) + "</h1>" +
@@ -447,7 +516,7 @@
                 (c.role ? '<b class="lp-cred-role">' + esc(c.role) + "</b> · " : "") + esc(ui.builtBy) + "</div>" +
               '<div class="lp-cta"><a class="lp-btn lp-btn-primary" href="' + base + '#contact">' + esc(ui.discuss) + ' <span class="lp-arr">→</span></a>' + githubBtn + "</div>" +
             "</div>" +
-            '<figure class="lp-hero-visual" data-lp-reveal style="--reveal-delay:.08s"><div class="lp-photo"><img style="view-transition-name:lp-hero-' + esc(p.slug) + '" src="' + visual + '" alt="" loading="eager" fetchpriority="high" decoding="async" width="1536" height="512"></div><figcaption class="mono"><span>OBJECT / ' + esc(p.slug) + '</span><span>1536 × 512 · EDITORIAL STUDY</span></figcaption></figure>' +
+            '<figure class="lp-hero-visual" data-lp-reveal style="--reveal-delay:.08s"><div class="lp-photo"><img style="view-transition-name:lp-hero-' + esc(p.slug) + '" src="' + visual + '" srcset="' + visualSet + '" sizes="(max-width: 980px) calc(100vw - 28px), 55vw" alt="" loading="eager" fetchpriority="high" decoding="async" width="1536" height="512"></div><figcaption class="mono"><span>OBJECT / ' + esc(p.slug) + '</span><span>3:1 · RESPONSIVE EDITORIAL STUDY</span></figcaption></figure>' +
           "</section>" +
 
           '<nav class="lp-chapters" aria-label="' + esc(ui.chapterNav) + '">' + chapterNav + '</nav>' +
@@ -479,7 +548,7 @@
 
           '<section class="lp-final" data-lp-reveal><div class="lp-final-glow" aria-hidden="true"></div><span class="lp-eyebrow mono">NEXT · BUILD</span><h2 class="lp-final-head">' + esc(ui.ctaHead) + '</h2><p class="lp-final-sub">' + esc(ui.ctaSub) + '</p><div class="lp-cta lp-final-cta"><a class="lp-btn lp-btn-primary" href="' + base + '#contact">' + esc(ui.discuss) + ' <span class="lp-arr">→</span></a><a class="lp-btn lp-btn-ghost" href="' + TG + '" target="_blank" rel="noopener noreferrer">' + esc(ui.telegram) + ' <span class="lp-arr">↗</span></a></div></section>' +
 
-          '<footer class="lp-foot"><a class="lp-foot-back mono" href="' + base + '#projects"><span class="lp-back-arr">←</span> ' + esc(ui.allProjects) + '</a><span class="lp-foot-note mono">' + esc(ui.footNote) + '</span></footer>' +
+          '<footer class="lp-foot"><a class="lp-foot-back mono" href="' + base + '#proj-' + esc(p.slug) + '"><span class="lp-back-arr">←</span> ' + esc(ui.allProjects) + '</a><span class="lp-foot-note mono">' + esc(ui.footNote) + '</span></footer>' +
         "</main>" +
       "</div>"
     );

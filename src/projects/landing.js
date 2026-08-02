@@ -12,6 +12,11 @@
   var revealObserver = null;
   var chapterObserver = null;
   var activeChapter = "thesis";
+  var chapterIntent = null;
+  var chapterIntentUntil = 0;
+  var chapterIntentTimer = 0;
+  var chapterScrollHandler = null;
+  var chapterScrollFrame = 0;
 
   function validLang(value) { return LANGS.indexOf(value) !== -1 ? value : null; }
   function getStored() {
@@ -38,12 +43,11 @@
   }
 
   function currentChapterId() {
-    var chapters = ["thesis", "context", "system", "evidence", "boundary"];
-    var hashChapter = (window.location.hash || "").replace(/^#/, "");
-    // A chapter click writes the semantic destination immediately, while the
-    // smooth scroll may still be travelling. Prefer that explicit intent so a
-    // language switch mid-flight cannot snap the reader back a chapter.
-    if (chapters.indexOf(hashChapter) !== -1) return hashChapter;
+    // Preserve a fresh click intent while smooth scrolling through intermediate
+    // chapters. Once the movement settles, the viewport-derived chapter is the
+    // source of truth; a stale URL hash must not rewind a later language switch.
+    if (chapterIntent && Date.now() < chapterIntentUntil) return chapterIntent;
+    if (activeChapter) return activeChapter;
     var sections = root.querySelectorAll("[data-lp-chapter]");
     var best = "thesis"; var bestDistance = Infinity;
     Array.prototype.forEach.call(sections, function (section) {
@@ -51,6 +55,26 @@
       if (distance < bestDistance) { bestDistance = distance; best = section.getAttribute("data-lp-chapter") || best; }
     });
     return best;
+  }
+
+  function chapterAtViewport(sections) {
+    var activationLine = Math.max(150, Math.min(window.innerHeight * .3, 260));
+    var passed = null; var passedTop = -Infinity;
+    var nearest = null; var nearestDistance = Infinity;
+    Array.prototype.forEach.call(sections, function (section) {
+      var top = section.getBoundingClientRect().top;
+      var distance = Math.abs(top - activationLine);
+      if (distance < nearestDistance) { nearestDistance = distance; nearest = section; }
+      if (top <= activationLine && top > passedTop) { passedTop = top; passed = section; }
+    });
+    var target = passed || nearest;
+    return target ? target.getAttribute("data-lp-chapter") : "thesis";
+  }
+
+  function syncChapterFromViewport(sections) {
+    if (chapterIntent && Date.now() < chapterIntentUntil) return;
+    chapterIntent = null;
+    setActiveChapter(chapterAtViewport(sections));
   }
 
   function instantToChapter(id) {
@@ -71,6 +95,9 @@
   function setActiveChapter(id) {
     if (!id) return;
     activeChapter = id;
+    if (id !== "thesis" || window.location.hash) {
+      try { history.replaceState(history.state, "", "#" + id); } catch (e) { /* progressive enhancement */ }
+    }
     var chapters = ["thesis", "context", "system", "evidence", "boundary"];
     var idx = Math.max(0, chapters.indexOf(id));
     var currentIndex = root.querySelector(".lp-current-index");
@@ -109,13 +136,35 @@
 
   function wireChapters() {
     if (chapterObserver) chapterObserver.disconnect();
+    if (chapterScrollHandler) window.removeEventListener("scroll", chapterScrollHandler);
+    if (chapterScrollFrame) { cancelAnimationFrame(chapterScrollFrame); chapterScrollFrame = 0; }
+    if (chapterIntentTimer) { clearTimeout(chapterIntentTimer); chapterIntentTimer = 0; }
     var sections = root.querySelectorAll("[data-lp-chapter]");
-    chapterObserver = new IntersectionObserver(function (entries) {
-      var visible = entries.filter(function (entry) { return entry.isIntersecting; })
-        .sort(function (a, b) { return Math.abs(a.boundingClientRect.top - 150) - Math.abs(b.boundingClientRect.top - 150); });
-      if (visible[0]) setActiveChapter(visible[0].target.getAttribute("data-lp-chapter"));
-    }, { rootMargin: "-22% 0px -64% 0px", threshold: [0, .01, .2] });
+    chapterObserver = new IntersectionObserver(function () {
+      syncChapterFromViewport(sections);
+    }, { rootMargin: "-28% 0px -68% 0px", threshold: [0, .01] });
     Array.prototype.forEach.call(sections, function (section) { chapterObserver.observe(section); });
+
+    // IntersectionObserver only reports threshold crossings. A native hash
+    // jump may move between two already-intersecting long sections without a
+    // new entry, so a single rAF-coalesced scroll listener is the authoritative
+    // fallback for the sticky chapter indicator.
+    chapterScrollHandler = function () {
+      if (chapterScrollFrame) return;
+      chapterScrollFrame = requestAnimationFrame(function () {
+        chapterScrollFrame = 0;
+        syncChapterFromViewport(sections);
+      });
+    };
+    window.addEventListener("scroll", chapterScrollHandler, { passive: true });
+
+    if (chapterIntent && Date.now() < chapterIntentUntil) {
+      chapterIntentTimer = window.setTimeout(function () {
+        chapterIntentTimer = 0;
+        chapterIntent = null;
+        syncChapterFromViewport(sections);
+      }, Math.max(0, chapterIntentUntil - Date.now()) + 40);
+    }
 
     Array.prototype.forEach.call(root.querySelectorAll("[data-lp-chapter-link]"), function (link) {
       link.addEventListener("click", function (event) {
@@ -123,8 +172,15 @@
         var target = root.querySelector('[data-lp-chapter="' + id + '"]');
         if (!target) return;
         event.preventDefault();
+        chapterIntent = id;
+        chapterIntentUntil = Date.now() + 1400;
+        if (chapterIntentTimer) clearTimeout(chapterIntentTimer);
+        chapterIntentTimer = window.setTimeout(function () {
+          chapterIntentTimer = 0;
+          chapterIntent = null;
+          syncChapterFromViewport(sections);
+        }, 1440);
         setActiveChapter(id);
-        try { history.replaceState(history.state, "", "#" + id); } catch (e) {}
         target.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
       });
     });
@@ -174,12 +230,22 @@
 
   var initial = getStored();
   var initialHash = (window.location.hash || "").replace(/^#/, "");
-  if (["thesis", "context", "system", "evidence", "boundary"].indexOf(initialHash) !== -1) activeChapter = initialHash;
+  if (["thesis", "context", "system", "evidence", "boundary"].indexOf(initialHash) !== -1) {
+    activeChapter = initialHash;
+    chapterIntent = initialHash;
+    chapterIntentUntil = Date.now() + 1500;
+  }
   if (initial !== "ru") render(initial, activeChapter, false);
   else {
     wireLanguage("ru");
     wireReveal();
     wireChapters();
     wirePointer();
+  }
+  if (chapterIntent) {
+    requestAnimationFrame(function () {
+      instantToChapter(chapterIntent);
+      setActiveChapter(chapterIntent);
+    });
   }
 })();

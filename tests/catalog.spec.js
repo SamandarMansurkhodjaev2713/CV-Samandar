@@ -7,6 +7,7 @@ const {
   liveProducts,
   settleMain,
   expectNoHorizontalOverflow,
+  expectResponsiveProjectImage,
 } = require("./helpers");
 
 test.describe("project catalog", () => {
@@ -83,8 +84,9 @@ test.describe("project catalog", () => {
       complete: node.complete,
       width: node.naturalWidth,
       height: node.naturalHeight,
+      currentSrc: node.currentSrc,
     }));
-    expect(image).toEqual({ complete: true, width: 1536, height: 512 });
+    expectResponsiveProjectImage(expect, image, "case-return card image");
     await expectNoHorizontalOverflow(expect, page, "case-return");
   });
 });

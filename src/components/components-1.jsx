@@ -750,7 +750,7 @@ function formatTashkentTime(date) {
 // PROJECTS — floating product screens
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Per-project cinematic 3D dioramas — one purpose-generated image per product.
+// Per-project editorial still lifes — one purpose-generated image per product.
 // Keyed by stable project SLUG (not display name) so a translation or a future
 // title edit can never break the visual link. `bg` matches each image's own
 // dominant dark tone, so the monitor chrome never shows a seam while the image
@@ -758,8 +758,11 @@ function formatTashkentTime(date) {
 // (Superseded the earlier hand-drawn SVG blueprint set, which was keyed by
 // display name — that map and its 13 .svg files were removed with this change.)
 const PROJ_CARD = (window.PRODUCT_REGISTRY || []).reduce((cards, product) => {
+  const sourceRoot = product.image.replace(/\.webp$/i, "");
+  const responsiveRoot = sourceRoot.replace(/\/([^/]+)$/, "/responsive/$1");
   cards[product.slug] = {
     src: product.image,
+    srcSet: `${responsiveRoot}-768.webp 768w, ${responsiveRoot}-1152.webp 1152w, ${product.image} 1536w`,
     bg: "#1F1E1B",
     accent: product.accent || "var(--accent)",
   };
@@ -848,6 +851,10 @@ function ProjectCard({ p, i, labels }) {
             <img
               className="proj-screen-img"
               src={PROJ_CARD[p.slug].src}
+              srcSet={PROJ_CARD[p.slug].srcSet}
+              sizes="(max-width: 900px) 87vw, (max-width: 1280px) 46vw, 590px"
+              width="1536"
+              height="512"
               alt=""
               loading="lazy"
               decoding="async"

@@ -2,8 +2,8 @@
 """Normalize generated project covers into the production image contract.
 
 The source art is intentionally kept outside version control. This script performs
-only deterministic post-processing: centered 3:1 crop, high-quality resize and the
-highest WebP quality that remains inside the site's 150 KB performance budget.
+only deterministic post-processing: centered 3:1 crop, high-quality responsive
+resizes and the highest WebP quality that remains inside each performance budget.
 """
 
 from __future__ import annotations
@@ -18,7 +18,12 @@ from PIL import Image, ImageOps
 
 TARGET_SIZE = (1536, 512)
 TARGET_RATIO = TARGET_SIZE[0] / TARGET_SIZE[1]
-MAX_BYTES = 150_000
+OUTPUT_SPECS = (
+    # width, height, byte budget, filename suffix
+    (768, 256, 60_000, "-768"),
+    (1152, 384, 100_000, "-1152"),
+    (1536, 512, 150_000, ""),
+)
 MIN_QUALITY = 52
 MAX_QUALITY = 94
 EXPECTED_COUNT = 24
@@ -53,15 +58,15 @@ def encode_webp(image: Image.Image, quality: int) -> bytes:
     return buffer.getvalue()
 
 
-def best_bounded_webp(image: Image.Image) -> tuple[bytes, int]:
-    """Choose the highest integer WebP quality that fits MAX_BYTES."""
+def best_bounded_webp(image: Image.Image, max_bytes: int) -> tuple[bytes, int]:
+    """Choose the highest integer WebP quality that fits max_bytes."""
     low = MIN_QUALITY
     high = MAX_QUALITY
     winner: tuple[bytes, int] | None = None
     while low <= high:
         quality = (low + high) // 2
         payload = encode_webp(image, quality)
-        if len(payload) <= MAX_BYTES:
+        if len(payload) <= max_bytes:
             winner = (payload, quality)
             low = quality + 1
         else:
@@ -69,28 +74,45 @@ def best_bounded_webp(image: Image.Image) -> tuple[bytes, int]:
     if winner is None:
         payload = encode_webp(image, MIN_QUALITY)
         raise RuntimeError(
-            f"cannot reach {MAX_BYTES} bytes at quality {MIN_QUALITY}: {len(payload)} bytes"
+            f"cannot reach {max_bytes} bytes at quality {MIN_QUALITY}: {len(payload)} bytes"
         )
     return winner
 
 
-def process(source: Path, destination: Path) -> tuple[int, int, tuple[int, int]]:
-    with Image.open(source) as opened:
-        image = ImageOps.exif_transpose(opened).convert("RGB")
-        source_size = image.size
-        image = centered_ratio_crop(image)
-        image = image.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
-        payload, quality = best_bounded_webp(image)
-
+def write_output(
+    image: Image.Image,
+    destination: Path,
+    size: tuple[int, int],
+    max_bytes: int,
+) -> tuple[int, int]:
+    resized = image.resize(size, Image.Resampling.LANCZOS)
+    payload, quality = best_bounded_webp(resized, max_bytes)
     destination.parent.mkdir(parents=True, exist_ok=True)
     temporary = destination.with_suffix(".tmp.webp")
     temporary.write_bytes(payload)
     with Image.open(temporary) as check:
-        if check.format != "WEBP" or check.size != TARGET_SIZE:
+        if check.format != "WEBP" or check.size != size:
             temporary.unlink(missing_ok=True)
             raise RuntimeError(f"invalid output for {destination.name}")
     temporary.replace(destination)
-    return len(payload), quality, source_size
+    return len(payload), quality
+
+
+def process(source: Path, target: Path) -> list[tuple[Path, int, int, tuple[int, int]]]:
+    with Image.open(source) as opened:
+        image = ImageOps.exif_transpose(opened).convert("RGB")
+        source_size = image.size
+        image = centered_ratio_crop(image)
+
+        outputs = []
+        for width, height, max_bytes, suffix in OUTPUT_SPECS:
+            folder = target if not suffix else target / "responsive"
+            destination = folder / f"{source.stem}{suffix}.webp"
+            payload_size, quality = write_output(
+                image, destination, (width, height), max_bytes
+            )
+            outputs.append((destination, payload_size, quality, source_size))
+    return outputs
 
 
 def parse_args() -> argparse.Namespace:
@@ -118,13 +140,14 @@ def main() -> int:
             f"expected {EXPECTED_COUNT} PNG sources in {args.source}, found {len(sources)}"
         )
 
-    print("project cover                            source       q   bytes")
-    print("-" * 70)
+    print("project cover                            output       q   bytes")
+    print("-" * 72)
     for source in sources:
-        destination = args.target / f"{source.stem}.webp"
-        size, quality, source_size = process(source, destination)
-        dimensions = f"{source_size[0]}x{source_size[1]}"
-        print(f"{destination.name:<40} {dimensions:<11} {quality:>2} {size:>7}")
+        for destination, payload_size, quality, _source_size in process(source, args.target):
+            with Image.open(destination) as output:
+                dimensions = f"{output.width}x{output.height}"
+            relative = destination.relative_to(args.target)
+            print(f"{str(relative):<40} {dimensions:<11} {quality:>2} {payload_size:>7}")
     return 0
 
 

@@ -11,6 +11,11 @@ const ALLOWED_PRESENTATION = new Set(["live", "case"]);
 const ALLOWED_PORTFOLIO_STATE = new Set(["featured", "catalog", "hold"]);
 const ALLOWED_CONFIDENTIALITY = new Set(["public", "private_source", "nda", "sensitive"]);
 const ALLOWED_REPO_VISIBILITY = new Set(["public", "private"]);
+const PROJECT_IMAGE_SPECS = [
+  { suffix: "-768", width: 768, height: 256, maxBytes: 60000, responsive: true },
+  { suffix: "-1152", width: 1152, height: 384, maxBytes: 100000, responsive: true },
+  { suffix: "", width: 1536, height: 512, maxBytes: 150000, responsive: false },
+];
 const REQUIRED_CASE_COPY = [
   "tag", "role", "signal", "quick", "what", "problem", "architecture",
   "why", "unique", "employer", "quality", "boundary",
@@ -133,12 +138,38 @@ function validateRegistry(registry) {
       assert(copy && cleanString(copy.name) && cleanString(copy.descriptor), label + ": incomplete " + locale + " registry copy");
     });
 
-    const imagePath = path.join(ROOT, product.image);
-    assert(fs.existsSync(imagePath), label + ": missing image " + product.image);
-    const bytes = fs.statSync(imagePath).size;
-    assert(bytes <= 150000, label + ": image exceeds 150 KB (" + bytes + " bytes)");
-    const size = readWebpSize(imagePath);
-    assert(size.width === 1536 && size.height === 512, label + ": image must be 1536×512, got " + size.width + "×" + size.height);
+    const imageDirectory = path.dirname(product.image);
+    const imageStem = path.basename(product.image, ".webp");
+    PROJECT_IMAGE_SPECS.forEach(function validateProjectImage(spec) {
+      const relativePath = spec.responsive
+        ? path.join(imageDirectory, "responsive", imageStem + spec.suffix + ".webp")
+        : product.image;
+      const imagePath = path.join(ROOT, relativePath);
+      assert(fs.existsSync(imagePath), label + ": missing image " + relativePath);
+      const bytes = fs.statSync(imagePath).size;
+      assert(bytes <= spec.maxBytes, label + ": image exceeds byte budget " + relativePath + " (" + bytes + " bytes)");
+      const size = readWebpSize(imagePath);
+      assert(
+        size.width === spec.width && size.height === spec.height,
+        label + ": image must be " + spec.width + "×" + spec.height + ", got " + size.width + "×" + size.height
+      );
+    });
+  });
+
+  const responsiveDirectory = path.join(ROOT, "assets", "proj", "responsive");
+  const expectedResponsive = new Set();
+  registry.forEach(function collectExpectedResponsive(product) {
+    const imageStem = path.basename(product.image, ".webp");
+    PROJECT_IMAGE_SPECS.filter((spec) => spec.responsive).forEach(function collectSpec(spec) {
+      expectedResponsive.add(imageStem + spec.suffix + ".webp");
+    });
+  });
+  const actualResponsive = fs.existsSync(responsiveDirectory)
+    ? fs.readdirSync(responsiveDirectory).filter((name) => name.endsWith(".webp"))
+    : [];
+  assert(actualResponsive.length === expectedResponsive.size, "responsive project image count drift");
+  actualResponsive.forEach(function validateResponsiveName(name) {
+    assert(expectedResponsive.has(name), "unexpected responsive project image " + name);
   });
 
   const liveCount = registry.filter((p) => p.presentation === "live").length;
@@ -174,6 +205,7 @@ function validateMainContent(registry, content) {
 
 function validateLandings(registry, landings, generated) {
   const expected = registry.filter((p) => p.presentation === "case");
+  const generatedDiagramKinds = [];
   assert(Object.keys(landings).length === expected.length, "expected " + expected.length + " landing definitions, received " + Object.keys(landings).length);
   expected.forEach(function validateLanding(meta) {
     const landing = landings[meta.slug];
@@ -200,8 +232,18 @@ function validateLandings(registry, landings, generated) {
       assert(html.includes("window.__LP_SLUG__=" + JSON.stringify(meta.slug)), meta.id + ": generated slug marker is missing");
       assert(html.includes("../../src/content/product-registry.js"), meta.id + ": generated page does not load product registry");
       assert(html.includes("../../src/projects/landings-new.js"), meta.id + ": generated page does not load new landing source");
+      assert(html.includes('data-hero-profile="'), meta.id + ": generated hero profile is missing");
+      assert(html.includes('href="../../#proj-' + meta.slug + '"'), meta.id + ": generated return link does not preserve card context");
+      assert(html.includes("assets/proj/responsive/" + meta.slug + "-768.webp 768w"), meta.id + ": generated hero has no 768px candidate");
+      assert(html.includes("assets/proj/responsive/" + meta.slug + "-1152.webp 1152w"), meta.id + ": generated hero has no 1152px candidate");
+      const diagramMatch = html.match(/data-diagram="([^"]+)"/);
+      assert(diagramMatch && diagramMatch[1] !== "pipeline", meta.id + ": generated case still uses the generic architecture pipeline");
+      generatedDiagramKinds.push(diagramMatch[1]);
     }
   });
+  if (generated) {
+    assert(new Set(generatedDiagramKinds).size === expected.length, "case architecture diagrams must be semantically unique");
+  }
 }
 
 function validateScriptOrder() {

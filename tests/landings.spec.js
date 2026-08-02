@@ -1,7 +1,11 @@
 "use strict";
 
 const { test, expect } = require("@playwright/test");
-const { caseProducts, expectNoHorizontalOverflow } = require("./helpers");
+const {
+  caseProducts,
+  expectNoHorizontalOverflow,
+  expectResponsiveProjectImage,
+} = require("./helpers");
 
 for (const product of caseProducts) {
   test(product.slug + " has complete generated structure", async ({ page, isMobile }) => {
@@ -19,8 +23,9 @@ for (const product of caseProducts) {
       complete: node.complete,
       width: node.naturalWidth,
       height: node.naturalHeight,
+      currentSrc: node.currentSrc,
     }));
-    expect(dimensions).toEqual({ complete: true, width: 1536, height: 512 });
+    expectResponsiveProjectImage(expect, dimensions, product.slug + " hero image");
     await expectNoHorizontalOverflow(expect, page, product.slug);
   });
 }
@@ -56,4 +61,35 @@ test("new cases switch RU / EN / UZ without losing chapter or route", async ({ p
       await expect(page.locator(".lp-back")).toHaveAttribute("href", "../../#proj-" + product.slug);
     });
   }
+});
+
+test("every direct system deep link resolves the exact sticky chapter", async ({ page }) => {
+  test.setTimeout(180000);
+  for (const product of caseProducts) {
+    await test.step(product.slug, async () => {
+      await page.goto("/" + product.casePage + "#system", { waitUntil: "domcontentloaded" });
+      await expect(page.locator(".lp-current-index")).toHaveText("03");
+      await expect(page.locator('[data-lp-chapter-link="system"]')).toHaveAttribute("aria-current", "location");
+      await expect(page).toHaveURL(/#system$/);
+    });
+  }
+});
+
+test("scroll spy, language switch and reload preserve the reader chapter", async ({ page }) => {
+  const product = caseProducts.find((item) => item.slug === "chat-app");
+  await page.goto("/" + product.casePage + "#system", { waitUntil: "domcontentloaded" });
+  await page.locator('[data-lp-chapter="evidence"]').scrollIntoViewIfNeeded();
+  await expect(page.locator(".lp-current-index")).toHaveText("04");
+  await expect(page.locator('[data-lp-chapter-link="evidence"]')).toHaveAttribute("aria-current", "location");
+  await expect(page).toHaveURL(/#evidence$/);
+
+  await page.getByRole("button", { name: "EN", exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.locator(".lp-current-index")).toHaveText("04");
+  await expect(page).toHaveURL(/#evidence$/);
+
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.locator(".lp-current-index")).toHaveText("04");
+  await expect(page.locator('[data-lp-chapter-link="evidence"]')).toHaveAttribute("aria-current", "location");
 });

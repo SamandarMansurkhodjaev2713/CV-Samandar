@@ -303,7 +303,10 @@
       return Promise.resolve(false);
     }
     var image = element.querySelector("img");
-    var src = image && image.getAttribute("src");
+    // Reuse the exact candidate already selected by the browser from srcset.
+    // Falling back to `src` keeps the effect compatible with older browsers
+    // and images that do not expose currentSrc yet.
+    var src = image && (image.currentSrc || image.getAttribute("src"));
     if (!src || !build()) return Promise.resolve(false);
     if (host === element && currentTexture) {
       clearTimeout(parkTimer);
