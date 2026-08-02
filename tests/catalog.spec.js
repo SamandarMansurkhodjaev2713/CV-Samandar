@@ -63,14 +63,28 @@ test.describe("project catalog", () => {
     }
   });
 
-  test("case return link points to the exact originating card", async ({ page }) => {
-    const product = caseProducts.find((item) => item.slug === "vacation-control");
+  test("case return restores the exact originating card inside the viewport", async ({ page }) => {
+    const product = caseProducts.find((item) => item.slug === "chat-app");
     await page.goto("/" + product.casePage, { waitUntil: "domcontentloaded" });
     const back = page.locator(".lp-back");
     await expect(back).toHaveAttribute("href", "../../#proj-" + product.slug);
     await back.click();
     await expect(page).toHaveURL(new RegExp("#proj-" + product.slug + "$"));
-    await expect(page.locator("#proj-" + product.slug)).toBeVisible();
+    const card = page.locator("#proj-" + product.slug);
+    await expect(card).toBeVisible();
     await expect(page.locator("#sm-intro")).toHaveCount(0);
+    await expect(page.locator(".proj-card:visible")).toHaveCount(orderedProducts.length);
+    await expect.poll(async () => card.evaluate((node) => {
+      const rect = node.getBoundingClientRect();
+      return rect.top < window.innerHeight && rect.bottom > 0;
+    })).toBe(true);
+
+    const image = await card.locator("img").evaluate((node) => ({
+      complete: node.complete,
+      width: node.naturalWidth,
+      height: node.naturalHeight,
+    }));
+    expect(image).toEqual({ complete: true, width: 1536, height: 512 });
+    await expectNoHorizontalOverflow(expect, page, "case-return");
   });
 });

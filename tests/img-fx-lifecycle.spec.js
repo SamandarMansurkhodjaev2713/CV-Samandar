@@ -2,6 +2,21 @@
 
 const { test, expect } = require("@playwright/test");
 
+// Chromium on Windows can serialize GPU-process teardown when several WebGL
+// contexts close at once. These lifecycle tests intentionally create and lose
+// contexts, so run them in order and explicitly release the owned renderer
+// before Playwright closes each isolated browser context.
+test.describe.configure({ mode: "serial" });
+
+test.afterEach(async ({ page }, testInfo) => {
+  if (testInfo.project.name !== "desktop-chromium") return;
+  await page.evaluate(() => {
+    if (window.__SM_IMGFX && typeof window.__SM_IMGFX.dispose === "function") {
+      window.__SM_IMGFX.dispose();
+    }
+  }).catch(() => {});
+});
+
 async function settleProjects(page) {
   await page.goto("/?imgfx-contract=1#projects", { waitUntil: "domcontentloaded" });
   await page.locator("#main").waitFor({ state: "attached" });

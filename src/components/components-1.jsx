@@ -842,8 +842,8 @@ function ProjectCard({ p, i, labels }) {
             data-imgfx
             style={{ background: PROJ_CARD[p.slug].bg }}
           >
-            {/* Purpose-built 3D product diorama inside the shared monitor
-                chrome. alt="" because the frame is aria-hidden decoration and
+            {/* Purpose-built editorial still life inside the shared project
+                frame. alt="" because the frame is aria-hidden decoration and
                 the card's visible content already names and explains it. */}
             <img
               className="proj-screen-img"

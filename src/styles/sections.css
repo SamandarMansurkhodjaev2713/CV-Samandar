@@ -1529,9 +1529,9 @@ html[data-perf="low"] .proj-grid > .proj-card { translate: none; }
   gap: 6px;
   position: relative; z-index: 1;
 }
-/* Cinematic product diorama inside the shared monitor. Every source is authored
-   at the same 3:1 ratio, so cover remains crop-safe across responsive card
-   widths while keeping the illustration edge-to-edge and fully saturated. */
+/* Editorial product study inside the shared project frame. Every source is
+   authored at the same 3:1 ratio, so cover remains crop-safe across responsive
+   card widths while keeping the photograph edge-to-edge. */
 .proj-screen-body--img { padding: 0; position: relative; }
 /* Living imagery (img-fx.js) — the shader canvas is an overlay ON TOP of the
    real <img>, never a replacement. If WebGL is unavailable, the context is
