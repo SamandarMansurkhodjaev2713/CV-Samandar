@@ -2,3 +2,8 @@ node_modules/
 test-results/
 playwright-report/
 .server-*.log
+tmp/
+.env
+.env.*
+!.env.example
+!.env.*.example

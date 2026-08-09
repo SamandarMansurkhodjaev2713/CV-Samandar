@@ -7,8 +7,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -19,10 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 20
           cache: npm
@@ -30,42 +28,85 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
+      - name: Audit dependency graph
+        run: npm audit --audit-level=high
+
+      - name: Scan repository candidates for committed secrets
+        run: npm run scan:secrets
+
       - name: Install browser test runtime
-        run: npx playwright install --with-deps chromium webkit
+        run: npx playwright install --with-deps chromium firefox webkit
 
       - name: Build and validate generated assets
-        run: npm run build
+        run: npm run check:build
+
+      - name: Verify generated files are committed
+        run: test -z "$(git status --porcelain --untracked-files=all -- index.html src/components projects sitemap.xml)"
+
+      - name: Verify documentation contracts
+        run: npm run check:docs
 
       - name: Run desktop, mobile and accessibility quality gate
         run: npm test
 
-      - name: Add SPA fallback and disable Jekyll
-        run: |
-          cp index.html 404.html
-          touch .nojekyll
+      - name: Run isolated desktop and mobile performance budgets
+        run: npm run test:performance
+
+      - name: Disable Jekyll
+        run: touch .nojekyll
 
       - name: Prepare static artifact
         run: |
           mkdir -p _site/vendor
-          cp index.html 404.html .nojekyll favicon.svg og-image.png _site/
+          cp index.html 404.html robots.txt sitemap.xml .nojekyll favicon.svg og-image.png _site/
           cp -R assets projects src _site/
           cp vendor/three.min.js vendor/react.production.min.js vendor/react-dom.production.min.js _site/vendor/
 
       - name: Configure Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
           path: _site
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03 # v4
+
+  verify-production:
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Install Chromium smoke runtime
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify deployed main and every generated case route
+        run: npm run test:production
+
+      - name: Verify all external live products
+        run: npm run check:live

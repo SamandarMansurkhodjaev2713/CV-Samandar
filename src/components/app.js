@@ -103,6 +103,18 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "motion": 1,
   "density": "regular"
 } /*EDITMODE-END*/;
+function resolveInitialTweaks() {
+  try {
+    const requested = new URL(window.location.href).searchParams.get("lang");
+    if (requested && window.CONTENT && requested in window.CONTENT) {
+      return {
+        ...TWEAK_DEFAULTS,
+        lang: requested
+      };
+    }
+  } catch (error) {/* URL APIs can be restricted in embedded previews */}
+  return TWEAK_DEFAULTS;
+}
 function useScrollEngine(setActiveSection) {
   useE(() => {
     const progressEl = document.querySelector(".scroll-progress");
@@ -529,6 +541,7 @@ function Nav({
     // inside the 60px bar (it opened, but as a 1280x59 sliver). Keeping it
     // outside is the only robust fix; z-index keeps the burger clickable above it.
     React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("nav", {
+      "aria-label": t.nav.label || "Primary navigation",
       className: `nav ${open ? "nav-open" : ""} ${capsule ? "is-capsule" : ""}`
     }, /*#__PURE__*/React.createElement("div", {
       className: "nav-inner"
@@ -800,7 +813,7 @@ function PortfolioTweaks({
   }));
 }
 function App() {
-  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [tweaks, setTweak] = useTweaks(resolveInitialTweaks());
   const [activeSection, setActiveSection] = useS("hero");
   const [coreReady, setCoreReady] = useS(false);
   const canvasRef = useR(null);
@@ -1085,8 +1098,21 @@ function App() {
     let cancelled = false;
     const timers = [];
     let resizeObserver = null;
+    let mutationObserver = null;
     let layoutTimer = 0;
+    let pulseTimer = 0;
+    let settling = true;
+    let stableSince = 0;
+    const startedAt = performance.now();
+    const minimumWatchMs = 3200;
+    const hardCeilingMs = 8000;
+    document.documentElement.setAttribute("data-deep-link-settling", id);
+    document.documentElement.removeAttribute("data-deep-link-settled");
     function stopSettling() {
+      if (!settling) return;
+      settling = false;
+      document.documentElement.removeAttribute("data-deep-link-settling");
+      document.documentElement.setAttribute("data-deep-link-settled", id);
       if (resizeObserver) {
         resizeObserver.disconnect();
         resizeObserver = null;
@@ -1095,10 +1121,22 @@ function App() {
         window.clearTimeout(layoutTimer);
         layoutTimer = 0;
       }
+      if (pulseTimer) {
+        window.clearTimeout(pulseTimer);
+        pulseTimer = 0;
+      }
+      if (mutationObserver) {
+        mutationObserver.disconnect();
+        mutationObserver = null;
+      }
     }
     function cancelOnIntent() {
       cancelled = true;
       stopSettling();
+    }
+    function cancelOnNavigation(event) {
+      const destination = event && event.detail && event.detail.id ? String(event.detail.id).replace(/^#/, "") : (window.location.hash || "").replace(/^#/, "");
+      if (destination && destination !== id) cancelOnIntent();
     }
     window.addEventListener("wheel", cancelOnIntent, {
       passive: true,
@@ -1115,8 +1153,27 @@ function App() {
     window.addEventListener("keydown", cancelOnIntent, {
       once: true
     });
+    window.addEventListener("sm:navigation-intent", cancelOnNavigation);
+    window.addEventListener("hashchange", cancelOnNavigation);
+    window.addEventListener("popstate", cancelOnNavigation);
+    function schedulePulse(delay) {
+      if (cancelled || !settling || pulseTimer) return;
+      pulseTimer = window.setTimeout(() => {
+        pulseTimer = 0;
+        tryScroll();
+      }, delay == null ? 120 : delay);
+    }
+    function sectionDelta(el) {
+      const rect = el.getBoundingClientRect();
+      if (id.indexOf("proj-") === 0) {
+        return rect.top - Math.max(12, (window.innerHeight - rect.height) / 2);
+      }
+      const margin = Number.parseFloat(window.getComputedStyle(el).scrollMarginTop);
+      const desiredTop = Number.isFinite(margin) ? margin : 0;
+      return rect.top - desiredTop;
+    }
     function tryScroll() {
-      if (cancelled) return;
+      if (cancelled || !settling) return;
       const el = document.getElementById(id);
       if (el && el.offsetParent !== null) {
         // Force an instant jump even though the root stylesheet declares
@@ -1126,37 +1183,89 @@ function App() {
         const previous = root.style.scrollBehavior;
         root.style.scrollBehavior = "auto";
         try {
-          el.scrollIntoView({
-            behavior: "auto",
-            block: id.indexOf("proj-") === 0 ? "center" : "start"
-          });
+          const delta = sectionDelta(el);
+          if (Math.abs(delta) > 2) {
+            stableSince = 0;
+            if (id.indexOf("proj-") === 0) {
+              el.scrollIntoView({
+                behavior: "auto",
+                block: "center",
+                inline: "center"
+              });
+            } else {
+              window.scrollTo({
+                top: Math.max(0, window.scrollY + delta),
+                behavior: "auto"
+              });
+            }
+          } else if (!stableSince) {
+            stableSince = performance.now();
+          }
         } finally {
           root.style.scrollBehavior = previous;
         }
       }
+      const now = performance.now();
+      const fontsReady = !document.fonts || document.fonts.status === "loaded";
+      const shellReady = document.documentElement.getAttribute("data-app-boot") === "ready";
+      const stableLongEnough = stableSince && now - stableSince >= 700;
+      if (shellReady && fontsReady && now - startedAt >= minimumWatchMs && stableLongEnough || now - startedAt >= hardCeilingMs) {
+        // One last geometry-based correction at the ceiling. Unlike a fixed
+        // delay, this survives late pin-host/font layout without fighting real
+        // input: every wheel/touch/pointer/key gesture cancels ownership above.
+        const finalTarget = document.getElementById(id);
+        if (finalTarget && finalTarget.offsetParent !== null) {
+          const finalDelta = sectionDelta(finalTarget);
+          if (Math.abs(finalDelta) > 2) window.scrollTo({
+            top: Math.max(0, window.scrollY + finalDelta),
+            behavior: "auto"
+          });
+        }
+        stopSettling();
+        return;
+      }
+      schedulePulse(120);
     }
     // React mount, project expansion and pin-host binding each change layout at
     // a different moment. Re-assert the same deterministic target across those
     // milestones, but stop instantly on any real user intent so the page never
     // fights manual scrolling.
-    [0, 120, 360, 760, 1280, 2200].forEach(delay => {
+    [0, 80, 220, 480, 900, 1400].forEach(delay => {
       timers.push(window.setTimeout(tryScroll, delay));
     });
     const main = document.getElementById("main");
     if (main && typeof ResizeObserver === "function") {
       resizeObserver = new ResizeObserver(() => {
         if (cancelled) return;
+        stableSince = 0;
         if (layoutTimer) window.clearTimeout(layoutTimer);
         layoutTimer = window.setTimeout(tryScroll, 40);
       });
       resizeObserver.observe(main);
+    }
+    if (main && typeof MutationObserver === "function") {
+      mutationObserver = new MutationObserver(() => {
+        if (cancelled) return;
+        stableSince = 0;
+        schedulePulse(0);
+      });
+      mutationObserver.observe(main, {
+        childList: true,
+        subtree: true
+      });
     }
     if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === "function") {
       document.fonts.ready.then(() => {
         if (!cancelled) tryScroll();
       }).catch(() => {});
     }
-    timers.push(window.setTimeout(stopSettling, 4200));
+    window.addEventListener("load", tryScroll, {
+      once: true
+    });
+    window.addEventListener("sm:bootstrap-ready", tryScroll, {
+      once: true
+    });
+    schedulePulse(0);
     return () => {
       cancelled = true;
       stopSettling();
@@ -1165,11 +1274,21 @@ function App() {
       window.removeEventListener("touchstart", cancelOnIntent);
       window.removeEventListener("pointerdown", cancelOnIntent);
       window.removeEventListener("keydown", cancelOnIntent);
+      window.removeEventListener("sm:navigation-intent", cancelOnNavigation);
+      window.removeEventListener("hashchange", cancelOnNavigation);
+      window.removeEventListener("popstate", cancelOnNavigation);
+      window.removeEventListener("load", tryScroll);
+      window.removeEventListener("sm:bootstrap-ready", tryScroll);
     };
   }, []);
   useE(() => {
     document.documentElement.setAttribute("data-density", tweaks.density);
     document.documentElement.setAttribute("lang", lang);
+    try {
+      const url = new URL(window.location.href);
+      if (lang === "ru") url.searchParams.delete("lang");else url.searchParams.set("lang", lang);
+      history.replaceState(history.state, "", url.pathname + url.search + url.hash);
+    } catch (error) {/* progressive enhancement */}
   }, [tweaks.density, lang]);
   useE(() => {
     document.documentElement.style.setProperty("--motion", String(tweaks.motion));

@@ -30,7 +30,7 @@ module.exports = defineConfig({
     video: "retain-on-failure",
     serviceWorkers: "block",
   },
-  webServer: {
+  webServer: process.env.PLAYWRIGHT_SKIP_WEBSERVER ? undefined : {
     command: "node scripts/static-server.js 4173",
     url: "http://127.0.0.1:4173/",
     reuseExistingServer: !process.env.CI,
@@ -41,7 +41,7 @@ module.exports = defineConfig({
   projects: [
     {
       name: "desktop-chromium",
-      testIgnore: /(?:reduced-motion|webkit-smoke)\.spec\.js/,
+      testIgnore: /(?:reduced-motion|webkit-smoke|firefox-smoke)\.spec\.js/,
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1440, height: 1000 },
@@ -49,7 +49,7 @@ module.exports = defineConfig({
     },
     {
       name: "mobile-chromium",
-      testIgnore: /(?:reduced-motion|webkit-smoke)\.spec\.js/,
+      testIgnore: /(?:reduced-motion|webkit-smoke|firefox-smoke)\.spec\.js/,
       use: {
         ...devices["Pixel 7"],
         viewport: { width: 412, height: 839 },
@@ -61,6 +61,14 @@ module.exports = defineConfig({
       use: {
         ...devices["iPhone 13"],
         viewport: { width: 390, height: 844 },
+      },
+    },
+    {
+      name: "desktop-firefox",
+      testMatch: /firefox-smoke\.spec\.js/,
+      use: {
+        ...devices["Desktop Firefox"],
+        viewport: { width: 1440, height: 1000 },
       },
     },
     {

@@ -69,12 +69,13 @@ test("reduced motion is reactive policy state without removing readable content"
   await page.goto("/?policy-contract=1#hero", { waitUntil: "domcontentloaded" });
   await page.locator("#main").waitFor({ state: "attached" });
 
-  const policy = await page.evaluate(() => ({
+    const policy = await page.evaluate(() => ({
     state: window.__SM_MOTION_POLICY.getState(),
     allowsMotion: window.__SM_MOTION_POLICY.allows("motion"),
     allowsShader: window.__SM_MOTION_POLICY.allows("shader"),
     perf: document.documentElement.getAttribute("data-perf"),
     motion: document.documentElement.getAttribute("data-motion-policy"),
+    motionLite: document.documentElement.hasAttribute("data-motion-lite"),
   }));
 
   expect(policy.state.reducedMotion).toBe(true);
@@ -83,8 +84,35 @@ test("reduced motion is reactive policy state without removing readable content"
   expect(policy.allowsShader).toBe(false);
   expect(policy.perf).toBe("low");
   expect(policy.motion).toBe("reduced");
+  expect(policy.motionLite).toBe(true);
   await expect(page.locator(".hero-proof")).toBeVisible();
   await expect(page.locator(".hero-roles")).toContainText("QA");
+});
+
+test("motion-lite follows the centralized tier contract", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "one engine covers policy attributes");
+  await settleMain(page, "#hero");
+
+  const matrix = await page.evaluate(() => {
+    const policy = window.__SM_MOTION_POLICY;
+    return ["high", "mid", "low"].map((tier) => {
+      policy.__set(tier);
+      return {
+        tier,
+        attribute: document.documentElement.getAttribute("data-perf"),
+        lite: document.documentElement.hasAttribute("data-motion-lite"),
+        motion: policy.allows("motion"),
+        shader: policy.allows("shader"),
+        heavy: policy.allows("heavy"),
+      };
+    });
+  });
+
+  expect(matrix).toEqual([
+    { tier: "high", attribute: "high", lite: false, motion: true, shader: true, heavy: true },
+    { tier: "mid", attribute: "mid", lite: false, motion: true, shader: true, heavy: false },
+    { tier: "low", attribute: "low", lite: true, motion: false, shader: false, heavy: false },
+  ]);
 });
 
 test("viewport class follows responsive changes without creating a second tier", async ({ page }, testInfo) => {

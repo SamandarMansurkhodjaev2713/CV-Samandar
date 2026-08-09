@@ -29,7 +29,9 @@
   var UPGRADE_AFTER_MS = 4200;
   var SETTLE_MS = 2200;
   var BURST_IDLE_MS = 5200;
-  var SPIKE_MS = 90;
+  // Ignore only resume/debugger-scale gaps. Frames in the 90–500 ms range are
+  // catastrophic delivery, not harmless outliers, and must lower the tier.
+  var SPIKE_MS = 500;
   var LONG_TASK_WINDOW_MS = 5000;
   var TEST_MODE = !!window.__SM_TEST_MODE;
 
@@ -63,6 +65,7 @@
   var destroyed = false;
   var forcedTier = TEST_MODE ? "low" : null;
   var resizeQueued = false;
+  var resizeRaf = 0;
 
   function viewportClass() {
     var width = Math.max(root.clientWidth || 0, window.innerWidth || 0);
@@ -106,6 +109,8 @@
     root.setAttribute("data-motion-policy", state.reducedMotion ? "reduced" : "full");
     root.setAttribute("data-pointer", state.pointerClass);
     root.setAttribute("data-viewport", state.viewportClass);
+    if (state.tier === "low" || state.reducedMotion || state.saveData) root.setAttribute("data-motion-lite", "");
+    else root.removeAttribute("data-motion-lite");
     if (state.saveData) root.setAttribute("data-save-data", "");
     else root.removeAttribute("data-save-data");
   }
@@ -157,7 +162,15 @@
   function stepTier(direction, reason) {
     var index = TIERS.indexOf(state.tier);
     var next = TIERS[Math.max(0, Math.min(TIERS.length - 1, index + direction))];
-    setTier(next, reason);
+    var changed = setTier(next, reason);
+    // A sustained good signal at `high`, or bad signal at `low`, cannot move
+    // any further. Clear the pressure window so the burst sampler is allowed
+    // to become quiet instead of keeping a permanent RAF alive.
+    if (!changed && next === state.tier) {
+      badSince = 0;
+      goodSince = 0;
+    }
+    return changed;
   }
 
   function pruneLongTasks(now) {
@@ -201,13 +214,23 @@
 
       if (now - samplerStartedAt > SETTLE_MS && !forcedTier) {
         if (delta > BAD_FRAME_MS) {
-          if (!badSince) badSince = now;
-          goodSince = 0;
-          if (now - badSince >= DOWNGRADE_AFTER_MS) stepTier(-1, "frame-budget-downgrade");
+          if (state.tier === "low") {
+            badSince = 0;
+            goodSince = 0;
+          } else {
+            if (!badSince) badSince = now;
+            goodSince = 0;
+            if (now - badSince >= DOWNGRADE_AFTER_MS) stepTier(-1, "frame-budget-downgrade");
+          }
         } else if (delta <= GOOD_FRAME_MS) {
-          if (!goodSince) goodSince = now;
-          badSince = 0;
-          if (now - goodSince >= UPGRADE_AFTER_MS) stepTier(1, "frame-budget-upgrade");
+          if (state.tier === "high") {
+            badSince = 0;
+            goodSince = 0;
+          } else {
+            if (!goodSince) goodSince = now;
+            badSince = 0;
+            if (now - goodSince >= UPGRADE_AFTER_MS) stepTier(1, "frame-budget-upgrade");
+          }
         } else {
           badSince = 0;
           goodSince = 0;
@@ -306,8 +329,10 @@
   function onResize() {
     if (resizeQueued) return;
     resizeQueued = true;
-    requestAnimationFrame(function () {
+    resizeRaf = requestAnimationFrame(function () {
+      resizeRaf = 0;
       resizeQueued = false;
+      if (destroyed) return;
       setState({ viewportClass: viewportClass() }, "viewport");
       wake("viewport");
     });
@@ -354,6 +379,9 @@
     destroyed = true;
     if (raf) cancelAnimationFrame(raf);
     raf = 0;
+    if (resizeRaf) cancelAnimationFrame(resizeRaf);
+    resizeRaf = 0;
+    resizeQueued = false;
     if (longTaskObserver) {
       try { longTaskObserver.disconnect(); } catch (error) { /* optional */ }
       longTaskObserver = null;

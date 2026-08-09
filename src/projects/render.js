@@ -57,6 +57,7 @@
       ctaHead: "Нужен похожий продукт?",
       ctaSub: "Соберу под ключ — от архитектуры до деплоя и QA. Отвечу с оценкой за 24 часа.",
       telegram: "Написать в Telegram",
+      languageLabel: "Язык страницы",
     },
     en: {
       allProjects: "All projects",
@@ -87,8 +88,9 @@
       footNote: "Part of Samandar's portfolio · Full-Stack · AI Automation · QA",
       builtBy: "one engineer · code · architecture · deploy · QA",
       ctaHead: "Need something like this?",
-      ctaSub: "I'll build it end-to-end — from architecture to deploy and QA. Reply with an estimate within 24h.",
+      ctaSub: "I'll build it end-to-end — from architecture to deploy and QA. I'll reply with an estimate within 24 hours.",
       telegram: "Message on Telegram",
+      languageLabel: "Page language",
     },
     uz: {
       allProjects: "Barcha loyihalar",
@@ -121,6 +123,7 @@
       ctaHead: "Shunga o'xshash mahsulot kerakmi?",
       ctaSub: "Kalit topshiriladigan holda quraman — arxitekturadan deploy va QA'gacha. 24 soatda baho bilan javob beraman.",
       telegram: "Telegram'da yozish",
+      languageLabel: "Sahifa tili",
     },
   };
 
@@ -435,10 +438,10 @@
 
   // Build the full <body> inner HTML for one product in one language.
   // `p` is the whole product record (with .i18n); `lang` selects the copy.
-  function LP_render(p, lang) {
+  function LP_render(p, lang, base) {
     var ui = UI[lang] || UI.ru;
     var c = (p.i18n && p.i18n[lang]) || (p.i18n && p.i18n.ru) || {};
-    var base = "../../";               // pages live at /projects/<slug>/
+    base = base || "../../";            // localized pages add one directory level
     var visualName = String(p.visual || "");
     var visualStem = visualName.replace(/\.webp$/i, "");
     var visual = base + "assets/proj/" + esc(visualName);
@@ -448,14 +451,20 @@
       visual + " 1536w";
     var langs = ["ru", "en", "uz"];
 
+    function languageHref(targetLang) {
+      if (lang === "ru") return targetLang === "ru" ? "./" : targetLang + "/";
+      return targetLang === "ru" ? "../" : "../" + targetLang + "/";
+    }
+
     var langBtns = langs
       .map(function (L) {
         return (
-          '<button type="button" class="lp-lang-btn' +
+          '<a class="lp-lang-btn' +
           (L === lang ? " is-active" : "") +
-          '" data-lang="' + L + '" aria-pressed="' + (L === lang) + '">' +
+          '" data-lang="' + L + '" href="' + languageHref(L) + '"' +
+          (L === lang ? ' aria-current="page"' : "") + '>' +
           L.toUpperCase() +
-          "</button>"
+          "</a>"
         );
       })
       .join("");
@@ -465,8 +474,11 @@
     // than looping back to a GitHub card. Public code-bearing products link to
     // their real repo instead.
     var githubBtn;
-    var isPrivate = p.private === true || p.status === "NDA";
-    var isPublicShowcase = p.status === "NDA" && !!p.github;
+    var confidentiality = p.meta && p.meta.confidentiality
+      ? p.meta.confidentiality
+      : (p.private === true ? "private_source" : "public");
+    var isPrivate = confidentiality !== "public";
+    var isPublicShowcase = isPrivate && !!p.github;
     if (isPublicShowcase) {
       githubBtn =
         '<a class="lp-btn lp-btn-ghost" href="' + esc(p.github) + '" target="_blank" rel="noopener noreferrer">' +
@@ -502,7 +514,7 @@
           '<div class="lp-current mono"><span class="lp-current-index">01</span><span class="lp-current-divider">/05</span><b class="lp-current-name">' + esc(ui.chapters[0]) + '</b></div>' +
           '<div class="lp-bar-right">' +
             (p.status ? '<span class="lp-status mono lp-status--' + esc(String(p.status).toLowerCase()) + '">' + esc(p.status) + "</span>" : "") +
-            '<div class="lp-lang" role="group" aria-label="language">' + langBtns + "</div>" +
+            '<div class="lp-lang" role="group" aria-label="' + esc(ui.languageLabel) + '">' + langBtns + "</div>" +
           "</div>" +
         "</header>" +
 

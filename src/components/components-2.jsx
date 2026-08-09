@@ -399,6 +399,45 @@ function CV({ t, links }) {
     setDocumentTab(tabs[next], true);
   }
 
+  function keepTimelineFocusVisible(event) {
+    const control = event.target && event.target.closest ? event.target.closest(".cv-role-head") : null;
+    if (!control) return;
+    function alignFocusedTimelineControl() {
+      if (!control.isConnected || document.activeElement !== control) return;
+      const nav = document.querySelector(".nav");
+      const dock = document.querySelector(".mobile-dock.is-visible");
+      const navRect = nav ? nav.getBoundingClientRect() : null;
+      const dockRect = dock && getComputedStyle(dock).display !== "none" ? dock.getBoundingClientRect() : null;
+      const topBoundary = Math.max(0, navRect ? navRect.bottom : 0) + 12;
+      const bottomBoundary = Math.min(window.innerHeight, dockRect ? dockRect.top : window.innerHeight) - 12;
+      let rect = control.getBoundingClientRect();
+      if (rect.top >= topBoundary && rect.bottom <= bottomBoundary) return;
+      const root = document.documentElement;
+      const previous = root.style.scrollBehavior;
+      root.style.scrollBehavior = "auto";
+      try {
+        // Let the browser resolve the target against the current document
+        // geometry first. This remains correct if an expanded role or a late
+        // font metric changed every absolute offset above the control.
+        control.scrollIntoView({ behavior: "auto", block: "center", inline: "nearest" });
+        rect = control.getBoundingClientRect();
+        if (rect.top < topBoundary || rect.bottom > bottomBoundary) {
+          const targetTop = topBoundary + Math.max(0, (bottomBoundary - topBoundary - rect.height) / 2);
+          window.scrollTo({ top: Math.max(0, window.scrollY + rect.top - targetTop), behavior: "auto" });
+        }
+      } finally {
+        root.style.scrollBehavior = previous;
+      }
+    }
+    // Native focus scrolling is synchronous in current engines, so the first
+    // pass closes the gap even when background tabs throttle animation frames.
+    // The microtask catches same-turn layout changes; rAF remains a final guard
+    // for a breakpoint or font reflow that lands after the focus event.
+    alignFocusedTimelineControl();
+    if (typeof queueMicrotask === "function") queueMicrotask(alignFocusedTimelineControl);
+    requestAnimationFrame(alignFocusedTimelineControl);
+  }
+
   function onPrint() {
     restoreOpenIdx.current = openIdx;
     setDocTab("cv"); // the printed PDF is the résumé, never the readme view
@@ -443,7 +482,7 @@ function CV({ t, links }) {
   })();
 
   return (
-    <section data-section="cv" id="cv" data-enter="curtain" ref={ref}>
+    <section data-section="cv" id="cv" data-enter="curtain" ref={ref} onFocusCapture={keepTimelineFocusVisible}>
       <div className="shell">
         <SecHead num="08" eyebrow={t.cv.eyebrow} title={t.cv.title} em={t.cv.title.split(" ").pop()} meta={`v.2026 · ${years || "active"}`} />
 
@@ -1480,7 +1519,7 @@ function Contact({ t, links }) {
           <aside className="contact-side" data-reveal>
             <div className="contact-deploy">
               <div className="mono contact-deploy-head">
-                <span className="chip"><span className="chip-dot" />direct</span>
+                <span className="chip"><span className="chip-dot" />{t.contact.direct_label || "direct"}</span>
                 <span>{t.contact.channel_label}</span>
               </div>
               <div className="contact-deploy-body">

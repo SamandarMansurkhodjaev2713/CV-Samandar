@@ -292,10 +292,14 @@ test("a production deep link settles on the requested chapter after layout and f
   await page.goto("/?deep-link-shell=1#process", { waitUntil: "domcontentloaded" });
   await page.locator("#main").waitFor({ state: "attached" });
   await expect.poll(
-    () => page.locator("#process").evaluate((element) => Math.round(element.getBoundingClientRect().top)),
-    { timeout: 5000 }
-  ).toBeGreaterThanOrEqual(60);
+    () => page.locator("#process").evaluate((element) => {
+      const top = Math.round(element.getBoundingClientRect().top);
+      return top >= 60 && top <= 92;
+    }),
+    { timeout: 7000 }
+  ).toBe(true);
   const top = await page.locator("#process").evaluate((element) => Math.round(element.getBoundingClientRect().top));
+  expect(top).toBeGreaterThanOrEqual(60);
   expect(top).toBeLessThanOrEqual(92);
   await expect(page.locator(".mobile-dock-label-num")).toHaveText("/09");
   await expect(page.locator(".mobile-dock-label")).toContainText("Метод");

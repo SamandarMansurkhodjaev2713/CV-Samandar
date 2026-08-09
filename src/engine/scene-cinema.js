@@ -24,6 +24,21 @@
     catch (error) { return false; }
   }
 
+  function limitedMotion() {
+    if (!policy || typeof policy.getState !== "function") return false;
+    var state = policy.getState();
+    return state.tier === "low" || state.saveData;
+  }
+
+  function performanceCut(target, id) {
+    document.documentElement.classList.add("is-flying");
+    instantScroll(target);
+    setActiveSection(id);
+    window.setTimeout(function () {
+      document.documentElement.classList.remove("is-flying");
+    }, 240);
+  }
+
   function sectionId(value) {
     if (!value) return null;
     var id = String(value).charAt(0) === "#" ? String(value).slice(1) : String(value);
@@ -175,15 +190,29 @@
     var target = targetFor(id);
     if (!id || !target) return Promise.resolve({ id: id, reason: "missing-target" });
 
+    // Publish viewport ownership before History or scrolling changes. The
+    // first-load deep-link stabilizer listens to this event and yields to the
+    // newer transaction even when navigation is invoked through the API rather
+    // than a pointer/keyboard gesture.
+    try {
+      window.dispatchEvent(new CustomEvent("sm:navigation-intent", {
+        detail: { id: id, source: options.source || "programmatic" },
+      }));
+    } catch (error) { /* optional coordination channel */ }
+
     updateHistory(id, options.history || "push");
     if (active && active.id === id && !active.finished) return active.promise;
 
     var reduced = reducedMotion();
-    if (!supportsVT || reduced || options.instant) {
+    var limited = limitedMotion();
+    if (!supportsVT || reduced || limited || options.instant) {
       cancelActive("fallback");
-      fallbackScroll(target, reduced || options.instant);
-      setActiveSection(id);
-      return Promise.resolve({ id: id, reason: reduced ? "reduced-motion" : "fallback" });
+      if (limited && !reduced && !options.instant) performanceCut(target, id);
+      else {
+        fallbackScroll(target, reduced || options.instant);
+        setActiveSection(id);
+      }
+      return Promise.resolve({ id: id, reason: reduced ? "reduced-motion" : limited ? "performance-cut" : "fallback" });
     }
     return begin(id, target, options.source || "programmatic");
   }
@@ -226,7 +255,7 @@
     document.addEventListener("visibilitychange", onVisibilityChange);
     if (policy && typeof policy.on === "function") {
       unsubscribePolicy = policy.on(function (tier, state) {
-        if (state.reducedMotion && active) {
+        if ((state.reducedMotion || state.saveData || tier === "low") && active) {
           var transaction = active;
           skipNative(transaction);
           instantScroll(transaction.target);

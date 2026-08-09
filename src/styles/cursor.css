@@ -1,5 +1,13 @@
 /* cursor.css — Smart cursor + motion utilities */
 
+/* The observer-backed near zone lets the browser stop infinite decorative
+   timelines several screens away without flattening the experience. No-JS
+   rendering is unaffected because the root class is added by motion.js only. */
+html.motion-zones section[data-section]:not(.is-motion-near),
+html.motion-zones section[data-section]:not(.is-motion-near) * {
+  animation-play-state: paused !important;
+}
+
 /* ── Hide native cursor only when smart cursor active and pointing fine */
 @media (hover: hover) and (pointer: fine) {
   body.has-smart-cursor,
@@ -95,6 +103,11 @@
    so we DON'T animate them in CSS (avoids double-easing). Only opacity / color
    are CSS-transitioned. */
 .sc-ring {
+  --sc-ring-x: 0px;
+  --sc-ring-y: 0px;
+  --sc-ring-scale: 1;
+  --sc-mode-scale-x: 1;
+  --sc-mode-scale-y: 1;
   position: fixed;
   width: 28px; height: 28px;
   border: 1px solid currentColor;
@@ -103,6 +116,8 @@
   margin-left: -14px;
   margin-top: -14px;
   opacity: 0.55;
+  transform: translate(var(--sc-ring-x), var(--sc-ring-y))
+    scale(calc(var(--sc-ring-scale) * var(--sc-mode-scale-x)), calc(var(--sc-ring-scale) * var(--sc-mode-scale-y)));
   transform-origin: center;
   transition: opacity .2s ease, border-color .2s ease;
   will-change: width, height, border-radius, transform, margin;
@@ -114,23 +129,23 @@
 }
 .sc-cursor.is-idle .sc-dot { box-shadow: 0 0 12px var(--accent), 0 0 0 1px rgba(0,0,0,.4); }
 @keyframes cursorIdlePulse {
-  0%, 100% { transform: translate(-50%,-50%) scale(1); opacity: 0.55; }
-  50%      { transform: translate(-50%,-50%) scale(1.4); opacity: 0.85; }
+  0%, 100% { opacity: 0.55; box-shadow: 0 0 0 rgba(var(--accent-rgb) / 0); }
+  50%      { opacity: 0.85; box-shadow: 0 0 14px rgba(var(--accent-rgb) / 0.18); }
 }
 .sc-cursor[data-mode="link"] .sc-ring { border-radius: 6px; opacity: 0.85; }
 .sc-cursor[data-mode="drag"] .sc-ring { border-radius: 4px; opacity: 0.95; border-style: dashed; }
 .sc-cursor[data-mode="file"] .sc-ring { border-radius: 2px; opacity: 0.85; }
 .sc-cursor[data-mode="copy"] .sc-ring { border-radius: 4px; opacity: 0.8; }
 .sc-cursor[data-mode="send"] .sc-ring { border-radius: 999px; opacity: 0.9; background: rgba(var(--accent-rgb) / 0.08); }
-.sc-cursor[data-mode="input"] .sc-ring { border-radius: 2px; opacity: 0.6; transform: translate(-50%, -50%) scaleX(0.15); }
+.sc-cursor[data-mode="input"] .sc-ring { border-radius: 2px; opacity: 0.6; --sc-mode-scale-x: 0.15; }
 .sc-cursor[data-mode="tab"] .sc-ring { border-radius: 999px; opacity: 0.7; border-style: dotted; }
 /* "target" — a reticle/lock state (used over the skills radar): show the
    built-in crosshair, expand the ring into a square bracket, drop the dot. */
 .sc-cursor[data-mode="target"] .sc-cross-h,
 .sc-cursor[data-mode="target"] .sc-cross-v { display: block; }
-.sc-cursor[data-mode="target"] .sc-ring { border-radius: 2px; opacity: 0.75; transform: translate(-50%, -50%) scale(1.5); }
+.sc-cursor[data-mode="target"] .sc-ring { border-radius: 2px; opacity: 0.75; --sc-mode-scale-x: 1.5; --sc-mode-scale-y: 1.5; }
 .sc-cursor[data-mode="target"] .sc-dot { opacity: 0; }
-.sc-cursor.is-down .sc-ring { opacity: 1; transform: translate(-50%, -50%) scale(0.7); }
+.sc-cursor.is-down .sc-ring { opacity: 1; --sc-mode-scale-x: 0.7; --sc-mode-scale-y: 0.7; }
 
 /* ── Label (the "smart" part) */
 .sc-label {

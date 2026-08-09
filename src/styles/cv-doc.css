@@ -756,6 +756,10 @@
   .cv-main { padding: 24px 22px; border-right: 0; border-bottom: 1px solid var(--line, rgba(var(--doc-ink-rgb, 244 241 234) / 0.08)); }
   .cv-side { padding: 24px 22px; gap: 26px; }
   .cv-role-head { grid-template-columns: 1fr auto; gap: 10px; padding: 16px 0; }
+  /* `scrollIntoView()` must account for both fixed chrome layers: the top
+     navigation and the mobile command dock. The asymmetric end margin moves
+     focused timeline controls above the dock even in 390px-tall landscape. */
+  .cv-role-head { scroll-margin-block: var(--nav-h, 60px) 160px; }
   .cv-role-y { grid-column: 1 / -1; }
   .cv-role-tag { display: none; }
   /* The timeline rail (.cv-roles::before) is drawn at left:4px, sized for the

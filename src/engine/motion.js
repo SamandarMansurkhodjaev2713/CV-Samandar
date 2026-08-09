@@ -16,13 +16,20 @@
   var revealObserver = null;
   var sectionObserver = null;
   var centerObserver = null;
+  var parallaxObserver = null;
+  var motionZoneObserver = null;
   var pendingReveals = new Set();
   var pendingSections = new Set();
+  var visibleParallax = new Set();
+  var motionZones = new Set();
   var magnets = [];
   var pinHosts = [];
   var parallaxElements = [];
   var pinMeasurements = [];
   var parallaxMeasurements = [];
+  var motionZoneMeasurements = [];
+  var visiblePendingReveals = [];
+  var visiblePendingSections = [];
   var magnetMeasurements = [];
   var layoutDirty = true;
   var spotlightElement = null;
@@ -164,6 +171,28 @@
         if (entry.isIntersecting) enterSection(entry.target);
       });
     }, { rootMargin: "0px 0px -12% 0px", threshold: 0.01 });
+  }
+
+  function refreshMotionZones() {
+    if (!("IntersectionObserver" in window)) return;
+    if (!motionZoneObserver) {
+      document.documentElement.classList.add("motion-zones");
+      motionZoneObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          // A queued pre-scroll IO record can arrive after a programmatic
+          // scroll under CPU pressure. Confirm the live geometry before
+          // pausing a section so a stale `false` never freezes visible motion.
+          var margin = (window.innerHeight || 0) * 0.65;
+          entry.target.classList.toggle("is-motion-near", entry.isIntersecting || isVisible(entry.target, margin));
+        });
+      }, { rootMargin: "65% 0px 65% 0px", threshold: 0 });
+    }
+    document.querySelectorAll("section[data-section]").forEach(function (section) {
+      if (motionZones.has(section)) return;
+      motionZones.add(section);
+      section.classList.toggle("is-motion-near", isVisible(section, (window.innerHeight || 0) * 0.65));
+      motionZoneObserver.observe(section);
+    });
   }
 
   function bindRevealElements() {
@@ -350,6 +379,22 @@
     pinHosts = Array.from(document.querySelectorAll("[data-pin]"));
     pinHosts.forEach(function (element) { element.classList.add("pin-bound"); });
     parallaxElements = Array.from(document.querySelectorAll("[data-plx]"));
+    visibleParallax.clear();
+    if (parallaxObserver) parallaxObserver.disconnect();
+    parallaxObserver = null;
+    if ("IntersectionObserver" in window) {
+      parallaxObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) visibleParallax.add(entry.target);
+          else visibleParallax.delete(entry.target);
+        });
+        layoutDirty = true;
+        if (runtime) runtime.wake("parallax-visibility");
+      }, { rootMargin: "220px 0px 220px 0px", threshold: 0 });
+      parallaxElements.forEach(function (element) { parallaxObserver.observe(element); });
+    } else {
+      parallaxElements.forEach(function (element) { visibleParallax.add(element); });
+    }
     layoutDirty = true;
     if (runtime) runtime.wake("motion-refresh");
   }
@@ -371,11 +416,13 @@
     } else {
       morphRect = null;
     }
-    magnetMeasurements = magnets.map(function (magnet) {
-      if (!magnet.element.isConnected) return null;
-      var rect = magnet.element.getBoundingClientRect();
-      return { magnet: magnet, rect: rect };
-    });
+    if (!magnetMeasurements.length || context.input.scrolled || context.input.resized || layoutDirty) {
+      magnetMeasurements = magnets.map(function (magnet) {
+        if (!magnet.element.isConnected) return null;
+        var rect = magnet.element.getBoundingClientRect();
+        return { magnet: magnet, rect: rect };
+      });
+    }
     spotlightRect = spotlightElement && spotlightElement.isConnected
       ? spotlightElement.getBoundingClientRect()
       : null;
@@ -405,6 +452,7 @@
       ring[key] += (ringTarget[key] - ring[key]) * ringEase;
     });
 
+    var magnetsMoving = false;
     magnetMeasurements.forEach(function (measurement) {
       if (!measurement) return;
       var magnet = measurement.magnet;
@@ -415,10 +463,14 @@
       var dy = cursorTarget.y - cy;
       var distance = Math.hypot(dx, dy);
       var radius = Math.max(rect.width, rect.height) * 0.9;
-      magnet.active = distance < radius;
-      var factor = magnet.active ? (1 - distance / radius) * magnet.strength : 0;
-      magnet.x = dx * factor;
-      magnet.y = dy * factor;
+      var active = distance < radius;
+      var factor = active ? (1 - distance / radius) * magnet.strength : 0;
+      var nextX = dx * factor;
+      var nextY = dy * factor;
+      magnetsMoving = magnetsMoving || Math.abs(nextX - magnet.x) > 0.02 || Math.abs(nextY - magnet.y) > 0.02;
+      magnet.active = active;
+      magnet.x = nextX;
+      magnet.y = nextY;
     });
 
     cursorMoving =
@@ -430,7 +482,7 @@
       Math.abs(ring.offsetX - ringTarget.offsetX) > 0.2 ||
       Math.abs(ring.offsetY - ringTarget.offsetY) > 0.2 ||
       Math.abs(ring.scale - ringTarget.scale) > 0.01 ||
-      magnets.some(function (magnet) { return magnet.active; });
+      magnetsMoving;
   }
 
   function mutateCursor(context) {
@@ -446,8 +498,9 @@
       cursorRing.style.marginLeft = (-ring.width / 2).toFixed(2) + "px";
       cursorRing.style.marginTop = (-ring.height / 2).toFixed(2) + "px";
       cursorRing.style.borderRadius = ring.radius.toFixed(1) + "px";
-      cursorRing.style.transform = "translate(" + ring.offsetX.toFixed(2) + "px," +
-        ring.offsetY.toFixed(2) + "px) scale(" + ring.scale.toFixed(3) + ")";
+      cursorRing.style.setProperty("--sc-ring-x", ring.offsetX.toFixed(2) + "px");
+      cursorRing.style.setProperty("--sc-ring-y", ring.offsetY.toFixed(2) + "px");
+      cursorRing.style.setProperty("--sc-ring-scale", ring.scale.toFixed(3));
     }
     magnetMeasurements.forEach(function (measurement) {
       if (!measurement) return;
@@ -474,7 +527,7 @@
         value: range > 0 ? Math.max(0, Math.min(1, -rect.top / range)) : 0,
       };
     });
-    parallaxMeasurements = parallaxElements.map(function (element) {
+    parallaxMeasurements = Array.from(visibleParallax).map(function (element) {
       if (!element.isConnected) return null;
       var rect = element.getBoundingClientRect();
       if (rect.bottom < -100 || rect.top > height + 100) return null;
@@ -483,6 +536,23 @@
         element: element,
         value: -(rect.top + rect.height / 2 - height / 2) * speed,
       };
+    });
+    // IntersectionObserver remains the low-cost primary path. This shared
+    // scroll-frame measurement is the deterministic fallback for throttled or
+    // delayed observer delivery (background pressure, WebKit and test runners).
+    var zoneMargin = height * 0.65;
+    motionZoneMeasurements = Array.from(motionZones).map(function (element) {
+      if (!element.isConnected) return null;
+      var rect = element.getBoundingClientRect();
+      return { element: element, near: rect.bottom >= -zoneMargin && rect.top <= height + zoneMargin };
+    });
+    visiblePendingReveals = [];
+    pendingReveals.forEach(function (element) {
+      if (isVisible(element, 220)) visiblePendingReveals.push(element);
+    });
+    visiblePendingSections = [];
+    pendingSections.forEach(function (element) {
+      if (isVisible(element, 220)) visiblePendingSections.push(element);
     });
     layoutDirty = false;
   }
@@ -496,6 +566,11 @@
         if (measurement) measurement.element.style.setProperty("--plx", measurement.value.toFixed(1) + "px");
       });
     }
+    motionZoneMeasurements.forEach(function (measurement) {
+      if (measurement) measurement.element.classList.toggle("is-motion-near", measurement.near);
+    });
+    visiblePendingReveals.forEach(function (element) { reveal(element, true); });
+    visiblePendingSections.forEach(enterSection);
   }
 
   function buildCenterStage() {
@@ -534,6 +609,7 @@
 
   function refresh() {
     if (!initialized) return;
+    refreshMotionZones();
     bindRevealElements();
     refreshInteractiveElements();
     buildCenterStage();
@@ -586,9 +662,16 @@
     if (revealObserver) revealObserver.disconnect();
     if (sectionObserver) sectionObserver.disconnect();
     if (centerObserver) centerObserver.disconnect();
+    if (parallaxObserver) parallaxObserver.disconnect();
+    if (motionZoneObserver) motionZoneObserver.disconnect();
     revealObserver = null;
     sectionObserver = null;
     centerObserver = null;
+    parallaxObserver = null;
+    motionZoneObserver = null;
+    motionZones.forEach(function (section) { section.classList.remove("is-motion-near"); });
+    motionZones.clear();
+    document.documentElement.classList.remove("motion-zones");
     revealEverything();
     pendingReveals.clear();
     pendingSections.clear();
@@ -596,8 +679,12 @@
     magnets = [];
     pinHosts = [];
     parallaxElements = [];
+    visibleParallax.clear();
     pinMeasurements = [];
     parallaxMeasurements = [];
+    motionZoneMeasurements = [];
+    visiblePendingReveals = [];
+    visiblePendingSections = [];
     magnetMeasurements = [];
     spotlightElement = null;
     spotlightRect = null;
@@ -627,9 +714,14 @@
       return {
         initialized: initialized,
         cursor: Boolean(cursor),
+        cursorMoving: cursorMoving,
         magnets: magnets.length,
+        measuredMagnets: magnetMeasurements.filter(Boolean).length,
         pins: pinHosts.length,
         parallax: parallaxElements.length,
+        activeParallax: visibleParallax.size,
+        motionZones: motionZones.size,
+        activeMotionZones: document.querySelectorAll("section[data-section].is-motion-near").length,
         pendingReveals: pendingReveals.size,
         pendingSections: pendingSections.size,
         runtimeSubscribers: runtime

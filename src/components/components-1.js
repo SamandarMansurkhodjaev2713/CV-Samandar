@@ -709,7 +709,7 @@ function About({
     className: "about-id-online"
   }, /*#__PURE__*/React.createElement("span", {
     className: "about-id-dot"
-  }), "online"), /*#__PURE__*/React.createElement("span", {
+  }), t.about.online_label || "online"), /*#__PURE__*/React.createElement("span", {
     className: "about-id-sep"
   }, "\xB7"), /*#__PURE__*/React.createElement("span", null, "Tashkent \xB7 UTC+5"), /*#__PURE__*/React.createElement("span", {
     className: "about-id-sep"
@@ -741,7 +741,7 @@ function About({
     className: "about-md-para"
   }, p))), /*#__PURE__*/React.createElement("div", {
     className: "about-chips",
-    "aria-label": "primary stack"
+    "aria-label": t.about.stack_label || "Primary stack"
   }, TECH_CHIPS.map((c, i) => /*#__PURE__*/React.createElement("span", {
     key: i,
     className: "about-chip mono"
@@ -766,7 +766,7 @@ function About({
     className: "about-contrib-head mono"
   }, /*#__PURE__*/React.createElement("span", null, contribLabel), /*#__PURE__*/React.createElement("span", {
     className: "about-contrib-legend"
-  }, /*#__PURE__*/React.createElement("span", null, "less"), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", null, t.about.less_label || "less"), /*#__PURE__*/React.createElement("span", {
     className: "about-contrib-legend-cell",
     "data-level": "0"
   }), /*#__PURE__*/React.createElement("span", {
@@ -781,7 +781,7 @@ function About({
   }), /*#__PURE__*/React.createElement("span", {
     className: "about-contrib-legend-cell",
     "data-level": "4"
-  }), /*#__PURE__*/React.createElement("span", null, "more"))), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("span", null, t.about.more_label || "more"))), /*#__PURE__*/React.createElement("div", {
     className: "about-contrib-grid about-contrib-grid--days",
     style: {
       gridTemplateColumns: `repeat(${gh.days.length}, 1fr)`
@@ -940,7 +940,13 @@ function ProjectCard({
     height: "512",
     alt: "",
     loading: "lazy",
-    decoding: "async"
+    decoding: "async",
+    onError: event => {
+      const image = event.currentTarget;
+      image.hidden = true;
+      const frame = image.parentElement;
+      if (frame) frame.classList.add("is-image-fallback");
+    }
   })) : /*#__PURE__*/React.createElement("div", {
     className: "proj-screen-body"
   }, /*#__PURE__*/React.createElement("div", {
@@ -969,13 +975,13 @@ function ProjectCard({
     className: "proj-meta"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("dt", {
     className: "mono"
-  }, "problem"), /*#__PURE__*/React.createElement("dd", null, p.problem)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("dt", {
+  }, labels.problem_label || "problem"), /*#__PURE__*/React.createElement("dd", null, p.problem)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("dt", {
     className: "mono"
-  }, "solution"), /*#__PURE__*/React.createElement("dd", null, p.solution)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("dt", {
+  }, labels.solution_label || "solution"), /*#__PURE__*/React.createElement("dd", null, p.solution)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("dt", {
     className: "mono"
-  }, "role"), /*#__PURE__*/React.createElement("dd", null, p.role)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("dt", {
+  }, labels.role_label || "role"), /*#__PURE__*/React.createElement("dd", null, p.role)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("dt", {
     className: "mono"
-  }, "outcome"), /*#__PURE__*/React.createElement("dd", {
+  }, labels.outcome_label || "outcome"), /*#__PURE__*/React.createElement("dd", {
     className: "proj-outcome"
   }, p.outcome))), /*#__PURE__*/React.createElement("div", {
     className: "proj-stack"
@@ -1009,7 +1015,7 @@ function ProjectCard({
 function ProjectChapterDots({
   items,
   gridRef,
-  label
+  labels
 }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const cardRefs = useRef([]);
@@ -1090,7 +1096,7 @@ function ProjectChapterDots({
   const visibleItems = items.slice(windowStart, windowStart + dotWindow);
   return /*#__PURE__*/React.createElement("nav", {
     className: "proj-chapters",
-    "aria-label": label || "project list"
+    "aria-label": labels && labels.list_label || "project list"
   }, /*#__PURE__*/React.createElement("ol", {
     className: "proj-chapters-dots",
     ref: dotsRef
@@ -1118,12 +1124,12 @@ function ProjectChapterDots({
     type: "button",
     onClick: () => onStep(-1),
     disabled: activeIdx <= 0,
-    "aria-label": "Previous project"
+    "aria-label": labels && labels.previous_project || "Previous project"
   }, "\u2190"), /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: () => onStep(1),
     disabled: activeIdx >= items.length - 1,
-    "aria-label": "Next project"
+    "aria-label": labels && labels.next_project || "Next project"
   }, "\u2192")));
 }
 
@@ -1172,11 +1178,49 @@ function Projects({
     const idx = items.findIndex(p => p.slug === slug);
     if (idx >= FEATURED_PROJECT_COUNT) setExpanded(true);
   }, [items]);
+
+  // A focused action must stay inside the real reading window, not merely the
+  // layout viewport. On a short landscape phone the fixed navigation and the
+  // command dock remove a meaningful slice from both edges; after a rotation,
+  // native focus scrolling may otherwise settle a card CTA behind the dock.
+  // Run on the next frame so this correction wins after the browser's own
+  // focus scroll and after any just-completed breakpoint reflow.
+  function keepProjectFocusVisible(event) {
+    const control = event.target && event.target.closest ? event.target.closest(".proj-cta, .proj-repo, .proj-expand, .proj-chapters button") : null;
+    if (!control) return;
+    function alignFocusedProjectControl() {
+      if (!control.isConnected || document.activeElement !== control) return;
+      const nav = document.querySelector(".nav");
+      const dock = document.querySelector(".mobile-dock.is-visible");
+      const navRect = nav ? nav.getBoundingClientRect() : null;
+      const dockRect = dock && getComputedStyle(dock).display !== "none" ? dock.getBoundingClientRect() : null;
+      const topBoundary = Math.max(0, navRect ? navRect.bottom : 0) + 12;
+      const bottomBoundary = Math.min(window.innerHeight, dockRect ? dockRect.top : window.innerHeight) - 12;
+      const rect = control.getBoundingClientRect();
+      if (rect.top >= topBoundary && rect.bottom <= bottomBoundary) return;
+      const targetTop = topBoundary + Math.max(0, (bottomBoundary - topBoundary - rect.height) / 2);
+      const root = document.documentElement;
+      const previous = root.style.scrollBehavior;
+      root.style.scrollBehavior = "auto";
+      try {
+        window.scrollTo({
+          top: Math.max(0, window.scrollY + rect.top - targetTop),
+          behavior: "auto"
+        });
+      } finally {
+        root.style.scrollBehavior = previous;
+      }
+    }
+    alignFocusedProjectControl();
+    if (typeof queueMicrotask === "function") queueMicrotask(alignFocusedProjectControl);
+    requestAnimationFrame(alignFocusedProjectControl);
+  }
   return /*#__PURE__*/React.createElement("section", {
     "data-section": "projects",
     id: "projects",
     "data-enter": "rise",
-    ref: ref
+    ref: ref,
+    onFocusCapture: keepProjectFocusVisible
   }, /*#__PURE__*/React.createElement("div", {
     className: "shell"
   }, /*#__PURE__*/React.createElement(SecHead, {
@@ -1207,7 +1251,7 @@ function Projects({
   }, expanded ? "↑" : "↓")) : null, /*#__PURE__*/React.createElement(ProjectChapterDots, {
     items: chapterItems,
     gridRef: gridRef,
-    label: t.projects.list_label
+    labels: t.projects
   })));
 }
 

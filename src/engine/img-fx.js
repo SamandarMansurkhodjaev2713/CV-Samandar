@@ -25,6 +25,7 @@
   var hostRect = null;
   var hostToken = 0;
   var textureSerial = 0;
+  var lifecycleToken = 0;
   var loader = THREE ? new THREE.TextureLoader() : null;
   var textureCache = Object.create(null);
   var textureCount = 0;
@@ -163,6 +164,9 @@
     }
     if (renderer) {
       try { renderer.dispose(); } catch (error) { /* optional */ }
+      if (markDisposed && typeof renderer.forceContextLoss === "function") {
+        try { renderer.forceContextLoss(); } catch (error) { /* optional */ }
+      }
     }
     if (canvas) {
       canvas.removeEventListener("webglcontextlost", onContextLost, false);
@@ -209,9 +213,16 @@
       return existing.promise;
     }
     var entry = { texture: null, promise: null, lastUsed: ++textureSerial };
+    var loadToken = lifecycleToken;
     textureCache[src] = entry;
     entry.promise = new Promise(function (resolve, reject) {
       loader.load(src, function (texture) {
+        if (disposed || loadToken !== lifecycleToken) {
+          try { texture.dispose(); } catch (error) { /* optional */ }
+          if (textureCache[src] === entry) delete textureCache[src];
+          reject(new Error("Texture load cancelled"));
+          return;
+        }
         entry.promise = null;
         entry.texture = texture;
         entry.lastUsed = ++textureSerial;
@@ -445,6 +456,7 @@
   function dispose() {
     if (disposed) return;
     disposed = true;
+    lifecycleToken += 1;
     clearTimeout(parkTimer);
     parkTimer = 0;
     document.removeEventListener("pointerover", onPointerOver, { passive: true });

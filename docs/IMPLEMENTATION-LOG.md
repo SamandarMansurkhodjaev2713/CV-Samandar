@@ -137,3 +137,124 @@ Production-mode browser QA дополнительно подтвердил:
 Следующий этап: двенадцать отдельных сцен главной и конфигуратор. Работа идёт
 сверху вниз, но каждый блок принимается только после desktop/mobile,
 keyboard/reduced-motion, visual и regression-проверок.
+
+## Main, catalog and case-system checkpoint
+
+После последовательных product/UX/visual проходов:
+
+- все 12 сцен главной приведены к одной editorial-системе, но имеют разные
+  композиции и enter-signature;
+- Builder выдаёт проверяемый диапазон, границы и handoff, а не имитацию оферты;
+- Stack связывает full-stack, AI и реальный QA-инструментарий;
+- Services, Method, FAQ, Quality и Contact больше не повторяют каталог;
+- CV имеет APG-tabs, корректные факты, канонический двухстраничный PDF и
+  устойчивый keyboard focus в portrait/landscape;
+- каталог содержит 24 уникальные карточки: 9 live и 15 case;
+- 24 предметные WebP-обложки используют responsive sources и branded fallback;
+- 15 приватных кейсов имеют индивидуальные hero, system diagram, evidence,
+  QA и boundary, полностью сгенерированные в RU/EN/UZ;
+- возврат из кейса раскрывает каталог, фокусирует точную карточку и не
+  проигрывает intro повторно.
+
+Контрольные commits этапа: 59e18ed, a74b89d, a631172, a77eeee.
+
+## Release hardening checkpoint
+
+Локально подтверждено до финального asset bump:
+
+- desktop Chromium: 112 passed, 5 project-specific skipped, 0 failed;
+- mobile Chromium: 30 passed, 87 project-specific skipped, 0 failed;
+- iPhone WebKit: 2/2; desktop Firefox: 2/2; reduced motion: 1/1;
+- performance budget: desktop и mobile 2/2;
+- SceneCinema stress: 40/40 повторов;
+- responsive orientation/text-zoom stress: 10/10;
+- CV focus/landscape stress: 20/20;
+- WCAG axe для главной, 15 кейсов и 404 — без A/AA violations в
+  автоматизированном наборе;
+- secret scan — чисто; dependency audit — 0 vulnerabilities;
+- 9/9 внешних live URL вернули пригодный HTML;
+- schema validation: 24 продукта, 9 live, 15 case, 3 локали;
+- две последовательные сборки дают 51 байтово идентичный generated artifact.
+
+Исправленные предрелизные дефекты:
+
+- WebKit больше не повышает локальные HTTP-ресурсы до HTTPS через избыточный
+  upgrade-insecure-requests;
+- short-landscape dock не перекрывает CV и project focus;
+- CV и project gallery возвращают focused control в безопасную viewport-зону;
+- SceneCinema timeout и performance-cut проверяются как независимые контракты;
+- build пропускает byte-identical записи и повторяет кратковременно
+  заблокированную Windows-запись;
+- production-smoke отделяет first-party failure от честного GitHub API
+  rate-limit fallback.
+
+## Visual release QA
+
+В ignored tmp/release-qa сформированы и просмотрены:
+
+- 12 сцен главной × desktop/mobile — 24 viewport capture;
+- 15 case pages × desktop/mobile — 30 full-page capture;
+- 4 contact sheet.
+
+Full-page case capture выполняет реальный scroll-sweep перед снимком. Это
+устранило ложные пустые главы, которые появляются, если compositor screenshot
+не активирует IntersectionObserver. Повторная ревизия revealed-v2 подтверждает
+полный ритм от hero до final CTA; точечно просмотрены GrowthOps AI, TTYL и ChAT,
+включая мобильную TTYL.
+
+Реальные NVDA/VoiceOver и physical Safari/iOS/Chrome/Android не заявляются как
+выполненные: они остаются внешним ручным release-gate и явно отражаются в
+QA-матрице.
+
+## Production contract
+
+Добавлен отдельный post-deploy gate:
+
+- production main монтирует 24 карточки без first-party/runtime errors;
+- все 45 RU/EN/UZ case URL возвращают локализованный статический shell;
+- case → exact card сохраняет hash и пропускает intro;
+- 9 внешних live URL проверяются после Pages deploy.
+
+Сам production deploy и его smoke пока не заявлены: следующий шаг — финальный
+asset bump, полный повтор обязательной матрицы, release commit, push в main,
+GitHub Actions и проверка фактически развернутого URL.
+
+## Final local release candidate — v229
+
+Дата локальной приёмки: 2026-08-10.
+
+После финального asset bump и повторного полного аудита подтверждено:
+
+- `npm test`: 147 passed, 106 осознанно skipped по нерелевантным
+  browser-project/opt-in сценариям, 0 failed и 0 flaky за 7.1 минуты;
+- `npm run test:performance`: desktop Chromium 1/1 и mobile Chromium 1/1;
+- отдельный iPhone WebKit critical path: 2/2;
+- `npm run check:build`: 51 generated artifact байтово идентичны в двух
+  последовательных сборках;
+- `npm run validate`: 24 продукта, 9 live, 15 case, 3 локали;
+- `npm audit --audit-level=high`: 0 vulnerabilities;
+- `npm run scan:secrets`: credential signatures не найдены;
+- `npm run check:live`: 9/9 внешних live URL вернули usable HTML;
+- `git diff --check`: whitespace errors отсутствуют;
+- свежий `npm run qa:visual`: 4/4 capture packages, 54 кадра и 4 contact
+  sheet; вручную просмотрены все contact sheet и full-page TTYL/ChAT на
+  desktop/mobile.
+
+Редкие lifecycle-гонки были не скрыты retry, а воспроизведены и закрыты:
+
+- intro и mobile deep-link выдержали 20 применимых повторов под четырьмя
+  параллельными workers;
+- offscreen motion pause/resume выдержал 20/20 повторов;
+- Contact mobile geometry, landing locale switch, reduced-motion history и
+  mobile dock выдержали 40/40 применимых повторов;
+- первый deep-link теперь удерживает viewport по фактической геометрии и
+  отдаёт его пользовательскому жесту или более новой SceneCinema-транзакции;
+- видимость анимационных зон имеет IntersectionObserver primary path и
+  детерминированный shared-scroll fallback;
+- RU/EN/UZ на case-страницах являются настоящими ссылками и работают до
+  подключения JavaScript; enhancement сохраняет текущую главу.
+
+Ограничения зафиксированы честно: physical iPhone/Android, Safari на реальном
+устройстве, NVDA/VoiceOver/TalkBack и smoke нового production commit ещё не
+выполнены. Следующий шаг — release commit, quality workflow, deploy в `main`,
+обязательный verify-production и тег только на фактически развёрнутом SHA.

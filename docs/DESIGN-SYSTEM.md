@@ -1,295 +1,220 @@
-# Samandar Portfolio Design System
+# Design system портфолио Samandar
 
-Статус: `v3 / authoritative`
-Вертикальный эталон: `intro → hero → signal`
-Языки: `RU / EN / UZ`
-Тема: только тёмная, material editorial
+Статус: описание текущей реализации.
 
-## 1. Идея
+Область: главная страница, 24 карточки продуктов и 15 проектных case routes.
 
-Сайт показывает не «набор технологий», а один контур ответственности:
+Локали: RU, EN, UZ.
+
+Визуальный режим: одна тёмная тема Ember с двумя светлыми документными сценами.
+
+Этот документ фиксирует уже реализованную визуальную систему. Он не заменяет исходный код и не является доказательством прохождения ручной проверки или получения Awwwards-награды.
+
+## 1. Источники истины
+
+| Область | Авторитетный источник |
+|---|---|
+| порядок и состав 12 сцен | `FULL_MENU_SECTIONS` и фактический DOM в `src/components/app.jsx` |
+| компоненты главной | `src/components/*.jsx`; одноимённые `.js` — generated artifacts |
+| тексты главной и карточек RU/EN/UZ | `src/content/content.js` |
+| идентичность, порядок, маршруты и публичные границы 24 продуктов | `src/content/product-registry.js` |
+| содержимое 15 кейсов | `src/projects/landings-data.js` и `src/projects/landings-new.js` |
+| разметка кейсов и общий UI-копирайт | `src/projects/render.js` |
+| базовые токены и shell | `src/styles/styles.css` |
+| композиции сцен и адаптивность главной | `src/styles/sections.css`, `src/styles/features.css`, `src/styles/cv-doc.css` |
+| визуальная система кейсов | `src/projects/landing.css` |
+| адаптивные и визуальные проверяемые контракты | `tests/responsive-matrix.spec.js`, `tests/stage5-sections.spec.js`, `tests/landings.spec.js`, `tests/visual-release.spec.js` |
+
+Если текст документа расходится с этими файлами, верен код. Числа `24 / 9 / 15 / 3` дополнительно закреплены в `scripts/validate-site.js` и проверяются до и после сборки.
+
+## 2. Дизайн-намерение
+
+Позиционирование строится вокруг одного инженерного маршрута:
 
 `BUILD → VERIFY → SHIP`
 
-Samandar проектирует и собирает продукт, проверяет его как QA-инженер и
-доводит до production. Каждый визуальный эффект обязан усиливать один из этих
-трёх смыслов. Эффект без продуктовой функции удаляется.
+Сайт показывает не перечень технологий, а способность спроектировать продукт, собрать его, проверить как QA-инженер и довести до доступного результата. Визуальный язык соединяет:
 
-Характер:
+- editorial-масштаб и читаемую иерархию;
+- тёплую материальность вместо неонового sci-fi интерфейса;
+- инженерную точность в сетке, моноширинных метаданных и схемах;
+- заметную режиссуру без scroll-jacking;
+- честные статусы, доказательства и границы вместо вымышленных метрик.
 
-- тёплая тёмная материальность вместо неона и sci-fi UI;
-- editorial-масштаб и инженерная точность;
-- доказательства, состояния и реальные маршруты вместо вымышленных метрик;
-- заметная режиссура без scroll-jacking;
-- одна визуальная система на главной и 15 case pages;
-- одинаковая типографическая идентичность в RU, EN и UZ.
+Signature motif — Proof Rail. Это линия с тремя контрольными состояниями BUILD, VERIFY и SHIP. Она обозначает реальный путь работы, а не процент готовности, live-телеметрию или обещание production-статуса.
 
-## 2. Signature motif — Proof Rail
+## 3. Двенадцать сцен главной
 
-Proof Rail — калиброванная линия с тремя контрольными точками:
+Порядок ниже одновременно является порядком DOM, полноэкранного меню, счётчика и мобильного rail. Семь основных пунктов компактной навигации — `about`, `projects`, `skills`, `services`, `cv`, `faq`, `contact`; полноэкранное меню раскрывает все двенадцать глав.
 
-1. `BUILD` — архитектура, интерфейс, код, AI.
-2. `VERIFY` — test design, API/UI checks, CI, regression control.
-3. `SHIP` — production, наблюдаемость, поддержка результата.
+| № | ID | Роль в истории | Motion-сигнатура / композиционный контракт |
+|---:|---|---|---|
+| 01 | `hero` | имя, роль, главный тезис | самостоятельная первая сцена; нативный sticky-переход в Signal |
+| 02 | `signal` | причины работать вместе | `emerge`; читатель сам управляет disclosure |
+| 03 | `about` | профиль и проверяемый контекст | `develop`; README-композиция и безопасный GitHub fallback |
+| 04 | `projects` | 24 продукта | `rise`; desktop grid и mobile horizontal gallery |
+| 05 | `builder` | конфигурация будущего проекта | `assemble`; параметры превращаются в структурированный brief |
+| 06 | `skills` | инженерная и QA-компетенция | `converge`; аналитический холодный акт |
+| 07 | `services` | форматы сотрудничества | `slide-left`; первая половина pinned-overlap с CV |
+| 08 | `cv` | документированная карьера | `curtain`; светлая paper-сцена поверх Services |
+| 09 | `process` | способ работы | `line-stagger`; последовательный delivery pipeline |
+| 10 | `faq` | снятие возражений | `transcript`; раскрываемые ответы с явным affordance |
+| 11 | `trust` | QA-протокол и границы | `slide-right`; светлая protocol-сцена |
+| 12 | `contact` | финальное действие | `rise-bright`; тёплая кульминация и второй pinned-overlap |
 
-Rail используется только там, где есть реальный маршрут или доказательная
-структура:
+Два `Interlude` между крупными актами являются связками, а не самостоятельными секциями: у них нет `data-section`, поэтому они не искажают нумерацию и навигацию.
 
-- финальный beat интро;
-- нижняя граница Hero;
-- переход в Signal;
-- схемы архитектуры на case pages;
-- QA/evidence-блоки;
-- итог builder-конфигурации.
+## 4. Цвет и материальность
 
-Rail не является процентом готовности проекта и не имитирует живую телеметрию.
+### 4.1 База Ember
 
-## 3. Token architecture
+| Семантика | Токен | Значение |
+|---|---|---|
+| canvas | `--surface-canvas` / `--bg-0` | `#1F1E1B` |
+| subtle surface | `--surface-subtle` / `--bg-1` | `#28251F` |
+| raised surface | `--surface-raised` / `--bg-panel` | `#2F2B24` |
+| inset surface | `--surface-inset` / `--bg-2` | `#191815` |
+| primary ink | `--ink-primary` / `--text` | `#F5F0E6` |
+| secondary ink | `--ink-secondary` / `--text-dim` | `#B8AC97` |
+| muted ink | `--ink-muted` / `--text-mute` | `#9C9180` |
+| faint ink | `--ink-faint` / `--text-faint` | `#938A7D` |
+| primary action | `--action-primary` / `--accent` | `#D97757` |
+| secondary action | `--action-secondary` / `--accent-2` | `#C89B5E` |
 
-### 3.1 Reference tokens
+Компонент использует semantic role, а не собственный случайный hex. Индивидуальность продукта создают фотография, `accent`, содержимое и композиция, но не параллельная мини-тема всего интерфейса.
 
-Физические значения объявляются один раз в `src/styles/styles.css`:
+RGB-токены хранят каналы через пробел, например `217 119 87`, потому что CSS использует slash-alpha: `rgb(var(--accent-rgb) / .2)`.
 
-- бренд: `--bg-*`, `--text-*`, `--accent-*`;
-- шаги: `--space-1 … --space-32`;
-- форма: `--radius-control/card/panel/pill`;
-- движение: `--ease-*`, `--d-*`;
-- глубина: `--elevation-*`, `--z-*`.
+### 4.2 Драматургия актов
 
-### 3.2 Semantic tokens
+`src/engine/acts.js` меняет фон и атмосферный акцент при смене активной сцены. Дуга идёт от холодного graphite Hero к тёплому Projects, делает аналитический спад в Skills, переходит в светлые CV и Trust и завершается самым тёплым Contact. Брендовые цвета CTA не меняются между сценами.
 
-Компоненты используют роли, а не hex:
-
-| Роль | Токен |
-|---|---|
-| canvas | `--surface-canvas` |
-| quiet surface | `--surface-subtle` |
-| raised panel | `--surface-raised` |
-| inset/evidence | `--surface-inset` |
-| primary ink | `--ink-primary` |
-| secondary ink | `--ink-secondary` |
-| muted metadata | `--ink-muted` |
-| primary action | `--action-primary` |
-| secondary action | `--action-secondary` |
-| proof states | `--proof-build/verify/ship` |
-| system states | `--state-positive/caution/negative` |
-
-Новый компонент не имеет права заводить локальную «мини-тему». Уникальность
-проекта создаётся product accent, композицией и изображением, а не новым набором
-базовых поверхностей.
-
-### 3.3 Material contexts
-
-- `dark/material` — основная система;
-- `paper` — CV и Quality;
-- `print` — PDF/печать;
-- `product-accent` — уникальный акцент case page.
-
-Контекст может переопределить semantic role, но не сам компонент.
-
-### 3.4 RGB rule
-
-Токены `*-rgb` хранят каналы через пробел:
-
-```css
---accent-rgb: 217 119 87;
-background: rgb(var(--accent-rgb) / 0.2);
-```
-
-Запятая ломает slash-alpha без ошибки браузера.
-
-## 4. Цвет и контраст
-
-База:
-
-| Роль | Значение |
-|---|---|
-| canvas | `#1F1E1B` |
-| subtle | `#28251F` |
-| raised | `#2F2B24` |
-| primary ink | `#F5F0E6` |
-| secondary ink | `#B8AC97` |
-| muted ink | `#9C9180` |
-| faint ink | `#938A7D` |
-| terracotta | `#D97757` |
-| brass | `#C89B5E` |
-
-Контракт:
-
-- обычный смысловой текст: не ниже `4.5:1`;
-- крупный текст: не ниже `3:1`;
-- основной текст и CTA по возможности идут выше `7:1`;
-- декоративная телеметрия получает `aria-hidden="true"` и не заменяет смысл;
-- light plates используют собственные ink/accent roles;
-- фотография всегда имеет измеримый readability veil.
+CV и Trust — намеренные светлые `paper/protocol` исключения. Они меняют material context, но сохраняют ту же типографическую, пространственную и интерактивную систему.
 
 ## 5. Типографика
 
-Все шрифты self-hosted в `assets/fonts/`; внешнего font CDN нет.
+Шрифты self-hosted в `assets/fonts/`; внешнего font CDN нет. Для RU, EN и UZ поставляются отдельные Cyrillic, Latin и Latin Extended диапазоны.
 
-| Роль | Семейство | Назначение |
+| Роль | Семейство | Использование |
 |---|---|---|
-| Display | Oswald variable | имена, заголовки, section scale |
-| Body | Inter variable | тексты и интерфейс |
-| Mono | JetBrains Mono variable | telemetry, evidence, metadata |
-| Editorial | Cormorant Garamond | смысловой акцент и italic voice |
+| Display | Oswald variable, `300–700` | имена, крупные заголовки, номерные сцены |
+| Body | Inter variable, `300–700` | тексты, формы, интерфейс |
+| Mono | JetBrains Mono variable, `300–600` | статусы, telemetry, evidence, metadata |
+| Editorial | Cormorant Garamond, `500` normal/italic | редкий человеческий и документный акцент |
 
-Все четыре роли покрывают кириллицу и Latin Extended. Русский больше не
-проваливается в Georgia, а узбекские строки не получают другой рисунок шрифта.
+Базовый текст главной — `16px / 1.62`. Размеры заголовков fluid через `clamp()`. Длинные RU/EN/UZ строки проверяются как отдельные layout-сценарии; нельзя оценивать переносы только по английской версии.
 
-Правила:
+## 6. Пространство, форма и слой
 
-- body не меньше `16px` на контентных экранах;
-- функциональный mobile text не меньше `10px`;
-- значения `7–9px` допустимы только как декоративная телеметрия;
-- Hero mobile подгоняет роли по реальным метрикам загруженного шрифта, а не по
-  длине английской строки;
-- переносы тестируются отдельно в RU, EN и UZ.
+Сетка использует базовый шаг 4px:
 
-## 6. Motion grammar
+- `--space-1 … --space-32`: `4 … 128px`;
+- `--gap-section`: `clamp(96px, 10vw, 160px)`;
+- `--gap-block`: `clamp(40px, 5vw, 72px)`;
+- `--pad-card`: `clamp(20px, 2.2vw, 32px)`;
+- `--max-w`: `1440px`;
+- `--gutter`: `clamp(20px, 4vw, 64px)`;
+- `--nav-h`: `60px` плюс safe-area inset.
 
-### 6.1 Роли движения
+Форма: control `6px`, card `10px`, panel `16px`, pill `999px`. Скругление следует функции: интерактивный control, карточка, крупная панель или capsule; декоративное смешивание радиусов не допускается.
 
-| Роль | Поведение |
-|---|---|
-| enter | один осмысленный вход секции |
-| focus | hover/focus/tap подчёркивает действие |
-| transition | нативный scroll или interruptible navigation |
-| ambient | редкое фоновое дыхание, не постоянный шум |
-| proof | линия проходит реальные checkpoints |
-| reduced | конечное состояние без continuous motion |
+Каждая секция получает `scroll-margin-top` с учётом fixed navigation. Z-index берётся из `--z-*`; recovery и intro являются отдельными верхними слоями, а не случайными большими числами внутри компонентов.
 
-### 6.2 Timing
+## 7. Motion grammar
 
-- instant: `--d-instant`;
-- control: `--d-fast`;
-- component: `--d-mid`;
-- section: `--d-slow`;
-- staged scene: `--d-scene`.
+Базовые duration tokens:
 
-Новые literal duration/easing запрещены. Motion работает через
-`--ease-out`, `--ease-emphasized`, `--ease-standard`,
-`--ease-overlap`.
+- `--d-instant`: `0.12s × --motion`;
+- `--d-fast`: `0.20s × --motion`;
+- `--d-mid`: `0.46s × --motion`;
+- `--d-slow`: `0.90s × --motion`;
+- `--d-scene`: `1.25s × --motion`.
 
-### 6.3 Intro contract
+Easing tokens: `--ease-out`, `--ease-emphasized`, `--ease-standard`, `--ease-overlap`, `--ease-spring`.
 
-- первый вход: `2.4–2.9s`;
-- повторный вход: `2.0–2.3s`;
-- deep link: без интро;
-- hard recovery cap: меньше `3.6s`;
-- scroll под curtain заблокирован;
-- Hero собирается под последним beat интро;
-- состояния: `BUILD → VERIFY → SHIP → ONLINE`;
-- boot log, Tashkent telemetry и core pulse существуют как одна композиция;
-- `92 → 99` проходит плавно, без скачка к 100.
+Движение имеет одну из ролей: section entrance, focus feedback, navigation transition, ambient atmosphere или proof progression. Оно не должно скрывать смысл, менять истинность состояния или блокировать нативный скролл. Техническая реализация, tier-policy и бюджеты описаны в `docs/MOTION-PERFORMANCE.md`.
 
-### 6.4 Hero → Signal
+## 8. Продуктовая система
 
-- нативный sticky curtain, scroll остаётся `1:1`;
-- mobile Hero занимает около `86svh`, поэтому Signal виден на первом экране;
-- отдельная floating scroll-подсказка удалена: направление показывает Proof Rail
-  и видимый край Signal;
-- Signal не переключает текст автоматически;
-- accordion полностью управляется читателем;
-- reduced motion меняет движение, но не `aria-expanded`/`aria-hidden`.
+### 8.1 Карточки
 
-## 7. Reference components
+В реестре ровно 24 продукта, отсортированных по `featuredRank`:
 
-### Section heading
+- 9 `presentation: "live"`: primary CTA открывает реальный HTTPS live-site;
+- 15 `presentation: "case"`: primary CTA открывает локальный case route;
+- публичный GitHub, если он разрешён реестром, остаётся отдельным secondary CTA;
+- возврат из кейса ведёт к `#proj-<slug>`, раскрывает каталог при необходимости и возвращает позицию чтения к исходной карточке.
 
-- eyebrow/number задают координату;
-- display title несёт смысл;
-- meta содержит только проверяемый контекст;
-- один line-mask entrance, без двойного transform.
+Desktop-каталог — двухколоночная сетка. При ширине `≤900px` это горизонтальная flex-галерея с scroll snap, видимым краем следующей карточки и явным pager; она не заменяется вертикальным списком.
 
-### CTA
+### 8.2 Обложки
 
-- один визуально главный action;
-- вторичный не конкурирует по заливке;
-- mobile target не меньше `48×48px`;
-- hover, focus и press должны композироваться, а не перезаписывать transform;
-- текст проверяется на длиннейшем locale.
+Для каждого продукта обязательны три WebP-файла 3:1:
 
-### Project card
+| Кандидат | Размер | Максимальный вес |
+|---|---:|---:|
+| основной | `1536×512` | `150 KB` |
+| responsive | `1152×384` | `100 KB` |
+| responsive | `768×256` | `60 KB` |
 
-- фотография `1536×512`, safe area 84%;
-- название, роль, краткий outcome;
-- live-проект: primary ведёт на live, GitHub — secondary;
-- private/case: primary ведёт на case page;
-- возврат из case page приходит к точной исходной карточке.
+Размеры, формат, вес и отсутствие лишних responsive-файлов проверяет `scripts/validate-site.js`. Центральная безопасная зона около 84% — guideline для авторинга, потому что мобильный frame может подрезать края; валидатор проверяет геометрию файла, но не художественную композицию.
 
-### Disclosure
+Фотография остаётся реальным `<img>` даже при активном ImgFx. WebGL только усиливает изображение и никогда не является единственным носителем содержания.
 
-- affordance однозначен;
-- визуальное и ARIA-состояние имеют один источник истины;
-- reduced motion не раскрывает скрытые данные самовольно.
+### 8.3 Case pages
 
-### Evidence
+Каждый из 15 кейсов имеет три физически сгенерированные страницы: RU в `/projects/<slug>/`, EN в `/projects/<slug>/en/`, UZ в `/projects/<slug>/uz/`. Итого — 45 статических HTML-файлов.
 
-- только реальные ссылки, тестовые артефакты, публичный код и безопасные
-  NDA-формулировки;
-- никаких фальшивых queued/live/verified состояний;
-- диаграмма обязана объяснять архитектурное решение, а не украшать фон.
+Единая структура содержит:
 
-## 8. Performance and device policy
+1. Thesis;
+2. Context;
+3. System;
+4. Evidence;
+5. Boundaries.
 
-Цели:
+Кейс также обязан иметь три quick facts, стек, system flow минимум из четырёх узлов, QA-подход и честную публичную границу. Общая design system едина, но акцент, фотография, схема и аргументация принадлежат конкретному продукту.
 
-- LCP `≤2.5s desktop`, `≤3.5s mobile`;
-- INP `≤200ms`;
-- CLS `≤0.05`;
-- high: `55–60 FPS`;
-- mid: стабильные `≥45 FPS`;
-- low/reduced: тот же смысл и композиция без continuous GPU motion.
+## 9. Навигация и интерактивность
 
-Деградация снимает стоимость в порядке:
+- fixed navigation сохраняет brand, язык, chapter counter и menu trigger;
+- при ширине `>1160px` видны семь primary links; в диапазоне `901–1160px` они заменяются компактным chapter counter;
+- fullscreen menu всегда повторяет реальный порядок двенадцати DOM-сцен;
+- mobile command dock появляется после Signal, но скрывается на Contact;
+- в коротком landscape `≤900×520` нижний dock скрыт: верхний counter остаётся доступным и не перекрывает контент;
+- disclosure обязан иметь согласованные визуальное и ARIA-состояния;
+- keyboard focus не должен уходить под nav, sticky chapter bar или mobile dock;
+- smart cursor существует только для fine pointer и не заменяет нативный focus ring.
 
-1. image shader;
-2. pointer depth;
-3. ambient layers;
-4. staged decorative details.
+## 10. Responsive contracts
 
-Никогда не снимаются текст, CTA, Proof Rail, нативный transition и доступность.
+Главный breakpoint каталога и mobile shell — `900px`; case layout перестраивается на `980px`, а узкая case-композиция — на `700px`. Внутренние breakpoint-правила могут быть более точными, но не должны противоречить этим продуктовым контрактам.
 
-## 9. Source-of-truth and build
+Автоматическая sweep-матрица главной содержит:
 
-- `src/content/product-registry.js` — 24 продукта и routing;
-- `src/content/content.js` — главная RU/EN/UZ;
-- `src/projects/landings-data.js` + `landings-new.js` — 15 case pages;
-- `src/projects/render.js` — единый browser/build renderer;
-- `*.jsx` — source, `*.js` — generated;
-- `projects/*/index.html` — generated, вручную не редактируется.
+`320×568`, `360×800`, `375×812`, `390×844`, `430×932`, `768×1024`, `844×390`, `1024×768`, `1280×800`, `1440×1000`, `1920×1080`.
 
-После JSX/content/version изменений:
+Она проверяет отсутствие horizontal overflow, сохранность shell, desktop/mobile режим галереи, видимость следующей карточки, keyboard focus, 200% text reflow, открытую навигацию при rotation и сохранение состояния раскрытого каталога. Это автоматический contract, а не заявление о ручной проверке каждого физического устройства.
 
-```bash
-node build.js
-node scripts/validate-site.js --generated
-npx playwright test --reporter=line --workers=2
-```
+## 11. Accessibility и reduced motion
 
-`?v=` сначала меняется в `index.html`, затем case pages пересобираются.
+- первый keyboard target на свежем входе — skip link к `#main`;
+- интерактивные элементы имеют `:focus-visible`;
+- основные Hero touch targets проверяются как минимум `44px`;
+- fullscreen menu управляет `aria-hidden`, `inert`, focus containment и Escape;
+- active navigation использует `aria-current`;
+- изображения имеют текстовый fallback, а декоративные слои скрыты от accessibility tree;
+- `prefers-reduced-motion: reduce` сохраняет все 24 карточки, тексты, CTA и нативную навигацию;
+- reduced mode отключает continuous scheduler и optional Three.js, но не раскрывает скрытые пользователем данные и не меняет семантическое состояние disclosure;
+- автоматический axe gate покрывает WCAG 2.2 A/AA ruleset, однако он не заменяет NVDA, VoiceOver и проверку на физических устройствах.
 
-## 10. Acceptance gates
+## 12. Правила изменения системы
 
-Vertical slice считается принятым, когда:
-
-- Builder + QA явно видны в первом viewport;
-- intro, Hero и Signal читаются как одна постановка;
-- RU/EN/UZ не имеют overflow и случайного fallback;
-- desktop 1440×1000 и mobile 390×844 визуально проверены;
-- mobile UZ CTA и роли не обрезаются;
-- axe не находит critical/serious нарушений;
-- Chromium desktop/mobile, iPhone WebKit и reduced-motion проходят gate;
-- recovery/deep-link/return-to-card остаются рабочими;
-- нет известного P0-дефекта в изменённом контуре.
-
-## 11. Migration rule
-
-Старая часть сайта ещё содержит raw colors/timings. Она мигрирует по сценам,
-чтобы не сломать существующую драматургию одним массовым replace. При этом:
-
-- новые raw color/duration/easing не добавляются;
-- каждая переработанная секция полностью переводится на semantic roles;
-- после миграции последней сцены CI запрещает новые raw values автоматически;
-- landing, paper/print и builder получают те же reference roles до релиза.
+1. Сначала меняется source-of-truth, затем запускается `npm run build`.
+2. `.jsx` редактируется; generated `.js` вручную не меняется.
+3. `projects/**/index.html` не редактируются вручную: их выпускает `build.js`.
+4. Новый продукт сначала получает запись в canonical registry, затем card copy, route/case data и три изображения.
+5. Новый visual token добавляется только если существующая semantic role не выражает задачу.
+6. Новая motion-функция подписывается на общий runtime и policy; отдельный perpetual RAF запрещён.
+7. Любая новая responsive композиция проверяется на overflow, focus obstruction, RU/EN/UZ и reduced motion.
+8. Автоматический тест подтверждает только заявленный им контракт; непроведённая ручная проверка не документируется как выполненная.

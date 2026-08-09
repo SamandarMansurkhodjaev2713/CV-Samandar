@@ -6,6 +6,7 @@ async function settleCinema(page) {
   await page.goto("/?cinema-contract=1#hero", { waitUntil: "domcontentloaded" });
   await page.locator("#main").waitFor({ state: "attached" });
   await expect.poll(() => page.evaluate(() => !!(window.SceneCinema && window.SceneCinema.__debug().bound))).toBe(true);
+  await expect(page.locator("html")).toHaveAttribute("data-deep-link-settled", "hero", { timeout: 9000 });
 }
 
 test("latest navigation intent wins and every cinema event is balanced", async ({ page }, testInfo) => {
@@ -26,6 +27,7 @@ test("latest navigation intent wins and every cinema event is balanced", async (
     };
   });
   await settleCinema(page);
+  await page.evaluate(() => window.__SM_MOTION_POLICY.__set("high"));
 
   const result = await page.evaluate(async () => {
     const events = [];
@@ -68,6 +70,11 @@ test("hard timeout restores the requested final pose and releases the shell", as
     });
   });
   await settleCinema(page);
+  // Isolate the watchdog contract from the separate low-tier fast path. Under
+  // CI load the real governor may legitimately downgrade before navigation;
+  // this test must still exercise an accepted native transition that never
+  // resolves, not the already-covered performance cut.
+  await page.evaluate(() => window.__SM_MOTION_POLICY.__set("high"));
 
   const timeoutMs = await page.evaluate(() => window.SceneCinema.__debug().timeoutMs);
   const resultPromise = page.evaluate(async () => {
@@ -89,6 +96,34 @@ test("hard timeout restores the requested final pose and releases the shell", as
 
   expect(result.result.reason).toBe("timeout");
   expect(result.doneReason).toBe("timeout");
+  expect(result.hash).toBe("#services");
+  expect(result.activeSection).toBe("services");
+  expect(result.debug.active).toBeNull();
+  expect(result.debug.transitioning).toBe(false);
+});
+
+test("low performance tier cuts directly to the requested readable pose", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "performance cut contract is engine-independent");
+  await settleCinema(page);
+
+  const result = await page.evaluate(async () => {
+    window.__SM_MOTION_POLICY.__set("low");
+    let starts = 0;
+    const onStart = () => { starts += 1; };
+    window.addEventListener("sm:cinema-start", onStart);
+    const navigation = await window.SceneCinema.navigate("services", { source: "e2e-performance-cut" });
+    window.removeEventListener("sm:cinema-start", onStart);
+    return {
+      navigation,
+      starts,
+      hash: location.hash,
+      activeSection: document.body.getAttribute("data-active-section"),
+      debug: window.SceneCinema.__debug(),
+    };
+  });
+
+  expect(result.navigation.reason).toBe("performance-cut");
+  expect(result.starts).toBe(0);
   expect(result.hash).toBe("#services");
   expect(result.activeSection).toBe("services");
   expect(result.debug.active).toBeNull();

@@ -12,6 +12,8 @@ const TYPES = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
+  ".xml": "application/xml; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
   ".png": "image/png",
   ".svg": "image/svg+xml",
   ".webp": "image/webp",
@@ -26,7 +28,9 @@ function safePath(urlPath) {
   } catch (error) {
     return null;
   }
-  const relative = decoded.replace(/^\/+/, "");
+  const relative = decoded
+    .replace(/^\/CV-Samandar(?:\/|$)/, "/")
+    .replace(/^\/+/, "");
   const candidate = path.resolve(ROOT, relative || "index.html");
   if (candidate !== ROOT && !candidate.startsWith(ROOT + path.sep)) return null;
   return candidate;
@@ -38,13 +42,14 @@ function resolveFile(urlPath) {
   try {
     if (fs.statSync(candidate).isDirectory()) {
       const index = path.join(candidate, "index.html");
-      if (fs.existsSync(index)) return index;
+      if (fs.existsSync(index)) return { path: index, status: 200 };
     }
-    if (fs.statSync(candidate).isFile()) return candidate;
+    if (fs.statSync(candidate).isFile()) return { path: candidate, status: 200 };
   } catch (error) {
-    // Fall through to the same SPA fallback used by GitHub Pages.
+    // Fall through to the same custom 404 artifact deployed to GitHub Pages.
   }
-  return path.join(ROOT, "index.html");
+  const notFound = path.join(ROOT, "404.html");
+  return { path: fs.existsSync(notFound) ? notFound : path.join(ROOT, "index.html"), status: 404 };
 }
 
 const server = http.createServer(function serve(request, response) {
@@ -53,15 +58,15 @@ const server = http.createServer(function serve(request, response) {
     response.end();
     return;
   }
-  const filePath = resolveFile(request.url || "/");
-  if (!filePath) {
+  const resolved = resolveFile(request.url || "/");
+  if (!resolved) {
     response.writeHead(400);
     response.end("Bad request");
     return;
   }
-  const type = TYPES[path.extname(filePath).toLowerCase()] || "application/octet-stream";
-  const stats = fs.statSync(filePath);
-  response.writeHead(200, {
+  const type = TYPES[path.extname(resolved.path).toLowerCase()] || "application/octet-stream";
+  const stats = fs.statSync(resolved.path);
+  response.writeHead(resolved.status, {
     "Content-Type": type,
     "Content-Length": stats.size,
     "Cache-Control": "no-store",
@@ -71,7 +76,7 @@ const server = http.createServer(function serve(request, response) {
     response.end();
     return;
   }
-  fs.createReadStream(filePath).pipe(response);
+  fs.createReadStream(resolved.path).pipe(response);
 });
 
 server.listen(PORT, "127.0.0.1", function ready() {

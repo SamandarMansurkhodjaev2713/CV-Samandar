@@ -99,6 +99,7 @@ test("CV stays operable and unclipped across narrow portrait and landscape", asy
   for (const viewport of viewports) {
     await page.setViewportSize(viewport);
     await settleMain(page, "#cv");
+    await expect(page.locator("html")).toHaveAttribute("data-deep-link-settled", "cv");
     await expect(page.locator("#cv")).toBeVisible();
     const geometry = await page.evaluate(() => {
       const viewportWidth = document.documentElement.clientWidth;
@@ -135,20 +136,22 @@ test("CV stays operable and unclipped across narrow portrait and landscape", asy
 
     const roleButtons = page.locator(".cv-role-head");
     for (let index = 0; index < await roleButtons.count(); index += 1) {
-      await roleButtons.nth(index).evaluate((node) => node.scrollIntoView({ block: "center", behavior: "instant" }));
-      const placement = await roleButtons.nth(index).evaluate((node) => {
+      await roleButtons.nth(index).focus();
+      await expect(roleButtons.nth(index)).toBeFocused();
+      await expect.poll(() => roleButtons.nth(index).evaluate((node) => {
         const rect = node.getBoundingClientRect();
         const dock = document.querySelector(".mobile-dock");
         const dockRect = dock && getComputedStyle(dock).display !== "none" ? dock.getBoundingClientRect() : null;
         return {
-          top: rect.top,
-          bottom: rect.bottom,
+          visible: rect.top >= -1 && rect.bottom <= (dockRect ? dockRect.top : window.innerHeight) + 1,
+          top: Math.round(rect.top),
+          bottom: Math.round(rect.bottom),
+          dockTop: dockRect ? Math.round(dockRect.top) : null,
           viewportHeight: window.innerHeight,
-          dockTop: dockRect ? dockRect.top : window.innerHeight,
+          scrollY: Math.round(window.scrollY),
+          focused: document.activeElement === node,
         };
-      });
-      expect(placement.top).toBeGreaterThanOrEqual(-1);
-      expect(placement.bottom).toBeLessThanOrEqual(placement.dockTop + 1);
+      })).toMatchObject({ visible: true, focused: true });
     }
     await expectNoHorizontalOverflow(expect, page, `CV ${viewport.width}x${viewport.height}`);
   }

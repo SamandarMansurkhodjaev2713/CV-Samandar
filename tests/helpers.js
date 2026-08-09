@@ -8,9 +8,16 @@ const caseProducts = orderedProducts.filter((product) => product.presentation ==
 const liveProducts = orderedProducts.filter((product) => product.presentation === "live");
 
 async function settleMain(page, hash) {
-  await page.goto("/?e2e=1" + (hash || "#hero"), { waitUntil: "domcontentloaded" });
+  const destination = (hash || "#hero").replace(/^#/, "");
+  await page.goto("/?e2e=1#" + destination, { waitUntil: "domcontentloaded" });
   await page.locator("#main").waitFor({ state: "attached" });
   await page.locator(".proj-card").first().waitFor({ state: "attached" });
+  await page.locator("html").waitFor({ state: "attached" });
+  await page.waitForFunction(
+    (id) => document.documentElement.getAttribute("data-deep-link-settled") === id,
+    destination,
+    { timeout: 9000 }
+  );
   await page.evaluate(function makeStable() {
     document.documentElement.classList.add("e2e-stable");
   });

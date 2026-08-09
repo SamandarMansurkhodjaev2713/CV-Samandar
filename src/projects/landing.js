@@ -2,13 +2,33 @@
 (function () {
   "use strict";
 
-  var slug = window.__LP_SLUG__;
+  function markImageFallback(image) {
+    if (!image || image.naturalWidth) return;
+    image.hidden = true;
+    var frame = image.closest ? image.closest(".lp-photo") : null;
+    if (frame) frame.classList.add("is-image-fallback");
+  }
+
+  function installImageFallbacks() {
+    var images = document.querySelectorAll(".lp-photo img");
+    for (var i = 0; i < images.length; i += 1) {
+      (function (image) {
+        image.addEventListener("error", function () { markImageFallback(image); }, { once: true });
+        if (image.complete && !image.naturalWidth) markImageFallback(image);
+      })(images[i]);
+    }
+  }
+
+  installImageFallbacks();
+
+  var LANGS = ["ru", "en", "uz"];
+  var slug = document.documentElement.getAttribute("data-lp-slug") || window.__LP_SLUG__;
+  var staticLang = validLang(document.documentElement.getAttribute("data-lp-lang")) || "ru";
   var root = document.getElementById("lp-root");
   var product = (window.LANDINGS || {})[slug];
   if (!root || !product || typeof window.LP_render !== "function") return;
 
   var KEY = "sm-lp-lang";
-  var LANGS = ["ru", "en", "uz"];
   var revealObserver = null;
   var chapterObserver = null;
   var activeChapter = "thesis";
@@ -19,27 +39,23 @@
   var chapterScrollFrame = 0;
 
   function validLang(value) { return LANGS.indexOf(value) !== -1 ? value : null; }
-  function getStored() {
+  function requestedLang() {
     try {
       var urlLang = validLang(new URL(window.location.href).searchParams.get("lang"));
       if (urlLang) return urlLang;
-      var saved = validLang(localStorage.getItem(KEY));
-      if (saved) return saved;
     } catch (e) { /* URL/storage can be restricted */ }
-    return "ru";
+    return staticLang;
   }
   function setStored(lang) {
-    try {
-      localStorage.setItem(KEY, lang);
-      var url = new URL(window.location.href);
-      if (lang === "ru") url.searchParams.delete("lang");
-      else url.searchParams.set("lang", lang);
-      history.replaceState(history.state, "", url.pathname + url.search + url.hash);
-    } catch (e) { /* progressive enhancement */ }
+    try { localStorage.setItem(KEY, lang); } catch (e) { /* Storage can be restricted. */ }
   }
-  function titleFor(lang) {
-    var copy = (product.i18n && product.i18n[lang]) || {};
-    return product.name + (copy.tag ? " — " + copy.tag.replace(/ · /g, " / ") : "");
+  function languageUrl(lang, chapter) {
+    var url = new URL(window.location.href);
+    var basePath = url.pathname.replace(/\/(?:en|uz)\/$/, "/");
+    url.pathname = lang === "ru" ? basePath : basePath + lang + "/";
+    url.searchParams.delete("lang");
+    url.hash = chapter ? "#" + chapter : "";
+    return url.pathname + url.search + url.hash;
   }
 
   function currentChapterId() {
@@ -189,59 +205,50 @@
 
   function wireLanguage(lang) {
     Array.prototype.forEach.call(root.querySelectorAll(".lp-lang-btn"), function (button) {
-      button.addEventListener("click", function () {
+      button.addEventListener("click", function (event) {
         var next = validLang(button.getAttribute("data-lang"));
-        if (!next || next === lang) return;
+        if (!next) return;
+        event.preventDefault();
+        if (next === lang) return;
         var chapter = currentChapterId();
         setStored(next);
-        render(next, chapter, true);
+        window.location.assign(languageUrl(next, chapter));
       });
     });
   }
 
   function wirePointer() {
     var page = root.querySelector(".lp-page");
-    if (!page || window.matchMedia("(pointer: coarse)").matches) return;
+    if (!page || window.matchMedia("(pointer: coarse)").matches || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var frame = 0; var x = 50; var y = 50;
     page.addEventListener("pointermove", function (event) {
-      page.style.setProperty("--lp-pointer-x", ((event.clientX / window.innerWidth) * 100).toFixed(1) + "%");
-      page.style.setProperty("--lp-pointer-y", ((event.clientY / window.innerHeight) * 100).toFixed(1) + "%");
+      x = (event.clientX / window.innerWidth) * 100;
+      y = (event.clientY / window.innerHeight) * 100;
+      if (frame) return;
+      frame = requestAnimationFrame(function () {
+        frame = 0;
+        page.style.setProperty("--lp-pointer-x", x.toFixed(1) + "%");
+        page.style.setProperty("--lp-pointer-y", y.toFixed(1) + "%");
+      });
     }, { passive: true });
   }
 
-  function render(lang, chapter, preserveChapter) {
-    if (revealObserver) revealObserver.disconnect();
-    if (chapterObserver) chapterObserver.disconnect();
-    activeChapter = chapter || activeChapter || "thesis";
-    root.innerHTML = window.LP_render(product, lang);
-    document.documentElement.setAttribute("lang", lang);
-    document.title = titleFor(lang);
-    wireLanguage(lang);
-    wireReveal();
-    wireChapters();
-    wirePointer();
-    if (preserveChapter) {
-      // The new tree is already committed by innerHTML, so land synchronously;
-      // then re-assert once after fonts/layout settle. This also works in hidden
-      // tabs where requestAnimationFrame can be suspended indefinitely.
-      instantToChapter(activeChapter);
-      window.setTimeout(function () { instantToChapter(activeChapter); }, 120);
-    }
-  }
-
-  var initial = getStored();
+  var initial = requestedLang();
   var initialHash = (window.location.hash || "").replace(/^#/, "");
   if (["thesis", "context", "system", "evidence", "boundary"].indexOf(initialHash) !== -1) {
     activeChapter = initialHash;
     chapterIntent = initialHash;
     chapterIntentUntil = Date.now() + 1500;
   }
-  if (initial !== "ru") render(initial, activeChapter, false);
-  else {
-    wireLanguage("ru");
-    wireReveal();
-    wireChapters();
-    wirePointer();
+  if (initial !== staticLang) {
+    window.location.replace(languageUrl(initial, activeChapter));
+    return;
   }
+  setStored(staticLang);
+  wireLanguage(staticLang);
+  wireReveal();
+  wireChapters();
+  wirePointer();
   if (chapterIntent) {
     requestAnimationFrame(function () {
       instantToChapter(chapterIntent);

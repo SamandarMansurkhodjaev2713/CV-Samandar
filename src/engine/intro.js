@@ -465,6 +465,16 @@
       if (boot) boot.classList.add("is-online");
       updateProof(100);
 
+      // A saturated host may deliver the readiness/deadline callback long
+      // after its intended wall-clock moment. In that case another hold plus
+      // curtain transition would only keep an invisible interaction shield
+      // alive. Preserve the full authored exit during normal timing and cut
+      // directly to the already-rendered Hero once the hard allowance passed.
+      if (performance.now() - createdAt >= timing.recoveryMs + 650) {
+        teardown((reason || "complete") + "-late-cut");
+        return;
+      }
+
       window.setTimeout(function () {
         if (reduced) {
           var finishReduced = function () { teardown(reason); };

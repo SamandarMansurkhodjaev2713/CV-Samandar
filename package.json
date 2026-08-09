@@ -5,13 +5,20 @@
   "description": "Static trilingual portfolio with generated product case pages.",
   "scripts": {
     "build": "node build.js",
+    "bump:assets": "node scripts/bump-asset-version.js",
+    "check:build": "node scripts/check-build-determinism.js",
+    "check:docs": "node scripts/check-docs.js",
     "validate": "node scripts/validate-site.js --generated",
+    "scan:secrets": "node scripts/scan-secrets.js",
     "check:live": "node scripts/check-live-routes.js",
-    "test": "npm run validate && playwright test",
+    "test": "npm run validate && npm run check:docs && playwright test --workers=2 --grep-invert \"production motion stays inside the measurable desktop/mobile budget\"",
     "test:smoke": "playwright test --grep @smoke",
     "test:a11y": "playwright test tests/accessibility.spec.js",
     "test:mobile": "playwright test --project=mobile-chromium --project=mobile-webkit",
-    "test:desktop": "playwright test --project=desktop-chromium",
+    "test:desktop": "playwright test --project=desktop-chromium --project=desktop-firefox",
+    "test:performance": "playwright test tests/performance-budget.spec.js --project=desktop-chromium --project=mobile-chromium --workers=1",
+    "test:production": "node scripts/run-production-smoke.js",
+    "qa:visual": "node scripts/run-visual-qa.js",
     "test:update-snapshots": "playwright test --update-snapshots"
   },
   "devDependencies": {

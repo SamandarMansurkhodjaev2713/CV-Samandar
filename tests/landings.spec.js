@@ -49,16 +49,18 @@ test("new cases switch RU / EN / UZ without losing chapter or route", async ({ p
     const product = caseProducts.find((item) => item.slug === slug);
     await test.step(slug, async () => {
       await page.goto("/" + product.casePage + "#system", { waitUntil: "domcontentloaded" });
-      await page.getByRole("button", { name: "EN", exact: true }).click();
+      await page.locator('.lp-lang-btn[data-lang="en"]').click();
       await expect(page.locator("html")).toHaveAttribute("lang", "en");
+      await expect(page).toHaveURL(new RegExp("/" + product.casePage + "en/#system$"));
       await expect(page).toHaveURL(/#system$/);
       await expect(page.locator("h1")).toHaveText(product.i18n.en.name);
 
-      await page.getByRole("button", { name: "UZ", exact: true }).click();
+      await page.locator('.lp-lang-btn[data-lang="uz"]').click();
       await expect(page.locator("html")).toHaveAttribute("lang", "uz");
+      await expect(page).toHaveURL(new RegExp("/" + product.casePage + "uz/#system$"));
       await expect(page).toHaveURL(/#system$/);
       await expect(page.locator("h1")).toHaveText(product.i18n.uz.name);
-      await expect(page.locator(".lp-back")).toHaveAttribute("href", "../../#proj-" + product.slug);
+      await expect(page.locator(".lp-back")).toHaveAttribute("href", "../../../#proj-" + product.slug);
     });
   }
 });
@@ -83,7 +85,7 @@ test("scroll spy, language switch and reload preserve the reader chapter", async
   await expect(page.locator('[data-lp-chapter-link="evidence"]')).toHaveAttribute("aria-current", "location");
   await expect(page).toHaveURL(/#evidence$/);
 
-  await page.getByRole("button", { name: "EN", exact: true }).click();
+      await page.locator('.lp-lang-btn[data-lang="en"]').click();
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.locator(".lp-current-index")).toHaveText("04");
   await expect(page).toHaveURL(/#evidence$/);

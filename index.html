@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-uLX3zNNWUqGxGXVIYkh0hiFEflwygnNGAVFIxMYicQs='; style-src 'self'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.github.com; media-src 'self'; worker-src 'self' blob:; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="theme-color" content="#1F1E1B" />
 
   <!-- Intro curtain: paint a solid warm panel over the page on frame 0 so there
@@ -12,165 +13,44 @@
        LCP text (h1/CTA) still renders underneath (occluded, not delayed: the
        element IS painted, the LCP timestamp is unaffected by being visually
        covered while loading). -->
-  <script>
-  (function () {
-    try {
-      // Browser QA mode keeps the real DOM, routing and state logic but removes
-      // continuous GPU/rAF decoration. This makes cross-engine assertions
-      // deterministic without shipping a separate test build.
-      window.__SM_TEST_MODE = /(?:^|[?&])e2e=1(?:&|$)/.test(window.location.search || "");
-      if (window.__SM_TEST_MODE) document.documentElement.classList.add("e2e-stable");
-      // Deep-link entry — a fresh load carrying a #section or #proj-<slug> hash
-      // (returning from a product landing, or any shared section link). Skip the
-      // boot loader entirely and let the app scroll to the target: bg-fx.js
-      // gates ONLY on this panel being live in the DOM
-      // (window.__SM_INTRO.panel), so simply never creating it makes them run
-      // immediately — matching pre-intro behavior, no sm:intro-done needed.
-      if (window.location && window.location.hash && window.location.hash.length > 1) return;
-      // Show the intro on EVERY full page load (incl. reload) — deliberately
-      // NOT once-per-session. It used to gate on sessionStorage["sm_intro_seen"],
-      // but that flag survives reloads (even hard reloads), so after the first
-      // visit the intro silently never appeared again in that tab — which read
-      // as "the intro is broken / doesn't show". This is a single-page site
-      // (anchor links don't reload), so per-load only fires on a genuine fresh
-      // load, and the intro can be shortened with wheel/touch/Escape, so
-      // re-showing it stays predictable. Reduced motion keeps the same proof
-      // structure but releases through a short opacity transition.
-      var mm = window.matchMedia;
-      var reduced = mm && mm("(prefers-reduced-motion: reduce)").matches;
-      var createdAt = performance && performance.now ? performance.now() : Date.now();
-      var previousOverflow = document.documentElement.style.overflow;
-      var doneFired = false;
-      var panel = document.createElement("div");
-      panel.id = "sm-intro";
-      panel.setAttribute("role", "dialog");
-      panel.setAttribute("aria-modal", "true");
-      panel.setAttribute("aria-label", "Portfolio loading sequence");
-      panel.setAttribute("aria-busy", "true");
-      panel.setAttribute("data-intro-mode", reduced ? "reduced" : "full");
-      panel.style.cssText =
-        "position:fixed;inset:0;z-index:2147483000;background:#1F1E1B;color:#F5F0E6;" +
-        "pointer-events:auto;overflow:hidden;isolation:isolate;font-family:Arial,sans-serif;";
-      panel.innerHTML =
-        '<div class="sm-boot sm-boot--head" style="position:absolute;left:50%;top:42%;width:min(520px,82vw);transform:translate(-50%,-50%);display:flex;flex-direction:column;gap:16px">' +
-          '<div class="sm-boot-label" style="font:600 10px/1.4 monospace;letter-spacing:.22em;color:#B8AC97">SAMANDAR / PRODUCT LAB <span class="sm-boot-state" style="color:#D97757">BUILD</span></div>' +
-          '<div class="sm-boot-proof" aria-hidden="true" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font:500 10px/1.4 monospace;letter-spacing:.14em;color:#6B6353"><span style="color:#F5F0E6">BUILD</span><span>VERIFY</span><span>SHIP</span></div>' +
-          '<div class="sm-boot-pct" aria-hidden="true" style="display:flex;align-items:flex-start;font-weight:600;line-height:.8;letter-spacing:-.06em"><span class="sm-boot-pct-n" style="font-size:clamp(64px,12vw,112px)">00</span><span class="sm-boot-pct-sign" style="margin:.08em 0 0 .12em;font:500 clamp(18px,3vw,28px)/1 monospace;color:#D97757">%</span></div>' +
-          '<div class="sm-boot-line" aria-hidden="true" style="height:1px;background:rgba(217,119,87,.18);overflow:hidden"><i style="display:block;width:0;height:100%;background:#D97757"></i></div>' +
-          '<div class="sm-boot-status" role="status" aria-live="polite" style="font:500 10px/1.4 monospace;letter-spacing:.16em;color:#6B6353">INITIALIZING</div>' +
-        '</div>';
-      window.__SM_INTRO = {
-        mode: reduced ? "reduced" : "full",
-        panel: panel,
-        createdAt: createdAt,
-        ready: { shell: false, fonts: false, hero: false },
-        fallback: {},
-        previousOverflow: previousOverflow,
-        doneFired: false,
-      };
-      window.__SM_INTRO.notify = function () {
-        try {
-          window.dispatchEvent(new CustomEvent("sm:intro-readiness", {
-            detail: window.__SM_INTRO.ready,
-          }));
-        } catch (e) { /* optional channel */ }
-      };
-      window.__SM_INTRO.release = function (reason) {
-        if (doneFired) return;
-        doneFired = true;
-        window.__SM_INTRO.doneFired = true;
-        window.__SM_INTRO.reason = reason || "complete";
-        document.documentElement.classList.remove("intro-lock");
-        document.documentElement.style.overflow = previousOverflow;
-        document.documentElement.removeAttribute("aria-busy");
-        panel.setAttribute("aria-busy", "false");
-        try {
-          window.dispatchEvent(new CustomEvent("sm:intro-done", {
-            detail: { reason: window.__SM_INTRO.reason },
-          }));
-        } catch (e) { /* optional channel */ }
-      };
-      window.__SM_INTRO.recover = function (code) {
-        window.__SM_INTRO.prepared = true;
-        if (!panel.parentNode) document.documentElement.appendChild(panel);
-        panel.setAttribute("role", "alert");
-        panel.setAttribute("aria-busy", "false");
-        panel.style.cssText =
-          "position:fixed;inset:0;z-index:2147483000;background:#1F1E1B;color:#F5F0E6;" +
-          "display:grid;place-items:center;padding:24px;overflow:auto;font-family:Arial,sans-serif;";
-        panel.innerHTML =
-          '<div style="width:min(620px,100%);border-top:1px solid #D97757;padding-top:24px">' +
-            '<div style="font:600 11px/1.4 monospace;letter-spacing:.18em;color:#D97757">RECOVERY · ' + (code || "00") + '</div>' +
-            '<h1 style="font:600 clamp(34px,8vw,72px)/.98 Arial,sans-serif;margin:22px 0 18px">Сайт не загрузился</h1>' +
-            '<p style="max-width:52ch;color:#B8AC97;line-height:1.6;margin:0 0 28px">Обновите страницу. Если соединение нестабильно, напишите мне напрямую — контакты работают независимо от интерфейса.</p>' +
-            '<div style="display:flex;flex-wrap:wrap;gap:12px">' +
-              '<button type="button" onclick="window.location.reload()" style="min-height:44px;padding:0 18px;border:1px solid #D97757;background:#D97757;color:#1F1E1B;font-weight:700;cursor:pointer">Обновить страницу</button>' +
-              '<a href="https://t.me/killallofthem13" style="min-height:44px;padding:0 18px;border:1px solid #6B6353;color:#F5F0E6;display:inline-flex;align-items:center;text-decoration:none">Написать в Telegram</a>' +
-            '</div>' +
-          '</div>';
-        window.__SM_INTRO.release("recovery");
-      };
-      document.documentElement.classList.add("intro-lock");
-      document.documentElement.setAttribute("aria-busy", "true");
-      document.documentElement.style.overflow = "hidden";
-      document.documentElement.appendChild(panel);
-      // Safety net: if intro.js never runs (blocked/slow script/404), self-clear
-      // after 3.2s so the page is never permanently curtained. Critically, this
-      // ALSO dispatches sm:intro-done — bg-fx.js's WebGL loop gates on
-      // that event (so it doesn't fight the intro's own canvas for main-
-      // thread time) and has no other way to un-gate if
-      // intro.js itself never runs to fire it. Without this dispatch, a
-      // blocked/failed intro.js left the background renderer paused for the
-      // ENTIRE session (found in review, not just a cosmetic gap). Dispatched
-      // right away rather than after the 420ms fade so recovery isn't delayed
-      // by an animation nobody asked for in this already-degraded path.
-      window.__SM_INTRO.safety = setTimeout(function () {
-        if (!panel.parentNode || window.__SM_INTRO.doneFired) return;
-        var root = document.getElementById("root");
-        if (root && root.childElementCount) {
-          var revealShell = function () {
-            if (panel.parentNode) panel.remove();
-            window.__SM_INTRO.release("head-safety-shell");
-          };
-          panel.addEventListener("transitionend", revealShell, { once: true });
-          panel.style.transition = "opacity .14s ease";
-          panel.style.opacity = "0";
-          setTimeout(revealShell, 190);
-        } else {
-          window.__SM_INTRO.recover("00");
-        }
-      }, 3150);
-    } catch (e) { /* DOM/matchMedia unavailable → just skip the intro entirely */ }
-  })();
-  </script>
+  <script src="src/engine/head-boot.js?v=229"></script>
 
-  <title>Samandar — Full-Stack &amp; AI Automation Engineer</title>
-  <meta name="description" content="Senior full-cycle developer: production web apps, AI automation, Telegram bots, and admin systems — design, code, and deploy, end to end." />
-  <meta name="author" content="Samandar" />
+  <title>Samandar — Product Engineer · AI Automation · QA</title>
+  <meta name="description" content="Product engineer and QA engineer in Tashkent: I design, build, verify and deploy web products, AI automation and reliable internal systems end to end." />
+  <meta name="author" content="Samandar Mansurkhodjaev" />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
 
   <!-- Favicon (SVG, scales crisply at any size) -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="apple-touch-icon" href="favicon.svg" />
 
-  <!-- Open Graph — controls the link preview on Telegram / LinkedIn / etc.
-       NOTE: og:image should be a real 1200×630 PNG. favicon.svg is a stopgap;
-       replace `og-image.png` with a branded share card for best results. -->
+  <!-- Open Graph — absolute URLs are required by Telegram / LinkedIn crawlers. -->
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Samandar — Executive AI Code Lab" />
-  <meta property="og:title" content="Samandar — Full-Stack &amp; AI Automation Engineer" />
-  <meta property="og:description" content="Production web apps, AI automation, Telegram bots, and admin systems — design, code, and deploy, end to end." />
-  <meta property="og:image" content="og-image.png" />
+  <meta property="og:title" content="Samandar — Product Engineer · AI Automation · QA" />
+  <meta property="og:description" content="I design, build, verify and deploy web products, AI automation and reliable internal systems end to end." />
+  <meta property="og:image" content="https://samandarmansurkhodjaev2713.github.io/CV-Samandar/og-image.png" />
+  <meta property="og:image:secure_url" content="https://samandarmansurkhodjaev2713.github.io/CV-Samandar/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Samandar — Product Engineer, AI Automation and QA" />
   <meta property="og:locale" content="ru_RU" />
   <meta property="og:locale:alternate" content="en_US" />
+  <meta property="og:locale:alternate" content="uz_UZ" />
 
   <!-- Twitter / X card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Samandar — Full-Stack &amp; AI Automation Engineer" />
-  <meta name="twitter:description" content="Production web apps, AI automation, Telegram bots — design, code, deploy." />
-  <meta name="twitter:image" content="og-image.png" />
+  <meta name="twitter:title" content="Samandar — Product Engineer · AI Automation · QA" />
+  <meta name="twitter:description" content="I design, build, verify and deploy reliable digital products end to end." />
+  <meta name="twitter:image" content="https://samandarmansurkhodjaev2713.github.io/CV-Samandar/og-image.png" />
+  <meta name="twitter:image:alt" content="Samandar — Product Engineer, AI Automation and QA" />
 
   <!-- Canonical + og:url (were missing — needed for correct link previews + SEO) -->
   <link rel="canonical" href="https://samandarmansurkhodjaev2713.github.io/CV-Samandar/" />
+  <link rel="alternate" hreflang="ru" href="https://samandarmansurkhodjaev2713.github.io/CV-Samandar/" />
+  <link rel="alternate" hreflang="en" href="https://samandarmansurkhodjaev2713.github.io/CV-Samandar/?lang=en" />
+  <link rel="alternate" hreflang="uz" href="https://samandarmansurkhodjaev2713.github.io/CV-Samandar/?lang=uz" />
+  <link rel="alternate" hreflang="x-default" href="https://samandarmansurkhodjaev2713.github.io/CV-Samandar/" />
   <meta property="og:url" content="https://samandarmansurkhodjaev2713.github.io/CV-Samandar/" />
 
   <!-- Structured data — schema.org Person. Helps search engines + social show
@@ -182,8 +62,8 @@
     "@type": "Person",
     "name": "Samandar Mansurkhodjaev",
     "alternateName": "Samandar",
-    "jobTitle": "Full-Stack & AI Automation Engineer",
-    "description": "Full-cycle developer: production web apps, AI automation, Telegram bots — design, code, and deploy, end to end.",
+    "jobTitle": "Product Engineer · AI Automation · QA Engineer",
+    "description": "Product engineer who designs, builds, verifies and deploys web products, AI automation and reliable internal systems end to end.",
     "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/",
     "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/og-image.png",
     "email": "mailto:sam4k27@gmail.com",
@@ -195,14 +75,14 @@
     ],
     "address": { "@type": "PostalAddress", "addressLocality": "Tashkent", "addressCountry": "UZ" },
     "knowsLanguage": ["ru", "uz", "en"],
-    "knowsAbout": ["Full-stack development", "AI automation", "RAG", "Telegram bots", "Next.js", "FastAPI", "TypeScript", "Python", "Rust", "Product engineering"],
+    "knowsAbout": ["Product engineering", "Quality assurance", "Test automation", "Playwright", "Full-stack development", "AI automation", "RAG", "Telegram bots", "Next.js", "FastAPI", "TypeScript", "Python", "Rust"],
     "alumniOf": { "@type": "CollegeOrUniversity", "name": "IT Park University" }
   }
   </script>
 
   <!-- Self-hosted Cyrillic + Latin Extended type system. No CDN dependency and
        no RU-only fallback to a different editorial face. -->
-  <link rel="stylesheet" href="src/styles/fonts.css????v=224" />
+  <link rel="stylesheet" href="src/styles/fonts.css?v=229" />
 
   <!-- ════════════════════════════════════════════════════════════════════
        v51 — restructured paths. All app code lives under src/:
@@ -215,20 +95,33 @@
        ═══════════════════════════════════════════════════════════════════ -->
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="src/styles/styles.css????v=224" />
-  <link rel="stylesheet" href="src/styles/sections.css????v=224" />
-  <link rel="stylesheet" href="src/styles/cursor.css????v=224" />
-  <link rel="stylesheet" href="src/styles/cv-doc.css????v=224" />
-  <link rel="stylesheet" href="src/styles/features.css????v=224" />
+  <link rel="stylesheet" href="src/styles/styles.css?v=229" />
+  <link rel="stylesheet" href="src/styles/sections.css?v=229" />
+  <link rel="stylesheet" href="src/styles/cursor.css?v=229" />
+  <link rel="stylesheet" href="src/styles/cv-doc.css?v=229" />
+  <link rel="stylesheet" href="src/styles/features.css?v=229" />
 
-  <!-- Three.js r128 -->
-  <script src="vendor/three.min.js"></script>
-
-  <!-- React 18.3.1 — PRODUCTION builds (~142 KB vs ~1.2 MB dev). The JSX
-       is pre-compiled to plain JS by build.js, so babel-standalone is no
-       longer loaded in the browser (saved ~3 MB + the in-page transpile). -->
-  <script src="vendor/react.production.min.js"></script>
-  <script src="vendor/react-dom.production.min.js"></script>
+  <!-- Fetch the application graph in parallel, but execute it in frame-sized
+       stages through bootstrap.js. This keeps the intro responsive instead
+       of turning parser work into one monolithic main-thread task. -->
+  <link rel="preload" as="script" href="vendor/react.production.min.js?v=229" />
+  <link rel="preload" as="script" href="vendor/react-dom.production.min.js?v=229" />
+  <link rel="preload" as="script" href="src/content/product-registry.js?v=229" />
+  <link rel="preload" as="script" href="src/content/content.js?v=229" />
+  <link rel="preload" as="script" href="src/engine/themes.js?v=229" />
+  <link rel="preload" as="script" href="src/engine/perf.js?v=229" />
+  <link rel="preload" as="script" href="src/engine/motion-runtime.js?v=229" />
+  <link rel="preload" as="script" href="src/engine/builder-estimator.js?v=229" />
+  <link rel="preload" as="script" href="src/engine/acts.js?v=229" />
+  <link rel="preload" as="script" href="src/engine/sound.js?v=229" />
+  <link rel="preload" as="script" href="src/engine/gh.js?v=229" />
+  <link rel="preload" as="script" href="src/engine/motion.js?v=229" />
+  <link rel="preload" as="script" href="src/engine/scene-cinema.js?v=229" />
+  <link rel="preload" as="script" href="src/engine/lazy-effects.js?v=229" />
+  <link rel="preload" as="script" href="src/components/tweaks-panel.js?v=229" />
+  <link rel="preload" as="script" href="src/components/components-1.js?v=229" />
+  <link rel="preload" as="script" href="src/components/components-2.js?v=229" />
+  <link rel="preload" as="script" href="src/components/app.js?v=229" />
 </head>
 <body>
   <div id="root"></div>
@@ -243,57 +136,11 @@
       </div>
     </main>
   </noscript>
-  <script>
-  // A vendor/CDN/script failure must never leave an empty page behind. React's
-  // own ErrorBoundary handles render failures; this watchdog covers failures
-  // that happen before React can mount at all.
-  window.__SM_APP_WATCHDOG = window.setTimeout(function () {
-    var root = document.getElementById("root");
-    if (!root || root.childElementCount) return;
-    var intro = document.getElementById("sm-intro");
-    if (intro) intro.remove();
-    document.documentElement.classList.remove("intro-lock");
-    root.innerHTML =
-      '<main class="fatal-shell" role="alert">' +
-        '<span class="fatal-code mono">RECOVERY · 00</span>' +
-        '<h1>Сайт не загрузился</h1>' +
-        '<p>Обновите страницу. Если соединение нестабильно, напишите мне напрямую — контакты работают независимо от интерфейса.</p>' +
-        '<div class="fatal-actions">' +
-          '<button type="button" onclick="window.location.reload()">Обновить страницу</button>' +
-          '<a href="https://t.me/killallofthem13">Написать в Telegram</a>' +
-        '</div>' +
-      '</main>';
-  }, 4200);
-  </script>
+  <script src="src/engine/app-watchdog.js?v=229"></script>
 
-  <!-- Content + i18n -->
-  <script src="src/content/product-registry.js????v=224"></script>
-  <script src="src/content/content.js????v=224"></script>
-
-  <!-- Intro timeline — consumes window.__SM_INTRO stashed by the head-boot
-       script above. Loads before the other engine scripts so it can start
-       its rAF loop as early as possible; it needs no content/theme state. -->
-  <script src="src/engine/intro.js????v=224"></script>
-
-  <!-- Engine: theming, motion observers, background WebGL, view transitions.
-       (v56 — single Ember theme; theme-transition.js + the multi-theme
-       switcher removed.) -->
-  <script src="src/engine/themes.js????v=224"></script>
-  <script src="src/engine/perf.js????v=224"></script>
-  <script src="src/engine/motion-runtime.js????v=224"></script>
-  <script src="src/engine/builder-estimator.js????v=224"></script>
-  <script src="src/engine/acts.js????v=224"></script>
-  <script src="src/engine/sound.js????v=224"></script>
-  <script src="src/engine/gh.js????v=224"></script>
-  <script src="src/engine/motion.js????v=224"></script>
-  <script src="src/engine/img-fx.js????v=224"></script>
-  <script src="src/engine/scene-cinema.js????v=224"></script>
-
-  <!-- Components + app — PRE-COMPILED plain JS (generated by build.js from
-       the .jsx sources). After editing any .jsx, run `node build.js`. -->
-  <script src="src/components/tweaks-panel.js????v=224"></script>
-  <script src="src/components/components-1.js????v=224"></script>
-  <script src="src/components/components-2.js????v=224"></script>
-  <script src="src/components/app.js????v=224"></script>
+  <!-- Intro starts before the application graph. Bootstrap yields between
+       scripts, so the sequence remains responsive while the app mounts. -->
+  <script src="src/engine/intro.js?v=229"></script>
+  <script src="src/engine/bootstrap.js?v=229"></script>
 </body>
 </html>

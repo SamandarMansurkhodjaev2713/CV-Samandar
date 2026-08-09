@@ -1533,6 +1533,33 @@ html[data-perf="low"] .proj-grid > .proj-card { translate: none; }
    authored at the same 3:1 ratio, so cover remains crop-safe across responsive
    card widths while keeping the photograph edge-to-edge. */
 .proj-screen-body--img { padding: 0; position: relative; }
+.proj-screen-body--img.is-image-fallback {
+  overflow: hidden;
+  background:
+    linear-gradient(128deg, transparent 0 34%, color-mix(in srgb, var(--proj-accent) 18%, transparent) 34% 35%, transparent 35% 100%),
+    linear-gradient(180deg, #171411, #0d0c0a) !important;
+}
+.proj-screen-body--img.is-image-fallback::before,
+.proj-screen-body--img.is-image-fallback::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border: 1px solid color-mix(in srgb, var(--proj-accent) 58%, transparent);
+  transform: translate(-50%, -50%) rotate(-8deg);
+}
+.proj-screen-body--img.is-image-fallback::before {
+  width: 28%;
+  aspect-ratio: 1.7;
+  background: color-mix(in srgb, var(--proj-accent) 9%, #11100e);
+  box-shadow: 26px 18px 0 -1px #11100e, 26px 18px 0 color-mix(in srgb, var(--proj-accent) 32%, transparent);
+}
+.proj-screen-body--img.is-image-fallback::after {
+  width: 44%;
+  height: 1px;
+  border-width: 1px 0 0;
+  transform: translate(-50%, -50%) rotate(7deg);
+}
 /* Living imagery (img-fx.js) — the shader canvas is an overlay ON TOP of the
    real <img>, never a replacement. If WebGL is unavailable, the context is
    refused, or the frame governor drops to "low", nothing is appended and the
@@ -1842,6 +1869,15 @@ html[data-motion-lite] .proj-grid.is-expanded > .proj-card:nth-child(n+5) { anim
     grid-template-columns: none;
     gap: 14px;
     overflow-x: auto;
+    /* Keep the film strip a horizontal scroller only. With overflow-y left at
+       `visible`, CSS computes it to `auto` because the inline axis scrolls;
+       browsers then treat the whole tall card track as a nested vertical
+       scroll container. `scrollIntoView()` can center a focused card action
+       inside that inert container instead of the viewport, leaving the action
+       underneath the fixed command dock after an orientation change. `clip`
+       preserves every pixel (the track has no authored block overflow) without
+       creating that second scrollport. */
+    overflow-y: clip;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
@@ -5119,6 +5155,16 @@ html[data-motion-lite] .builder-chip { animation: none; }
   .mobile-dock-cta { padding-inline: 10px; font-size: 10px; }
   .mobile-dock-cta-long { display: none; }
   .mobile-dock-cta-short { display: inline; }
+}
+
+/* A short landscape phone already keeps the animated section counter, language
+   switcher and menu in the top command capsule. Repeating that information in
+   the 58px bottom dock leaves too little vertical reading space and can cover
+   real controls (notably the CV document header). In this one constrained
+   posture the top capsule is the sole fixed command surface; portrait phones
+   and tablets retain the full bottom dock. */
+@media (max-width: 900px) and (max-height: 520px) and (orientation: landscape) {
+  .mobile-dock { display: none !important; }
 }
 
 /* ── THE RING — the page's closing signature ────────────────────────────────

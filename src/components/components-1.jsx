@@ -611,7 +611,7 @@ function About({ t }) {
                 <span className="about-id-status mono"><span className="about-id-status-dot" />{statusLabel}</span>
               </div>
               <div className="about-id-meta mono">
-                <span className="about-id-online"><span className="about-id-dot" />online</span>
+                <span className="about-id-online"><span className="about-id-dot" />{t.about.online_label || "online"}</span>
                 <span className="about-id-sep">·</span>
                 <span>Tashkent · UTC+5</span>
                 <span className="about-id-sep">·</span>
@@ -650,7 +650,7 @@ function About({ t }) {
           </div>
 
           {/* Tech-stack chips */}
-          <div className="about-chips" aria-label="primary stack">
+          <div className="about-chips" aria-label={t.about.stack_label || "Primary stack"}>
             {TECH_CHIPS.map((c, i) => (
               <span key={i} className="about-chip mono">{c}</span>
             ))}
@@ -688,13 +688,13 @@ function About({ t }) {
               <div className="about-contrib-head mono">
                 <span>{contribLabel}</span>
                 <span className="about-contrib-legend">
-                  <span>less</span>
+                  <span>{t.about.less_label || "less"}</span>
                   <span className="about-contrib-legend-cell" data-level="0" />
                   <span className="about-contrib-legend-cell" data-level="1" />
                   <span className="about-contrib-legend-cell" data-level="2" />
                   <span className="about-contrib-legend-cell" data-level="3" />
                   <span className="about-contrib-legend-cell" data-level="4" />
-                  <span>more</span>
+                  <span>{t.about.more_label || "more"}</span>
                 </span>
               </div>
               <div
@@ -858,6 +858,12 @@ function ProjectCard({ p, i, labels }) {
               alt=""
               loading="lazy"
               decoding="async"
+              onError={(event) => {
+                const image = event.currentTarget;
+                image.hidden = true;
+                const frame = image.parentElement;
+                if (frame) frame.classList.add("is-image-fallback");
+              }}
             />
           </div>
         ) : (
@@ -876,10 +882,10 @@ function ProjectCard({ p, i, labels }) {
       </div>
 
       <dl className="proj-meta">
-        <div><dt className="mono">problem</dt><dd>{p.problem}</dd></div>
-        <div><dt className="mono">solution</dt><dd>{p.solution}</dd></div>
-        <div><dt className="mono">role</dt><dd>{p.role}</dd></div>
-        <div><dt className="mono">outcome</dt><dd className="proj-outcome">{p.outcome}</dd></div>
+        <div><dt className="mono">{labels.problem_label || "problem"}</dt><dd>{p.problem}</dd></div>
+        <div><dt className="mono">{labels.solution_label || "solution"}</dt><dd>{p.solution}</dd></div>
+        <div><dt className="mono">{labels.role_label || "role"}</dt><dd>{p.role}</dd></div>
+        <div><dt className="mono">{labels.outcome_label || "outcome"}</dt><dd className="proj-outcome">{p.outcome}</dd></div>
       </dl>
 
       <div className="proj-stack">
@@ -915,7 +921,7 @@ function ProjectCard({ p, i, labels }) {
 // Mobile chapter-indicator: shows N dots above the project grid, highlights
 // whichever card is most-in-view, taps scroll to that card. Only meaningful
 // on small screens where the grid collapses to one column.
-function ProjectChapterDots({ items, gridRef, label }) {
+function ProjectChapterDots({ items, gridRef, labels }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const cardRefs = useRef([]);
   const dotsRef = useRef(null);
@@ -989,7 +995,7 @@ function ProjectChapterDots({ items, gridRef, label }) {
   const visibleItems = items.slice(windowStart, windowStart + dotWindow);
 
   return (
-    <nav className="proj-chapters" aria-label={label || "project list"}>
+    <nav className="proj-chapters" aria-label={(labels && labels.list_label) || "project list"}>
       <ol className="proj-chapters-dots" ref={dotsRef}>
         {visibleItems.map((p, localIndex) => {
           const i = windowStart + localIndex;
@@ -1011,8 +1017,8 @@ function ProjectChapterDots({ items, gridRef, label }) {
         <span className="proj-chapters-name">{items[activeIdx]?.name || ""}</span>
       </div>
       <div className="proj-chapters-controls">
-        <button type="button" onClick={() => onStep(-1)} disabled={activeIdx <= 0} aria-label="Previous project">←</button>
-        <button type="button" onClick={() => onStep(1)} disabled={activeIdx >= items.length - 1} aria-label="Next project">→</button>
+        <button type="button" onClick={() => onStep(-1)} disabled={activeIdx <= 0} aria-label={(labels && labels.previous_project) || "Previous project"}>←</button>
+        <button type="button" onClick={() => onStep(1)} disabled={activeIdx >= items.length - 1} aria-label={(labels && labels.next_project) || "Next project"}>→</button>
       </div>
     </nav>
   );
@@ -1062,8 +1068,46 @@ function Projects({ t }) {
     if (idx >= FEATURED_PROJECT_COUNT) setExpanded(true);
   }, [items]);
 
+  // A focused action must stay inside the real reading window, not merely the
+  // layout viewport. On a short landscape phone the fixed navigation and the
+  // command dock remove a meaningful slice from both edges; after a rotation,
+  // native focus scrolling may otherwise settle a card CTA behind the dock.
+  // Run on the next frame so this correction wins after the browser's own
+  // focus scroll and after any just-completed breakpoint reflow.
+  function keepProjectFocusVisible(event) {
+    const control = event.target && event.target.closest
+      ? event.target.closest(".proj-cta, .proj-repo, .proj-expand, .proj-chapters button")
+      : null;
+    if (!control) return;
+    function alignFocusedProjectControl() {
+      if (!control.isConnected || document.activeElement !== control) return;
+      const nav = document.querySelector(".nav");
+      const dock = document.querySelector(".mobile-dock.is-visible");
+      const navRect = nav ? nav.getBoundingClientRect() : null;
+      const dockRect = dock && getComputedStyle(dock).display !== "none"
+        ? dock.getBoundingClientRect()
+        : null;
+      const topBoundary = Math.max(0, navRect ? navRect.bottom : 0) + 12;
+      const bottomBoundary = Math.min(window.innerHeight, dockRect ? dockRect.top : window.innerHeight) - 12;
+      const rect = control.getBoundingClientRect();
+      if (rect.top >= topBoundary && rect.bottom <= bottomBoundary) return;
+      const targetTop = topBoundary + Math.max(0, (bottomBoundary - topBoundary - rect.height) / 2);
+      const root = document.documentElement;
+      const previous = root.style.scrollBehavior;
+      root.style.scrollBehavior = "auto";
+      try {
+        window.scrollTo({ top: Math.max(0, window.scrollY + rect.top - targetTop), behavior: "auto" });
+      } finally {
+        root.style.scrollBehavior = previous;
+      }
+    }
+    alignFocusedProjectControl();
+    if (typeof queueMicrotask === "function") queueMicrotask(alignFocusedProjectControl);
+    requestAnimationFrame(alignFocusedProjectControl);
+  }
+
   return (
-    <section data-section="projects" id="projects" data-enter="rise" ref={ref}>
+    <section data-section="projects" id="projects" data-enter="rise" ref={ref} onFocusCapture={keepProjectFocusVisible}>
       <div className="shell">
         <SecHead num="04" eyebrow={t.projects.eyebrow} title={t.projects.title} meta={`${items.length} cases · 2024–26`} />
         <div className={`proj-grid ${expanded ? "is-expanded" : "is-collapsed"}`} ref={gridRef}>
@@ -1093,7 +1137,7 @@ function Projects({ t }) {
         ) : null}
 
         {/* Mobile-only carousel pager (CSS hides it on desktop). */}
-        <ProjectChapterDots items={chapterItems} gridRef={gridRef} label={t.projects.list_label} />
+        <ProjectChapterDots items={chapterItems} gridRef={gridRef} labels={t.projects} />
       </div>
     </section>
   );

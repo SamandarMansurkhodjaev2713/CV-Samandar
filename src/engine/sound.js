@@ -19,6 +19,8 @@
   var ctx = null;
   var master = null;
   var on = false;
+  var destroyed = false;
+  var arm = null;
 
   function syncControls() {
     var controls = document.querySelectorAll(".sound-toggle");
@@ -28,6 +30,7 @@
   }
 
   function ensureCtx() {
+    if (destroyed) return false;
     if (ctx) return true;
     try {
       var AC = window.AudioContext || window.webkitAudioContext;
@@ -94,6 +97,7 @@
   }
 
   function setOn(next) {
+    if (destroyed) return;
     on = !!next && ensureCtx();
     document.documentElement.classList.toggle("sm-sound", on);
     syncControls();
@@ -102,7 +106,7 @@
   }
 
   // ── Wiring — delegated, so React re-renders can't orphan listeners ──────
-  document.addEventListener("click", function (e) {
+  function onDocumentClick(e) {
     var toggle = e.target.closest && e.target.closest(".sound-toggle");
     if (toggle) { setOn(!on); return; }
     if (!on) return;
@@ -110,9 +114,12 @@
       play("tick");
     }
     if (e.target.closest && e.target.closest(".nav-burger")) play("whoosh");
-  }, true);
+  }
 
-  window.addEventListener("sm:section", function () { play("thump"); });
+  function onSection() { play("thump"); }
+
+  document.addEventListener("click", onDocumentClick, true);
+  window.addEventListener("sm:section", onSection);
 
   // Restore persisted preference. The AudioContext still needs a user gesture
   // on some browsers — resume lazily on the first play() attempt.
@@ -121,9 +128,10 @@
   if (saved === "1") {
     on = true;
     // Defer creation to the first real interaction (autoplay policy).
-    var arm = function () {
+    arm = function () {
       window.removeEventListener("pointerdown", arm, true);
       window.removeEventListener("keydown", arm, true);
+      arm = null;
       setOn(true);
     };
     window.addEventListener("pointerdown", arm, true);
@@ -137,5 +145,33 @@
     syncControls();
   }
 
-  window.SMSound = { play: play, set: setOn, isOn: function () { return on; }, sync: syncControls };
+  function destroy() {
+    if (destroyed) return;
+    destroyed = true;
+    document.removeEventListener("click", onDocumentClick, true);
+    window.removeEventListener("sm:section", onSection);
+    document.removeEventListener("DOMContentLoaded", syncControls);
+    if (arm) {
+      window.removeEventListener("pointerdown", arm, true);
+      window.removeEventListener("keydown", arm, true);
+      arm = null;
+    }
+    on = false;
+    document.documentElement.classList.remove("sm-sound");
+    syncControls();
+    if (ctx && typeof ctx.close === "function") {
+      try { ctx.close(); } catch (e) { /* best-effort teardown */ }
+    }
+    ctx = null;
+    master = null;
+  }
+
+  window.SMSound = {
+    play: play,
+    set: setOn,
+    isOn: function () { return on; },
+    sync: syncControls,
+    destroy: destroy,
+    __debug: function () { return { destroyed: destroyed, armed: Boolean(arm), context: ctx ? ctx.state : "none" }; },
+  };
 })();

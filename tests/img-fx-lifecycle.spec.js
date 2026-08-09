@@ -17,10 +17,15 @@ test.afterEach(async ({ page }, testInfo) => {
   }).catch(() => {});
 });
 
-async function settleProjects(page) {
+async function settleProjects(page, options = {}) {
   await page.goto("/?imgfx-contract=1#projects", { waitUntil: "domcontentloaded" });
   await page.locator("#main").waitFor({ state: "attached" });
   await page.locator(".proj-card [data-imgfx]").first().waitFor({ state: "attached" });
+  if (options.loadEffect === false) return;
+  await page.evaluate(() => {
+    window.__SM_MOTION_POLICY.__set("high");
+    return window.__SM_LAZY_EFFECTS && window.__SM_LAZY_EFFECTS.ensure();
+  });
   await expect.poll(() => page.evaluate(() => Boolean(window.__SM_IMGFX))).toBe(true);
 }
 
@@ -129,21 +134,53 @@ test("context loss and restore degrade safely, rebuild once, and dispose resourc
 test("reduced motion keeps project imagery static and readable", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-chromium", "one browser covers preference behavior");
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await settleProjects(page);
+  await settleProjects(page, { loadEffect: false });
 
   const result = await page.evaluate(async () => {
-    const box = document.querySelector(".proj-card [data-imgfx]");
-    const attached = await window.__SM_IMGFX.attach(box);
+    const effect = await window.__SM_LAZY_EFFECTS.ensure();
     return {
-      attached,
-      debug: window.__SM_IMGFX.__debug(),
+      effectLoaded: Boolean(effect || window.__SM_IMGFX),
       policy: window.__SM_MOTION_POLICY.getState(),
     };
   });
 
-  expect(result.attached).toBe(false);
-  expect(result.debug.active).toBe(false);
-  expect(result.debug.rendererReady).toBe(false);
+  expect(result.effectLoaded).toBe(false);
   expect(result.policy.reducedMotion).toBe(true);
+  await expect(page.locator("script[src*='three.min.js']")).toHaveCount(0);
   await expect(page.locator(".proj-card [data-imgfx] img").first()).toBeVisible();
+});
+
+test("disposing during an in-flight texture load cannot resurrect WebGL state", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "WebGL lifecycle is engine-independent");
+  await page.route("**/assets/proj/**/klawis*.webp?slow-texture=1", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 220));
+    await route.continue();
+  });
+  await settleProjects(page);
+
+  const result = await page.evaluate(async () => {
+    const effect = window.__SM_IMGFX;
+    const policy = window.__SM_MOTION_POLICY;
+    const box = document.querySelector(".proj-card [data-imgfx]");
+    const image = box.querySelector("img");
+    policy.__set("high");
+    image.removeAttribute("srcset");
+    image.src = "/assets/proj/klawis.webp?slow-texture=1";
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    const pending = effect.attach(box).catch(() => false);
+    effect.dispose();
+    await pending;
+    await new Promise((resolve) => setTimeout(resolve, 280));
+    return {
+      debug: effect.__debug(),
+      canvasCount: document.querySelectorAll(".imgfx-canvas").length,
+      activeSurfaceCount: document.querySelectorAll(".has-imgfx").length,
+    };
+  });
+
+  expect(result.debug.disposed).toBe(true);
+  expect(result.debug.rendererReady).toBe(false);
+  expect(result.debug.textureCount).toBe(0);
+  expect(result.canvasCount).toBe(0);
+  expect(result.activeSurfaceCount).toBe(0);
 });

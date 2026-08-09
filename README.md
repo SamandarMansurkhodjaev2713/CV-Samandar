@@ -1,96 +1,137 @@
 # Samandar — Executive AI Code Lab
 
-An interactive portfolio built as a product, not a résumé page.
+Интерактивное трёхъязычное портфолио Product Engineer / AI Automation / QA. Это статический продуктовый сайт с кинематографичной навигацией, адаптивной motion-системой и отдельными доказательными страницами проектов — без runtime-бэкенда и клиентской JSX-компиляции.
 
-**Live:** [samandarmansurkhodjaev2713.github.io/CV-Samandar](https://samandarmansurkhodjaev2713.github.io/CV-Samandar/)
+Текущий каталог содержит **24 канонических продукта**:
 
----
+- **9 live-проектов** ведут на доступные внешние сайты;
+- **15 case-проектов** раскрываются на безопасных страницах внутри портфолио;
+- главная и все case-страницы поддерживают **RU / EN / UZ**;
+- 15 кейсов × 3 языка генерируются как **45 самостоятельных HTML-страниц**.
 
-## What this is
+> Текущая ветка содержит unreleased Awwwards rebuild. Настроенный Pages workflow описан ниже, но наличие этих изменений в production этим README не утверждается.
 
-A static site that presents full-stack, AI-automation and QA work as a piece of
-software rather than a document: a scored, scroll-driven experience with a
-colour journey, per-section motion signatures, living project imagery and 12
-in-site product case studies — in three languages.
+## Технологии
 
-No framework, no bundler, no runtime dependencies. React ships as a vendored
-production build, JSX is compiled ahead of time by `build.js`, and the whole
-thing deploys as static files to GitHub Pages.
+- Vanilla HTML, CSS и JavaScript;
+- React 18 production build, хранящийся в `vendor/`;
+- ahead-of-time JSX → JavaScript через локальный `build.js`;
+- Three.js для прогрессивных визуальных эффектов;
+- Playwright и axe-core для browser-, accessibility- и regression-проверок;
+- GitHub Actions и GitHub Pages для проверяемой статической публикации.
 
----
+## Требования и установка
 
-## Highlights
+Нужен **Node.js 20 или новее**. Зависимости устанавливаются строго по lock-файлу:
 
-| | |
+```bash
+node --version
+npm ci
+npx playwright install
+```
+
+Для локального просмотра после сборки:
+
+```bash
+npm run build
+node scripts/static-server.js 4173
+```
+
+Сайт будет доступен по адресу `http://127.0.0.1:4173/`. Playwright запускает этот сервер автоматически, поэтому для тестов отдельный процесс не нужен.
+
+## Основные команды
+
+| Команда | Назначение |
 |---|---|
-| **Colour dramaturgy** | The page ground and the atmospheric accent evolve act by act — cool at the start, warm through the work, cool again in the engineering blocks, warmest at contact. Brand tokens stay fixed, so the primary action never changes colour. |
-| **Living imagery** | One shared WebGL context follows the pointer between project cards: the illustration ripples under the hand and swells with scroll velocity. Degrades to a sharp still image where WebGL is unavailable. |
-| **Frame governor** | Quality tiers come from the frames the device *actually delivers*, not from `navigator.hardwareConcurrency`. Effects are shed in a defined order when the budget is tight. |
-| **A typographic masthead** | The hero is the name, set edge to edge in condensed caps, letters rising out of a mask on their own beats and leaning on separate depth planes. No 3D character, no second WebGL context, no CDN runtime to wait on. |
-| **Eleven distinct entrances** | Every section arrives in its own language — a curtain, a develop, a converge, a transcript settling like set type. No two share an animation. |
-| **Live telemetry, not decoration** | The activity strip is the real GitHub public-events feed. There is no synthetic fallback: when the fetch fails the strip disappears rather than inventing a graph. |
-| **12 product case studies** | Every closed project has a full in-site case page with a hand-authored architecture diagram, an evidence section and an honest-limits block — RU / EN / UZ. |
-| **Honest by construction** | Every number on the site is traceable to a public repository; private work states its own boundaries. |
+| `npm run build` | Проверяет source-контракт, компилирует JSX, обновляет CSP, генерирует 45 case-страниц и sitemap, затем валидирует результат. |
+| `npm run check:build` | Дважды выполняет сборку и требует байтовой идентичности 51 generated artifact. |
+| `npm run validate` | Проверяет уже сгенерированный сайт: 24 продукта, маршруты, локали, тексты, изображения, discovery-артефакты и runtime-контракты. |
+| `npm run check:docs` | Проверяет обязательные документы, локальные ссылки, package scripts и количественные контракты. |
+| `npm test` | Запускает валидацию и полную Playwright-матрицу: Chromium desktop/mobile, WebKit mobile smoke, Firefox desktop smoke и reduced-motion. |
+| `npm run test:performance` | Отдельно проверяет desktop/mobile performance-бюджеты в Chromium одним worker. |
+| `npm run qa:visual` | Снимает главные сцены и все 15 кейсов на desktop/mobile, затем собирает контактные листы в `tmp/release-qa/`. |
+| `npm run test:a11y` | Запускает accessibility-набор с axe и keyboard/focus-проверками. |
+| `npm run scan:secrets` | Проверяет кандидатов на коммит на признаки секретов и приватных данных. |
+| `npm run check:live` | С сетевыми retry проверяет, что 9 live-маршрутов возвращают пригодный HTML. |
+| `npm run test:production` | После deploy проверяет production-главную, 45 case URL и возврат к точной карточке. |
+| `npm run bump:assets` | Перед релизной сборкой атомарно повышает единую версию cache-busting ссылок. |
 
----
-
-## Stack
-
-- Vanilla HTML / CSS / JavaScript
-- React 18 (vendored production build) + ahead-of-time JSX compilation
-- Three.js — background field and image shaders
-- GitHub Actions → GitHub Pages
-
----
-
-## Running locally
+Минимальный локальный quality gate:
 
 ```bash
-python -m http.server 3007
+npm run scan:secrets
+npm audit --audit-level=high
+npm run check:build
+npm run validate
+npm run check:docs
+npm test
+npm run test:performance
+npm run check:live
+npm run qa:visual
 ```
 
-Open `http://localhost:3007`. There is no install step.
+`qa:visual` создаёт доказательные скриншоты, но не заменяет их ручной просмотр.
 
-After editing any `.jsx`, `landings-data.js` or `render.js`:
+## Архитектура и source of truth
 
-```bash
-node build.js
+| Область | Канонический источник | Производный результат |
+|---|---|---|
+| Идентичность продукта, порядок, live/case-маршрут, evidence/confidentiality, изображение | `src/content/product-registry.js` | Порядок карточек, URL, sitemap и contract validation |
+| Тексты главной и карточек на RU / EN / UZ | `src/content/content.js` | Данные, которые получает React-приложение |
+| Полный контент 15 case-страниц | `src/projects/landings-data.js` + `src/projects/landings-new.js` | Локализованные страницы в `projects/<slug>/` |
+| Разметка case-страниц | `src/projects/render.js` | Одинаковый SSR-like HTML на build-time и client-side при смене языка |
+| UI-компоненты | `src/components/*.jsx` | `src/components/*.js`, сгенерированные `build.js` |
+| Дизайн и runtime-эффекты | `src/styles/`, `src/projects/landing.css`, `src/engine/` | Progressive motion/WebGL с читаемым fallback |
+| Сборка и генерация | `build.js` | CSP, compiled JS, 45 HTML-страниц и `sitemap.xml` |
+
+Ключевой поток данных:
+
+```text
+product-registry + content + landing data + JSX
+                       ↓
+                    build.js
+                       ↓
+compiled components + 45 case pages + CSP + sitemap
+                       ↓
+               validate + Playwright
 ```
 
-Bump `?v=` in `index.html` **before** building — the product landings bake that
-number into their asset URLs.
+## Правила внесения изменений
 
----
+1. **Не редактировать производные файлы вручную.** Изменения компонентов вносятся в `.jsx`, а `src/components/*.js` пересобираются. Страницы `projects/<slug>/index.html`, `en/index.html` и `uz/index.html` генерируются из landing data и renderer.
+2. **Новый или изменённый продукт начинается с реестра.** Затем синхронизируются карточки главной и, для `presentation: "case"`, полный RU/EN/UZ контент кейса.
+3. **Не смешивать зрелость и приватность.** `lifecycle`, `confidentiality`, `presentation` и `evidenceLevel` имеют разные значения; закрытый source не является доказательством production-ready состояния.
+4. **Сохранять паритет локалей.** Структура RU, EN и UZ должна совпадать; валидатор намеренно останавливает сборку при расхождении.
+5. **Не публиковать закрытые сведения.** Секреты, клиентские данные и внутренние детали не переносятся в fixtures, тексты кейсов, логи или изображения.
+6. **После изменения source запускать `npm run check:build`.** Сгенерированные изменения коммитятся вместе с source; команда и CI проверяют байтовую детерминированность и отсутствие drift.
+7. **Cache version повышается один раз перед релизным кандидатом.** После `npm run bump:assets` обязательно снова выполнить build и полный quality gate.
 
-## Repository map
+Подробные инженерные контракты находятся в `docs/DESIGN-SYSTEM.md`, `docs/ARCHITECTURE.md`, `docs/MOTION-PERFORMANCE.md` и ADR в `docs/adr/`.
 
-```
-index.html              entry point, script order, intro curtain
-build.js                JSX compiler + landing generator
-src/
-  engine/               perf · acts · motion · glide · gh · img-fx · bg-fx · sound · intro · scene-cinema
-  components/           React source (.jsx) and compiled output (.js)
-  content/content.js    all copy, RU / EN / UZ
-  projects/             landing data, renderer and styles
-  styles/               design tokens and section styles
-projects/<slug>/        generated case-study pages — do not edit by hand
-docs/DESIGN-SYSTEM.md   engine map, motion grammar, conventions
-```
+## Тестовая матрица
 
-**Working on this?** Read [`docs/DESIGN-SYSTEM.md`](docs/DESIGN-SYSTEM.md)
-first — it documents the engine contracts and several silent traps that have
-already cost real debugging time.
+Playwright покрывает:
 
----
+- критический путь главной, intro, навигацию, каталог, builder, CV, FAQ и contact;
+- все 15 case-маршрутов и переключение RU / EN / UZ;
+- клавиатуру, focus visibility, семантику, axe и reduced motion;
+- desktop/mobile responsive-состояния и смену ориентации;
+- Chromium, Firefox smoke и WebKit smoke;
+- motion/performance policy, WebGL/image lifecycle, sound lifecycle и degraded-state recovery;
+- SEO, CSP, 404/deep-link routing, generated discovery files и performance-бюджеты.
 
-## Deployment
+Визуальный release review выполняется отдельно через `npm run qa:visual`, чтобы автоматические проверки не подменяли дизайнерское решение.
 
-Every push to `main` deploys to GitHub Pages through GitHub Actions.
+## GitHub Pages
 
----
+- `.github/workflows/quality.yml` запускается для pull request и вручную: locked install, dependency audit, secret scan, deterministic build, документационные контракты, generated drift и полный test suite.
+- `.github/workflows/deploy-pages.yml` настроен на push в `main` и ручной запуск. Он повторяет quality gate, формирует минимальный статический `_site`, публикует Pages, а затем отдельным job запускает production smoke и проверку 9 live URL.
+- Deploy job получает только `pages: write` и `id-token: write`; build job работает с `contents: read`.
 
-## Contact
+Целевой Pages URL: `https://samandarmansurkhodjaev2713.github.io/CV-Samandar/`. Актуальность конкретного коммита подтверждается только успешным deploy workflow и последующей production-проверкой.
 
-- Telegram — [@killallofthem13](https://t.me/killallofthem13)
-- Email — sam4k27@gmail.com
-- Tashkent · UTC+5 · reply within 24 hours
+## Контакты
+
+- Telegram: [@killallofthem13](https://t.me/killallofthem13)
+- Email: `sam4k27@gmail.com`
+- Tashkent · UTC+5

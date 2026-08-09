@@ -125,6 +125,9 @@ button { color: inherit; font: inherit; }
 .lp-status--nda { color: var(--lp-mute); border-color: var(--lp-line-strong); }
 .lp-lang { display: flex; align-items: center; gap: 2px; }
 .lp-lang-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 42px;
   min-height: 44px;
   border: 0;
@@ -135,11 +138,16 @@ button { color: inherit; font: inherit; }
   font-family: var(--lp-mono);
   font-size: 9px;
   letter-spacing: .08em;
+  text-decoration: none;
   transition: background var(--lp-fast), color var(--lp-fast), transform var(--lp-fast);
 }
 .lp-lang-btn:hover { color: var(--lp-text); }
 .lp-lang-btn:active { transform: scale(.94); }
-.lp-lang-btn.is-active { color: #171713; background: var(--lp-accent); }
+.lp-lang-btn.is-active {
+  color: #fff;
+  background: color-mix(in srgb, var(--lp-accent) 34%, #151412 66%);
+  box-shadow: inset 0 0 0 1px var(--lp-accent), 0 0 18px color-mix(in srgb, var(--lp-accent) 18%, transparent);
+}
 
 .lp { width: min(var(--lp-max), calc(100% - 48px)); margin: 0 auto; }
 
@@ -236,6 +244,34 @@ button { color: inherit; font: inherit; }
   transform: rotateY(-2.2deg) rotateX(1deg);
   transform-origin: 50% 50%;
   transition: transform 900ms var(--lp-ease), border-color 500ms;
+}
+.lp-photo.is-image-fallback {
+  min-height: clamp(176px, 27vw, 320px);
+  overflow: hidden;
+  background:
+    linear-gradient(128deg, transparent 0 34%, color-mix(in srgb, var(--lp-accent) 18%, transparent) 34% 35%, transparent 35% 100%),
+    linear-gradient(180deg, #171411, #0d0c0a);
+}
+.lp-photo.is-image-fallback::before,
+.lp-photo.is-image-fallback::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border: 1px solid color-mix(in srgb, var(--lp-accent) 58%, transparent);
+  transform: translate(-50%, -50%) rotate(-8deg);
+}
+.lp-photo.is-image-fallback::before {
+  width: 24%;
+  aspect-ratio: 1.7;
+  background: color-mix(in srgb, var(--lp-accent) 9%, #11100e);
+  box-shadow: 34px 22px 0 -1px #11100e, 34px 22px 0 color-mix(in srgb, var(--lp-accent) 32%, transparent);
+}
+.lp-photo.is-image-fallback::after {
+  width: 42%;
+  height: 1px;
+  border-width: 1px 0 0;
+  transform: translate(-50%, -50%) rotate(7deg);
 }
 .lp-photo::after { content: ""; position: absolute; inset: 0; border: 1px solid rgba(255,255,255,.08); pointer-events: none; }
 .lp-hero-visual:hover .lp-photo { transform: rotateY(0) rotateX(0) translateY(-4px); border-color: rgba(var(--lp-accent-rgb) / .48); }
