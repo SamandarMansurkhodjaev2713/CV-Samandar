@@ -37,7 +37,14 @@ jobs:
         run: npm run check:build
 
       - name: Verify generated files are committed
-        run: test -z "$(git status --porcelain --untracked-files=all -- index.html src/components projects sitemap.xml)"
+        run: |
+          drift="$(git status --porcelain --untracked-files=all -- index.html src/components projects sitemap.xml)"
+          if [ -n "$drift" ]; then
+            echo "Generated drift detected:"
+            echo "$drift"
+            git diff -- index.html src/components projects sitemap.xml
+            exit 1
+          fi
 
       - name: Verify documentation contracts
         run: npm run check:docs

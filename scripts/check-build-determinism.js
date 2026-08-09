@@ -45,7 +45,11 @@ function snapshot() {
   const hashes = new Map();
   generatedPaths().forEach((filePath) => {
     const relative = path.relative(ROOT, filePath).split(path.sep).join("/");
-    const digest = crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
+    const bytes = fs.readFileSync(filePath);
+    if (bytes.includes(13)) {
+      throw new Error("Generated artifact contains non-canonical CR line endings: " + relative);
+    }
+    const digest = crypto.createHash("sha256").update(bytes).digest("hex");
     hashes.set(relative, digest);
   });
   return hashes;

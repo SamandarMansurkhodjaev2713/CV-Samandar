@@ -63,8 +63,14 @@ function sleepSync(ms) {
   Atomics.wait(signal, 0, 0, ms);
 }
 
+function normalizeLf(value) {
+  // Generated artifacts are deployed from Linux but are also built on Windows.
+  // Canonical LF bytes keep CSP hashes and committed output platform-neutral.
+  return String(value).replace(/\r\n?/g, "\n");
+}
+
 function writeUtf8IfChanged(filePath, content) {
-  const next = String(content);
+  const next = normalizeLf(content);
   try {
     // Do not rewrite byte-identical artifacts. Apart from preserving mtimes,
     // this makes immediate repeated builds immune to transient Windows locks.
@@ -125,7 +131,7 @@ function compileFile(babel, jsxName) {
 const SITE_BASE = "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/";
 
 function scriptHash(source) {
-  return "'sha256-" + crypto.createHash("sha256").update(source, "utf8").digest("base64") + "'";
+  return "'sha256-" + crypto.createHash("sha256").update(normalizeLf(source), "utf8").digest("base64") + "'";
 }
 
 function contentSecurityPolicy(inlineScripts) {
@@ -150,7 +156,7 @@ function contentSecurityPolicy(inlineScripts) {
 
 function refreshMainCsp() {
   const indexPath = path.join(__dirname, "index.html");
-  let source = fs.readFileSync(indexPath, "utf8");
+  let source = normalizeLf(fs.readFileSync(indexPath, "utf8"));
   const inlineScripts = [];
   const inlinePattern = /<script\b(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi;
   let match;
