@@ -44,8 +44,8 @@
 | 5–8. Главная, изображения, кейсы и контент | выполнен | 12 сцен, 24 обложки, 15 case × 3 локали, truth audit |
 | 9–12. Responsive, motion, WCAG и QA | выполнен | viewport/browser-матрица, performance budgets и regression gates |
 | 13. Документация | выполнен | 14 обязательных документов, ADR, QA-матрица, runbook и автоматический docs-contract |
-| 14. Предрелиз и выпуск | в работе | финальный локальный gate и visual sign-off зелёные; commit/CI/deploy/production proof впереди |
-| 15. После выпуска | запланирован | monitoring и submission package после production |
+| 14. Предрелиз и выпуск | в работе | локальный gate, visual review, commit, CI, deploy и production smoke зелёные; final docs SHA/tag и внешний physical/AT sign-off впереди |
+| 15. После выпуска | в работе | scheduled production monitor и Awwwards submission package подготовлены; 24–48-часовое наблюдение продолжается |
 
 Статус отражает только зафиксированные и проверенные контракты. Детальные
 доказательства, версии и результаты тестов находятся в

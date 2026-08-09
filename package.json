@@ -18,6 +18,7 @@
     "test:desktop": "playwright test --project=desktop-chromium --project=desktop-firefox",
     "test:performance": "playwright test tests/performance-budget.spec.js --project=desktop-chromium --project=mobile-chromium --workers=1",
     "test:production": "node scripts/run-production-smoke.js",
+    "monitor:production": "node scripts/monitor-production.js",
     "qa:visual": "node scripts/run-visual-qa.js",
     "test:update-snapshots": "playwright test --update-snapshots"
   },

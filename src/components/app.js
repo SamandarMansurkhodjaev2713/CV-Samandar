@@ -833,23 +833,15 @@ function App() {
     // instead of leaving a stale recovery dialog over a healthy application.
     if (intent.doneFired) {
       if (intent.reason === "recovery" && intent.panel.parentNode && root && root.childElementCount) {
-        root.inert = true;
-        root.setAttribute("aria-hidden", "true");
+        // Recovery can win the deadline milliseconds before React commits on
+        // a saturated WebKit main thread. Once the real shell exists, promote
+        // it synchronously: another transition + timer can be starved by the
+        // same workload and leave an invisible full-screen panel intercepting
+        // input even though the application is already complete.
         intent.prepared = true;
-        let promoted = false;
-        const promoteShell = () => {
-          if (promoted) return;
-          promoted = true;
-          if (intent.panel.parentNode) intent.panel.remove();
-          root.inert = false;
-          root.removeAttribute("aria-hidden");
-        };
-        intent.panel.addEventListener("transitionend", promoteShell, {
-          once: true
-        });
-        intent.panel.style.transition = "opacity .16s ease";
-        intent.panel.style.opacity = "0";
-        window.setTimeout(promoteShell, 210);
+        intent.panel.remove();
+        root.inert = false;
+        root.removeAttribute("aria-hidden");
       } else if (root) {
         root.inert = false;
         root.removeAttribute("aria-hidden");

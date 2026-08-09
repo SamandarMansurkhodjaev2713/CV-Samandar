@@ -54,6 +54,7 @@ node scripts/static-server.js 4173
 | `npm run scan:secrets` | Проверяет кандидатов на коммит на признаки секретов и приватных данных. |
 | `npm run check:live` | С сетевыми retry проверяет, что 9 live-маршрутов возвращают пригодный HTML. |
 | `npm run test:production` | После deploy проверяет production-главную, 45 case URL и возврат к точной карточке. |
+| `npm run monitor:production` | Измеряет реальный Pages URL в desktop/mobile Chromium и сохраняет синтетический production-отчёт без пользовательского трекинга. |
 | `npm run bump:assets` | Перед релизной сборкой атомарно повышает единую версию cache-busting ссылок. |
 
 Минимальный локальный quality gate:
@@ -106,7 +107,7 @@ compiled components + 45 case pages + CSP + sitemap
 6. **После изменения source запускать `npm run check:build`.** Сгенерированные изменения коммитятся вместе с source; команда и CI проверяют байтовую детерминированность и отсутствие drift.
 7. **Cache version повышается один раз перед релизным кандидатом.** После `npm run bump:assets` обязательно снова выполнить build и полный quality gate.
 
-Подробные инженерные контракты находятся в `docs/DESIGN-SYSTEM.md`, `docs/ARCHITECTURE.md`, `docs/MOTION-PERFORMANCE.md` и ADR в `docs/adr/`.
+Подробные инженерные контракты находятся в `docs/DESIGN-SYSTEM.md`, `docs/ARCHITECTURE.md`, `docs/MOTION-PERFORMANCE.md`, `docs/PRODUCTION-MONITORING.md` и ADR в `docs/adr/`. Материалы для подачи собраны в `docs/AWWWARDS-SUBMISSION.md`.
 
 ## Тестовая матрица
 
@@ -126,6 +127,7 @@ Playwright покрывает:
 
 - `.github/workflows/quality.yml` запускается для pull request и вручную: locked install, dependency audit, secret scan, deterministic build, документационные контракты, generated drift и полный test suite.
 - `.github/workflows/deploy-pages.yml` настроен на push в `main` и ручной запуск. Он повторяет quality gate, формирует минимальный статический `_site`, публикует Pages, а затем отдельным job запускает production smoke и проверку 9 live URL.
+- `.github/workflows/production-monitor.yml` каждые шесть часов и вручную повторяет production smoke, снимает синтетические desktop/mobile vitals и сохраняет JSON evidence на 14 дней.
 - Deploy job получает только `pages: write` и `id-token: write`; build job работает с `contents: read`.
 
 Целевой Pages URL: `https://samandarmansurkhodjaev2713.github.io/CV-Samandar/`. Актуальность конкретного коммита подтверждается только успешным deploy workflow и последующей production-проверкой.

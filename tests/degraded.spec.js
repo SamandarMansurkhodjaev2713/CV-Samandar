@@ -17,6 +17,23 @@ test.describe("honest degraded states", () => {
       .toHaveAttribute("href", "https://t.me/killallofthem13");
   });
 
+  test("a shell that mounts after the intro deadline replaces recovery synchronously", async ({ page }) => {
+    test.setTimeout(20000);
+    await page.route("**/src/components/app.js*", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 3400));
+      await route.continue();
+    });
+
+    await page.goto("/?late-shell=1", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("alert")).toBeVisible({ timeout: 7000 });
+    await page.locator("#main").waitFor({ state: "attached", timeout: 10000 });
+
+    await expect(page.locator("#sm-intro")).toHaveCount(0);
+    await expect(page.locator("html")).not.toHaveClass(/intro-lock/);
+    await expect(page.locator("#root")).not.toHaveAttribute("aria-hidden", "true");
+    expect(await page.locator("#root").evaluate((root) => root.inert)).toBe(false);
+  });
+
   test("font failure keeps the main experience readable and unlocked", async ({ page }) => {
     let blocked = 0;
     await page.route("**/assets/fonts/**", (route) => {

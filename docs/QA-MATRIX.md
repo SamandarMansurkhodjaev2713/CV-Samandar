@@ -31,19 +31,21 @@
 | Gate | Статус | Доказательство |
 |---|---|---|
 | Generated site contract | **GREEN** | `npm run validate` → `OK — 24 products, 9 live routes, 15 case routes, 3 locales` (2026-08-10) |
-| Full Playwright matrix | **GREEN** | `npm test` → 147 passed, 106 project/opt-in skipped, 0 failed, 0 flaky (7.1 min; 2026-08-10) |
+| Full Playwright matrix | **GREEN** | финальный `v230` `npm test` → 148 passed, 107 project/opt-in skipped, 0 failed, 0 flaky (7.7 min; 2026-08-10) |
 | Isolated performance budgets | **GREEN** | `npm run test:performance` → desktop Chromium 1/1, mobile Chromium 1/1 (2026-08-10) |
-| iPhone WebKit critical path | **GREEN** | отдельный `mobile-webkit` прогон → intro 1/1, portfolio journey 1/1 (2026-08-10) |
-| Build determinism | **GREEN** | `npm run check:build` → 51 generated artifacts byte-identical в двух последовательных сборках |
+| iPhone WebKit critical path | **GREEN** | общий прогон → intro 1/1 + portfolio journey 1/1; после исправления late-mount race отдельный intro stress → 10/10 под 2 workers (2026-08-10) |
+| Build determinism | **GREEN** | `v230` `npm run check:build` → 51 generated artifacts byte-identical в двух последовательных сборках |
 | Dependency/secret gates | **GREEN** | `npm audit --audit-level=high` → 0 vulnerabilities; `npm run scan:secrets` → credential signatures не найдены |
 | External live routes | **GREEN** | `npm run check:live` → 9/9 approved HTTPS routes вернули usable HTML (2026-08-10) |
-| Deployed production smoke | **NOT RUN** | новый commit ещё не развёрнут; запускать `npm run test:production` только после deploy |
+| Deployed production smoke | **GREEN** | commit `155c73c`: GitHub Actions `31336811572` → build/deploy/verify-production success; независимый `npm run test:production` → 3/3 PASS, production HTML → 200 + `v229` + ожидаемый CSP (2026-08-10) |
+| Scheduled synthetic production monitor | **GREEN** | локальная калибровка `npm run monitor:production` → desktop/mobile PASS; recurring workflow и JSON artifact определены в `docs/PRODUCTION-MONITORING.md` |
 | Visual capture + human review | **GREEN** | свежий `npm run qa:visual` → 4/4 capture packages; просмотрены 4 contact sheet и full-page TTYL/ChAT desktop+mobile, всего 54 кадра |
 | NVDA / VoiceOver / physical devices | **NOT RUN** | локальная headless-среда не может честно подтвердить эти проверки |
 
-Локальная release-кандидатура зелёная по автоматическим gate и эмулированному
-visual review. Production smoke и физические device/assistive-technology
-проверки остаются отдельными доказательствами и не объявляются выполненными.
+Локальная release-кандидатура, GitHub Actions deploy и фактически опубликованный
+production зелёные по автоматическим gate. Physical device и
+assistive-technology проверки остаются отдельным внешним доказательством и не
+объявляются выполненными.
 
 ## 3. Блокирующий automated pipeline
 

@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+Новых изменений после подготовки релиза пока нет.
+
+## [2.12.0] - 2026-08-10
+
 ### Added
 
 - Канонический реестр из 24 продуктов с отдельными полями для lifecycle, confidentiality, presentation, evidence, маршрутов, repository aliases, privacy boundary и RU/EN/UZ идентичности.
@@ -15,6 +19,7 @@
 - Автоматические проверки accessibility, responsive/orientation, SEO/CSP, deep links, 404 recovery, Firefox/WebKit smoke, reduced motion, performance budgets и visual release capture.
 - Статические discovery-артефакты `404.html`, `robots.txt` и `sitemap.xml`, генерируемый sitemap содержит главную и все локализованные case-маршруты.
 - Secret scan, live-route verifier, asset-version helper и отдельный visual QA runner.
+- Scheduled production monitor с desktop/mobile synthetic vitals, функциональным smoke, проверкой live-маршрутов и сохраняемым JSON evidence.
 
 ### Changed
 
@@ -31,9 +36,11 @@
 
 - Возврат с case-страницы восстанавливает конкретную карточку проекта и раскрывает скрытую часть каталога при необходимости.
 - Устранены гонки и зависшие состояния при повторной навигации, timeout, performance cut, WebGL context loss, visibility change и повторном mount/unmount.
+- Recovery-интро больше не оставляет невидимую блокирующую панель, если WebKit монтирует готовую React-оболочку сразу после hard deadline: shell повышается синхронно и возвращает accessibility tree/input без дополнительного таймера.
 - Исправлены перекрытия focused controls мобильным dock, включая CV, горизонтальную project gallery, text zoom и короткую landscape-ориентацию.
 - Исправлена несовместимость локального HTTP с WebKit, вызванная `upgrade-insecure-requests` в meta CSP; production-ресурсы при этом остаются same-origin и HTTPS на Pages.
 - Устранены ложные section indicators, повторная intro-загрузка при deep link и некорректные переходы карточек без публичного live URL.
+- Generated build нормализован в LF и проверяется в чистом Linux/Node 20 checkout; GitHub Pages action закреплён полным immutable SHA.
 
 ### Security
 
@@ -49,4 +56,4 @@
 
 ### Release status
 
-- Изменения остаются **Unreleased** до успешного полного quality gate, merge/push в release-ветку, успешного GitHub Pages deploy и отдельной production-проверки.
+- Начальный runtime `v229` опубликован из commit `155c73c`; GitHub Actions run `31336811572` завершил build, deploy и `verify-production` со статусом success. После найденной и исправленной WebKit recovery-гонки финальный cache graph повышен до `v230` и заново прошёл 148 browser tests, performance 2/2 и deterministic build 51/51. Финальный тег ставится только после deploy `v230` и повторного production smoke.

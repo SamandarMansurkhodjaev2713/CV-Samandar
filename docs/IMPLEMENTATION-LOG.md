@@ -258,3 +258,78 @@ GitHub Actions и проверка фактически развернутого
 устройстве, NVDA/VoiceOver/TalkBack и smoke нового production commit ещё не
 выполнены. Следующий шаг — release commit, quality workflow, deploy в `main`,
 обязательный verify-production и тег только на фактически развёрнутом SHA.
+
+## Production release evidence — v229
+
+Дата публикации: 2026-08-10.
+
+Release sequence:
+
+- `6500a7f` — основной Awwwards release commit;
+- первый CI `31335961279` безопасно остановил публикацию из-за Windows/LF CSP
+  drift;
+- `1de0bd5` нормализовал generated output и CSP hashing в LF; чистый
+  Linux/Node 20 checkout подтвердил две byte-identical сборки;
+- второй CI `31336340469` прошёл весь build/test/performance gate, но GitHub
+  runner отклонил сокращённый SHA официального `actions/deploy-pages` до
+  выполнения deploy;
+- `155c73c` закрепил полный 40-символьный immutable SHA action;
+- GitHub Actions run `31336811572` завершил `build`, `deploy` и
+  `verify-production` со статусом success.
+
+Фактический production подтверждён двумя независимыми контурами:
+
+- встроенный `verify-production`: все 45 case URL, главная, точный возврат к
+  TTYL и 9 внешних live URL — PASS;
+- локальный `npm run test:production`: 3/3 PASS;
+- локальный `npm run check:live`: 9/9 PASS;
+- hard fetch с cache-busting query: HTTP 200, asset version `v229`, актуальный
+  product-registry link и ожидаемый CSP hash.
+
+Добавлен пострелизный контроль без клиентского трекинга:
+
+- `npm run monitor:production` измеряет production desktop/mobile Chromium и
+  сохраняет JSON с LCP, CLS, long tasks, frame pacing, transfers и ошибками;
+- первый калиброванный прогон: desktop ready 4035 ms, LCP 1196 ms, CLS 0.0223;
+  mobile ready 3557 ms, LCP 900 ms, CLS 0.0030 — оба PASS;
+- `.github/workflows/production-monitor.yml` повторяет smoke, synthetic vitals
+  и 9 live URL каждые шесть часов; evidence хранится 14 дней;
+- `docs/AWWWARDS-SUBMISSION.md` фиксирует concept, truthful credits,
+  technology story, key scenes, submission copy и media shot list.
+
+Synthetic monitor не заявляется как field RUM. Physical iPhone/Android,
+реальные Safari/Chrome mobile и NVDA/VoiceOver/TalkBack по-прежнему требуют
+внешнего ручного sign-off; до него этап 14 не отмечается полностью завершённым.
+
+## Final WebKit recovery hardening
+
+Финальный повтор полной матрицы не был принят с единичным падением. Trace
+показал точную последовательность на перегруженном WebKit runner:
+
+1. intro hard deadline наступал непосредственно перед React commit;
+2. recovery честно разблокировал документ и показал fallback;
+3. готовая оболочка монтировалась позже и запускала promotion;
+4. дополнительный fade-таймер promotion голодал на том же main thread;
+5. панель уже имела opacity 0, но оставалась в DOM, а `#root` — в `inert`.
+
+Исправлен продуктовый контракт, а не test timeout: после появления настоящего
+shell recovery-панель удаляется синхронно, accessibility tree и input
+восстанавливаются в той же операции. Добавлен детерминированный regression с
+искусственно задержанным `app.js`.
+
+Доказательство после исправления:
+
+- runtime cache version повышена `v229 → v230`, чтобы опубликованный браузер не
+  мог сохранить старый `app.js` под прежним URL;
+- late-shell regression — 1/1;
+- WebKit first-load intro stress — 10/10 под двумя workers;
+- полный `npm test` — 148 passed, 107 осознанно skipped, 0 failed, 0 flaky за
+  7.7 минуты;
+- изолированные performance budgets — desktop/mobile 2/2;
+- deterministic build — 51/51 byte-identical;
+- docs contract — 16/16 обязательных документов;
+- validate — 24 продукта, 9 live, 15 case, RU / EN / UZ;
+- audit/secret scan/diff check — зелёные.
+
+Все перечисленные full-matrix, performance и deterministic-build результаты
+повторены после bump и относятся к финальному `v230` candidate.
