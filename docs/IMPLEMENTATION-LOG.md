@@ -333,3 +333,11 @@ shell recovery-панель удаляется синхронно, accessibility
 
 Все перечисленные full-matrix, performance и deterministic-build результаты
 повторены после bump и относятся к финальному `v230` candidate.
+
+Первый ручной запуск production-monitor `31339495796` прошёл полностью и
+сохранил JSON artifact. Его единственная annotation указывала на deprecated
+Node 20 runtime старых official actions. По официальным GitHub release refs
+все workflows переведены на verified immutable commits: checkout `v7.0.1`,
+setup-node `v7.0.0`, upload-artifact `v7.0.1`, configure-pages `v6.0.0`,
+upload-pages-artifact и deploy-pages `v5.0.0`. `node-version: 20` для сборки
+сайта не менялся; Node 24 используется только внутренним action runtime.

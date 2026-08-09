@@ -31,6 +31,7 @@
 - Motion runtime теперь координирует уровень качества, visibility, offscreen pause, reduced motion и восстановление финального читаемого состояния вместо независимых эффектов.
 - JSX компилируется ahead of time; build одновременно обновляет CSP, генерирует локализованные кейсы и sitemap и валидирует source/generated contracts.
 - GitHub Actions используют locked dependencies, immutable action revisions, минимальные permissions и проверяют отсутствие незакоммиченного generated diff.
+- Official GitHub actions обновлены до Node 24-compatible major-релизов и закреплены полными verified commit SHA; проектовый runtime остаётся на Node.js 20.
 
 ### Fixed
 
