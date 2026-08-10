@@ -63,13 +63,15 @@ HTTP/runtime, LCP, CLS, main-ready или long-task ограничения.
 6. Закрывать инцидент только после зелёного deploy и следующего production
    monitor.
 
-## 24–48-часовое наблюдение релиза 2.12.0
+## 24–48-часовое наблюдение релиза 2.12.1
 
-Финальный release `v2.12.0` указывает на commit `4f6af33`. Deploy workflow
-`31339942716` завершил build/deploy/verify-production без annotations;
-независимый локальный production smoke дал 3/3 PASS, а live verifier — 9/9
-PASS. Scheduled run `31350135801` и дополнительный manual run `31364392491`
-на том же SHA также полностью зелёные и сохранили JSON artifacts. Следующие
+Release `v2.12.1` указывает на commit `eb3e405`. Deploy workflow
+`31368347969` завершил build/deploy/verify-production без annotations;
+независимый production smoke дал 3/3 PASS, а live verifier — 9/9 PASS.
+Scheduled run `31368418978` и дополнительный manual run `31369244468` на том
+же SHA также полностью зелёные и сохранили JSON artifacts. Последний artifact:
+desktop ready 3337 ms, LCP 660 ms, CLS 0.0016; mobile ready 3010 ms, LCP 216
+ms, CLS 0.0058; оба профиля — без first-party failures и violations. Следующие
 scheduled runs являются продолжением наблюдения. Итог 24–48 часов фиксируется
 в `docs/IMPLEMENTATION-LOG.md` только по фактически завершённым запускам.
 

@@ -26,6 +26,17 @@
   failed, performance — 2/2, visual capture — 4/4, validate — 24/9/15/3,
   audit — 0 vulnerabilities, secret scan и diff check — зелёные.
 
+### Release status
+
+- Tag `v2.12.1` указывает на опубликованный SHA `eb3e405`; GitHub Actions
+  `31368347969` завершил build/deploy/verify-production без annotations.
+- Независимый post-deploy smoke — 3/3, live routes — 9/9; production HTML
+  отдаёт только asset graph `v231`.
+- Scheduled monitor `31368418978` и manual monitor `31369244468` на том же SHA
+  зелёные. Последний JSON artifact: desktop ready 3337 ms, LCP 660 ms, CLS
+  0.0016; mobile ready 3010 ms, LCP 216 ms, CLS 0.0058; 0 failures и 0
+  violations в обоих synthetic Chromium profiles.
+
 ## [2.12.0] - 2026-08-10
 
 ### Added

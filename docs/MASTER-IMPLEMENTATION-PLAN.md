@@ -44,8 +44,8 @@
 | 5–8. Главная, изображения, кейсы и контент | выполнен | 12 сцен, 24 обложки, 15 case × 3 локали, truth audit |
 | 9–12. Responsive, motion, WCAG и QA | выполнен | viewport/browser-матрица, performance budgets и regression gates |
 | 13. Документация | выполнен | 16 обязательных документов, ADR, QA-матрица, runbook и автоматический docs-contract |
-| 14. Предрелиз и выпуск | в работе | technical release `v2.12.0`, CI/deploy/production smoke и rollback evidence зелёные; внешний physical mobile/AT sign-off впереди |
-| 15. После выпуска | в работе | scheduled production monitor реально выполняется, submission package готов; 24–48-часовое наблюдение продолжается |
+| 14. Предрелиз и выпуск | в работе | technical release `v2.12.1`, CI/deploy/production smoke и rollback evidence зелёные; внешний physical mobile/AT sign-off впереди |
+| 15. После выпуска | в работе | scheduled + manual production monitors для `v2.12.1` зелёные, submission package готов; 24–48-часовое наблюдение продолжается |
 
 Статус отражает только зафиксированные и проверенные контракты. Детальные
 доказательства, версии и результаты тестов находятся в

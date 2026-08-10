@@ -37,14 +37,14 @@
 | Build determinism | **GREEN** | `v231` `npm run check:build` → 51 generated artifacts byte-identical в двух последовательных сборках |
 | Dependency/secret gates | **GREEN** | `npm audit --audit-level=high` → 0 vulnerabilities; `npm run scan:secrets` → credential signatures не найдены |
 | External live routes | **GREEN** | `npm run check:live` → 9/9 approved HTTPS routes вернули usable HTML (2026-08-10) |
-| Deployed production smoke | **GREEN** | release `v2.12.0`, commit `4f6af33`: GitHub Actions `31339942716` → build/deploy/verify-production success и 0 annotations; независимый `npm run test:production` → 3/3 PASS, production HTML → 200 + только `v230` (2026-08-10) |
-| Scheduled synthetic production monitor | **GREEN** | schedule `31350135801` + manual `31364392491` на `4f6af33` → оба PASS, 0 annotations, JSON artifacts; последний desktop/mobile report → 0 failures и 0 violations |
+| Deployed production smoke | **GREEN** | release `v2.12.1`, commit `eb3e405`: GitHub Actions `31368347969` → build/deploy/verify-production success, jobs `93391551089` / `93393420491` / `93393540602`, у всех 0 annotations; независимый `npm run test:production` → 3/3 PASS, production HTML → 200 + только `v231` (2026-08-10) |
+| Scheduled synthetic production monitor | **GREEN** | schedule `31368418978` + manual `31369244468` на `eb3e405` → оба PASS; manual job `93394302886` → 0 annotations и JSON artifact; desktop/mobile report → 0 failures и 0 violations |
 | Visual capture + human review | **GREEN** | `v231` `npm run qa:visual` → 4/4 capture packages; повторно просмотрены все 4 contact sheet (12 main сцен + 15 case, desktop/mobile), runtime-only diff не создал визуальной регрессии |
-| Manual production browser journey | **GREEN** | реальный production `v230` вручную пройден в in-app Chromium: desktop 1280×720, CSS portrait 390×844 и landscape 844×390; menu, 24-card gallery, TTYL/BelfProctor, RU/EN/UZ, exact-card return, Builder→brief, CV и 404; найденный console AbortError закрыт regression в `v231` candidate |
+| Manual production browser journey | **GREEN** | production вручную пройден в in-app Chromium: desktop 1280×720, CSS portrait 390×844 и landscape 844×390; menu, 24-card gallery, TTYL/BelfProctor, RU/EN/UZ, exact-card return, Builder→brief, CV и 404; после deploy `v231` повторная console-проверка загрузила `scene-cinema.js?v=231` без errors/warnings |
 | NVDA / VoiceOver / physical devices | **NOT RUN** | локальная headless-среда не может честно подтвердить эти проверки |
 
-Локальная release-кандидатура, GitHub Actions deploy и фактически опубликованный
-production зелёные по автоматическим gate. Physical device и
+Локальная release-кандидатура `v231`, GitHub Actions deploy и фактически
+опубликованный production зелёные по автоматическим gate. Physical device и
 assistive-technology проверки остаются отдельным внешним доказательством и не
 объявляются выполненными.
 

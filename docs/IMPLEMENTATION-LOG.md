@@ -413,6 +413,29 @@ Transition. Пользовательский путь не ломался, но 
 - audit — 0 vulnerabilities; secret scan и `git diff --check` — зелёные;
 - package version — `2.12.1`, asset graph — `v231`.
 
-Этот раздел фиксирует локальный candidate, а не заявляет production deploy:
-новый release SHA, workflow IDs и post-deploy smoke добавляются только после
-фактической публикации.
+Release `v2.12.1` опубликован на SHA
+`eb3e405b48916510fae6f9590c09f578cd85d9df` с asset graph `v231`.
+
+Deploy workflow `31368347969`:
+
+- build `93391551089` — success за 8m27s;
+- deploy `93393420491` — success за 21s;
+- verify-production `93393540602` — success за 58s;
+- у всех трёх check-runs — 0 annotations.
+
+Независимо после deploy:
+
+- production HTML → HTTP 200, содержит `v231`, не содержит `v230` refs;
+- `npm run test:production` → 3/3 PASS;
+- `npm run check:live` → 9/9 PASS;
+- новый браузерный tab загрузил `scene-cinema.js?v=231`; после реальной
+  section-навигации console errors/warnings → 0;
+- scheduled monitor `31368418978` и manual monitor `31369244468` на
+  `eb3e405` → PASS;
+- manual job `93394302886` → 0 annotations; JSON artifact подтверждает:
+  desktop ready 3337 ms, LCP 660 ms, CLS 0.0016; mobile ready 3010 ms, LCP
+  216 ms, CLS 0.0058; 0 first-party failures и 0 budget violations.
+
+Метрики остаются synthetic Chromium evidence, а не field RUM или physical
+device proof. 24–48-часовое наблюдение и внешний NVDA/VoiceOver/TalkBack +
+physical iPhone/Android sign-off продолжаются и не объявлены завершёнными.
