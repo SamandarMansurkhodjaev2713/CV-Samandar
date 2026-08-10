@@ -65,11 +65,13 @@ HTTP/runtime, LCP, CLS, main-ready или long-task ограничения.
 
 ## 24–48-часовое наблюдение релиза 2.12.0
 
-Начальный post-deploy smoke коммита `155c73c` прошёл 2026-08-10 в GitHub
-Actions run `31336811572`; независимый локальный запуск production smoke дал
-3/3 PASS, а live verifier — 9/9 PASS. Следующие scheduled runs являются
-продолжением наблюдения. Итог 24–48 часов фиксируется в
-`docs/IMPLEMENTATION-LOG.md` только по фактически завершённым запускам.
+Финальный release `v2.12.0` указывает на commit `4f6af33`. Deploy workflow
+`31339942716` завершил build/deploy/verify-production без annotations;
+независимый локальный production smoke дал 3/3 PASS, а live verifier — 9/9
+PASS. Scheduled run `31350135801` и дополнительный manual run `31364392491`
+на том же SHA также полностью зелёные и сохранили JSON artifacts. Следующие
+scheduled runs являются продолжением наблюдения. Итог 24–48 часов фиксируется
+в `docs/IMPLEMENTATION-LOG.md` только по фактически завершённым запускам.
 
 Physical iPhone/Android и NVDA/VoiceOver/TalkBack остаются отдельным ручным
 evidence и не подменяются этим workflow.

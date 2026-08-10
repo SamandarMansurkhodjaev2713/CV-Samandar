@@ -37,8 +37,8 @@
 | Build determinism | **GREEN** | `v230` `npm run check:build` → 51 generated artifacts byte-identical в двух последовательных сборках |
 | Dependency/secret gates | **GREEN** | `npm audit --audit-level=high` → 0 vulnerabilities; `npm run scan:secrets` → credential signatures не найдены |
 | External live routes | **GREEN** | `npm run check:live` → 9/9 approved HTTPS routes вернули usable HTML (2026-08-10) |
-| Deployed production smoke | **GREEN** | commit `155c73c`: GitHub Actions `31336811572` → build/deploy/verify-production success; независимый `npm run test:production` → 3/3 PASS, production HTML → 200 + `v229` + ожидаемый CSP (2026-08-10) |
-| Scheduled synthetic production monitor | **GREEN** | локальная калибровка `npm run monitor:production` → desktop/mobile PASS; recurring workflow и JSON artifact определены в `docs/PRODUCTION-MONITORING.md` |
+| Deployed production smoke | **GREEN** | release `v2.12.0`, commit `4f6af33`: GitHub Actions `31339942716` → build/deploy/verify-production success и 0 annotations; независимый `npm run test:production` → 3/3 PASS, production HTML → 200 + только `v230` (2026-08-10) |
+| Scheduled synthetic production monitor | **GREEN** | schedule `31350135801` + manual `31364392491` на `4f6af33` → оба PASS, 0 annotations, JSON artifacts; последний desktop/mobile report → 0 failures и 0 violations |
 | Visual capture + human review | **GREEN** | свежий `npm run qa:visual` → 4/4 capture packages; просмотрены 4 contact sheet и full-page TTYL/ChAT desktop+mobile, всего 54 кадра |
 | NVDA / VoiceOver / physical devices | **NOT RUN** | локальная headless-среда не может честно подтвердить эти проверки |
 

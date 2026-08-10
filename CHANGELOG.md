@@ -57,4 +57,4 @@
 
 ### Release status
 
-- Начальный runtime `v229` опубликован из commit `155c73c`; GitHub Actions run `31336811572` завершил build, deploy и `verify-production` со статусом success. После найденной и исправленной WebKit recovery-гонки финальный cache graph повышен до `v230` и заново прошёл 148 browser tests, performance 2/2 и deterministic build 51/51. Финальный тег ставится только после deploy `v230` и повторного production smoke.
+- Release `v2.12.0` опубликован на commit `4f6af33` с cache graph `v230`. GitHub Actions `31339942716` завершил build, deploy и `verify-production` без annotations; независимый post-deploy smoke — 3/3, live routes — 9/9. Scheduled и manual production monitors (`31350135801`, `31364392491`) на том же SHA зелёные и сохранили JSON evidence.

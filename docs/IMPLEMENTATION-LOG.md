@@ -341,3 +341,34 @@ Node 20 runtime старых official actions. По официальным GitHu
 setup-node `v7.0.0`, upload-artifact `v7.0.1`, configure-pages `v6.0.0`,
 upload-pages-artifact и deploy-pages `v5.0.0`. `node-version: 20` для сборки
 сайта не менялся; Node 24 используется только внутренним action runtime.
+
+## Final release proof — v2.12.0
+
+Release tag `v2.12.0` указывает на фактически опубликованный commit
+`4f6af33b39791e6053b9eb47e2b278826e59bbef`.
+
+Финальный deploy workflow `31339942716`:
+
+- build — success: locked install, audit, secret scan, deterministic build,
+  docs, 148-test matrix и performance budgets;
+- deploy — success на обновлённых configure/upload/deploy Pages actions;
+- verify-production — success: 45 localized case URL, main/catalog/return flow
+  и 9 внешних live URL;
+- build/deploy/verify-production check-runs — 0 annotations.
+
+Независимо после deploy подтверждено:
+
+- production HTML → HTTP 200, содержит `v230`, не содержит `v229` asset refs;
+- `npm run test:production` → 3/3 PASS;
+- `npm run check:live` → 9/9 PASS;
+- scheduled monitor `31350135801` → PASS;
+- manual monitor `31364392491` → PASS, 0 annotations, JSON artifact загружен
+  и прочитан локально;
+- последний artifact относится к SHA `4f6af33`: desktop ready 3054 ms,
+  LCP 312 ms, CLS 0.0013; mobile ready 2972 ms, LCP 164 ms, CLS 0.0066;
+  оба профиля имеют 0 first-party failures и 0 budget violations.
+
+Метрики monitor являются synthetic Chromium evidence, а не полевым RUM.
+Технический релиз, rollback point и Awwwards submission package готовы.
+Незакрытый внешний gate не скрыт: physical iPhone/Android и фактические
+NVDA/VoiceOver/TalkBack требуют отдельного ручного sign-off.
