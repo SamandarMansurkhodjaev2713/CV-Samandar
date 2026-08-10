@@ -109,6 +109,20 @@
     }
   }
 
+  // `skipTransition()` is the normal interruption path when a newer navigation
+  // intent wins. Chromium rejects the auxiliary `ready` lifecycle promise with
+  // AbortError in that case even though `finished` is handled below. Observe the
+  // auxiliary promises as well so an expected cancellation never leaks into the
+  // console as an unhandled rejection.
+  function observeNativeLifecycle(transition) {
+    if (!transition) return;
+    [transition.ready, transition.updateCallbackDone].forEach(function (promise) {
+      if (promise && typeof promise.catch === "function") {
+        promise.catch(function () { /* completion/recovery is owned by finished */ });
+      }
+    });
+  }
+
   function finish(transaction, reason) {
     if (!transaction || transaction.finished) return;
     transaction.finished = true;
@@ -164,6 +178,7 @@
         instantScroll(target);
         setActiveSection(id);
       });
+      observeNativeLifecycle(transaction.transition);
       var completion = transaction.transition && transaction.transition.finished;
       Promise.resolve(completion).then(function () {
         finish(transaction, "complete");

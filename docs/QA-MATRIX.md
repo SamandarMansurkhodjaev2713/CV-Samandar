@@ -31,15 +31,16 @@
 | Gate | Статус | Доказательство |
 |---|---|---|
 | Generated site contract | **GREEN** | `npm run validate` → `OK — 24 products, 9 live routes, 15 case routes, 3 locales` (2026-08-10) |
-| Full Playwright matrix | **GREEN** | финальный `v230` `npm test` → 148 passed, 107 project/opt-in skipped, 0 failed, 0 flaky (7.7 min; 2026-08-10) |
+| Full Playwright matrix | **GREEN** | `v231` `npm test` → 148 passed, 107 project/opt-in skipped, 0 failed, 0 flaky (10.0 min; 2026-08-10) |
 | Isolated performance budgets | **GREEN** | `npm run test:performance` → desktop Chromium 1/1, mobile Chromium 1/1 (2026-08-10) |
 | iPhone WebKit critical path | **GREEN** | общий прогон → intro 1/1 + portfolio journey 1/1; после исправления late-mount race отдельный intro stress → 10/10 под 2 workers (2026-08-10) |
-| Build determinism | **GREEN** | `v230` `npm run check:build` → 51 generated artifacts byte-identical в двух последовательных сборках |
+| Build determinism | **GREEN** | `v231` `npm run check:build` → 51 generated artifacts byte-identical в двух последовательных сборках |
 | Dependency/secret gates | **GREEN** | `npm audit --audit-level=high` → 0 vulnerabilities; `npm run scan:secrets` → credential signatures не найдены |
 | External live routes | **GREEN** | `npm run check:live` → 9/9 approved HTTPS routes вернули usable HTML (2026-08-10) |
 | Deployed production smoke | **GREEN** | release `v2.12.0`, commit `4f6af33`: GitHub Actions `31339942716` → build/deploy/verify-production success и 0 annotations; независимый `npm run test:production` → 3/3 PASS, production HTML → 200 + только `v230` (2026-08-10) |
 | Scheduled synthetic production monitor | **GREEN** | schedule `31350135801` + manual `31364392491` на `4f6af33` → оба PASS, 0 annotations, JSON artifacts; последний desktop/mobile report → 0 failures и 0 violations |
-| Visual capture + human review | **GREEN** | свежий `npm run qa:visual` → 4/4 capture packages; просмотрены 4 contact sheet и full-page TTYL/ChAT desktop+mobile, всего 54 кадра |
+| Visual capture + human review | **GREEN** | `v231` `npm run qa:visual` → 4/4 capture packages; повторно просмотрены все 4 contact sheet (12 main сцен + 15 case, desktop/mobile), runtime-only diff не создал визуальной регрессии |
+| Manual production browser journey | **GREEN** | реальный production `v230` вручную пройден в in-app Chromium: desktop 1280×720, CSS portrait 390×844 и landscape 844×390; menu, 24-card gallery, TTYL/BelfProctor, RU/EN/UZ, exact-card return, Builder→brief, CV и 404; найденный console AbortError закрыт regression в `v231` candidate |
 | NVDA / VoiceOver / physical devices | **NOT RUN** | локальная headless-среда не может честно подтвердить эти проверки |
 
 Локальная release-кандидатура, GitHub Actions deploy и фактически опубликованный
@@ -106,7 +107,7 @@ assistive-technology проверки остаются отдельным вне
 | `production-smoke.spec.js` | opt-in deployed main, 45 localized case routes и exact-card return без intro | skipped без `PRODUCTION_SMOKE=1`; использует production base URL и не входит в обычный local `npm test` как выполненный smoke |
 | `reduced-motion.spec.js` | reduced intro, no canvas, content visibility, native navigation, all 24 cards | dedicated reduced-motion project |
 | `responsive-matrix.spec.js` | 11 canonical viewports, no overflow, mobile carousel/desktop grid, unobscured focus, 200% text, orientation and breakpoint state | deterministic Chromium reflow matrix; physical browser chrome/safe-area остаются manual |
-| `scene-cinema.spec.js` | latest-intent transaction, balanced events, hard timeout recovery, low-tier cut, reduced/back navigation | native View Transition behavior stubbed для deterministic contracts |
+| `scene-cinema.spec.js` | latest-intent transaction, balanced events, auxiliary lifecycle rejection без `unhandledrejection`, hard timeout recovery, low-tier cut, reduced/back navigation | native View Transition behavior stubbed для deterministic contracts |
 | `seo-routing.spec.js` | robots/sitemap/404, main locale URL, canonical/social/hreflang/JSON-LD, localized pre-JS HTML, CSP blocks arbitrary inline script/style | не проверяет crawler cache и external indexing |
 | `sound-lifecycle.spec.js` | opt-in sound destroy без orphan listeners/context/classes | не оценивает громкость и UX на реальном устройстве |
 | `stage5-sections.spec.js` | QA stack, Services tabs/accordion/related links/locales, FAQ/Quality truthfulness, phone typography | semantic and geometry contract |

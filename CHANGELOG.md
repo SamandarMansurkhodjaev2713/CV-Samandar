@@ -6,6 +6,26 @@
 
 Новых изменений после подготовки релиза пока нет.
 
+## [2.12.1] - 2026-08-10
+
+### Fixed
+
+- Прерывание нативного View Transition больше не оставляет ожидаемый
+  `AbortError: Transition was skipped` как необработанное отклонение в консоли:
+  scene-cinema наблюдает вспомогательные lifecycle promises, а финальную
+  читаемую позу по-прежнему гарантирует основной `finished`-контракт.
+
+### Quality
+
+- Добавлена детерминированная регрессия, которая отклоняет `ready` при
+  superseded-навигации и требует ноль `unhandledrejection` при сохранении
+  latest-intent semantics и парности cinema events.
+- Asset graph повышен `v230 → v231`; 51 generated artifact дважды собран
+  байт-в-байт одинаково.
+- Локальный release-gate: `npm test` — 148 passed / 107 осознанно skipped / 0
+  failed, performance — 2/2, visual capture — 4/4, validate — 24/9/15/3,
+  audit — 0 vulnerabilities, secret scan и diff check — зелёные.
+
 ## [2.12.0] - 2026-08-10
 
 ### Added

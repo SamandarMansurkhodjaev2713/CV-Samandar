@@ -12,15 +12,23 @@ async function settleCinema(page) {
 test("latest navigation intent wins and every cinema event is balanced", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-chromium", "transaction semantics are engine-independent");
   await page.addInitScript(() => {
+    window.__cinemaUnhandled = [];
+    window.addEventListener("unhandledrejection", (event) => {
+      window.__cinemaUnhandled.push(String(event.reason && (event.reason.message || event.reason)));
+    });
     document.startViewTransition = (mutation) => {
       mutation();
       let resolve;
+      let rejectReady;
       const finished = new Promise((done) => { resolve = done; });
+      const ready = new Promise((done, reject) => { rejectReady = reject; });
       const timer = setTimeout(resolve, 240);
       return {
         finished,
+        ready,
         skipTransition() {
           clearTimeout(timer);
+          rejectReady(new DOMException("Transition was skipped", "AbortError"));
           resolve();
         },
       };
@@ -37,6 +45,7 @@ test("latest navigation intent wins and every cinema event is balanced", async (
     const first = window.SceneCinema.navigate("about", { source: "e2e-first" });
     const second = window.SceneCinema.navigate("projects", { source: "e2e-latest" });
     await Promise.all([first, second]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
     window.removeEventListener("sm:cinema-start", record);
     window.removeEventListener("sm:cinema-done", record);
     return {
@@ -45,6 +54,7 @@ test("latest navigation intent wins and every cinema event is balanced", async (
       activeSection: document.body.getAttribute("data-active-section"),
       debug: window.SceneCinema.__debug(),
       runtime: window.__SM_MOTION_RUNTIME.__debug(),
+      unhandled: window.__cinemaUnhandled.slice(),
     };
   });
 
@@ -59,6 +69,7 @@ test("latest navigation intent wins and every cinema event is balanced", async (
   expect(result.debug.active).toBeNull();
   expect(result.debug.transitioning).toBe(false);
   expect(result.runtime.suspended).not.toContain("cinema");
+  expect(result.unhandled).toEqual([]);
 });
 
 test("hard timeout restores the requested final pose and releases the shell", async ({ page }, testInfo) => {

@@ -372,3 +372,47 @@ Release tag `v2.12.0` указывает на фактически опубли�
 Технический релиз, rollback point и Awwwards submission package готовы.
 Незакрытый внешний gate не скрыт: physical iPhone/Android и фактические
 NVDA/VoiceOver/TalkBack требуют отдельного ручного sign-off.
+
+## Manual production audit and View Transition hotfix — v231
+
+После выпуска `v2.12.0` production дополнительно пройден вручную в обычном
+in-app Chromium, а не только headless runner. Проверены desktop 1280×720,
+калиброванный CSS portrait 390×844 и обязательный landscape 844×390:
+
+- intro удерживает scroll/input и освобождает shell; deep link intro не
+  повторяет;
+- полноэкранное menu имеет dialog semantics, focus на close control и 12 глав;
+- каталог содержит 24 canonical cards, mobile rail использует mandatory snap,
+  next-control меняет активный проект, раскрытие показывает 24/24;
+- TTYL и BelfProctor открываются как case, RU/EN/UZ меняют полный контент, а
+  возврат восстанавливает точную карточку; для скрытой BelfProctor каталог
+  раскрывается автоматически;
+- Builder пересчитывает сложный AI/production scope и переносит точный срок,
+  бюджет, drivers и disclaimer в contact brief;
+- CV tabs/download, контактная локальная валидация и пользовательская 404
+  доступны; внешнее сообщение не отправлялось.
+
+Единственный browser-console сигнал был
+`AbortError: Transition was skipped` после штатно прерванного native View
+Transition. Пользовательский путь не ломался, но auxiliary `ready` promise
+оставался ненаблюдаемым. В `scene-cinema.js` lifecycle promises `ready` и
+`updateCallbackDone` теперь явно наблюдаются, тогда как `finished` остаётся
+единственным владельцем recovery/final-pose semantics. Regression искусственно
+отклоняет `ready` при superseded intent и требует ноль `unhandledrejection`.
+
+Локальное доказательство `v231` candidate после исправления:
+
+- targeted scene-cinema — 4/4 serial; отдельная rejection regression — 1/1;
+- `npm test` — 148 passed, 107 осознанно skipped, 0 failed, 0 flaky за 10.0
+  минуты;
+- performance budgets — desktop/mobile 2/2;
+- visual release capture — 4/4; повторно просмотрены четыре contact sheet для
+  12 main scenes и 15 case на desktop/mobile;
+- deterministic build — 51/51 byte-identical;
+- validate — 24 продукта, 9 live, 15 case, 3 локали;
+- audit — 0 vulnerabilities; secret scan и `git diff --check` — зелёные;
+- package version — `2.12.1`, asset graph — `v231`.
+
+Этот раздел фиксирует локальный candidate, а не заявляет production deploy:
+новый release SHA, workflow IDs и post-deploy smoke добавляются только после
+фактической публикации.
