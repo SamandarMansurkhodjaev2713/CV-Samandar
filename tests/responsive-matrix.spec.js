@@ -145,7 +145,12 @@ async function expectProjectGalleryLayout(page, viewport) {
     expect.soft(geometry.pagerVisible, `${viewport.label}: mobile project pager is hidden`).toBe(true);
   } else {
     expect.soft(geometry.display, `${viewport.label}: desktop gallery is not a grid`).toBe("grid");
-    expect.soft(geometry.columns.split(" ").filter(Boolean), `${viewport.label}: desktop gallery lost its two-column composition`).toHaveLength(2);
+    // Featured projects are intentionally full-width editorial records on a
+    // twelve-column system; archive cards become two span-6 columns only after
+    // expansion. The old two-track assertion described the superseded card
+    // grid and incorrectly rejected the approved composition.
+    expect.soft(geometry.columns.split(" ").filter(Boolean), `${viewport.label}: desktop gallery lost its twelve-column editorial grid`).toHaveLength(12);
+    expect.soft(geometry.firstWidth / geometry.clientWidth, `${viewport.label}: featured project no longer owns the editorial row`).toBeGreaterThan(0.98);
     expect.soft(geometry.scrollWidth, `${viewport.label}: desktop gallery retained horizontal carousel overflow`).toBeLessThanOrEqual(geometry.clientWidth + 1);
     expect.soft(geometry.pagerVisible, `${viewport.label}: mobile pager leaked into desktop layout`).toBe(false);
   }

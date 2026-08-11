@@ -57,6 +57,7 @@ test("iPhone WebKit keeps the critical portfolio journey usable", async ({ page 
 
   await page.goto("/projects/chat-app/?e2e=1", { waitUntil: "domcontentloaded" });
   await page.locator('.lp-lang-btn[data-lang="en"]').evaluate((link) => link.click());
+  await expect(page).toHaveURL(/\/projects\/chat-app\/en\/\?e2e=1#thesis$/);
   const chat = orderedProducts.find((product) => product.slug === "chat-app");
   await expect(page.locator("h1")).toHaveText(chat.i18n.en.name);
   await expect(page.locator(".lp-quick")).toHaveAttribute("tabindex", "0");

@@ -382,7 +382,12 @@ function Nav({ t, lang, setLang, active }) {
     return () => {
       window.removeEventListener("keydown", onKey);
       window.clearInterval(iv);
-      menuReleaseRef.current.timer = window.setTimeout(release, 580);
+      // The visual shutter now clears in 360 ms. Keep the semantic/inert lock
+      // only a hair longer than the pixels, otherwise a destination feels
+      // frozen after it is already visible. The old 580 ms release was
+      // especially obvious on touch and made the menu feel heavier than the
+      // whole page transition it initiated.
+      menuReleaseRef.current.timer = window.setTimeout(release, 390);
     };
   }, [open]);
 
@@ -392,6 +397,11 @@ function Nav({ t, lang, setLang, active }) {
   const extra = EXTRA_SECTION_LABELS[lang] || EXTRA_SECTION_LABELS.ru;
   const activeLabel = t.nav[active] || extra[active] || "";
   const progress = total > 1 ? idx / (total - 1) : 0;
+  // The menu must have a complete resting composition before hover exists.
+  // `peek` used to be null on open, leaving the entire right half black until
+  // the pointer happened to cross a link. Use the current chapter as the
+  // truthful default and let hover/focus temporarily retune the instrument.
+  const menuPreview = peek || { k: active, i: idx };
 
   function go(e, id) {
     e.preventDefault();
@@ -478,6 +488,10 @@ function Nav({ t, lang, setLang, active }) {
         ref={menuRef}
         id="site-menu"
         className={`nav-menu ${open ? "is-open" : ""}`}
+        style={{
+          "--menu-index": menuPreview.i,
+          "--menu-accent-rgb": MENU_ACCENT[menuPreview.k] || "217, 119, 87",
+        }}
         role="dialog"
         aria-modal="true"
         aria-label={menuCopy.dialog}
@@ -519,16 +533,22 @@ function Nav({ t, lang, setLang, active }) {
               colour (the same value acts.js uses when you actually get there)
               and blows its chapter number up. No invented facts, no thumbnails
               to keep in sync — just the chapter's own identity, early. */}
-          <div className={`nav-peek ${peek ? "is-on" : ""}`} aria-hidden="true">
+          <div className="nav-peek is-on" aria-hidden="true">
             {/* Comma alpha (`rgba(r, g, b, a)`) — MENU_ACCENT is comma-separated,
                 and the slash form only accepts space-separated channels. */}
-            <div className="nav-peek-wash" style={peek ? { background: `radial-gradient(ellipse 90% 80% at 50% 20%, rgba(${MENU_ACCENT[peek.k] || "217, 119, 87"}, 0.30), transparent 70%)` } : undefined} />
-            <div key={peek ? peek.k : "none"} className="nav-peek-body">
-              <span className="nav-peek-num" style={peek ? { color: `rgb(${MENU_ACCENT[peek.k] || "217, 119, 87"})` } : undefined}>
-                {peek ? String(peek.i + 1).padStart(2, "0") : "00"}
+            <div className="nav-peek-wash" style={{ background: `radial-gradient(ellipse 90% 80% at 50% 20%, rgba(${MENU_ACCENT[menuPreview.k] || "217, 119, 87"}, 0.30), transparent 70%)` }} />
+            <div key={menuPreview.k} className="nav-peek-body">
+              <span className="nav-peek-num" style={{ color: `rgb(${MENU_ACCENT[menuPreview.k] || "217, 119, 87"})` }}>
+                {String(menuPreview.i + 1).padStart(2, "0")}
               </span>
-              <span className="nav-peek-name">{peek ? (t.nav[peek.k] || FULL_MENU_LABELS[lang][peek.k]) : ""}</span>
+              <span className="nav-peek-name">{t.nav[menuPreview.k] || FULL_MENU_LABELS[lang][menuPreview.k]}</span>
             </div>
+            <picture className="nav-peek-object">
+              <source media="(max-width: 900px)" srcSet="assets/hero/responsive/proof-instrument-768.webp" />
+              <img src="assets/hero/responsive/proof-instrument-1152.webp" width="1152" height="768" alt="" />
+            </picture>
+            <span className="nav-peek-ring nav-peek-ring--a" />
+            <span className="nav-peek-ring nav-peek-ring--b" />
           </div>
           <div className="nav-menu-foot">
             <a href="#contact" className="nav-menu-cta" data-magnetic onClick={(e) => go(e, "contact")}>
@@ -702,10 +722,26 @@ function App() {
     }
 
     markReady("shell", false);
-    // Hero is CSS-native: its complete semantic and visual frame ships with
-    // the mounted shell, so there is no decorative image decode to pretend to
-    // wait for. The readiness gate still waits for local type metrics.
-    markReady("hero", false);
+
+    // The signature proof instrument is now the Hero's selected critical
+    // media. Wait for a real decode/load, but keep a strict fallback so a bad
+    // image can never turn the Intro into an interaction lock.
+    const heroImage = document.querySelector(".hero-instrument-img");
+    let heroTimer = window.setTimeout(() => markReady("hero", true), 1250);
+    const markHero = (fallback) => {
+      window.clearTimeout(heroTimer);
+      heroTimer = 0;
+      markReady("hero", fallback);
+    };
+    if (!heroImage) {
+      markHero(true);
+    } else if (heroImage.complete && heroImage.naturalWidth > 0) {
+      if (typeof heroImage.decode === "function") heroImage.decode().then(() => markHero(false)).catch(() => markHero(true));
+      else markHero(false);
+    } else {
+      heroImage.addEventListener("load", () => markHero(false), { once: true });
+      heroImage.addEventListener("error", () => markHero(true), { once: true });
+    }
 
     fontTimer = window.setTimeout(() => markReady("fonts", true), 1250);
     if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === "function") {
@@ -715,6 +751,7 @@ function App() {
       }).catch(() => markReady("fonts", true));
     } else {
       window.clearTimeout(fontTimer);
+      window.clearTimeout(heroTimer);
       markReady("fonts", true);
     }
 

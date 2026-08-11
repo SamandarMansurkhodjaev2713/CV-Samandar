@@ -117,7 +117,7 @@ function loadMainContent(registry) {
 
 function validateRegistry(registry) {
   assert(Array.isArray(registry), "PRODUCT_REGISTRY must export an array");
-  assert(registry.length === 24, "expected 24 canonical products, received " + registry.length);
+  assert(registry.length === 25, "expected 25 canonical products, received " + registry.length);
   assertUnique(registry, (p) => p.id, "product id");
   assertUnique(registry, (p) => p.slug, "product slug");
   assertUnique(registry, (p) => p.i18n && p.i18n.ru && p.i18n.ru.name, "display name");
@@ -223,7 +223,7 @@ function validateRegistry(registry) {
   const liveCount = registry.filter((p) => p.presentation === "live").length;
   const caseCount = registry.filter((p) => p.presentation === "case").length;
   assert(liveCount === 9, "expected 9 live products, received " + liveCount);
-  assert(caseCount === 15, "expected 15 case products, received " + caseCount);
+  assert(caseCount === 16, "expected 16 case products, received " + caseCount);
 }
 
 function validateMainContent(registry, content) {

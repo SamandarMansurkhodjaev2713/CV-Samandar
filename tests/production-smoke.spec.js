@@ -61,7 +61,7 @@ test.describe("deployed portfolio smoke", () => {
         expect(result.html, result.route.path).toContain('class="lp-page lp-page--' + result.route.product.slug + '"');
       }
     }
-    expect(routes).toHaveLength(45);
+    expect(routes).toHaveLength(48);
   });
 
   test("a deployed case returns to the exact originating project card without replaying intro", async ({ page }) => {

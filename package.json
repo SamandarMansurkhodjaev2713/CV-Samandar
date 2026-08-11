@@ -1,6 +1,6 @@
 {
   "name": "samandar-executive-ai-code-lab",
-  "version": "2.12.1",
+  "version": "2.13.0",
   "private": true,
   "description": "Static trilingual portfolio with generated product case pages.",
   "scripts": {

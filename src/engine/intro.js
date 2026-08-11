@@ -297,6 +297,16 @@
         "linear-gradient(180deg, rgba(31,30,27,.96), #1F1E1B)," +
         "radial-gradient(circle at 68% 42%, rgba(" + accent.join(",") + ",.12), transparent 42%)";
 
+      var instrument = document.createElement("div");
+      instrument.className = "sm-boot-instrument";
+      instrument.setAttribute("aria-hidden", "true");
+      instrument.innerHTML =
+        '<span class="sm-boot-aperture sm-boot-aperture--a"></span>' +
+        '<span class="sm-boot-aperture sm-boot-aperture--b"></span>' +
+        '<picture><source media="(max-width:760px)" srcset="assets/hero/responsive/proof-instrument-768.webp">' +
+        '<img src="assets/hero/responsive/proof-instrument-1152.webp" width="1152" height="768" alt="" decoding="async"></picture>';
+      panel.appendChild(instrument);
+
       if (!reduced) {
         canvas = document.createElement("canvas");
         canvas.className = "sm-boot-particles";

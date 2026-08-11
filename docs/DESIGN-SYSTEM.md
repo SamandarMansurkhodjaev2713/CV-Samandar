@@ -17,7 +17,7 @@
 | порядок и состав 12 сцен | `FULL_MENU_SECTIONS` и фактический DOM в `src/components/app.jsx` |
 | компоненты главной | `src/components/*.jsx`; одноимённые `.js` — generated artifacts |
 | тексты главной и карточек RU/EN/UZ | `src/content/content.js` |
-| идентичность, порядок, маршруты и публичные границы 24 продуктов | `src/content/product-registry.js` |
+| идентичность, порядок, маршруты и публичные границы 25 продуктов | `src/content/product-registry.js` |
 | содержимое 15 кейсов | `src/projects/landings-data.js` и `src/projects/landings-new.js` |
 | разметка кейсов и общий UI-копирайт | `src/projects/render.js` |
 | базовые токены и shell | `src/styles/styles.css` |
@@ -52,7 +52,7 @@ Signature motif — Proof Rail. Это линия с тремя контроль
 | 01 | `hero` | имя, роль, главный тезис | самостоятельная первая сцена; нативный sticky-переход в Signal |
 | 02 | `signal` | причины работать вместе | `emerge`; читатель сам управляет disclosure |
 | 03 | `about` | профиль и проверяемый контекст | `develop`; README-композиция и безопасный GitHub fallback |
-| 04 | `projects` | 24 продукта | `rise`; desktop grid и mobile horizontal gallery |
+| 04 | `projects` | 25 продуктов | `rise`; desktop grid и mobile horizontal gallery |
 | 05 | `builder` | конфигурация будущего проекта | `assemble`; параметры превращаются в структурированный brief |
 | 06 | `skills` | инженерная и QA-компетенция | `converge`; аналитический холодный акт |
 | 07 | `services` | форматы сотрудничества | `slide-left`; первая половина pinned-overlap с CV |
@@ -138,7 +138,7 @@ Easing tokens: `--ease-out`, `--ease-emphasized`, `--ease-standard`, `--ease-ove
 
 ### 8.1 Карточки
 
-В реестре ровно 24 продукта, отсортированных по `featuredRank`:
+В реестре ровно 25 продуктов, отсортированных по `featuredRank`:
 
 - 9 `presentation: "live"`: primary CTA открывает реальный HTTPS live-site;
 - 15 `presentation: "case"`: primary CTA открывает локальный case route;

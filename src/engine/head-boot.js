@@ -28,6 +28,10 @@
       "position:fixed;inset:0;z-index:2147483000;background:#1F1E1B;color:#F5F0E6;" +
       "pointer-events:auto;overflow:hidden;isolation:isolate;font-family:Arial,sans-serif;";
     panel.innerHTML =
+      '<div class="sm-boot-frame-object" aria-hidden="true" style="position:absolute;right:7vw;top:10vh;width:min(48vw,620px);aspect-ratio:1;border:1px solid rgba(200,155,94,.18);border-radius:50%;opacity:.72;transform:rotate(-12deg)">' +
+        '<i style="position:absolute;inset:12%;border:1px solid rgba(245,240,230,.10);border-radius:50%"></i>' +
+        '<i style="position:absolute;inset:28%;border:1px solid rgba(217,119,87,.32);border-radius:50%"></i>' +
+      '</div>' +
       '<div class="sm-boot sm-boot--head" style="position:absolute;left:50%;top:42%;width:min(520px,82vw);transform:translate(-50%,-50%);display:flex;flex-direction:column;gap:16px">' +
         '<div class="sm-boot-label" style="font:600 10px/1.4 monospace;letter-spacing:.22em;color:#B8AC97">SAMANDAR / PRODUCT LAB <span class="sm-boot-state" style="color:#D97757">BUILD</span></div>' +
         '<div class="sm-boot-proof" aria-hidden="true" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font:500 10px/1.4 monospace;letter-spacing:.14em;color:#6B6353"><span style="color:#F5F0E6">BUILD</span><span>VERIFY</span><span>SHIP</span></div>' +

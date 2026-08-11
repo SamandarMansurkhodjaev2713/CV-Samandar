@@ -67,7 +67,16 @@ async function captureMain(page, label) {
       window.__SM_MOTION_POLICY.__set("high");
     }
     document.documentElement.style.scrollBehavior = "auto";
+    // The page starts at #hero to skip the authored Intro. Yield the first-load
+    // deep-link stabilizer before the matrix starts moving through chapters;
+    // otherwise its final #hero correction can race the first #signal capture
+    // and silently save Hero twice. Real menu navigation publishes this same
+    // ownership event through SceneCinema.
+    window.dispatchEvent(new CustomEvent("sm:navigation-intent", {
+      detail: { id: "visual-qa", source: "visual-qa" },
+    }));
   });
+  await page.waitForTimeout(80);
 
   const captures = [];
   for (const section of MAIN_SECTIONS) {
@@ -80,9 +89,10 @@ async function captureMain(page, label) {
     await waitForVisualReadiness(page);
     await page.waitForTimeout(420);
     const file = path.join(OUTPUT, "main-" + label + "-" + section + ".png");
-    if (!fs.existsSync(file) || fs.statSync(file).size === 0) {
-      await page.screenshot({ path: file, animations: "disabled" });
-    }
+    // Visual QA is evidence for the CURRENT candidate, never a cache. Keeping
+    // an older non-empty screenshot made a successful run silently assemble a
+    // contact sheet from the previous release after visual source changed.
+    await page.screenshot({ path: file, animations: "disabled" });
     captures.push({ label: section, file });
   }
   return captures;
@@ -111,9 +121,7 @@ async function captureCases(page, label) {
       OUTPUT,
       "case-" + CASE_CAPTURE_REVISION + "-" + label + "-" + product.slug + ".png"
     );
-    if (!fs.existsSync(file) || fs.statSync(file).size === 0) {
-      await page.screenshot({ path: file, fullPage: true, animations: "disabled" });
-    }
+    await page.screenshot({ path: file, fullPage: true, animations: "disabled" });
     captures.push({
       label: (product.i18n && product.i18n.ru && product.i18n.ru.name) || product.slug,
       file,
@@ -157,7 +165,12 @@ test.describe.configure({ mode: "parallel" });
 for (const [label, viewport] of Object.entries(VIEWPORTS)) {
   test("capture " + label + " main scenes", async ({ browser }) => {
     test.skip(!ENABLED, "Run explicitly with npm run qa:visual");
-    test.setTimeout(240000);
+    // Desktop PNGs contain the full-resolution Hero instrument and product
+    // still lifes; on constrained CI workers their lossless encoding is
+    // materially slower than the mobile matrix. A shared 240s limit killed a
+    // healthy run during teardown and left Playwright's attachment ZIP
+    // truncated. Keep both bounded, but budget them according to real work.
+    test.setTimeout(label === "desktop" ? 420000 : 300000);
     fs.mkdirSync(OUTPUT, { recursive: true });
     const context = await browser.newContext({
       baseURL: "http://127.0.0.1:4173",
@@ -183,7 +196,7 @@ for (const [label, viewport] of Object.entries(VIEWPORTS)) {
 
   test("capture " + label + " product cases", async ({ browser }) => {
     test.skip(!ENABLED, "Run explicitly with npm run qa:visual");
-    test.setTimeout(360000);
+    test.setTimeout(label === "desktop" ? 600000 : 480000);
     fs.mkdirSync(OUTPUT, { recursive: true });
     const context = await browser.newContext({
       baseURL: "http://127.0.0.1:4173",

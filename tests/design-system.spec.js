@@ -291,6 +291,7 @@ test("a production deep link settles on the requested chapter after layout and f
   test.skip(testInfo.project.name !== "mobile-chromium", "mobile pinned-layout regression");
   await page.goto("/?deep-link-shell=1#process", { waitUntil: "domcontentloaded" });
   await page.locator("#main").waitFor({ state: "attached" });
+  await expect(page.locator("html")).toHaveAttribute("data-deep-link-settled", "process", { timeout: 9000 });
   await expect.poll(
     () => page.locator("#process").evaluate((element) => {
       const top = Math.round(element.getBoundingClientRect().top);

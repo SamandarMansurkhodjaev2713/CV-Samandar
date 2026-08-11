@@ -95,7 +95,8 @@
   // an event on every joint would read as a metronome. Non-blocking overlay
   // (pointer-events:none), pure CSS animation, skipped on reduced-motion.
   var SHUTTER_AT = { projects: 1, contact: 1 };
-  var shutterTop = null, shutterBot = null, shutterTimer = 0;
+  var shutterTop = null, shutterBot = null, shutterTimer = 0, exitTimer = 0;
+  var exitPending = false;
 
   function makeShutters() {
     function plate(pos) {
@@ -122,6 +123,36 @@
       shutterTop.classList.remove("is-run");
       shutterBot.classList.remove("is-run");
     }, 950);
+  }
+
+  function navigateWithShutter(destination) {
+    if (!destination || exitPending) return false;
+    exitPending = true;
+    if (reduced || !shutterTop || !shutterBot) {
+      window.location.assign(destination);
+      return true;
+    }
+    shutterTop.classList.remove("is-run", "is-exit");
+    shutterBot.classList.remove("is-run", "is-exit");
+    void shutterTop.offsetWidth;
+    shutterTop.classList.add("is-exit");
+    shutterBot.classList.add("is-exit");
+    document.documentElement.classList.add("sm-is-leaving");
+    window.clearTimeout(exitTimer);
+    // Navigate at full closure. The next document has the same dark base, so
+    // there is no white flash while its first meaningful paint is prepared.
+    exitTimer = window.setTimeout(function () {
+      window.location.assign(destination);
+    }, 440);
+    return true;
+  }
+
+  function resetExitState() {
+    exitPending = false;
+    window.clearTimeout(exitTimer);
+    document.documentElement.classList.remove("sm-is-leaving");
+    if (shutterTop) shutterTop.classList.remove("is-exit");
+    if (shutterBot) shutterBot.classList.remove("is-exit");
   }
 
   function makeVeil() {
@@ -223,6 +254,7 @@
   function dispose() {
     unsubscribeRuntime();
     unsubscribeRuntime = function () {};
+    window.removeEventListener("pageshow", resetExitState);
     if (fallbackPointerHandler) {
       window.removeEventListener("pointermove", fallbackPointerHandler);
       fallbackPointerHandler = null;
@@ -232,6 +264,7 @@
       sectionHandler = null;
     }
     window.clearTimeout(shutterTimer);
+    window.clearTimeout(exitTimer);
     [shutterTop, shutterBot, veilA, veilB, light].forEach(function (element) {
       if (element && element.parentNode) element.parentNode.removeChild(element);
     });
@@ -253,6 +286,9 @@
       if (e && e.detail && e.detail.id) apply(e.detail.id);
     };
     window.addEventListener("sm:section", sectionHandler);
+    // History can revive this document from the back-forward cache with its
+    // old classes intact. Always reopen the aperture on pageshow.
+    window.addEventListener("pageshow", resetExitState);
     // Sync hook: verification in headless preview (IO frozen) + public API.
     window.__SM_ACTS = {
       set: apply,
@@ -260,6 +296,7 @@
       // landing in browsers that cannot morph across documents, so the hand-off
       // is still a designed beat rather than a blank frame.
       shutter: runShutter,
+      navigate: navigateWithShutter,
       current: function () {
         for (var k in ACTS) { if (ACTS[k] === current) return k; }
         return null;

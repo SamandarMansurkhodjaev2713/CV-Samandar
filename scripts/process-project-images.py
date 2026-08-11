@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import io
+import re
 import sys
 from pathlib import Path
 
@@ -26,7 +27,7 @@ OUTPUT_SPECS = (
 )
 MIN_QUALITY = 52
 MAX_QUALITY = 94
-EXPECTED_COUNT = 24
+EXPECTED_COUNT = 25
 
 
 def centered_ratio_crop(image: Image.Image) -> Image.Image:
@@ -129,16 +130,28 @@ def parse_args() -> argparse.Namespace:
         default=Path("assets/proj"),
         help="production WebP output directory",
     )
+    parser.add_argument(
+        "--only",
+        help="process one source stem without weakening the full-set check",
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-    sources = sorted(args.source.glob("*.png"))
-    if len(sources) != EXPECTED_COUNT:
-        raise RuntimeError(
-            f"expected {EXPECTED_COUNT} PNG sources in {args.source}, found {len(sources)}"
-        )
+    if args.only:
+        if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", args.only):
+            raise RuntimeError("--only must be a canonical lowercase slug")
+        source = args.source / f"{args.only}.png"
+        if not source.is_file():
+            raise RuntimeError(f"source does not exist: {source}")
+        sources = [source]
+    else:
+        sources = sorted(args.source.glob("*.png"))
+        if len(sources) != EXPECTED_COUNT:
+            raise RuntimeError(
+                f"expected {EXPECTED_COUNT} PNG sources in {args.source}, found {len(sources)}"
+            )
 
     print("project cover                            output       q   bytes")
     print("-" * 72)
