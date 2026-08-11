@@ -362,7 +362,10 @@ section[data-section] {
      section's top via #id. Without this, the fixed .nav (height var(--nav-h),
      z-index:100) covers the landed section's heading — the jump LOOKS broken
      even though the scroll itself is correct. */
-  scroll-margin-top: calc(var(--nav-safe-h) + 16px);
+  /* The mobile command capsule has an 8px optical top offset and can settle a
+     few pixels after the anchor jump. Twenty-four pixels keeps the heading
+     visibly clear in the final pose, not merely during the first correction. */
+  scroll-margin-top: calc(var(--nav-safe-h) + 24px);
 }
 /* :first-of-type is scoped per DOM parent, not per-page — About/Services/Trust
    each happen to be the first <section> child of THEIR OWN wrapper (Hero's
@@ -1328,12 +1331,6 @@ html.act-light .bg-glow {
   background: radial-gradient(ellipse 70% 55% at 18% -10%, rgba(0, 0, 0, 0.05), transparent 62%);
 }
 
-/* Opt this document into cross-document view transitions. With the matching
-   rule on the landing pages, clicking a project card morphs its image into the
-   landing's hero instead of blanking the screen. Browsers without support
-   ignore the at-rule and navigate normally. */
-@view-transition { navigation: auto; }
-
 /* ══ Per-act accent (acts.js sets --act-accent / --act-accent-rgb) ══════════
    The ATMOSPHERIC accent drifts with the journey — steel at the cool start,
    copper through the projects heart, slate in the engineering blocks, brass at
@@ -1381,6 +1378,10 @@ html.act-light .bg-glow {
   box-shadow: 0 -1px 24px rgba(var(--accent-rgb) / 0.25); }
 .act-shutter--top.is-run { animation: shutTop .9s cubic-bezier(.65,.05,.35,1) both; }
 .act-shutter--bot.is-run { animation: shutBot .9s cubic-bezier(.65,.05,.35,1) both; }
+.act-shutter.is-exit { height: 51vh; }
+.act-shutter--top.is-exit { animation: shutExitTop .46s cubic-bezier(.72,.02,.22,1) both; }
+.act-shutter--bot.is-exit { animation: shutExitBot .46s cubic-bezier(.72,.02,.22,1) both; }
+html.sm-is-leaving { cursor: progress; }
 @keyframes shutTop {
   0%   { transform: translateY(-101%); }
   42%  { transform: translateY(-72%); }
@@ -1392,6 +1393,14 @@ html.act-light .bg-glow {
   42%  { transform: translateY(72%); }
   58%  { transform: translateY(72%); }
   100% { transform: translateY(101%); }
+}
+@keyframes shutExitTop {
+  from { transform: translateY(-101%); }
+  to { transform: translateY(0); }
+}
+@keyframes shutExitBot {
+  from { transform: translateY(101%); }
+  to { transform: translateY(0); }
 }
 @media (prefers-reduced-motion: reduce) { .act-shutter { display: none; } }
 

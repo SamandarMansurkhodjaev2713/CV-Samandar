@@ -5,7 +5,7 @@
 Текущий каталог содержит **24 канонических продукта**:
 
 - **9 live-проектов** ведут на доступные внешние сайты;
-- **15 case-проектов** раскрываются на безопасных страницах внутри портфолио;
+- **16 case-проектов** раскрываются на безопасных страницах внутри портфолио;
 - главная и все case-страницы поддерживают **RU / EN / UZ**;
 - 15 кейсов × 3 языка генерируются как **45 самостоятельных HTML-страниц**.
 
@@ -43,9 +43,9 @@ node scripts/static-server.js 4173
 
 | Команда | Назначение |
 |---|---|
-| `npm run build` | Проверяет source-контракт, компилирует JSX, обновляет CSP, генерирует 45 case-страниц и sitemap, затем валидирует результат. |
+| `npm run build` | Проверяет source-контракт, компилирует JSX, обновляет CSP, генерирует 48 case-страниц и sitemap, затем валидирует результат. |
 | `npm run check:build` | Дважды выполняет сборку и требует байтовой идентичности 51 generated artifact. |
-| `npm run validate` | Проверяет уже сгенерированный сайт: 24 продукта, маршруты, локали, тексты, изображения, discovery-артефакты и runtime-контракты. |
+| `npm run validate` | Проверяет уже сгенерированный сайт: 25 продуктов, маршруты, локали, тексты, изображения, discovery-артефакты и runtime-контракты. |
 | `npm run check:docs` | Проверяет обязательные документы, локальные ссылки, package scripts и количественные контракты. |
 | `npm test` | Запускает валидацию и полную Playwright-матрицу: Chromium desktop/mobile, WebKit mobile smoke, Firefox desktop smoke и reduced-motion. |
 | `npm run test:performance` | Отдельно проверяет desktop/mobile performance-бюджеты в Chromium одним worker. |
@@ -53,7 +53,7 @@ node scripts/static-server.js 4173
 | `npm run test:a11y` | Запускает accessibility-набор с axe и keyboard/focus-проверками. |
 | `npm run scan:secrets` | Проверяет кандидатов на коммит на признаки секретов и приватных данных. |
 | `npm run check:live` | С сетевыми retry проверяет, что 9 live-маршрутов возвращают пригодный HTML. |
-| `npm run test:production` | После deploy проверяет production-главную, 45 case URL и возврат к точной карточке. |
+| `npm run test:production` | После deploy проверяет production-главную, 48 case URL и возврат к точной карточке. |
 | `npm run monitor:production` | Измеряет реальный Pages URL в desktop/mobile Chromium и сохраняет синтетический production-отчёт без пользовательского трекинга. |
 | `npm run bump:assets` | Перед релизной сборкой атомарно повышает единую версию cache-busting ссылок. |
 
@@ -79,7 +79,7 @@ npm run qa:visual
 |---|---|---|
 | Идентичность продукта, порядок, live/case-маршрут, evidence/confidentiality, изображение | `src/content/product-registry.js` | Порядок карточек, URL, sitemap и contract validation |
 | Тексты главной и карточек на RU / EN / UZ | `src/content/content.js` | Данные, которые получает React-приложение |
-| Полный контент 15 case-страниц | `src/projects/landings-data.js` + `src/projects/landings-new.js` | Локализованные страницы в `projects/<slug>/` |
+| Полный контент 16 case-страниц | `src/projects/landings-data.js` + `src/projects/landings-new.js` | Локализованные страницы в `projects/<slug>/` |
 | Разметка case-страниц | `src/projects/render.js` | Одинаковый SSR-like HTML на build-time и client-side при смене языка |
 | UI-компоненты | `src/components/*.jsx` | `src/components/*.js`, сгенерированные `build.js` |
 | Дизайн и runtime-эффекты | `src/styles/`, `src/projects/landing.css`, `src/engine/` | Progressive motion/WebGL с читаемым fallback |
@@ -92,7 +92,7 @@ product-registry + content + landing data + JSX
                        ↓
                     build.js
                        ↓
-compiled components + 45 case pages + CSP + sitemap
+compiled components + 48 case pages + CSP + sitemap
                        ↓
                validate + Playwright
 ```
@@ -114,7 +114,7 @@ compiled components + 45 case pages + CSP + sitemap
 Playwright покрывает:
 
 - критический путь главной, intro, навигацию, каталог, builder, CV, FAQ и contact;
-- все 15 case-маршрутов и переключение RU / EN / UZ;
+- все 16 case-маршрутов и переключение RU / EN / UZ;
 - клавиатуру, focus visibility, семантику, axe и reduced motion;
 - desktop/mobile responsive-состояния и смену ориентации;
 - Chromium, Firefox smoke и WebKit smoke;

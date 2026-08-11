@@ -8,7 +8,7 @@
 
 ## Decision
 
-`src/content/product-registry.js` является единственным source of truth для публичной идентичности 24 продуктов:
+`src/content/product-registry.js` является единственным source of truth для публичной идентичности 25 продуктов:
 
 - stable id/slug, порядок и portfolio state;
 - lifecycle, confidentiality, presentation (`live` или `case`) и evidence level;

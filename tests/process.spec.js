@@ -55,6 +55,9 @@ test("Method remains readable across phone and compact-landscape widths", async 
         const heading = row.querySelector("h3");
         const proof = row.querySelector(".proc-ledger-proof");
         return {
+          heading: heading.textContent.trim(),
+          headingClientWidth: heading.clientWidth,
+          headingScrollWidth: heading.scrollWidth,
           left: rect.left,
           right: rect.right,
           headingFits: heading.scrollWidth <= heading.clientWidth + 1,
@@ -67,7 +70,10 @@ test("Method remains readable across phone and compact-landscape widths", async 
     geometry.rows.forEach((row) => {
       expect(row.left, `row left at ${caseId}`).toBeGreaterThanOrEqual(-1);
       expect(row.right, `row right at ${caseId}`).toBeLessThanOrEqual(viewport.width + 1);
-      expect(row.headingFits, `phase heading at ${caseId}`).toBe(true);
+      expect(
+        row.headingFits,
+        `phase "${row.heading}" at ${caseId}: ${row.headingScrollWidth}px content / ${row.headingClientWidth}px box`
+      ).toBe(true);
       expect(row.proofFits, `phase proof at ${caseId}`).toBe(true);
     });
     expect(geometry.boundaryWidth, `boundary width at ${caseId}`).toBeGreaterThan(240);

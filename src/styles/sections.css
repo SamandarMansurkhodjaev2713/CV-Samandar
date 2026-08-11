@@ -3213,12 +3213,24 @@ html[data-motion-lite] .svc-tab.is-active .svc-tab-mark { clip-path: inset(19% 0
   .proc-ledger-index { align-items: flex-start; padding-top: 3px; font-size: 48px; }
   .proc-ledger-kicker { margin-bottom: 11px; }
   .proc-ledger-body h3 { font-size: clamp(38px, 13.5vw, 56px); }
-  .proc-ledger-body h3.is-long { font-size: clamp(30px, 9vw, 42px); }
+  /* Russian "Спроектировать" is the longest phase label. The former 30px
+     floor exceeded the remaining column at 320px after index + gaps. Keep the
+     word intact and scale it optically instead of forcing an ugly mid-word
+     break. */
+  .proc-ledger-body h3.is-long { font-size: clamp(26px, 8.5vw, 42px); letter-spacing: -.045em; }
   .proc-ledger-body p { margin-top: 14px; font-size: 14px; }
   .proc-ledger-proof { grid-column: 1 / -1; }
   .proc-ledger-proof-row { grid-template-columns: 1fr; gap: 8px; padding: 15px; }
   .proc-ledger-proof dd { font-size: 12.5px; }
   .proc-boundary { grid-template-columns: 1fr; gap: 12px; padding: 20px; }
+}
+@media (max-width: 360px) {
+  /* At the narrowest supported portrait the index column still carries the
+     phase rhythm, leaving 194px for the title. Scale every title—not just the
+     longest one—so short labels such as "Выпустить" never overflow by a few
+     glyph pixels. */
+  .proc-ledger-body h3 { font-size: clamp(34px, 11.5vw, 44px); }
+  .proc-ledger-body h3.is-long { font-size: clamp(25px, 8.1vw, 34px); }
 }
 @media (prefers-reduced-motion: reduce) {
   .proc-principle-mark::after,

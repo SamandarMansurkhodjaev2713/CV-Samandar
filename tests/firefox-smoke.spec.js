@@ -9,11 +9,11 @@ test.describe("Firefox release smoke", () => {
     page.on("pageerror", (error) => pageErrors.push(error.message));
 
     await settleMain(page, "#projects");
-    await expect(page.locator(".proj-card")).toHaveCount(24);
+    await expect(page.locator(".proj-card")).toHaveCount(25);
     await expect(page.locator(".proj-card:visible")).toHaveCount(4);
 
-    await page.getByRole("button", { name: /Показать ещё 20/ }).click();
-    await expect(page.locator(".proj-card:visible")).toHaveCount(24);
+    await page.getByRole("button", { name: /Показать ещё 21/ }).click();
+    await expect(page.locator(".proj-card:visible")).toHaveCount(25);
 
     await page.locator(".nav .lang button").filter({ hasText: /^EN$/ }).click();
     await expect(page.locator("html")).toHaveAttribute("lang", "en");

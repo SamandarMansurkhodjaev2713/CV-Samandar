@@ -2025,6 +2025,37 @@ const PROJECT_ADDITIONS = [
       },
     },
   },
+  {
+    slug: "birthday-agent",
+    name: "Birthday Agent",
+    status: "BUILD",
+    url: "projects/birthday-agent/",
+    github: null,
+    stack: ["Python", "aiogram", "PostgreSQL 16", "SQLAlchemy", "Alembic", "Docker", "pytest"],
+    i18n: {
+      ru: {
+        tag: "HR OPS · RELIABILITY",
+        problem: "Поздравление в корпоративном канале нельзя пропустить, повторить или отправить с неверными персональными данными — ручная таблица этого не гарантирует.",
+        solution: "Приватный Telegram-агент импортирует Excel через preview/apply, публикует ровно один раз, сохраняет append-only аудит и восстанавливается без потери состояния.",
+        role: "Product Engineering + Backend + QA",
+        outcome: "718 тестов · 10 инвариантов · audit/recovery",
+      },
+      en: {
+        tag: "HR OPS · RELIABILITY",
+        problem: "A corporate greeting cannot be missed, duplicated or published with incorrect personal data — a manual spreadsheet cannot guarantee that.",
+        solution: "A private Telegram agent imports Excel through preview/apply, publishes exactly once, keeps an append-only audit trail and recovers without losing state.",
+        role: "Product Engineering + Backend + QA",
+        outcome: "718 tests · 10 invariants · audit/recovery",
+      },
+      uz: {
+        tag: "HR OPS · RELIABILITY",
+        problem: "Korporativ tabrikni o‘tkazib yuborish, takrorlash yoki noto‘g‘ri shaxsiy ma’lumot bilan yuborish mumkin emas — oddiy jadval bunga kafolat bermaydi.",
+        solution: "Private Telegram-agent Excel’ni preview/apply orqali import qiladi, faqat bir marta yuboradi, append-only audit saqlaydi va state’ni yo‘qotmasdan tiklanadi.",
+        role: "Product Engineering + Backend + QA",
+        outcome: "718 test · 10 invariant · audit/recovery",
+      },
+    },
+  },
 ];
 
 const PRODUCT_META = Array.isArray(window.PRODUCT_REGISTRY) ? window.PRODUCT_REGISTRY : [];

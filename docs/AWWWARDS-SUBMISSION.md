@@ -83,7 +83,7 @@ Motion не является заставкой поверх контента. �
 **Short description**
 
 An interactive portfolio for a product builder and QA engineer, structured as
-twelve distinct acts. It presents 24 products through live destinations or
+twelve distinct acts. It presents 25 products through live destinations or
 privacy-safe case studies and frames building, verification and delivery as one
 continuous responsibility loop.
 

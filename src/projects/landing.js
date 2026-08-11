@@ -37,8 +37,48 @@
   var chapterIntentTimer = 0;
   var chapterScrollHandler = null;
   var chapterScrollFrame = 0;
+  var exitPending = false;
+  var exitTimer = 0;
 
   function validLang(value) { return LANGS.indexOf(value) !== -1 ? value : null; }
+
+  function prefersReducedMotion() {
+    try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
+    catch (e) { return false; }
+  }
+
+  function navigateWithExit(destination) {
+    if (!destination || exitPending) return;
+    exitPending = true;
+    if (prefersReducedMotion()) {
+      window.location.assign(destination);
+      return;
+    }
+    document.documentElement.classList.add("lp-is-leaving");
+    document.documentElement.setAttribute("aria-busy", "true");
+    exitTimer = window.setTimeout(function () {
+      exitTimer = 0;
+      window.location.assign(destination);
+    }, 440);
+  }
+
+  function cancelExitTimer() {
+    if (!exitTimer) return;
+    window.clearTimeout(exitTimer);
+    exitTimer = 0;
+  }
+
+  function resetExitState() {
+    cancelExitTimer();
+    exitPending = false;
+    document.documentElement.classList.remove("lp-is-leaving");
+    document.documentElement.removeAttribute("aria-busy");
+  }
+  /* A newer browser navigation owns the page as soon as unload begins. Cancel
+     the old aperture timer so a stale language/link intent cannot interrupt a
+     programmatic navigation or a rapid user-initiated replacement in WebKit. */
+  window.addEventListener("beforeunload", cancelExitTimer);
+  window.addEventListener("pagehide", cancelExitTimer);
   function requestedLang() {
     try {
       var urlLang = validLang(new URL(window.location.href).searchParams.get("lang"));
@@ -212,7 +252,22 @@
         if (next === lang) return;
         var chapter = currentChapterId();
         setStored(next);
-        window.location.assign(languageUrl(next, chapter));
+        navigateWithExit(languageUrl(next, chapter));
+      });
+    });
+  }
+
+  function wireExitLinks() {
+    Array.prototype.forEach.call(root.querySelectorAll(".lp-back, .lp-foot-back, .lp-btn-primary"), function (link) {
+      link.addEventListener("click", function (event) {
+        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        var href = link.getAttribute("href");
+        if (!href) return;
+        var target;
+        try { target = new URL(href, window.location.href); } catch (e) { return; }
+        if (target.origin !== window.location.origin) return;
+        event.preventDefault();
+        navigateWithExit(target.href);
       });
     });
   }
@@ -246,6 +301,7 @@
   }
   setStored(staticLang);
   wireLanguage(staticLang);
+  wireExitLinks();
   wireReveal();
   wireChapters();
   wirePointer();
@@ -255,4 +311,5 @@
       setActiveChapter(chapterIntent);
     });
   }
+  window.addEventListener("pageshow", resetExitState);
 })();

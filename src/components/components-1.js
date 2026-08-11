@@ -208,7 +208,8 @@ function Hero({
       hx: 0,
       hy: 0,
       fieldX: 0,
-      fieldY: 0
+      fieldY: 0,
+      progress: 0
     };
     const unsubscribe = runtime.subscribe({
       id: "hero-depth-field",
@@ -225,6 +226,7 @@ function Hero({
         state.hx = canLean ? context.input.pointerX / Math.max(1, context.input.viewportWidth) - 0.5 : 0;
         state.hy = canLean ? context.input.pointerY / Math.max(1, context.input.viewportHeight) - 0.5 : 0;
         const progress = active && rect ? Math.max(0, Math.min(1, -rect.top / Math.max(1, rect.height))) : 0;
+        state.progress = progress;
         state.fieldX = state.hx * 10;
         state.fieldY = progress * 24 + state.hy * 8;
       },
@@ -233,12 +235,14 @@ function Hero({
         heroEl.style.setProperty("--hy", state.hy.toFixed(3));
         heroEl.style.setProperty("--hero-field-x", state.fieldX.toFixed(1) + "px");
         heroEl.style.setProperty("--hero-field-y", state.fieldY.toFixed(1) + "px");
+        heroEl.style.setProperty("--hero-phase", state.progress.toFixed(4));
       },
       dispose() {
         heroEl.style.removeProperty("--hx");
         heroEl.style.removeProperty("--hy");
         heroEl.style.removeProperty("--hero-field-x");
         heroEl.style.removeProperty("--hero-field-y");
+        heroEl.style.removeProperty("--hero-phase");
       }
     });
     runtime.wake("hero-depth-ready");
@@ -323,7 +327,48 @@ function Hero({
   }, /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null))), /*#__PURE__*/React.createElement("div", {
     className: "hero-seam",
     "aria-hidden": "true"
-  }), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("figure", {
+    className: "hero-instrument",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "hero-instrument-orbit hero-instrument-orbit--outer"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "hero-instrument-orbit hero-instrument-orbit--inner"
+  }), /*#__PURE__*/React.createElement("picture", null, /*#__PURE__*/React.createElement("source", {
+    media: "(max-width: 760px)",
+    srcSet: "assets/hero/responsive/proof-instrument-768.webp"
+  }), /*#__PURE__*/React.createElement("source", {
+    media: "(max-width: 1280px)",
+    srcSet: "assets/hero/responsive/proof-instrument-1152.webp"
+  }), /*#__PURE__*/React.createElement("img", {
+    className: "hero-instrument-img",
+    src: "assets/hero/proof-instrument.webp",
+    width: "1536",
+    height: "1024",
+    alt: "",
+    loading: "eager",
+    fetchPriority: "high",
+    decoding: "async"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "hero-instrument-index mono"
+  }, "PROOF / 01"), /*#__PURE__*/React.createElement("span", {
+    className: "hero-instrument-axis mono"
+  }, "BUILD \xB7 VERIFY \xB7 SHIP"), /*#__PURE__*/React.createElement("div", {
+    className: "hero-instrument-plate"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "hero-instrument-plate-label mono"
+  }, "PROOF INSTRUMENT"), /*#__PURE__*/React.createElement("span", {
+    className: "hero-instrument-plate-state mono"
+  }, "CALIBRATED / 03"), /*#__PURE__*/React.createElement("ol", {
+    className: "hero-instrument-scale"
+  }, proofSteps.map((step, index) => /*#__PURE__*/React.createElement("li", {
+    key: `instrument-${step.code}`,
+    style: {
+      "--instrument-i": index
+    }
+  }, /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("span", {
+    className: "mono"
+  }, step.code), /*#__PURE__*/React.createElement("strong", null, step.k)))))), /*#__PURE__*/React.createElement("div", {
     className: "hero-stack"
   }, /*#__PURE__*/React.createElement("div", {
     className: "shell hero-band hero-band--top"
@@ -858,23 +903,17 @@ function ProjectCard({
       try {
         history.replaceState(null, "", "#proj-" + landingSlug);
       } catch (err) {/* opportunistic */}
-      // Cross-document morph: name this card's image the same thing the landing
-      // names ITS hero image, and the browser tweens between them across the
-      // navigation. The name is assigned only at click time so that 21 cards
-      // never carry 21 live transition names at once (duplicate names on one
-      // page abort the transition entirely). Browsers without cross-document
-      // view transitions simply navigate — nothing to detect, nothing to break.
+      // Cross-document View Transitions can be cancelled by a fast navigation
+      // and surface an AbortError even when the page appears to work. The
+      // shared act engine owns this hand-off instead, so there is one
+      // deterministic transition and the native link remains the fallback.
+      const plainPrimaryClick = !e.defaultPrevented && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
       try {
-        const img = e.currentTarget.closest(".proj-card");
-        const target = img && img.querySelector(".proj-screen-body--img, .proj-screen-img");
-        if (target) target.style.viewTransitionName = "lp-hero-" + landingSlug;
-      } catch (err) {/* opportunistic */}
-      // Belt and braces for the browsers that DON'T morph: run the same
-      // instrument-hatch shutter the act changes use, so the jump is never a
-      // bare white flash.
-      try {
-        if (window.__SM_ACTS && window.__SM_ACTS.shutter) window.__SM_ACTS.shutter();
-      } catch (err) {/* opportunistic */}
+        if (plainPrimaryClick && window.__SM_ACTS && window.__SM_ACTS.navigate) {
+          e.preventDefault();
+          window.__SM_ACTS.navigate(p.url);
+        }
+      } catch (err) {/* native navigation remains available */}
     }
   }
 
@@ -888,7 +927,7 @@ function ProjectCard({
   return /*#__PURE__*/React.createElement("article", {
     ref: cardRef,
     id: p.slug ? "proj-" + p.slug : landingSlug ? "proj-" + landingSlug : undefined,
-    className: "proj-card card"
+    className: `proj-card card ${i < 4 ? "proj-card--feature" : "proj-card--archive"} ${i % 2 ? "is-reverse" : ""}`
     // Alternating parallax rates. The two desktop columns are already offset
     // vertically in CSS; this makes the offset LIVE — the left column lags
     // the scroll, the right column leads it, so the pair drifts apart and

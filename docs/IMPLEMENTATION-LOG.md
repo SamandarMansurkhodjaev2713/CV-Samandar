@@ -439,3 +439,85 @@ Deploy workflow `31368347969`:
 Метрики остаются synthetic Chromium evidence, а не field RUM или physical
 device proof. 24–48-часовое наблюдение и внешний NVDA/VoiceOver/TalkBack +
 physical iPhone/Android sign-off продолжаются и не объявлены завершёнными.
+
+## Awwwards art-direction и 25-product candidate — v232
+
+Новая итерация не ограничилась декоративным слоем. Каталог повторно
+канонизирован по GitHub и продуктовым маршрутам: 25 уникальных продуктов,
+9 внешних live-сайтов и 16 безопасных case-маршрутов. Birthday Agent добавлен
+как отдельный приватный продукт без раскрытия закрытых данных; его RU/EN/UZ
+контент, схема, QA/boundary-блок и предметная обложка входят в тот же generated
+контракт, что остальные кейсы. Сборка теперь выпускает 48 case pages и 49 URL
+в sitemap.
+
+Главная получила цельную физическую арт-систему Proof Instrument. Hero строится
+вокруг реального предметного объекта, а не декоративного HUD; Intro использует
+ту же оптическую грамматику, меню стало самостоятельной полноэкранной сценой,
+курсор и кнопки получили контекстные состояния. Каждая из двенадцати глав имеет
+собственный материал, композицию и вход, но нативный scroll и единый motion
+runtime сохранены. Светлые CV/Quality-сцены используют локальные контрастные
+ink-токены, а проектный раздел разделяет четыре editorial featured-записи и
+двухколоночный архив без дублей.
+
+Mobile Hero исправлен как три самостоятельных режима: portrait, short portrait
+и compact landscape. Геометрический контракт проверяет RU/EN/UZ на 320×568,
+360×800, 390×844, 430×932, 568×320, 844×390, 920×720, 1024×768 и
+1440×1000. Во всех состояниях имя, два CTA и proof-rail остаются внутри первой
+сцены, touch targets не меньше 44 px, а Signal даёт понятный следующий cue.
+Нахлёст Signal уменьшен до фиксированного шва, чтобы не скрывать Build → Verify
+→ Ship.
+
+Cross-document View Transition удалён из основного сайта и кейсов после
+воспроизводимого `Transition was skipped / AbortError`. Его заменяет
+детерминированная прерываемая exit-aperture с восстановлением после bfcache и
+instant-path для reduced motion. Возврат из кейса по-прежнему раскрывает архив
+при необходимости, пропускает Intro и центрирует точную исходную карточку.
+
+Локальная приёмка до финального asset bump:
+
+- desktop product layer — 37 passed / 4 profile-skipped;
+- mobile product layer — 15 passed / 26 profile-skipped;
+- desktop contracts — 56 passed / 1 profile-skipped;
+- mobile contracts — 9 passed / 48 profile-skipped;
+- engineering/runtime batch — 22 passed;
+- Firefox — 2/2, iPhone WebKit — 2/2, reduced motion — 1/1;
+- performance budgets — desktop/mobile 2/2;
+- visual capture — 4/4: 12 main scenes и 16 case pages на desktop/mobile;
+- contact sheets и увеличенные Hero/Projects captures просмотрены вручную;
+- deterministic build — 54/54 byte-identical;
+- validate — 25 products / 9 live / 16 case / 3 locales;
+- external live routes — 9/9; audit — 0 vulnerabilities; secret scan — clean.
+
+Автоматизированные axe-проверки не нашли WCAG 2.2 A/AA нарушений на главной,
+16 кейсах и 404. Это не подменяет реальный NVDA/VoiceOver/TalkBack и physical
+iPhone/Android sign-off: они остаются внешним NOT RUN до фактического запуска.
+Package candidate повышен до `2.13.0`, единый cache graph — `v232`.
+
+Первый единый post-bump `npm test` не был принят как release proof: при двух
+workers он воспроизвёл две гонки, которые не проявились в изолированных runs.
+Mobile deep-link кратковременно входил в допустимую геометрию, но тест не ждал
+опубликованного `data-deep-link-settled`; дополнительный сдвиг capsule оставлял
+заголовок на 57 px. Safe offset увеличен до 24 px, а regression теперь
+проверяет завершённую позу. Результат stress-повтора — 10/10 под двумя workers.
+
+Вторая гонка находилась в case exit-aperture: WebKit мог сохранить 440 ms
+language-navigation timer и перебить следующий browser navigation. Timer
+получил единственного владельца, очищается на `beforeunload` и `pagehide`, а
+smoke ждёт фактический локализованный URL, а не одинаковое во всех языках имя
+продукта. Конкурентный stress-повтор critical journey — 10/10.
+
+Финальное доказательство текущего `2.13.0 / v232` workspace после обоих fixes:
+
+- `npm test` — 259 scenarios, 150 passed, 109 осознанно profile-skipped,
+  0 failed и 0 flaky за 8.8 минуты;
+- `npm run test:performance` — desktop/mobile 2/2;
+- visual release — 4/4; свежие 12 main scenes и 16 case pages на
+  desktop/mobile, четыре contact sheet повторно просмотрены;
+- `npm run check:build` — 54/54 byte-identical;
+- validate/docs — 25/9/16/3 и 16/16;
+- audit — 0 vulnerabilities; secret scan — clean; live routes — 9/9;
+- `git diff --check` — exit 0.
+
+Production smoke и synthetic monitor для `v2.13.0` ещё не могут быть зелёными:
+кандидат не развёрнут. Они выполняются только после commit/push/deploy того же
+SHA. Physical device и screen-reader sign-off остаются честным внешним NOT RUN.

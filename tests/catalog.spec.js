@@ -29,7 +29,7 @@ test.describe("project catalog", () => {
     );
     expect(new Set(state.map((item) => item.href)).size).toBe(orderedProducts.length);
     expect(liveProducts).toHaveLength(9);
-    expect(caseProducts).toHaveLength(15);
+    expect(caseProducts).toHaveLength(16);
     await expectNoHorizontalOverflow(expect, page, "catalog");
   });
 
@@ -37,7 +37,7 @@ test.describe("project catalog", () => {
     await settleMain(page, "#projects");
 
     await expect(page.locator(".proj-card:visible")).toHaveCount(4);
-    const expand = page.getByRole("button", { name: "Показать ещё 20" });
+    const expand = page.getByRole("button", { name: "Показать ещё 21" });
     await expect(expand).toBeVisible();
     // The page deliberately uses scroll-linked transforms. Trigger the already
     // verified visible control directly so this state contract cannot race a
@@ -65,6 +65,15 @@ test.describe("project catalog", () => {
   });
 
   test("case return restores the exact originating card inside the viewport", async ({ page }) => {
+    const transitionErrors = [];
+    page.on("console", (message) => {
+      if (message.type() === "error" && /Transition was skipped|AbortError/i.test(message.text())) {
+        transitionErrors.push(message.text());
+      }
+    });
+    page.on("pageerror", (error) => {
+      if (/Transition was skipped|AbortError/i.test(error.message)) transitionErrors.push(error.message);
+    });
     const product = caseProducts.find((item) => item.slug === "chat-app");
     await page.goto("/" + product.casePage, { waitUntil: "domcontentloaded" });
     const back = page.locator(".lp-back");
@@ -88,5 +97,6 @@ test.describe("project catalog", () => {
     }));
     expectResponsiveProjectImage(expect, image, "case-return card image");
     await expectNoHorizontalOverflow(expect, page, "case-return");
+    expect(transitionErrors).toEqual([]);
   });
 });

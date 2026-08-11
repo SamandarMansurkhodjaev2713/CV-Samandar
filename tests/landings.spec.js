@@ -45,7 +45,7 @@ test("all case pages fit the mobile viewport", async ({ page, isMobile }) => {
 
 test("new cases switch RU / EN / UZ without losing chapter or route", async ({ page, isMobile }) => {
   test.skip(isMobile, "Runtime language behavior is viewport-independent and covered once.");
-  for (const slug of ["vacation-control", "b24-sales-analyst", "chat-app"]) {
+  for (const slug of ["vacation-control", "b24-sales-analyst", "chat-app", "birthday-agent"]) {
     const product = caseProducts.find((item) => item.slug === slug);
     await test.step(slug, async () => {
       await page.goto("/" + product.casePage + "#system", { waitUntil: "domcontentloaded" });

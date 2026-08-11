@@ -321,6 +321,32 @@
         ],
         edges: [e("schedule","normalize"),e("normalize","state","validated"),e("state","document","next step"),e("document","confirm"),e("state","recovery","persist"),e("recovery","state",tr(lang,"продолжить","resume","davom"),[704,364,482,364])]
       };
+      case "birthday-agent": return {
+        kind: "calendar-lock",
+        nodes: [
+          n("registry", "Реестр Excel", "Excel registry", "Excel reyestri", 20, 144, 144),
+          n("preview", "Черновик различий", "Change preview", "Farqlar drafti", 204, 52, 168),
+          n("decision", "Решение человека", "Human decision", "Inson qarori", 204, 254, 168),
+          n("domain", "Доменные инварианты", "Domain invariants", "Domain invariantlar", 418, 144, 178),
+          n("scheduler", "Один scheduler", "Single scheduler", "Bitta scheduler", 642, 52, 156),
+          n("guard", "Unique event guard", "Unique event guard", "Unique event guard", 642, 254, 156),
+          n("channel", "Публикация", "Publication", "Yuborish", 850, 144, 128)
+        ],
+        edges: [
+          e("registry","preview","parse"),
+          e("preview","decision",tr(lang,"неоднозначно","ambiguous","noaniq")),
+          e("preview","domain",tr(lang,"подтверждено","confirmed","tasdiqlandi")),
+          e("decision","domain",tr(lang,"разрешено","resolved","hal qilindi")),
+          e("domain","scheduler",tr(lang,"срок наступил","date due","sana keldi")),
+          e("scheduler","guard","advisory lock"),
+          e("domain","guard","unique constraint"),
+          e("guard","channel","exactly once")
+        ],
+        zones: [
+          { x: 184, y: 20, w: 212, h: 336, label: tr(lang,"ИМПОРТ БЕЗ ИЗМЕНЕНИЙ","NON-MUTATING IMPORT","O‘ZGARTIRMAYDIGAN IMPORT") },
+          { x: 620, y: 20, w: 366, h: 336, label: tr(lang,"КОНТУР ОДНОЙ ПУБЛИКАЦИИ","EXACTLY-ONCE BOUNDARY","BITTA YUBORISH KONTURI") }
+        ]
+      };
       case "b24-sales-analyst": return {
         kind: "reconcile",
         nodes: [
@@ -528,7 +554,7 @@
                 (c.role ? '<b class="lp-cred-role">' + esc(c.role) + "</b> · " : "") + esc(ui.builtBy) + "</div>" +
               '<div class="lp-cta"><a class="lp-btn lp-btn-primary" href="' + base + '#contact">' + esc(ui.discuss) + ' <span class="lp-arr">→</span></a>' + githubBtn + "</div>" +
             "</div>" +
-            '<figure class="lp-hero-visual" data-lp-reveal style="--reveal-delay:.08s"><div class="lp-photo"><img style="view-transition-name:lp-hero-' + esc(p.slug) + '" src="' + visual + '" srcset="' + visualSet + '" sizes="(max-width: 980px) calc(100vw - 28px), 55vw" alt="" loading="eager" fetchpriority="high" decoding="async" width="1536" height="512"></div><figcaption class="mono"><span>OBJECT / ' + esc(p.slug) + '</span><span>3:1 · RESPONSIVE EDITORIAL STUDY</span></figcaption></figure>' +
+            '<figure class="lp-hero-visual" data-lp-reveal style="--reveal-delay:.08s"><div class="lp-photo"><img src="' + visual + '" srcset="' + visualSet + '" sizes="(max-width: 980px) calc(100vw - 28px), 55vw" alt="" loading="eager" fetchpriority="high" decoding="async" width="1536" height="512"></div><figcaption class="mono"><span>OBJECT / ' + esc(p.slug) + '</span><span>3:1 · RESPONSIVE EDITORIAL STUDY</span></figcaption></figure>' +
           "</section>" +
 
           '<nav class="lp-chapters" aria-label="' + esc(ui.chapterNav) + '">' + chapterNav + '</nav>' +

@@ -40,12 +40,12 @@
 | Этап | Состояние | Проверяемый результат |
 | --- | --- | --- |
 | 0. Baseline и rollback | выполнен | `pre-awwwards-v210`, baseline и рабочая ветка |
-| 1–4. Реестр, архитектура и оболочка | выполнен | 24 продукта, единый registry, recovery, intro и 12-главная навигация |
-| 5–8. Главная, изображения, кейсы и контент | выполнен | 12 сцен, 24 обложки, 15 case × 3 локали, truth audit |
+| 1–4. Реестр, архитектура и оболочка | выполнен | 25 продуктов, единый registry, recovery, intro и 12-главная навигация |
+| 5–8. Главная, изображения, кейсы и контент | выполнен | 12 сцен, 25 обложек, 16 case × 3 локали, truth audit и Awwwards-полировка |
 | 9–12. Responsive, motion, WCAG и QA | выполнен | viewport/browser-матрица, performance budgets и regression gates |
 | 13. Документация | выполнен | 16 обязательных документов, ADR, QA-матрица, runbook и автоматический docs-contract |
-| 14. Предрелиз и выпуск | в работе | technical release `v2.12.1`, CI/deploy/production smoke и rollback evidence зелёные; внешний physical mobile/AT sign-off впереди |
-| 15. После выпуска | в работе | scheduled + manual production monitors для `v2.12.1` зелёные, submission package готов; 24–48-часовое наблюдение продолжается |
+| 14. Предрелиз и выпуск | в работе | локальный `v2.13.0 / v232` candidate прошёл automated gate; commit, deploy и post-deploy smoke впереди |
+| 15. После выпуска | ожидает deploy | scheduled/manual monitor, 24–48-часовое наблюдение и внешний physical mobile/AT sign-off выполняются только на опубликованном SHA |
 
 Статус отражает только зафиксированные и проверенные контракты. Детальные
 доказательства, версии и результаты тестов находятся в

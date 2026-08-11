@@ -3,9 +3,9 @@
 ## 1. Назначение
 
 Порядок выпуска статического портфолио на GitHub Pages без ручного расхождения
-между source, generated HTML и production. Текущий контракт: 24 продукта,
-9 live-маршрутов, 15 case-маршрутов, RU/EN/UZ, 45 generated case pages и
-46 URL в sitemap.
+между source, generated HTML и production. Текущий контракт: 25 продуктов,
+9 live-маршрутов, 16 case-маршрутов, RU/EN/UZ, 48 generated case pages и
+49 URL в sitemap.
 
 Production:
 https://samandarmansurkhodjaev2713.github.io/CV-Samandar/
@@ -44,7 +44,7 @@ Baseline rollback: tag pre-awwwards-v210.
     git diff --check
 
 qa:visual сохраняет ignored-артефакты в tmp/release-qa/: 12 сцен главной и
-15 полноразмерных case pages на desktop/mobile плюс четыре contact sheet.
+16 полноразмерных case pages на desktop/mobile плюс четыре contact sheet.
 Full-page case capture сначала выполняет реальный scroll-sweep, поэтому
 IntersectionObserver/lazy content входит в проверку.
 
@@ -113,9 +113,9 @@ Workflow обязан:
 
 test:production проверяет:
 
-- реальную главную и 24 карточки;
+- реальную главную и 25 карточек;
 - отсутствие first-party HTTP errors/runtime page errors;
-- 45 статических case URL и правильный lang;
+- 48 статических case URL и правильный lang;
 - возврат TTYL к #proj-ttyl без повторного intro.
 
 Ручной smoke:

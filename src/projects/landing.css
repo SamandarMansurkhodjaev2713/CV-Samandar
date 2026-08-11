@@ -1,9 +1,3 @@
-/* Receiving half of the cross-document morph: the main page names the clicked
-   card image `lp-hero-<slug>`, and render.js stamps the same name on this
-   page hero image, so the browser tweens one into the other across the
-   navigation. Unsupported browsers ignore both and navigate normally. */
-@view-transition { navigation: auto; }
-
 /* Product case studies — editorial engineering atelier, 2026. */
 :root {
   color-scheme: dark;
@@ -43,6 +37,40 @@ body {
   font-family: var(--lp-body);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* Stable cross-page aperture. Unlike cross-document View Transitions this is
+   fully owned by the site, cannot be aborted by a competing navigation and is
+   reset after a back-forward-cache restoration. */
+html::before,
+html::after {
+  content: "";
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  right: 0;
+  height: 51vh;
+  pointer-events: none;
+  background: linear-gradient(180deg, #12120f, #1c1a15);
+  will-change: transform;
+}
+html::before {
+  top: 0;
+  transform: translateY(-101%);
+  border-bottom: 1px solid rgba(var(--lp-accent-rgb) / .72);
+  box-shadow: 0 1px 28px rgba(var(--lp-accent-rgb) / .2);
+}
+html::after {
+  bottom: 0;
+  transform: translateY(101%);
+  border-top: 1px solid rgba(var(--lp-accent-rgb) / .72);
+  box-shadow: 0 -1px 28px rgba(var(--lp-accent-rgb) / .2);
+}
+html.lp-is-leaving { cursor: progress; }
+html.lp-is-leaving::before,
+html.lp-is-leaving::after {
+  transform: translateY(0);
+  transition: transform 440ms cubic-bezier(.72,.02,.22,1);
 }
 
 a { color: inherit; text-decoration: none; }
@@ -533,6 +561,8 @@ button { color: inherit; font: inherit; }
   .lp-photo,
   .lp-photo img { transform: none !important; }
   .lp-page::before { background: radial-gradient(760px 520px at 70% 14%, rgba(var(--lp-accent-rgb) / .06), transparent 70%); }
+  html::before,
+  html::after { display: none; }
 }
 
 @media (forced-colors: active) {

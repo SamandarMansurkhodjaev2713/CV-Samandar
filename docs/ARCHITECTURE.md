@@ -4,7 +4,7 @@
 
 Runtime: статический сайт для GitHub Pages, React без модульного bundler-runtime.
 
-Контентная модель: 24 canonical products, из них 9 live и 15 case.
+Контентная модель: 25 canonical products, из них 9 live и 16 case.
 
 Генерация кейсов: 15 routes × RU/EN/UZ = 45 статических HTML-страниц.
 
@@ -19,12 +19,12 @@ Runtime: статический сайт для GitHub Pages, React без мо�
 
 ```mermaid
 flowchart TD
-  R["Canonical product registry\n24 products"] --> C["Main content\nRU / EN / UZ cards"]
+  R["Canonical product registry\n25 products"] --> C["Main content\nRU / EN / UZ cards"]
   R --> L["Case data\n15 products × 3 locales"]
   C --> A["React main shell\n12 scenes"]
   L --> G["build.js + shared renderer"]
   G --> H["45 static case pages"]
-  R --> S["sitemap.xml\n46 URLs"]
+  R --> S["sitemap.xml\n49 URLs"]
   P["Motion policy"] --> M["Shared frame runtime"]
   M --> A
   M --> X["Motion / Acts / ImgFx"]
@@ -132,7 +132,7 @@ Hero/Signal используют нативный `position: sticky`. Services/C
 2. AOT JSX → JS для четырёх entry-файлов через vendored `vendor/babel.min.js` и React preset;
 3. пересчёт CSP главной по точным hash всех inline data blocks;
 4. генерация 15 кейсов по 3 локали — 45 HTML-файлов;
-5. генерация sitemap: главная + 45 case locale URLs = 46 URL;
+5. генерация sitemap: главная + 48 case locale URLs = 49 URL;
 6. повторная validation уже с generated files и проверкой source/generated parity.
 
 Запись выполняется только при изменении байтов. Для кратковременных Windows file locks предусмотрены ограниченные синхронные повторы; это не скрывает постоянную ошибку записи.

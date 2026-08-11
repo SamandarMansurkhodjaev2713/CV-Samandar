@@ -72,8 +72,8 @@ for (const relative of REQUIRED) {
 }
 
 const i18n = sources.get("docs/I18N.md") || "";
-if (!/\b15\b/.test(i18n) || !/\b45\b/.test(i18n) || !/\b46\b/.test(i18n)) {
-  fail("docs/I18N.md does not state the 15-case / 45-page / 46-URL contract");
+if (!/\b16\b/.test(i18n) || !/\b48\b/.test(i18n) || !/\b49\b/.test(i18n)) {
+  fail("docs/I18N.md does not state the 16-case / 48-page / 49-URL contract");
 }
 if (!/RU\s*\/\s*EN\s*\/\s*UZ|RU,\s*EN\s*(?:и|and)\s*UZ/i.test(i18n)) {
   fail("docs/I18N.md does not state RU/EN/UZ parity");
@@ -81,8 +81,8 @@ if (!/RU\s*\/\s*EN\s*\/\s*UZ|RU,\s*EN\s*(?:и|and)\s*UZ/i.test(i18n)) {
 
 for (const relative of CONTRACT_DOCS) {
   const source = sources.get(relative) || "";
-  if (!/\b24\b/.test(source)) fail(relative + " does not state the 24-product contract");
-  if (!/\b15\b/.test(source)) fail(relative + " does not state the 15-case contract");
+  if (!/\b25\b/.test(source)) fail(relative + " does not state the 25-product contract");
+  if (!/\b16\b/.test(source)) fail(relative + " does not state the 16-case contract");
   if (!/\b9\b/.test(source)) fail(relative + " does not state the 9-live contract");
   if (!/RU\s*\/\s*EN\s*\/\s*UZ|RU,\s*EN\s*(?:и|and)\s*UZ/i.test(source)) {
     fail(relative + " does not state RU/EN/UZ parity");
