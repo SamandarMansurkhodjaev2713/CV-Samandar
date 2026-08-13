@@ -38,17 +38,16 @@
 | Build determinism | **GREEN** | `v233` `npm run check:build` → 54 generated artifacts byte-identical в двух последовательных сборках (2026-08-13) |
 | Dependency/secret gates | **GREEN** | `npm audit --audit-level=high` → 0 vulnerabilities; `npm run scan:secrets` → no credential signatures (2026-08-13) |
 | External live routes | **GREEN** | `npm run check:live` → 9/9 live-маршрутов вернули usable HTML (2026-08-13) |
-| Deployed production smoke | **NOT RUN for v2.13.1** | текущий production `v2.13.0 / v232` на SHA `4d3c423` остаётся зелёным baseline; candidate `v2.13.1 / v233` требует deploy и отдельный post-deploy smoke |
-| Scheduled synthetic production monitor | **GREEN** | manual run `31487035854` на `4d3c423`: functional smoke, 9/9 live routes и desktop/mobile vitals success; JSON artifact → 0 failures / 0 violations (2026-08-11) |
+| Deployed production smoke | **GREEN** | code SHA `374d4c80`, GitHub Actions `31677200638`: build/deploy/verify-production success; независимый `npm run test:production` → 3/3; production HTML HTTP 200, 30 refs `v233`, 0 refs `v232`; 48 case routes и exact-card return подтверждены (2026-08-13) |
+| Scheduled synthetic production monitor | **GREEN** | manual run `31677968144` на `374d4c80`: functional smoke, 9/9 live routes и desktop/mobile vitals success; JSON artifact → 0 failures / 0 violations (2026-08-13) |
 | Visual capture + human review | **GREEN** | `v233` `VISUAL_QA=1` → 4/4: 12 main scenes + 16 full-page case на desktop/mobile; четыре contact sheet и увеличенные Hero/Projects просмотрены вручную на текущем workspace (2026-08-13) |
-| Manual production browser journey | **GREEN (desktop)** | опубликованный `v232` в Chromium 1280×720: 25 карточек, archive expand, Birthday RU→EN, возврат к `#proj-birthday-agent` без Intro, меню и runtime console errors = 0; mobile production остаётся автоматизированным/визуальным, не ручным physical evidence (2026-08-11) |
+| Manual production browser journey | **GREEN (v2.13.0 only)** | опубликованный `v232` ранее проверен вручную в Chromium; для `v2.13.1` отдельный in-app browser runtime не подключился, поэтому manual PASS не заявляется. Production Chromium smoke 3/3 и synthetic desktop/mobile monitor вынесены в отдельные строки |
 | NVDA / VoiceOver / physical devices | **NOT RUN** | локальная headless-среда не может честно подтвердить эти проверки |
 
-Candidate `v2.13.1 / v233` прошёл все локальные automated gates, но ещё не
-объявляется production до deploy и отдельного post-deploy smoke. Production
-`v2.13.0 / v232` из SHA `4d3c423` остаётся зелёным baseline и прошёл deploy,
-verify-production, независимый smoke и synthetic monitor. `v2.12.1` остаётся
-предыдущим rollback baseline. Physical device и
+Production `v2.13.1 / v233` опубликован из code SHA `374d4c80` и прошёл все
+локальные automated gates, GitHub Pages deploy/verify-production, независимый
+smoke и synthetic monitor. `v2.13.0 / v232` из SHA `4d3c423` остаётся зелёным
+rollback baseline. Physical device и
 assistive-technology проверки остаются отдельным внешним доказательством и не
 объявляются выполненными.
 

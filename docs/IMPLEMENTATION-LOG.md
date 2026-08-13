@@ -614,3 +614,35 @@ bounded timeout fallback и отменяет зависший RAF; hidden/suspen
 независимый production smoke и synthetic monitor записываются только после их
 фактического выполнения. Physical iPhone/Android и
 NVDA/VoiceOver/TalkBack остаются внешним `NOT RUN`.
+
+## Production release evidence — v2.13.1 / v233
+
+Дата публикации runtime: 2026-08-13.
+
+- code SHA `374d4c80fdd6759033ea3e4e107d9e5f474a7ea2` отправлен в `main`;
+- GitHub Pages workflow `31677200638` завершился success: build 8m26s,
+  deploy 14s, verify-production 53s;
+- все audit/secret/build drift/docs/full browser/performance jobs внутри
+  workflow прошли без пропуска blocking gate;
+- независимый `npm run test:production` после deploy → 3/3;
+- production HTML → HTTP 200, 30 asset refs `v233`, 0 refs `v232`;
+- `npm run check:live` после deploy → 9/9.
+
+Manual production monitor `31677968144` на том же code SHA завершился success
+за 1m19s. Сохранённый JSON artifact:
+
+- desktop 1440×1000: main ready 2870 ms, FCP 236 ms, LCP 1420 ms,
+  CLS 0.0010, long-task max 190 ms, failures/violations — 0;
+- mobile 412×839: main ready 2901 ms, FCP 136 ms, LCP 396 ms,
+  CLS 0.0054, frame p95 16.7 ms, long-task max 134 ms,
+  failures/violations — 0;
+- desktop synthetic runner выбрал motion tier `low`, потому что его baseline
+  frame p95 был 83.4 ms; normalized budget был применён прозрачно, violations
+  остались пустыми. Это адаптивный degraded path, а не доказательство 60 FPS.
+
+Подключение отдельного in-app browser для ручного production journey не
+состоялось из-за локальной ошибки browser runtime `kernel assets path not
+found`. Поэтому новый manual browser PASS не заявлен и не подменён smoke-тестом.
+Automated Chromium production journey, WebKit/Firefox local gate и synthetic
+desktop/mobile monitor записаны как разные виды доказательств. Physical
+iPhone/Android, NVDA/VoiceOver/TalkBack и field RUM остаются внешним `NOT RUN`.

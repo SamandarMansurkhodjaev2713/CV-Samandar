@@ -44,8 +44,8 @@
 | 5–8. Главная, изображения, кейсы и контент | выполнен | 12 сцен, 25 обложек, 16 case × 3 локали, truth audit и Awwwards-полировка |
 | 9–12. Responsive, motion, WCAG и QA | выполнен | viewport/browser-матрица, performance budgets и regression gates |
 | 13. Документация | выполнен | 16 обязательных документов, ADR, QA-матрица, runbook и автоматический docs-contract |
-| 14. Предрелиз и выпуск | в работе | candidate `v2.13.1 / v233`: локальные automated/performance/visual gates зелёные; deploy и post-deploy smoke ещё не выполнены |
-| 15. После выпуска | в работе | production `v2.13.0` monitor `31487035854` зелёный; для `v2.13.1` этап начнётся после deploy; внешний physical mobile/AT sign-off остаётся NOT RUN |
+| 14. Предрелиз и выпуск | выполнен | `v2.13.1 / v233` опубликован из `374d4c80`; Actions `31677200638`, deploy, verify-production, независимый smoke и live 9/9 зелёные |
+| 15. После выпуска | в работе | monitor `31677968144` на `374d4c80` зелёный без failures/violations; продолжаются 24–48-часовое наблюдение и внешний physical mobile/AT sign-off |
 
 Статус отражает только зафиксированные и проверенные контракты. Детальные
 доказательства, версии и результаты тестов находятся в

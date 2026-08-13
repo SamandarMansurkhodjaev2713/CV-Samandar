@@ -42,9 +42,13 @@
 
 ### Release status
 
-- В этом commit зафиксирован локально проверенный release candidate. Production
-  deployment, post-deploy smoke и monitor должны быть записаны отдельно после
-  фактического GitHub Pages выпуска; текущий production baseline — `v2.13.0`.
+- Runtime опубликован из SHA `374d4c80`; GitHub Pages workflow `31677200638`
+  завершил build, deploy и verify-production со статусом success.
+- Независимый post-deploy smoke — 3/3; production HTML отдаёт 30 ссылок на
+  `v233`, 0 ссылок на `v232`; внешние live routes — 9/9.
+- Production monitor `31677968144` завершился без failures/violations: desktop
+  LCP 1420 ms, CLS 0.0010; mobile LCP 396 ms, CLS 0.0054. Это synthetic
+  Chromium evidence, а не field RUM или physical-device proof.
 
 ## [2.13.0] - 2026-08-11
 
