@@ -1,6 +1,6 @@
 # QA matrix и release gates
 
-Актуально на: 2026-08-11
+Актуально на: 2026-08-13
 
 Тестовый runner: Playwright 1.62.0 + Axe 4.12.1
 
@@ -30,24 +30,27 @@
 
 | Gate | Статус | Доказательство |
 |---|---|---|
-| Generated site contract | **GREEN** | `npm run validate` → `OK — 25 products, 9 live routes, 16 case routes, 3 locales`; 48 generated case pages и 49 sitemap URL (2026-08-11) |
-| Full Playwright matrix | **GREEN** | финальный `v232` `npm test` → 259 scenarios, 150 passed / 109 осознанно profile-skipped / 0 failed / 0 flaky за 8.8 min; Chromium desktop/mobile, Firefox, WebKit и reduced-motion (2026-08-11) |
-| Isolated performance budgets | **GREEN** | финальный `v232` `npm run test:performance` → desktop/mobile 2/2, serial worker=1 (2026-08-11) |
-| iPhone WebKit critical path | **GREEN** | полный gate 2/2; regression stale exit intent отдельно 10/10 под 2 workers после исправления `beforeunload/pagehide` cancellation (2026-08-11) |
-| Build determinism | **GREEN** | `v232` `npm run check:build` → 54 generated artifacts byte-identical в двух последовательных сборках (2026-08-11) |
-| Dependency/secret gates | **GREEN** | `npm audit --audit-level=high` → 0 vulnerabilities; `npm run scan:secrets` → no credential signatures (2026-08-11) |
-| External live routes | **GREEN** | `npm run check:live` → 9/9 live-маршрутов вернули usable HTML (2026-08-11) |
-| Deployed production smoke | **NOT RUN (v2.13.0)** | опубликованный `v2.12.1` / `eb3e405` остаётся зелёным baseline, но не является доказательством ещё не развёрнутого `v2.13.0` candidate |
-| Scheduled synthetic production monitor | **NOT RUN (v2.13.0)** | последний зелёный monitor относится к `v2.12.1`; новый запускается только после deploy текущего SHA |
-| Visual capture + human review | **GREEN** | `VISUAL_QA=1` → 4/4: 12 main scenes + 16 full-page case на desktop/mobile; четыре contact sheet и увеличенные Hero/Projects просмотрены вручную на текущем workspace (2026-08-11) |
-| Manual production browser journey | **NOT RUN** | Предыдущий production `v2.12.1` проверен; текущий 25-card кандидат ещё не опубликован |
+| Generated site contract | **GREEN** | `v233` `npm run validate` → `OK — 25 products, 9 live routes, 16 case routes, 3 locales`; 48 generated case pages и 49 sitemap URL (2026-08-13) |
+| Full Playwright matrix | **GREEN** | финальный `v233` `npm test` → 261 scenario, 151 passed / 110 осознанно profile-skipped / 0 failed / 0 flaky за 13.6 min; локальный Windows gate — 1 worker, 0 retry; Chromium desktop/mobile, Firefox, WebKit и reduced-motion (2026-08-13) |
+| Isolated performance budgets | **GREEN** | финальный `v233` `npm run test:performance` → desktop/mobile 2/2, serial worker=1; LCP element attribution сохранён в report (2026-08-13) |
+| Navigation/reduced stress | **GREEN** | exact-card + locale/background navigation → 30/30 desktop и exact-card → 10/10 mobile; reduced scheduler final-frame contract → 30/30 (2026-08-13) |
+| iPhone WebKit critical path | **GREEN** | полный финальный gate 2/2; переходы используют нативный URL contract без blocking exit timer (2026-08-13) |
+| Build determinism | **GREEN** | `v233` `npm run check:build` → 54 generated artifacts byte-identical в двух последовательных сборках (2026-08-13) |
+| Dependency/secret gates | **GREEN** | `npm audit --audit-level=high` → 0 vulnerabilities; `npm run scan:secrets` → no credential signatures (2026-08-13) |
+| External live routes | **GREEN** | `npm run check:live` → 9/9 live-маршрутов вернули usable HTML (2026-08-13) |
+| Deployed production smoke | **NOT RUN for v2.13.1** | текущий production `v2.13.0 / v232` на SHA `4d3c423` остаётся зелёным baseline; candidate `v2.13.1 / v233` требует deploy и отдельный post-deploy smoke |
+| Scheduled synthetic production monitor | **GREEN** | manual run `31487035854` на `4d3c423`: functional smoke, 9/9 live routes и desktop/mobile vitals success; JSON artifact → 0 failures / 0 violations (2026-08-11) |
+| Visual capture + human review | **GREEN** | `v233` `VISUAL_QA=1` → 4/4: 12 main scenes + 16 full-page case на desktop/mobile; четыре contact sheet и увеличенные Hero/Projects просмотрены вручную на текущем workspace (2026-08-13) |
+| Manual production browser journey | **GREEN (desktop)** | опубликованный `v232` в Chromium 1280×720: 25 карточек, archive expand, Birthday RU→EN, возврат к `#proj-birthday-agent` без Intro, меню и runtime console errors = 0; mobile production остаётся автоматизированным/визуальным, не ручным physical evidence (2026-08-11) |
 | NVDA / VoiceOver / physical devices | **NOT RUN** | локальная headless-среда не может честно подтвердить эти проверки |
 
-Опубликованный production `v2.12.1` остаётся зелёным rollback baseline. Текущий
-25-product `v2.13.0 / v232` workspace прошёл все доступные локальные blocking
-automated gates, но не объявляется production-релизом до deploy и post-deploy
-smoke. Physical device и assistive-technology проверки остаются отдельным
-внешним доказательством и не объявляются выполненными.
+Candidate `v2.13.1 / v233` прошёл все локальные automated gates, но ещё не
+объявляется production до deploy и отдельного post-deploy smoke. Production
+`v2.13.0 / v232` из SHA `4d3c423` остаётся зелёным baseline и прошёл deploy,
+verify-production, независимый smoke и synthetic monitor. `v2.12.1` остаётся
+предыдущим rollback baseline. Physical device и
+assistive-technology проверки остаются отдельным внешним доказательством и не
+объявляются выполненными.
 
 ## 3. Блокирующий automated pipeline
 
@@ -80,8 +83,10 @@ smoke. Physical device и assistive-technology проверки остаются
 | `desktop-firefox` | Desktop Firefox, 1440×1000 | только `firefox-smoke.spec.js`: каталог, locale, case/chapter routing |
 | `reduced-motion` | Desktop Chrome, 1440×1000, `reducedMotion=reduce` | только `reduced-motion.spec.js` |
 
-Общие настройки: fully parallel; timeout 45 s; assertion timeout 7 s; в CI
-2 workers и до 2 retry; trace/screenshot/video сохраняются на failure. Retry не
+Общие настройки: fully parallel; timeout 45 s; assertion timeout 7 s; в Linux
+CI 2 workers и до 2 retry, локально на Windows 1 worker без retry из-за
+доказанной конкуренции двух тяжёлых WebGL contexts при teardown;
+trace/screenshot/video сохраняются на failure. Retry не
 скрывает flaky: release evidence должен показывать отсутствие flaky outcome.
 
 ## 5. Traceability всех automated specs

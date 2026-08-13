@@ -364,6 +364,7 @@
   }
 
   function refreshInteractiveElements() {
+    var state = currentPolicy();
     magnets = [];
     if (shouldUseCursor()) {
       document.querySelectorAll("[data-magnetic]").forEach(function (element) {
@@ -382,7 +383,7 @@
     visibleParallax.clear();
     if (parallaxObserver) parallaxObserver.disconnect();
     parallaxObserver = null;
-    if ("IntersectionObserver" in window) {
+    if (!state.reducedMotion && "IntersectionObserver" in window) {
       parallaxObserver = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
           if (entry.isIntersecting) visibleParallax.add(entry.target);
@@ -392,7 +393,7 @@
         if (runtime) runtime.wake("parallax-visibility");
       }, { rootMargin: "220px 0px 220px 0px", threshold: 0 });
       parallaxElements.forEach(function (element) { parallaxObserver.observe(element); });
-    } else {
+    } else if (!state.reducedMotion) {
       parallaxElements.forEach(function (element) { visibleParallax.add(element); });
     }
     layoutDirty = true;

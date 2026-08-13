@@ -1,6 +1,6 @@
 {
   "name": "samandar-executive-ai-code-lab",
-  "version": "2.13.0",
+  "version": "2.13.1",
   "private": true,
   "description": "Static trilingual portfolio with generated product case pages.",
   "scripts": {
@@ -11,7 +11,7 @@
     "validate": "node scripts/validate-site.js --generated",
     "scan:secrets": "node scripts/scan-secrets.js",
     "check:live": "node scripts/check-live-routes.js",
-    "test": "npm run validate && npm run check:docs && playwright test --workers=2 --grep-invert \"production motion stays inside the measurable desktop/mobile budget\"",
+    "test": "npm run validate && npm run check:docs && playwright test --grep-invert \"production motion stays inside the measurable desktop/mobile budget\"",
     "test:smoke": "playwright test --grep @smoke",
     "test:a11y": "playwright test tests/accessibility.spec.js",
     "test:mobile": "playwright test --project=mobile-chromium --project=mobile-webkit",

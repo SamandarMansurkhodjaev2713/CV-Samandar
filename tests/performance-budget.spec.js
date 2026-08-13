@@ -20,7 +20,18 @@ test.beforeEach(async ({ page }, testInfo) => {
         observer.observe(options || { type, buffered: true });
       } catch (error) { /* unsupported metric remains explicit zero */ }
     };
-    observe("largest-contentful-paint", (entry) => { window.__SM_VITALS.lcp = entry.startTime; });
+    observe("largest-contentful-paint", (entry) => {
+      const element = entry.element;
+      window.__SM_VITALS.lcp = entry.startTime;
+      window.__SM_VITALS.lcpElement = element ? {
+        tag: element.tagName,
+        id: element.id || "",
+        className: typeof element.className === "string" ? element.className : "",
+        text: (element.textContent || "").replace(/\s+/g, " ").trim().slice(0, 120),
+        url: entry.url || "",
+        size: entry.size || 0,
+      } : null;
+    });
     observe("layout-shift", (entry) => {
       if (!entry.hadRecentInput) window.__SM_VITALS.cls += entry.value;
     });
@@ -88,6 +99,7 @@ test("production motion stays inside the measurable desktop/mobile budget", asyn
     const eventDurations = vital.events.map((entry) => entry.duration);
     return {
       lcp: vital.lcp,
+      lcpElement: vital.lcpElement || null,
       cls: vital.cls,
       longTaskCount: longDurations.length,
       longTaskTotal: longDurations.reduce((sum, value) => sum + value, 0),

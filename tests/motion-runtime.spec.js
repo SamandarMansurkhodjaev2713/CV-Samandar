@@ -77,7 +77,7 @@ test("reduced motion permits a final frame but stops continuous scheduling", asy
   });
 
   expect(frames.reduced).toBe(true);
-  expect(frames.count).toBeGreaterThanOrEqual(1);
-  expect(frames.count).toBeLessThanOrEqual(2);
-  expect(frames.debug.scheduled).toBe(false);
+  expect(frames.count, JSON.stringify(frames)).toBeGreaterThanOrEqual(1);
+  expect(frames.count, JSON.stringify(frames)).toBeLessThanOrEqual(2);
+  expect(frames.debug.scheduled, JSON.stringify(frames)).toBe(false);
 });

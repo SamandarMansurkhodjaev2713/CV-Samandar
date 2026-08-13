@@ -4,6 +4,50 @@
 
 ## [Unreleased]
 
+## [2.13.1] - 2026-08-13
+
+### Changed
+
+- Hero Proof Instrument теперь доступен браузеру как LCP-кандидат сразу под
+  полностью непрозрачным Intro; после открытия сохраняется пространственная
+  сборка, но декоративная задержка opacity больше не откладывает первый paint.
+- Переходы из project cases оставлены нативным ссылкам: визуальный exit-state
+  больше не владеет URL и не может задержать возврат к точной карточке или
+  переключение RU/EN/UZ в throttled/background tab.
+- Локальный Windows Playwright gate выполняет тяжёлые WebGL/scroll-сцены
+  последовательно; Linux CI сохраняет два воркера. Набор тестов, таймауты и
+  отсутствие локальных retry не изменены.
+
+### Fixed
+
+- Устранена редкая гонка 440-ms case exit timer, из-за которой переход мог
+  остаться на визитке или быть перебит устаревшим language intent.
+- Reduced-motion runtime больше не создаёт бесполезный parallax observer, не
+  разрешает подписчику превратить финальный кадр в цикл и гарантирует один
+  bounded final-pose frame, если видимый cold-start контекст задержал RAF.
+- Полноэкранное меню явно возвращает `aria-expanded="false"` после закрытия.
+
+### Quality
+
+- Asset graph повышен до `v233`, package — до `2.13.1`; 54 generated artifacts
+  дважды собраны байт-в-байт одинаково.
+- Финальный локальный gate: 261 scenario, 151 passed / 110 осознанно
+  profile-skipped / 0 failed / 0 flaky; reduced scheduler stress — 30/30;
+  exact-card navigation stress — 30/30 desktop и 10/10 mobile.
+- Performance — 2/2; visual capture — 4/4 с ручным просмотром Hero, Projects,
+  12 сцен и 16 cases на desktop/mobile; validate — 25/9/16/3; live routes —
+  9/9; audit — 0 vulnerabilities; secret scan и diff check — зелёные.
+- Performance report теперь сохраняет точный LCP element/tag/class/url/size,
+  чтобы визуальный регресс локализовался по факту, а не по предположению.
+
+### Release status
+
+- В этом commit зафиксирован локально проверенный release candidate. Production
+  deployment, post-deploy smoke и monitor должны быть записаны отдельно после
+  фактического GitHub Pages выпуска; текущий production baseline — `v2.13.0`.
+
+## [2.13.0] - 2026-08-11
+
 ### Added
 
 - Birthday Agent добавлен как 25-й канонический продукт: безопасный приватный
@@ -51,10 +95,26 @@
   desktop/mobile; четыре contact sheet просмотрены вручную.
 - Добавлены регрессии для deterministic exit navigation, Birthday Agent,
   25-card catalog, 16 case pages, exact-card return и актуальной project grid.
+- Контракт полноэкранного меню теперь отдельно требует синхронное
+  `aria-expanded="false"` после закрытия; стресс-прогон — 10/10.
 - Release-кандидат использует package `2.13.0` и единый asset graph `v232`.
 - Финальный локальный gate: `npm test` — 150 passed / 109 осознанно skipped /
   0 failed / 0 flaky; performance — 2/2; visual — 4/4; determinism — 54/54;
   validate — 25/9/16/3; audit — 0 vulnerabilities; live routes — 9/9.
+
+### Release status
+
+- Код релиза опубликован из SHA `4d3c423`; GitHub Actions run `31485315454`
+  завершил `build`, `deploy` и `verify-production` со статусом success.
+- Независимый post-deploy smoke — 3/3, production HTML отдаёт `v232`, а
+  проверка внешних продуктов — 9/9.
+- Manual production monitor `31487035854` на том же SHA завершился без
+  failures/violations: desktop LCP 3792 ms, CLS 0.0014; mobile LCP 2496 ms,
+  CLS 0.0052.
+- Ручной desktop-путь подтвердил каталог из 25 карточек, локализованный
+  Birthday Agent, возврат к точной карточке без Intro и полноэкранное меню без
+  console errors. Physical mobile и NVDA/VoiceOver/TalkBack остаются внешним
+  `NOT RUN`, а не подменяются эмуляцией.
 
 ## [2.12.1] - 2026-08-10
 

@@ -17,7 +17,10 @@
   var byId = Object.create(null);
   var cleanup = [];
   var raf = 0;
+  var reducedFrameFallback = 0;
   var lastFrameAt = 0;
+  var lastFrameReason = "none";
+  var scheduledReason = "none";
   var frameCount = 0;
   var dirty = true;
   var destroyed = false;
@@ -104,7 +107,20 @@
 
   function schedule() {
     if (destroyed || raf || document.hidden || isSuspended()) return;
+    scheduledReason = pending.reason || "unspecified";
     raf = requestAnimationFrame(runFrame);
+    if (policyState().reducedMotion && !reducedFrameFallback) {
+      // Some visible cold-start contexts can delay their first RAF far beyond
+      // the reduced-motion final-pose budget. Deliver that one frame through a
+      // bounded fallback; this is not a loop and is cancelled by a real RAF.
+      reducedFrameFallback = window.setTimeout(function () {
+        reducedFrameFallback = 0;
+        if (!raf || destroyed || document.hidden || isSuspended()) return;
+        cancelAnimationFrame(raf);
+        raf = 0;
+        runFrame(performance.now());
+      }, 120);
+    }
   }
 
   function wake(reason) {
@@ -161,6 +177,12 @@
 
   function runFrame(now) {
     raf = 0;
+    if (reducedFrameFallback) {
+      window.clearTimeout(reducedFrameFallback);
+      reducedFrameFallback = 0;
+    }
+    lastFrameReason = scheduledReason;
+    scheduledReason = "none";
     if (destroyed || document.hidden || isSuspended()) {
       lastFrameAt = 0;
       return;
@@ -186,7 +208,14 @@
     runPhase("mutate", context);
     runPhase("render", context);
 
-    if (dirty || hasContinuousWork(context)) schedule();
+    if (state.reducedMotion) {
+      // Reduced motion is edge-triggered: one external wake may render one
+      // readable final pose, but a subscriber cannot request another frame
+      // from inside that frame and accidentally recreate a continuous loop.
+      // A later real input event can still call wake() and get its own frame.
+      dirty = false;
+      lastFrameAt = 0;
+    } else if (dirty || hasContinuousWork(context)) schedule();
     else lastFrameAt = 0;
   }
 
@@ -241,6 +270,8 @@
     suspendedReasons[reason] = true;
     if (raf) cancelAnimationFrame(raf);
     raf = 0;
+    if (reducedFrameFallback) window.clearTimeout(reducedFrameFallback);
+    reducedFrameFallback = 0;
     lastFrameAt = 0;
   }
 
@@ -313,6 +344,8 @@
     destroyed = true;
     if (raf) cancelAnimationFrame(raf);
     raf = 0;
+    if (reducedFrameFallback) window.clearTimeout(reducedFrameFallback);
+    reducedFrameFallback = 0;
     while (subscribers.length) {
       var subscriber = subscribers.pop();
       subscriber.disposed = true;
@@ -342,6 +375,9 @@
         subscriberIds: subscribers.map(function (subscriber) { return subscriber.id; }),
         frameCount: frameCount,
         scheduled: !!raf,
+        scheduledReason: scheduledReason,
+        lastFrameReason: lastFrameReason,
+        pendingReason: pending.reason,
         dirty: dirty,
         suspended: Object.keys(suspendedReasons),
         destroyed: destroyed,

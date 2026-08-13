@@ -286,9 +286,13 @@ section[data-section].sec-in::after {
   filter: saturate(.82) contrast(1.07) brightness(.82);
   -webkit-mask-image: linear-gradient(90deg, transparent 0, rgba(0,0,0,.28) 14%, #000 34%, #000 100%);
   mask-image: linear-gradient(90deg, transparent 0, rgba(0,0,0,.28) 14%, #000 34%, #000 100%);
-  opacity: 0;
+  /* This is the Hero's LCP asset and is already fully occluded by Intro on
+     first load. Paint it immediately behind the curtain; delaying opacity
+     until `sm:intro-prep` made a 77 ms local image report as a 5–7 s LCP.
+     Spatial assembly still happens when `.is-lit` lands. */
+  opacity: .94;
   transform: translate3d(7%, 2%, 0) scale(.96);
-  transition: opacity 1.05s ease .12s, transform 1.25s var(--ad-ease) .12s, filter .7s ease;
+  transition: transform 1.25s var(--ad-ease) .12s, filter .7s ease;
 }
 
 .hero.is-lit .hero-instrument-img {

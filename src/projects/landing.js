@@ -38,7 +38,6 @@
   var chapterScrollHandler = null;
   var chapterScrollFrame = 0;
   var exitPending = false;
-  var exitTimer = 0;
 
   function validLang(value) { return LANGS.indexOf(value) !== -1 ? value : null; }
 
@@ -47,38 +46,19 @@
     catch (e) { return false; }
   }
 
-  function navigateWithExit(destination) {
-    if (!destination || exitPending) return;
+  function prepareNativeExit() {
+    if (exitPending) return;
     exitPending = true;
-    if (prefersReducedMotion()) {
-      window.location.assign(destination);
-      return;
-    }
+    if (prefersReducedMotion()) return;
     document.documentElement.classList.add("lp-is-leaving");
     document.documentElement.setAttribute("aria-busy", "true");
-    exitTimer = window.setTimeout(function () {
-      exitTimer = 0;
-      window.location.assign(destination);
-    }, 440);
-  }
-
-  function cancelExitTimer() {
-    if (!exitTimer) return;
-    window.clearTimeout(exitTimer);
-    exitTimer = 0;
   }
 
   function resetExitState() {
-    cancelExitTimer();
     exitPending = false;
     document.documentElement.classList.remove("lp-is-leaving");
     document.documentElement.removeAttribute("aria-busy");
   }
-  /* A newer browser navigation owns the page as soon as unload begins. Cancel
-     the old aperture timer so a stale language/link intent cannot interrupt a
-     programmatic navigation or a rapid user-initiated replacement in WebKit. */
-  window.addEventListener("beforeunload", cancelExitTimer);
-  window.addEventListener("pagehide", cancelExitTimer);
   function requestedLang() {
     try {
       var urlLang = validLang(new URL(window.location.href).searchParams.get("lang"));
@@ -248,11 +228,16 @@
       button.addEventListener("click", function (event) {
         var next = validLang(button.getAttribute("data-lang"));
         if (!next) return;
-        event.preventDefault();
-        if (next === lang) return;
+        if (next === lang) { event.preventDefault(); return; }
         var chapter = currentChapterId();
         setStored(next);
-        navigateWithExit(languageUrl(next, chapter));
+        // Keep the anchor's native default action authoritative. Updating href
+        // before it runs preserves the chapter without making a timer capable
+        // of trapping navigation in a throttled or background page.
+        button.setAttribute("href", languageUrl(next, chapter));
+        if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) {
+          prepareNativeExit();
+        }
       });
     });
   }
@@ -266,8 +251,9 @@
         var target;
         try { target = new URL(href, window.location.href); } catch (e) { return; }
         if (target.origin !== window.location.origin) return;
-        event.preventDefault();
-        navigateWithExit(target.href);
+        // Native navigation is the reliability contract. The exit class is a
+        // best-effort visual cue only and never owns or delays the URL change.
+        prepareNativeExit();
       });
     });
   }

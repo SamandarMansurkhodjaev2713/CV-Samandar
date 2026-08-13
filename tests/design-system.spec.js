@@ -90,6 +90,7 @@ test("fullscreen menu owns the interaction layer and its language controls recei
   await expect(page.locator("html")).toHaveAttribute("lang", "uz");
   await page.locator(".nav-menu-close").click();
   await expect(page.locator(".nav-menu")).not.toHaveClass(/is-open/);
+  await expect(page.locator(".nav-burger")).toHaveAttribute("aria-expanded", "false");
   await expect(page.locator(".hero-roles")).toContainText("Builder");
   await expectNoHorizontalOverflow(expect, page, "menu language switch");
 });

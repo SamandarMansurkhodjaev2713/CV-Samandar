@@ -518,6 +518,99 @@ smoke ждёт фактический локализованный URL, а не 
 - audit — 0 vulnerabilities; secret scan — clean; live routes — 9/9;
 - `git diff --check` — exit 0.
 
-Production smoke и synthetic monitor для `v2.13.0` ещё не могут быть зелёными:
-кандидат не развёрнут. Они выполняются только после commit/push/deploy того же
-SHA. Physical device и screen-reader sign-off остаются честным внешним NOT RUN.
+## Production release evidence — v2.13.0 / v232
+
+Дата публикации runtime: 2026-08-11.
+
+Release sequence:
+
+- `e416098` — проверенный feature commit и head PR #1;
+- quality workflow `31484703516` на `e416098` — success;
+- merge commit `4d3c4234cceae65e2ad958b9e1b9a4e0938c61ae` опубликован в `main`;
+- deploy workflow `31485315454` завершил build, deploy и verify-production со
+  статусом success; все шаги audit, secret scan, deterministic build, full
+  browser matrix и performance budgets прошли без пропуска release gate.
+
+Независимо после deploy подтверждено:
+
+- production HTML → HTTP 200, title корректен, asset graph содержит `v232`;
+- `npm run test:production` → 3/3: 25-card main, 48 RU/EN/UZ case routes и
+  case → exact card без повторного Intro;
+- `npm run check:live` → 9/9 внешних live-продуктов;
+- ручной desktop Chromium-путь: раскрытие archive, Birthday Agent RU → EN,
+  возврат к `#proj-birthday-agent`, Intro не повторяется, карточка видима,
+  broken images = 0, runtime console errors = 0;
+- полноэкранное меню открывается как dialog с 12 главами и CTA; дополнительная
+  явная регрессия `aria-expanded=false` после закрытия прошла 10/10.
+
+Manual production monitor `31487035854` на `4d3c423` завершился success и
+сохранил JSON artifact:
+
+- desktop 1440×1000: main ready 2934 ms, LCP 3792 ms, CLS 0.0014,
+  long-task max 245 ms, failures/violations — 0;
+- mobile 412×839: main ready 3090 ms, LCP 2496 ms, CLS 0.0052,
+  frame p95 33.4 ms, frame max 50 ms, failures/violations — 0;
+- functional smoke и 9/9 live routes внутри monitor также зелёные.
+
+Это synthetic Chromium evidence, а не field RUM. In-app browser не применил
+запрошенный mobile viewport и остался 1280×720, поэтому physical mobile не
+заявляется как ручной PASS: его automated viewport/WebKit и visual evidence
+отделены от обязательного внешнего iPhone/Android sign-off. Реальные
+NVDA/VoiceOver/TalkBack и 24–48-часовое наблюдение остаются честным `NOT RUN` /
+`IN PROGRESS`, а `v2.12.1` сохраняется как проверенный rollback baseline.
+
+## v2.13.1 hardening candidate — v233
+
+Дата локальной приёмки: 2026-08-13.
+
+После публикации `v2.13.0` performance gate локализовал Hero LCP не по сетевой
+загрузке, а по paint lifecycle: `proof-instrument.webp` приходил примерно за
+77 ms, но `.hero-instrument-img` оставался `opacity: 0` до окончания Intro и
+дополнительного fade. Изображение теперь рисуется сразу под полностью
+непрозрачной Intro-шторкой, а после её открытия сохраняет только
+пространственную assembly-анимацию. Performance report дополнен фактическими
+tag/id/class/url/size данными LCP element. Финальный desktop/mobile budget —
+2/2.
+
+Полный gate обнаружил редкую гонку case navigation: 440-ms exit timer мог не
+сработать в throttled вкладке либо конкурировать с последующим intent.
+Архитектура упрощена до fail-open контракта: нативный `href` всегда является
+единственным владельцем URL; JavaScript только обновляет locale href с текущей
+главой и ставит необязательное визуальное exit-состояние. Возврат к
+`#proj-<slug>` раскрывает весь каталог, пропускает Intro и центрирует точную
+карточку. Stress proof: 30/30 desktop + 10/10 mobile; background locale path
+также входит в regression suite.
+
+В reduced-motion lifecycle устранены два источника лишней работы. Parallax
+IntersectionObserver больше не создаётся, когда эффект всё равно запрещён
+политикой. Один внешний wake разрешает ровно один финальный кадр; внутрикадровый
+wake не создаёт continuous chain. Для редкого видимого cold-start, где браузер
+не обслуживает первый RAF в пределах 120 ms, общий runtime использует один
+bounded timeout fallback и отменяет зависший RAF; hidden/suspended пути
+сохраняют ноль работы. Финальный stress — 30/30, normal-motion performance —
+2/2.
+
+Два параллельных тяжёлых Chromium contexts на локальной Windows-машине с
+ограниченной свободной памятью воспроизводимо завершали уже прошедшие тесты
+45-секундным teardown timeout. Те же CV/degraded/menu/Intro контракты прошли
+40/40 с исходными таймаутами и одним worker. Поэтому local Windows gate теперь
+последовательный; Linux CI сохраняет два workers. Ни один spec не отключён,
+локальные retry остаются 0.
+
+Финальное доказательство exact-tree `2.13.1 / v233` перед deploy:
+
+- `npm test` — 261 scenario, 151 passed, 110 осознанно profile-skipped,
+  0 failed / 0 flaky за 13.6 минуты;
+- `npm run test:performance` — desktop/mobile 2/2;
+- navigation stress — 30/30 desktop и 10/10 mobile; reduced scheduler — 30/30;
+- `npm run qa:visual` — 4/4; 12 main scenes, 16 case pages и увеличенные
+  Hero/Projects captures просмотрены вручную на desktop/mobile;
+- `npm run check:build` — 54 generated artifacts byte-identical;
+- validate — 25 products / 9 live / 16 case / 3 locale;
+- audit — 0 vulnerabilities; secret scan — clean; live routes — 9/9;
+- docs contract и `git diff --check` — exit 0.
+
+Это локальный release candidate, а не production claim. GitHub Pages deploy,
+независимый production smoke и synthetic monitor записываются только после их
+фактического выполнения. Physical iPhone/Android и
+NVDA/VoiceOver/TalkBack остаются внешним `NOT RUN`.

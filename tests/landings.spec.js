@@ -65,6 +65,21 @@ test("new cases switch RU / EN / UZ without losing chapter or route", async ({ p
   }
 });
 
+test("case locale navigation cannot be trapped by a throttled background exit timer", async ({ page, isMobile }) => {
+  test.skip(isMobile, "The native locale fallback is engine and viewport independent.");
+  await page.addInitScript(() => {
+    Object.defineProperty(Document.prototype, "hasFocus", {
+      configurable: true,
+      value: () => false,
+    });
+  });
+  await page.goto("/projects/ttyl/#system", { waitUntil: "domcontentloaded" });
+  await page.locator('.lp-lang-btn[data-lang="uz"]').click();
+  await expect(page).toHaveURL(/\/projects\/ttyl\/uz\/#system$/, { timeout: 4000 });
+  await expect(page.locator("html")).toHaveAttribute("lang", "uz");
+  await expect(page.locator("html")).not.toHaveAttribute("aria-busy", "true");
+});
+
 test("every direct system deep link resolves the exact sticky chapter", async ({ page }) => {
   test.setTimeout(180000);
   for (const product of caseProducts) {

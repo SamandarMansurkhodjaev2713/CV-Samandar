@@ -8,7 +8,13 @@ module.exports = defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 2 : 4,
+  // The authored page deliberately combines WebGL, long scroll scenes and
+  // responsive viewport sweeps. A second concurrent Chromium context can
+  // exhaust Windows graphics/memory resources and hang browser teardown even
+  // after every assertion has passed. CI runners keep two workers; local
+  // Windows runs stay sequential so flaky infrastructure cannot impersonate a
+  // product failure.
+  workers: process.env.CI ? 2 : (process.platform === "win32" ? 1 : 4),
   timeout: 45000,
   expect: {
     timeout: 7000,
@@ -66,6 +72,11 @@ module.exports = defineConfig({
     {
       name: "desktop-firefox",
       testMatch: /firefox-smoke\.spec\.js/,
+      // Two concurrent headless Firefox SWGL contexts on Windows can crash in
+      // teardown without exercising any user-facing concurrency. Keep this
+      // cross-engine smoke isolated while the Chromium product matrix remains
+      // parallel.
+      fullyParallel: false,
       use: {
         ...devices["Desktop Firefox"],
         viewport: { width: 1440, height: 1000 },
