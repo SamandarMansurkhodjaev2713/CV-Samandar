@@ -6,24 +6,24 @@ Runtime: статический сайт для GitHub Pages, React без мо�
 
 Контентная модель: 25 canonical products, из них 9 live и 16 case.
 
-Генерация кейсов: 15 routes × RU/EN/UZ = 45 статических HTML-страниц.
+Генерация кейсов: 16 routes × RU/EN/UZ = 48 статических HTML-страниц.
 
 ## 1. Границы системы
 
 Репозиторий содержит две связанные поверхности:
 
-1. Главная интерактивная страница с 12 сценами и 24 карточками продуктов.
-2. Статически сгенерированные case pages для 15 продуктов, которые нельзя или недостаточно честно показать прямым live-переходом.
+1. Главная интерактивная страница с 12 сценами и 25 карточками продуктов.
+2. Статически сгенерированные case pages для 16 продуктов, которые нельзя или недостаточно честно показать прямым live-переходом.
 
 Сайт не имеет application backend, SSR, runtime transpilation, service worker или клиентского роутера общего назначения. GitHub API используется только как необязательное progressive enhancement для публичного профиля. Главная требует JavaScript и предоставляет `<noscript>`-контакты; тело каждого кейса уже находится в generated HTML до выполнения JavaScript.
 
 ```mermaid
 flowchart TD
   R["Canonical product registry\n25 products"] --> C["Main content\nRU / EN / UZ cards"]
-  R --> L["Case data\n15 products × 3 locales"]
+  R --> L["Case data\n16 products × 3 locales"]
   C --> A["React main shell\n12 scenes"]
   L --> G["build.js + shared renderer"]
-  G --> H["45 static case pages"]
+  G --> H["48 static case pages"]
   R --> S["sitemap.xml\n49 URLs"]
   P["Motion policy"] --> M["Shared frame runtime"]
   M --> A
@@ -39,11 +39,11 @@ flowchart TD
 | Данные / поведение | Источник истины | Производные артефакты |
 |---|---|---|
 | product id, slug, rank, lifecycle, confidentiality, presentation, live/GitHub/case route, image, accent, evidence boundary | `src/content/product-registry.js` | карточки, metadata, sitemap, route expectations |
-| тексты 12 сцен и 24 карточек на главной | `src/content/content.js` | runtime `window.CONTENT` |
+| тексты 12 сцен и 25 карточек на главной | `src/content/content.js` | runtime `window.CONTENT` |
 | React-компоненты | `src/components/*.jsx` | соседние `*.js`, создаваемые `build.js` |
 | основной набор case content | `src/projects/landings-data.js` | baked body и runtime re-render |
 | три добавленных audited case definition | `src/projects/landings-new.js` | merge внутри `landings-data.js` |
-| единая HTML-разметка кейса и locale UI labels | `src/projects/render.js` | 45 `projects/**/index.html` и browser re-render |
+| единая HTML-разметка кейса и locale UI labels | `src/projects/render.js` | 48 `projects/**/index.html` и browser re-render |
 | case runtime: язык, chapter spy, reveal, image fallback | `src/projects/landing.js` | поведение уже сгенерированной страницы |
 | дизайн и responsive layout | `src/styles/*.css`, `src/projects/landing.css` | computed layout в браузере |
 | CSP, JSX compilation, case generation, sitemap | `build.js` | `index.html` CSP, compiled JS, case HTML, `sitemap.xml` |
@@ -68,7 +68,7 @@ Generated `.js` и `projects/**/index.html` не являются местом �
 
 Primary CTA идёт на `liveUrl`. GitHub показывается вторично только если `githubUrl` разрешён реестром.
 
-### 3.2 Case presentation — 15 маршрутов
+### 3.2 Case presentation — 16 маршрутов
 
 | Slug | RU route | EN / UZ routes |
 |---|---|---|
@@ -131,7 +131,7 @@ Hero/Signal используют нативный `position: sticky`. Services/C
 1. source validation без требования generated files;
 2. AOT JSX → JS для четырёх entry-файлов через vendored `vendor/babel.min.js` и React preset;
 3. пересчёт CSP главной по точным hash всех inline data blocks;
-4. генерация 15 кейсов по 3 локали — 45 HTML-файлов;
+4. генерация 16 кейсов по 3 локали — 48 HTML-файлов;
 5. генерация sitemap: главная + 48 case locale URLs = 49 URL;
 6. повторная validation уже с generated files и проверкой source/generated parity.
 
@@ -257,7 +257,7 @@ Meta CSP не содержит `upgrade-insecure-requests`: production уже о
 - `npm test` — validate и весь Playwright suite;
 - `npm run test:desktop`, `npm run test:mobile`, `npm run test:a11y`;
 - `npm run test:performance` — отдельный Chromium desktop/mobile gate с одним worker;
-- `npm run qa:visual` — opt-in capture 12 сцен и 15 кейсов на desktop/mobile;
+- `npm run qa:visual` — opt-in capture 12 сцен и 16 кейсов на desktop/mobile;
 - `npm run scan:secrets` и `npm run check:live` — отдельные release checks.
 
 Наличие теста означает наличие контракта, но не означает, что он был запущен в текущем окружении. Результаты должны подтверждаться свежим test output или CI artifact, а ручные проверки — отдельным checklist.

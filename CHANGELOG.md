@@ -4,6 +4,32 @@
 
 ## [Unreleased]
 
+### Added
+
+- Воспроизводимый physical mobile/assistive-technology protocol с отдельными
+  iPhone, Android, NVDA, VoiceOver и TalkBack сценариями, evidence header,
+  severity model и честным исходным статусом `NOT RUN`.
+
+### Changed
+
+- Awwwards submission package преобразован в готовый рабочий комплект:
+  англоязычный submission copy, позиционирование, карта 12 сцен, technology
+  story, transparent credits, media manifest, 82-секундный shot list и
+  pre-submission truth gate.
+- Текущие архитектурные документы синхронизированы с canonical registry:
+  25 продуктов, 9 live, 16 case, 48 локализованных case pages.
+- Documentation gate теперь выводит каталог из реестра и отклоняет возврат
+  устаревших текущих claims 24/15/45.
+
+### Quality
+
+- Финальный production monitor `31678896168` на docs/release SHA `07cb769`
+  завершился без first-party failures и budget violations; эти synthetic
+  показатели отделены от ещё не выполненного physical/AT sign-off.
+- Documentation hardening повторно прошло полный gate: 261 scenario,
+  151 passed / 110 profile-skipped / 0 failed / 0 flaky; performance 2/2;
+  deterministic build 54/54; validate 25/9/16/3; audit 0 и secret scan clean.
+
 ## [2.13.1] - 2026-08-13
 
 ### Changed

@@ -4,6 +4,7 @@
 const fs = require("fs");
 const path = require("path");
 const pkg = require("../package.json");
+const productRegistry = require("../src/content/product-registry.js");
 
 const ROOT = path.resolve(__dirname, "..");
 const REQUIRED = [
@@ -16,6 +17,7 @@ const REQUIRED = [
   "docs/I18N.md",
   "docs/MASTER-IMPLEMENTATION-PLAN.md",
   "docs/MOTION-PERFORMANCE.md",
+  "docs/PHYSICAL-AT-QA-PROTOCOL.md",
   "docs/PRODUCT-REGISTRY.md",
   "docs/PRODUCTION-MONITORING.md",
   "docs/QA-MATRIX.md",
@@ -30,6 +32,23 @@ const CONTRACT_DOCS = [
   "docs/QA-MATRIX.md",
   "docs/RELEASE-RUNBOOK.md",
 ];
+const CURRENT_CATALOG_DOCS = [
+  "README.md",
+  "docs/ARCHITECTURE.md",
+  "docs/AWWWARDS-SUBMISSION.md",
+  "docs/DESIGN-SYSTEM.md",
+  "docs/I18N.md",
+  "docs/MOTION-PERFORMANCE.md",
+  "docs/PRODUCTION-MONITORING.md",
+  "docs/QA-MATRIX.md",
+];
+const CATALOG = {
+  products: productRegistry.length,
+  live: productRegistry.filter((product) => product.presentation === "live").length,
+  cases: productRegistry.filter((product) => product.presentation === "case").length,
+  locales: 3,
+};
+CATALOG.casePages = CATALOG.cases * CATALOG.locales;
 const failures = [];
 
 function fail(message) {
@@ -72,8 +91,15 @@ for (const relative of REQUIRED) {
 }
 
 const i18n = sources.get("docs/I18N.md") || "";
-if (!/\b16\b/.test(i18n) || !/\b48\b/.test(i18n) || !/\b49\b/.test(i18n)) {
-  fail("docs/I18N.md does not state the 16-case / 48-page / 49-URL contract");
+if (
+  !new RegExp("\\b" + CATALOG.cases + "\\b").test(i18n) ||
+  !new RegExp("\\b" + CATALOG.casePages + "\\b").test(i18n) ||
+  !new RegExp("\\b" + (CATALOG.casePages + 1) + "\\b").test(i18n)
+) {
+  fail(
+    "docs/I18N.md does not state the " + CATALOG.cases + "-case / " +
+    CATALOG.casePages + "-page / " + (CATALOG.casePages + 1) + "-URL contract"
+  );
 }
 if (!/RU\s*\/\s*EN\s*\/\s*UZ|RU,\s*EN\s*(?:и|and)\s*UZ/i.test(i18n)) {
   fail("docs/I18N.md does not state RU/EN/UZ parity");
@@ -81,11 +107,38 @@ if (!/RU\s*\/\s*EN\s*\/\s*UZ|RU,\s*EN\s*(?:и|and)\s*UZ/i.test(i18n)) {
 
 for (const relative of CONTRACT_DOCS) {
   const source = sources.get(relative) || "";
-  if (!/\b25\b/.test(source)) fail(relative + " does not state the 25-product contract");
-  if (!/\b16\b/.test(source)) fail(relative + " does not state the 16-case contract");
-  if (!/\b9\b/.test(source)) fail(relative + " does not state the 9-live contract");
+  if (!new RegExp("\\b" + CATALOG.products + "\\b").test(source)) {
+    fail(relative + " does not state the " + CATALOG.products + "-product contract");
+  }
+  if (!new RegExp("\\b" + CATALOG.cases + "\\b").test(source)) {
+    fail(relative + " does not state the " + CATALOG.cases + "-case contract");
+  }
+  if (!new RegExp("\\b" + CATALOG.live + "\\b").test(source)) {
+    fail(relative + " does not state the " + CATALOG.live + "-live contract");
+  }
   if (!/RU\s*\/\s*EN\s*\/\s*UZ|RU,\s*EN\s*(?:и|and)\s*UZ/i.test(source)) {
     fail(relative + " does not state RU/EN/UZ parity");
+  }
+}
+
+const staleCatalogClaims = [
+  { pattern: /\b24\s+(?:canonical|каноническ|карточ|project|продукт)/iu, label: "24-product" },
+  { pattern: /\b15\s+(?:case|кейс|маршрут|route|product|продукт)/iu, label: "15-case" },
+  { pattern: /\b45\s+(?:localized|локализ|static|статич|HTML|case|RU)/iu, label: "45-page" },
+];
+for (const relative of CURRENT_CATALOG_DOCS) {
+  const source = sources.get(relative) || "";
+  for (const stale of staleCatalogClaims) {
+    if (stale.pattern.test(source)) {
+      fail(relative + " contains stale current catalog claim: " + stale.label);
+    }
+  }
+}
+
+const physicalProtocol = sources.get("docs/PHYSICAL-AT-QA-PROTOCOL.md") || "";
+for (const requiredState of ["PASS", "FAIL", "BLOCKED", "NOT RUN"]) {
+  if (!physicalProtocol.includes(requiredState)) {
+    fail("docs/PHYSICAL-AT-QA-PROTOCOL.md omits result state: " + requiredState);
   }
 }
 

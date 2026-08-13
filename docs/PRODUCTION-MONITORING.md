@@ -18,7 +18,7 @@ https://samandarmansurkhodjaev2713.github.io/CV-Samandar/
 
 Каждый запуск последовательно выполняет:
 
-1. `npm run test:production` — главная, 24 карточки, 45 RU / EN / UZ case URL,
+1. `npm run test:production` — главная, 25 карточек, 48 RU / EN / UZ case URL,
    runtime/network errors и возврат case → точная карточка без intro;
 2. `npm run monitor:production` — desktop 1440×1000 и mobile 412×839 в
    Chromium;
@@ -77,3 +77,26 @@ scheduled runs являются продолжением наблюдения. �
 
 Physical iPhone/Android и NVDA/VoiceOver/TalkBack остаются отдельным ручным
 evidence и не подменяются этим workflow.
+
+## Наблюдение релиза 2.13.1 — в работе
+
+Runtime `v2.13.1 / v233` опубликован 2026-08-13. Code SHA — `374d4c80`,
+финальный release/docs SHA — `07cb769`. Deploy workflow `31678159935` завершил
+build, deploy и verify-production со статусом success; независимый smoke — 3/3,
+live verifier — 9/9.
+
+Final-SHA monitor `31678896168` завершился success и сохранил JSON artifact:
+
+- desktop 1440×1000: main ready 3306 ms, FCP 208 ms, LCP 1488 ms,
+  CLS 0.0014, frame p95 66.8 ms, long-task max 186 ms;
+- mobile 412×839: main ready 3012 ms, FCP 140 ms, LCP 200 ms,
+  CLS 0.0051, frame p95 33.4 ms, long-task max 137 ms;
+- оба профиля: first-party failures 0, budget violations 0, motion tier `low`.
+
+Окно наблюдения считается от final-SHA monitor 2026-08-13 07:42 UTC. Итог
+после 24 и 48 часов фиксируется только по фактическим scheduled runs. Текущий
+статус — `IN PROGRESS`; один зелёный запуск не объявляется завершённым окном.
+
+Physical mobile и assistive technology выполняются отдельно по
+[physical mobile/AT protocol](PHYSICAL-AT-QA-PROTOCOL.md) и до фактического
+sign-off остаются `NOT RUN`.

@@ -646,3 +646,38 @@ found`. Поэтому новый manual browser PASS не заявлен и н�
 Automated Chromium production journey, WebKit/Firefox local gate и synthetic
 desktop/mobile monitor записаны как разные виды доказательств. Physical
 iPhone/Android, NVDA/VoiceOver/TalkBack и field RUM остаются внешним `NOT RUN`.
+
+## Post-release package hardening — v2.13.1
+
+После final docs deploy workflow `31678159935` подтвердил тот же runtime
+`v233` на SHA `07cb769`. Независимый final-SHA monitor `31678896168` завершился
+success: desktop LCP 1488 ms / CLS 0.0014, mobile LCP 200 ms / CLS 0.0051,
+first-party failures и budget violations — 0. Это первый запуск 24–48-часового
+окна, а не его завершение.
+
+Повторный documentation audit обнаружил stale текущие claims, оставшиеся после
+добавления 25-го продукта: отдельные архитектурные документы всё ещё называли
+24 карточки, 15 кейсов и 45 generated pages. Они синхронизированы с canonical
+registry — 25 products / 9 live / 16 case / 48 localized case pages. Docs gate
+теперь выводит числа из `src/content/product-registry.js` и отдельно отклоняет
+возврат старых claims в документах текущего состояния; исторические release
+записи остаются неизменёнными.
+
+`docs/AWWWARDS-SUBMISSION.md` расширен до рабочего пакета подачи: готовый EN
+copy, concept/credits/technology story, карта 12 актов, mobile narrative,
+проверяемые release facts, media manifest, 82-секундный честный walkthrough и
+pre-submission truth gate. `docs/PHYSICAL-AT-QA-PROTOCOL.md` фиксирует точные
+iPhone/Android/NVDA/VoiceOver/TalkBack journeys, evidence header, severity и
+sign-off record. Все внешние строки намеренно стартуют как `NOT RUN`; наличие
+протокола не подменяет фактическую проверку.
+
+После этих изменений повторён обязательный локальный gate:
+
+- docs contract — 17/17, catalog facts берутся из canonical registry;
+- validate — 25 products / 9 live / 16 case / 3 locale;
+- deterministic build — 54/54 byte-identical;
+- `npm test` — 261 scenario, 151 passed, 110 profile-skipped,
+  0 failed / 0 flaky за 15.4 минуты;
+- performance budgets — desktop/mobile 2/2;
+- dependency audit — 0 vulnerabilities; secret scan — clean;
+- runtime/generated diff — отсутствует; `git diff --check` — exit 0.

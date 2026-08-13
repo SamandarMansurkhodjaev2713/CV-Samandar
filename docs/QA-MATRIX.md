@@ -169,6 +169,8 @@ commit и среды.
 ## 8. Manual / external matrix
 
 Эти проверки нельзя честно объявить выполненными локальным headless runner.
+Пошаговый evidence-шаблон и обязательный journey находятся в
+[physical mobile/AT protocol](PHYSICAL-AT-QA-PROTOCOL.md).
 
 | Область | Обязательная среда | Что проверить | Evidence |
 |---|---|---|---|

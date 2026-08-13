@@ -2,7 +2,7 @@
 
 Статус: описание текущей реализации.
 
-Область: главная страница, 24 карточки продуктов и 15 проектных case routes.
+Область: главная страница, 25 карточек продуктов и 16 проектных case routes.
 
 Локали: RU, EN, UZ.
 
@@ -18,14 +18,14 @@
 | компоненты главной | `src/components/*.jsx`; одноимённые `.js` — generated artifacts |
 | тексты главной и карточек RU/EN/UZ | `src/content/content.js` |
 | идентичность, порядок, маршруты и публичные границы 25 продуктов | `src/content/product-registry.js` |
-| содержимое 15 кейсов | `src/projects/landings-data.js` и `src/projects/landings-new.js` |
+| содержимое 16 кейсов | `src/projects/landings-data.js` и `src/projects/landings-new.js` |
 | разметка кейсов и общий UI-копирайт | `src/projects/render.js` |
 | базовые токены и shell | `src/styles/styles.css` |
 | композиции сцен и адаптивность главной | `src/styles/sections.css`, `src/styles/features.css`, `src/styles/cv-doc.css` |
 | визуальная система кейсов | `src/projects/landing.css` |
 | адаптивные и визуальные проверяемые контракты | `tests/responsive-matrix.spec.js`, `tests/stage5-sections.spec.js`, `tests/landings.spec.js`, `tests/visual-release.spec.js` |
 
-Если текст документа расходится с этими файлами, верен код. Числа `24 / 9 / 15 / 3` дополнительно закреплены в `scripts/validate-site.js` и проверяются до и после сборки.
+Если текст документа расходится с этими файлами, верен код. Числа `25 / 9 / 16 / 3` дополнительно закреплены в `scripts/validate-site.js` и проверяются до и после сборки.
 
 ## 2. Дизайн-намерение
 
@@ -141,7 +141,7 @@ Easing tokens: `--ease-out`, `--ease-emphasized`, `--ease-standard`, `--ease-ove
 В реестре ровно 25 продуктов, отсортированных по `featuredRank`:
 
 - 9 `presentation: "live"`: primary CTA открывает реальный HTTPS live-site;
-- 15 `presentation: "case"`: primary CTA открывает локальный case route;
+- 16 `presentation: "case"`: primary CTA открывает локальный case route;
 - публичный GitHub, если он разрешён реестром, остаётся отдельным secondary CTA;
 - возврат из кейса ведёт к `#proj-<slug>`, раскрывает каталог при необходимости и возвращает позицию чтения к исходной карточке.
 
@@ -163,7 +163,7 @@ Desktop-каталог — двухколоночная сетка. При ши�
 
 ### 8.3 Case pages
 
-Каждый из 15 кейсов имеет три физически сгенерированные страницы: RU в `/projects/<slug>/`, EN в `/projects/<slug>/en/`, UZ в `/projects/<slug>/uz/`. Итого — 45 статических HTML-файлов.
+Каждый из 16 кейсов имеет три физически сгенерированные страницы: RU в `/projects/<slug>/`, EN в `/projects/<slug>/en/`, UZ в `/projects/<slug>/uz/`. Итого — 48 статических HTML-файлов.
 
 Единая структура содержит:
 
@@ -204,7 +204,7 @@ Desktop-каталог — двухколоночная сетка. При ши�
 - fullscreen menu управляет `aria-hidden`, `inert`, focus containment и Escape;
 - active navigation использует `aria-current`;
 - изображения имеют текстовый fallback, а декоративные слои скрыты от accessibility tree;
-- `prefers-reduced-motion: reduce` сохраняет все 24 карточки, тексты, CTA и нативную навигацию;
+- `prefers-reduced-motion: reduce` сохраняет все 25 карточек, тексты, CTA и нативную навигацию;
 - reduced mode отключает continuous scheduler и optional Three.js, но не раскрывает скрытые пользователем данные и не меняет семантическое состояние disclosure;
 - автоматический axe gate покрывает WCAG 2.2 A/AA ruleset, однако он не заменяет NVDA, VoiceOver и проверку на физических устройствах.
 
