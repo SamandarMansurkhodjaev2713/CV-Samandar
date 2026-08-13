@@ -26,6 +26,9 @@
 - Финальный production monitor `31678896168` на docs/release SHA `07cb769`
   завершился без first-party failures и budget violations; эти synthetic
   показатели отделены от ещё не выполненного physical/AT sign-off.
+- Post-deploy monitor `31682231539` на documentation-hardening SHA `fa0c63b`
+  также прошёл functional smoke, desktop/mobile budgets и 9 live routes без
+  first-party failures или violations.
 - Documentation hardening повторно прошло полный gate: 261 scenario,
   151 passed / 110 profile-skipped / 0 failed / 0 flaky; performance 2/2;
   deterministic build 54/54; validate 25/9/16/3; audit 0 и secret scan clean.

@@ -100,3 +100,16 @@ Final-SHA monitor `31678896168` завершился success и сохранил
 Physical mobile и assistive technology выполняются отдельно по
 [physical mobile/AT protocol](PHYSICAL-AT-QA-PROTOCOL.md) и до фактического
 sign-off остаются `NOT RUN`.
+
+Documentation-hardening SHA `fa0c63b` опубликован workflow `31681227107`:
+build, deploy и verify-production — success; независимый smoke — 3/3, live
+routes — 9/9. Monitor `31682231539` на этом SHA завершился success:
+
+- desktop: main ready 3219 ms, LCP 1736 ms, CLS 0.0013,
+  frame p95 83.4 ms, long-task max 265 ms;
+- mobile: main ready 3063 ms, LCP 188 ms, CLS 0.0045,
+  frame p95 33.3 ms, long-task max 177 ms;
+- failures 0, violations 0, motion tier `low` в обоих профилях.
+
+Этот запуск подтверждает опубликованный documentation hardening и неизменный
+runtime `v233`, но не завершает календарное окно наблюдения.

@@ -681,3 +681,22 @@ sign-off record. Все внешние строки намеренно стар�
 - performance budgets — desktop/mobile 2/2;
 - dependency audit — 0 vulnerabilities; secret scan — clean;
 - runtime/generated diff — отсутствует; `git diff --check` — exit 0.
+
+Documentation-hardening commit `fa0c63bf0376eccee539c9038da4bee96296d423`
+опубликован в `main`. GitHub Pages workflow `31681227107` завершил build за
+9m28s, deploy за 10s и verify-production за 1m17s; все blocking jobs — success.
+Независимый post-deploy smoke дал 3/3 PASS, включая 48 localized case URL и
+exact-card return, live verifier — 9/9.
+
+Post-deploy monitor `31682231539` на том же SHA также завершился success:
+
+- desktop 1440×1000: main ready 3219 ms, FCP 264 ms, LCP 1736 ms,
+  CLS 0.0013, frame p95 83.4 ms, long-task max 265 ms;
+- mobile 412×839: main ready 3063 ms, FCP 140 ms, LCP 188 ms,
+  CLS 0.0045, frame p95 33.3 ms, long-task max 177 ms;
+- оба профиля: motion tier `low`, first-party failures 0,
+  budget violations 0.
+
+Artifact schema прямо обозначает scope как synthetic Chromium monitoring, а не
+field RUM или physical-device evidence. Наблюдение 24–48 часов и внешний
+physical/AT sign-off продолжаются.
