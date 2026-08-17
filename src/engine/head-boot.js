@@ -103,25 +103,19 @@
     document.documentElement.appendChild(panel);
 
     // The critical shell must always release even if the main intro module is
-    // blocked. This wall-clock fallback also works in background tabs.
+    // blocked or starts and then loses its final rAF/transition callback. This
+    // independent wall-clock ceiling stays armed for the whole Intro; the
+    // authored module may finish earlier, but must never cancel its backstop.
     window.__SM_INTRO.safety = setTimeout(function () {
       if (!panel.parentNode) return;
-      // release() intentionally unlocks the shell before the authored curtain
-      // finishes. If that final transition is starved under CPU load, never
-      // leave an invisible pointer-blocking panel in the DOM.
-      if (window.__SM_INTRO.doneFired) {
-        panel.remove();
-        return;
-      }
       var root = document.getElementById("root");
-      if (root && root.childElementCount) {
-        // This is an exceptional hard ceiling, not the normal visual exit.
-        // Remove synchronously instead of depending on another delayed timer.
-        panel.remove();
-        window.__SM_INTRO.release("head-safety-shell");
-      } else {
-        window.__SM_INTRO.recover("00");
-      }
-    }, 3150);
+      // This is an exceptional hard ceiling, not the normal visual exit.
+      // Remove synchronously instead of depending on another delayed timer.
+      // If React is still absent, app-watchdog owns the honest fatal shell at
+      // 5.5s; keeping this dialog above a late successful mount is worse.
+      panel.remove();
+      window.__SM_INTRO.release(root && root.childElementCount ?
+        "head-safety-shell" : "head-safety-empty");
+    }, 3800);
   } catch (e) { /* DOM/matchMedia unavailable: skip the intro safely. */ }
 })();

@@ -110,3 +110,18 @@ test("scroll spy, language switch and reload preserve the reader chapter", async
   await expect(page.locator(".lp-current-index")).toHaveText("04");
   await expect(page.locator('[data-lp-chapter-link="evidence"]')).toHaveAttribute("aria-current", "location");
 });
+
+test("large scroll jumps leave every passed case reveal readable", async ({ page }) => {
+  await page.goto("/projects/ttyl/", { waitUntil: "domcontentloaded" });
+  const contextHeading = page.locator('.lp-act--context .lp-act-head');
+  await expect(contextHeading).toBeAttached();
+
+  await page.evaluate(() => {
+    const system = document.getElementById("system");
+    if (!system) throw new Error("Missing #system chapter");
+    window.scrollTo({ top: system.offsetTop + 120, behavior: "auto" });
+  });
+
+  await expect(contextHeading).toHaveClass(/\bis-in\b/);
+  await expect.poll(() => contextHeading.evaluate((node) => getComputedStyle(node).opacity)).toBe("1");
+});

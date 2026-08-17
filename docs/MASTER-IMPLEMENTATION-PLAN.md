@@ -45,7 +45,7 @@
 | 9–12. Responsive, motion, WCAG и QA | выполнен | viewport/browser-матрица, performance budgets и regression gates |
 | 13. Документация | выполнен | 17 обязательных документов, ADR, QA-матрица, physical/AT protocol, runbook и автоматический docs-contract |
 | 14. Предрелиз и выпуск | выполнен | `v2.13.1 / v233` опубликован из `374d4c80`; Actions `31677200638`, deploy, verify-production, независимый smoke и live 9/9 зелёные |
-| 15. После выпуска | в работе | final-SHA monitor `31678896168` зелёный; submission copy, media plan и physical/AT protocol готовы; продолжаются 24–48-часовое наблюдение, dedicated media capture и внешний sign-off |
+| 15. После выпуска | в работе | `v2.13.2 / v234` локально прошёл расширенный browser/performance/visual gate; submission copy, automated review media и physical/AT protocol готовы; pending: deploy/post-deploy proof, новое 24–48-часовое окно, final 60-fps/native media и внешний sign-off |
 
 Статус отражает только зафиксированные и проверенные контракты. Детальные
 доказательства, версии и результаты тестов находятся в

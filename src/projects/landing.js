@@ -30,6 +30,7 @@
 
   var KEY = "sm-lp-lang";
   var revealObserver = null;
+  var pendingReveals = [];
   var chapterObserver = null;
   var activeChapter = "thesis";
   var chapterIntent = null;
@@ -153,18 +154,48 @@
     });
   }
 
+  function settleReveal(element) {
+    if (!element || element.classList.contains("is-in")) return;
+    element.classList.add("is-in");
+    if (revealObserver) revealObserver.unobserve(element);
+  }
+
+  function settlePassedReveals() {
+    if (!pendingReveals.length) return;
+    var activationLine = window.innerHeight * .91;
+    var ready = [];
+    var waiting = [];
+    // Batch all geometry reads before class writes so the shared scroll frame
+    // does not alternate layout reads and mutations.
+    pendingReveals.forEach(function (element) {
+      if (!element.isConnected || element.classList.contains("is-in")) return;
+      if (element.getBoundingClientRect().top <= activationLine) ready.push(element);
+      else waiting.push(element);
+    });
+    pendingReveals = waiting;
+    ready.forEach(settleReveal);
+  }
+
   function wireReveal() {
     if (revealObserver) revealObserver.disconnect();
     var elements = root.querySelectorAll("[data-lp-reveal]");
+    pendingReveals = Array.prototype.slice.call(elements);
     if (!("IntersectionObserver" in window)) {
-      Array.prototype.forEach.call(elements, function (el) { el.classList.add("is-in"); });
+      pendingReveals.forEach(settleReveal);
+      pendingReveals = [];
       return;
     }
     revealObserver = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.add("is-in");
-        revealObserver.unobserve(entry.target);
+        // A large PageDown/hash/programmatic jump can move a short reveal
+        // completely from below to above the viewport between two observer
+        // samples. IntersectionObserver then reports a non-intersecting entry
+        // whose bottom is already negative. That element has been read past
+        // and must settle into its final readable pose instead of remaining
+        // transparent forever. Elements still below the viewport stay lazy.
+        if (!entry.isIntersecting && entry.boundingClientRect.bottom >= 0) return;
+        settleReveal(entry.target);
+        pendingReveals = pendingReveals.filter(function (element) { return element !== entry.target; });
       });
     }, { rootMargin: "0px 0px -9% 0px", threshold: .08 });
     Array.prototype.forEach.call(elements, function (el) { revealObserver.observe(el); });
@@ -189,6 +220,7 @@
       if (chapterScrollFrame) return;
       chapterScrollFrame = requestAnimationFrame(function () {
         chapterScrollFrame = 0;
+        settlePassedReveals();
         syncChapterFromViewport(sections);
       });
     };

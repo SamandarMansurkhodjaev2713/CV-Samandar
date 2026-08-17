@@ -64,13 +64,18 @@ test("reduced motion permits a final frame but stops continuous scheduling", asy
   const frames = await page.evaluate(async () => {
     const runtime = window.__SM_MOTION_RUNTIME;
     let count = 0;
+    let settleFirstFrame;
+    const firstFrame = new Promise((resolve) => { settleFirstFrame = resolve; });
     const unsubscribe = runtime.subscribe({
       id: "e2e-reduced-continuous",
       continuous: true,
-      compute: () => { count += 1; },
+      compute: () => {
+        count += 1;
+        if (count === 1) queueMicrotask(settleFirstFrame);
+      },
     });
     runtime.wake("e2e-reduced-continuous");
-    await new Promise((resolve) => setTimeout(resolve, 260));
+    await firstFrame;
     const debug = runtime.__debug();
     unsubscribe();
     return { count, debug, reduced: runtime.policy.reducedMotion };

@@ -36,6 +36,26 @@ test("iPhone WebKit releases the first-load intro into an interactive Hero", asy
   expect(contract.done).toBe(1);
 });
 
+test("iPhone WebKit head safety releases a stalled authored intro module", async ({ page }) => {
+  test.setTimeout(60000);
+
+  await page.route("**/src/engine/intro.js?*", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/javascript; charset=utf-8",
+      body: "window.__SM_INTRO.__started = true;",
+    });
+  });
+
+  await page.goto("/?webkit-stalled-intro=1", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("#sm-intro")).toHaveCount(0, { timeout: 5000 });
+  await expect(page.locator("html")).not.toHaveClass(/intro-lock/);
+  await expect(page.locator("#root")).not.toBeEmpty();
+  await expect(page.locator(".hero-ctas .btn").first()).toBeEnabled();
+  await expect.poll(() => page.evaluate(() => window.__SM_INTRO && window.__SM_INTRO.reason))
+    .toMatch(/^head-safety-/);
+});
+
 test("iPhone WebKit keeps the critical portfolio journey usable", async ({ page }) => {
   test.setTimeout(120000);
 

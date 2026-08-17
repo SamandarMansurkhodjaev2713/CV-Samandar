@@ -46,6 +46,30 @@ module.exports = defineConfig({
   },
   projects: [
     {
+      name: "desktop-firefox",
+      testMatch: /firefox-smoke\.spec\.js/,
+      // Headless Firefox uses SWGL on Windows. Run the cross-engine smoke
+      // before the long Chromium/WebGL matrix so it receives a clean graphics
+      // process instead of inheriting system pressure from earlier projects.
+      // The project remains serial: both tests still run, with no retry locally.
+      fullyParallel: false,
+      use: {
+        ...devices["Desktop Firefox"],
+        viewport: { width: 1440, height: 1000 },
+      },
+    },
+    {
+      name: "mobile-webkit",
+      testMatch: /webkit-smoke\.spec\.js/,
+      // Keep the strict 6-second first-load release budget, but give WebKit a
+      // clean process before the long Chromium/WebGL sweep. This mirrors the
+      // Firefox isolation above without changing coverage or timeouts.
+      use: {
+        ...devices["iPhone 13"],
+        viewport: { width: 390, height: 844 },
+      },
+    },
+    {
       name: "desktop-chromium",
       testIgnore: /(?:reduced-motion|webkit-smoke|firefox-smoke)\.spec\.js/,
       use: {
@@ -59,27 +83,6 @@ module.exports = defineConfig({
       use: {
         ...devices["Pixel 7"],
         viewport: { width: 412, height: 839 },
-      },
-    },
-    {
-      name: "mobile-webkit",
-      testMatch: /webkit-smoke\.spec\.js/,
-      use: {
-        ...devices["iPhone 13"],
-        viewport: { width: 390, height: 844 },
-      },
-    },
-    {
-      name: "desktop-firefox",
-      testMatch: /firefox-smoke\.spec\.js/,
-      // Two concurrent headless Firefox SWGL contexts on Windows can crash in
-      // teardown without exercising any user-facing concurrency. Keep this
-      // cross-engine smoke isolated while the Chromium product matrix remains
-      // parallel.
-      fullyParallel: false,
-      use: {
-        ...devices["Desktop Firefox"],
-        viewport: { width: 1440, height: 1000 },
       },
     },
     {

@@ -9,7 +9,12 @@
 - главная и все case-страницы поддерживают **RU / EN / UZ**;
 - 16 кейсов × 3 языка генерируются как **48 самостоятельных HTML-страниц**.
 
-> Текущая ветка содержит unreleased Awwwards rebuild. Настроенный Pages workflow описан ниже, но наличие этих изменений в production этим README не утверждается.
+> Runtime `v2.13.1 / v233` опубликован на GitHub Pages. Любой более новый
+> commit считается production-подтверждённым только после зелёного Pages
+> workflow и post-deploy проверки, записанной в implementation log.
+>
+> Локальный release candidate — `v2.13.2 / v234`; до deploy и независимого
+> production smoke он не объявляется опубликованным runtime.
 
 ## Технологии
 
@@ -44,12 +49,13 @@ node scripts/static-server.js 4173
 | Команда | Назначение |
 |---|---|
 | `npm run build` | Проверяет source-контракт, компилирует JSX, обновляет CSP, генерирует 48 case-страниц и sitemap, затем валидирует результат. |
-| `npm run check:build` | Дважды выполняет сборку и требует байтовой идентичности 51 generated artifact. |
+| `npm run check:build` | Дважды выполняет сборку и требует байтовой идентичности 54 generated artifacts. |
 | `npm run validate` | Проверяет уже сгенерированный сайт: 25 продуктов, маршруты, локали, тексты, изображения, discovery-артефакты и runtime-контракты. |
 | `npm run check:docs` | Проверяет обязательные документы, локальные ссылки, package scripts и количественные контракты. |
 | `npm test` | Запускает валидацию и полную Playwright-матрицу: Chromium desktop/mobile, WebKit mobile smoke, Firefox desktop smoke и reduced-motion. |
 | `npm run test:performance` | Отдельно проверяет desktop/mobile performance-бюджеты в Chromium одним worker. |
 | `npm run qa:visual` | Снимает главные сцены и все 16 кейсов на desktop/mobile, затем собирает контактные листы в `tmp/release-qa/`. |
+| `npm run qa:submission` | Снимает с production 8 submission stills, 60–90-секундный desktop review-video, manifest и contact sheet в `tmp/submission-media/`. |
 | `npm run test:a11y` | Запускает accessibility-набор с axe и keyboard/focus-проверками. |
 | `npm run scan:secrets` | Проверяет кандидатов на коммит на признаки секретов и приватных данных. |
 | `npm run check:live` | С сетевыми retry проверяет, что 9 live-маршрутов возвращают пригодный HTML. |

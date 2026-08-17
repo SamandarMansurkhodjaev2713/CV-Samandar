@@ -95,6 +95,18 @@ async function captureMain(page, label) {
     await page.screenshot({ path: file, animations: "disabled" });
     captures.push({ label: section, file });
   }
+  // The fullscreen index is a primary authored scene, not merely a hidden
+  // control. Capture it at both release viewports so localized label wrapping,
+  // preview composition and footer telemetry cannot regress outside the
+  // section-only contact sheet.
+  await page.locator(".nav-burger").click();
+  await expect(page.locator(".nav-menu")).toHaveClass(/is-open/);
+  await page.waitForTimeout(900);
+  const menuFile = path.join(OUTPUT, "main-" + label + "-menu.png");
+  await page.screenshot({ path: menuFile, animations: "disabled" });
+  captures.push({ label: "menu", file: menuFile });
+  await page.locator(".nav-menu-close").click();
+  await expect(page.locator(".nav-menu")).not.toHaveClass(/is-open/);
   return captures;
 }
 
@@ -114,6 +126,11 @@ async function captureCases(page, label) {
       await page.evaluate((top) => window.scrollTo({ top, behavior: "auto" }), y);
       await page.waitForTimeout(70);
     }
+    // Every reveal is now either intersected or has been passed. Keep the
+    // visual evidence honest: a skipped transparent heading is a product
+    // regression, not a contact-sheet detail to ignore.
+    await expect.poll(() => page.locator("[data-lp-reveal]:not(.is-in)").count()).toBe(0);
+    await page.waitForTimeout(1150);
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: "auto" }));
     await page.waitForTimeout(240);
     await waitForVisualReadiness(page);

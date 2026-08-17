@@ -55,11 +55,6 @@
     if (!intent || !panel || !panel.parentNode || intent.__started) return;
     intent.__started = true;
 
-    if (intent.safety) {
-      window.clearTimeout(intent.safety);
-      intent.safety = 0;
-    }
-
     var repeatVisit = false;
     try {
       repeatVisit = sessionStorage.getItem("sm-intro-seen") === "1";

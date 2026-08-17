@@ -416,11 +416,18 @@ function CV({
     function alignFocusedTimelineControl() {
       if (!control.isConnected || document.activeElement !== control) return;
       const nav = document.querySelector(".nav");
-      const dock = document.querySelector(".mobile-dock.is-visible");
+      const dock = document.querySelector(".mobile-dock");
       const navRect = nav ? nav.getBoundingClientRect() : null;
-      const dockRect = dock && getComputedStyle(dock).display !== "none" ? dock.getBoundingClientRect() : null;
+      const dockDisplayed = Boolean(dock && getComputedStyle(dock).display !== "none");
+      // `getBoundingClientRect().top` includes the dock's 40px entrance
+      // translate and every intermediate transition frame. During a direct
+      // #cv load focus can arrive before `.is-visible`; aligning against that
+      // moving visual rect leaves the control underneath the dock once the
+      // transition settles. offsetTop is the stable fixed-layout destination.
+      // Short landscape declares display:none, so it correctly reserves zero.
+      const dockTop = dockDisplayed ? dock.offsetTop : window.innerHeight;
       const topBoundary = Math.max(0, navRect ? navRect.bottom : 0) + 12;
-      const bottomBoundary = Math.min(window.innerHeight, dockRect ? dockRect.top : window.innerHeight) - 12;
+      const bottomBoundary = Math.min(window.innerHeight, dockTop) - 12;
       let rect = control.getBoundingClientRect();
       if (rect.top >= topBoundary && rect.bottom <= bottomBoundary) return;
       const root = document.documentElement;
@@ -454,6 +461,14 @@ function CV({
     alignFocusedTimelineControl();
     if (typeof queueMicrotask === "function") queueMicrotask(alignFocusedTimelineControl);
     requestAnimationFrame(alignFocusedTimelineControl);
+    // Chromium may apply native focus scrolling after the React focus event,
+    // while the fixed dock and viewport are also settling after a breakpoint
+    // change. A short bounded guard re-asserts the same final geometry without
+    // owning normal scroll: every callback becomes a no-op as soon as focus
+    // leaves this control. This is intentionally finite, not an RAF loop.
+    [0, 120, 360, 800, 1400].forEach(function scheduleFocusAlignment(delay) {
+      window.setTimeout(alignFocusedTimelineControl, delay);
+    });
   }
   function onPrint() {
     restoreOpenIdx.current = openIdx;

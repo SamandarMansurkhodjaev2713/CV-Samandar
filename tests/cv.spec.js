@@ -142,16 +142,21 @@ test("CV stays operable and unclipped across narrow portrait and landscape", asy
         const rect = node.getBoundingClientRect();
         const dock = document.querySelector(".mobile-dock");
         const dockRect = dock && getComputedStyle(dock).display !== "none" ? dock.getBoundingClientRect() : null;
-        return {
+        const state = {
           visible: rect.top >= -1 && rect.bottom <= (dockRect ? dockRect.top : window.innerHeight) + 1,
           top: Math.round(rect.top),
           bottom: Math.round(rect.bottom),
           dockTop: dockRect ? Math.round(dockRect.top) : null,
+          dockOffsetTop: dock ? Math.round(dock.offsetTop) : null,
+          dockClass: dock ? dock.className : null,
           viewportHeight: window.innerHeight,
           scrollY: Math.round(window.scrollY),
           focused: document.activeElement === node,
         };
-      })).toMatchObject({ visible: true, focused: true });
+        return state.visible && state.focused ? "ok" : JSON.stringify(state);
+      }), {
+        message: `focused CV role ${index} at ${viewport.width}x${viewport.height} must remain between nav and dock`,
+      }).toBe("ok");
     }
     await expectNoHorizontalOverflow(expect, page, `CV ${viewport.width}x${viewport.height}`);
   }

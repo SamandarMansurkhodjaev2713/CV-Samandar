@@ -1,6 +1,7 @@
 # Physical mobile and assistive technology QA protocol
 
-Актуально для: `v2.13.1`, asset graph `v233`, 2026-08-13
+Подготовлено для локального кандидата: `v2.13.2`, asset graph `v234`,
+2026-08-14. В evidence записывается только фактически открытый production SHA.
 
 Статус на момент создания: **NOT RUN**
 
@@ -29,7 +30,7 @@ reader.
 | Date/time + timezone | |
 | Tester | |
 | Production URL | `https://samandarmansurkhodjaev2713.github.io/CV-Samandar/` |
-| Release/tag | `v2.13.1` |
+| Release/tag | заполнить после final deploy |
 | Commit observed | |
 | Device model | |
 | OS + build | |
