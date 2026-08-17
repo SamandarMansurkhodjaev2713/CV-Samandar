@@ -126,6 +126,7 @@ async function expectProjectGalleryLayout(page, viewport) {
       scrollWidth: grid.scrollWidth,
       visibleCards: cards.length,
       firstWidth: first ? first.width : 0,
+      secondWidth: second ? second.width : 0,
       secondPeek,
       pagerVisible: Boolean(pager && pagerStyle.display !== "none" && pager.getBoundingClientRect().height > 0),
     };
@@ -145,12 +146,15 @@ async function expectProjectGalleryLayout(page, viewport) {
     expect.soft(geometry.pagerVisible, `${viewport.label}: mobile project pager is hidden`).toBe(true);
   } else {
     expect.soft(geometry.display, `${viewport.label}: desktop gallery is not a grid`).toBe("grid");
-    // Featured projects are intentionally full-width editorial records on a
-    // twelve-column system; archive cards become two span-6 columns only after
-    // expansion. The old two-track assertion described the superseded card
-    // grid and incorrectly rejected the approved composition.
+    // The approved museum rhythm is deliberately asymmetric: the first row is
+    // a complementary 7/5 split and the second reverses it. Archive cards use
+    // three span-4 columns after expansion. Protect the editorial relationship
+    // instead of the superseded full-width feature-record layout.
     expect.soft(geometry.columns.split(" ").filter(Boolean), `${viewport.label}: desktop gallery lost its twelve-column editorial grid`).toHaveLength(12);
-    expect.soft(geometry.firstWidth / geometry.clientWidth, `${viewport.label}: featured project no longer owns the editorial row`).toBeGreaterThan(0.98);
+    expect.soft(geometry.firstWidth / geometry.clientWidth, `${viewport.label}: lead project lost its seven-column weight`).toBeGreaterThan(0.55);
+    expect.soft(geometry.firstWidth / geometry.clientWidth, `${viewport.label}: lead project overwhelms the editorial pair`).toBeLessThan(0.61);
+    expect.soft(geometry.secondWidth / geometry.clientWidth, `${viewport.label}: supporting project lost its five-column weight`).toBeGreaterThan(0.37);
+    expect.soft(geometry.secondWidth / geometry.clientWidth, `${viewport.label}: supporting project overwhelms the lead`).toBeLessThan(0.43);
     expect.soft(geometry.scrollWidth, `${viewport.label}: desktop gallery retained horizontal carousel overflow`).toBeLessThanOrEqual(geometry.clientWidth + 1);
     expect.soft(geometry.pagerVisible, `${viewport.label}: mobile pager leaked into desktop layout`).toBe(false);
   }

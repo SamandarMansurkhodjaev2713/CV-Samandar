@@ -807,21 +807,11 @@ function ProjectBuilder({ t, links }) {
   const [stageId, setStageId] = useState2("mvp");
   const [driverIds, setDriverIds] = useState2(() => new Set());
   const [readinessIds, setReadinessIds] = useState2(() => new Set());
-  const [architectureOpen, setArchitectureOpen] = useState2(() =>
-    typeof window.matchMedia === "function" && window.matchMedia("(min-width: 901px)").matches
-  );
-
-  useEffect2(function syncArchitectureBreakpoint() {
-    if (typeof window.matchMedia !== "function") return undefined;
-    const query = window.matchMedia("(min-width: 901px)");
-    function sync(event) { setArchitectureOpen(event.matches); }
-    if (query.addEventListener) query.addEventListener("change", sync);
-    else if (query.addListener) query.addListener(sync);
-    return function cleanup() {
-      if (query.removeEventListener) query.removeEventListener("change", sync);
-      else if (query.removeListener) query.removeListener(sync);
-    };
-  }, []);
+  /* The detailed architecture is supporting evidence, not the first task.
+     Keep it behind one explicit, 48px control on every viewport so the scope
+     preview reaches a useful answer quickly; the current controls/readout stay
+     visible and complete without the disclosure. */
+  const [architectureOpen, setArchitectureOpen] = useState2(false);
 
   if (!b || !estimator || !Array.isArray(b.drivers) || !Array.isArray(b.readiness)) return null;
 
@@ -911,6 +901,11 @@ function ProjectBuilder({ t, links }) {
         <p className="lead-line" data-reveal>{b.lead}</p>
 
         <form className="builder card" aria-labelledby="builder-title" onSubmit={function preventSubmit(event) { event.preventDefault(); }} data-reveal>
+          <div className="builder-console-rail mono" aria-hidden="true">
+            <span>{b.meta}</span>
+            <span>{`${type ? type.label : typeId} / ${stage ? stage.label : stageId}`}</span>
+            <span>{`v${result.estimateVersion}`}</span>
+          </div>
           {/* CHOICES */}
           <div className="builder-choices">
             <fieldset className="builder-step">

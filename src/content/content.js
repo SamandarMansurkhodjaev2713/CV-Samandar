@@ -16,13 +16,19 @@ const CONTENT = {
     },
     hero: {
       eyebrow: "Builder · QA Engineer · AI Code Lab — v.2026",
+      eyebrow_mobile: "Product engineering · QA",
       name: "Samandar",
+      statement_lines: ["Продукты,", "которые выдерживают", "реальность."],
+      statement_aria: "Продукты, которые выдерживают реальность.",
+      signature: "Samandar Mansurkhodjaev · Product engineer",
       title_lines: ["Full-stack.", "AI Automation.", "Builder + QA."],
       tagline:
         "Превращаю задачу бизнеса в работающий продукт — и сам отвечаю за его качество. Дизайн, код, AI, тесты — без посредников.",
+      tagline_mobile: "Проектирую, собираю и проверяю продукт сам — от идеи до релиза.",
       cta_primary: "Обсудить проект",
       cta_secondary: "Смотреть работы",
       status: "доступен для проектов",
+      status_mobile: "открыт",
       proof_label: "Один контур ответственности",
       proof_steps: [
         { code: "01", k: "BUILD", v: "собираю продукт" },
@@ -586,13 +592,19 @@ const CONTENT = {
     nav: { label: "Primary navigation", about: "About", projects: "Work", skills: "Stack", services: "Services", cv: "CV", faq: "FAQ", contact: "Contact", skip: "Skip to content" },
     hero: {
       eyebrow: "Builder · QA Engineer · AI Code Lab — v.2026",
+      eyebrow_mobile: "Product engineering · QA",
       name: "Samandar",
+      statement_lines: ["Products", "built for", "the real world."],
+      statement_aria: "Products built for the real world.",
+      signature: "Samandar Mansurkhodjaev · Product engineer",
       title_lines: ["Full-stack.", "AI Automation.", "Builder + QA."],
       tagline:
         "I turn a business problem into a working product — and own its quality. Design, code, AI, tests — one person, no handoffs.",
+      tagline_mobile: "I design, build and verify the product myself — from idea to release.",
       cta_primary: "Discuss a project",
       cta_secondary: "View work",
       status: "available for projects",
+      status_mobile: "available",
       proof_label: "One ownership loop",
       proof_steps: [
         { code: "01", k: "BUILD", v: "build the product" },
@@ -1133,13 +1145,19 @@ const CONTENT = {
     nav: { label: "Asosiy navigatsiya", about: "Men haqimda", projects: "Loyihalar", skills: "Stek", services: "Xizmatlar", cv: "Tajriba", faq: "Savollar", contact: "Aloqa", skip: "Kontentga o'tish" },
     hero: {
       eyebrow: "Builder · QA Engineer · AI Code Lab — v.2026",
+      eyebrow_mobile: "Product engineering · QA",
       name: "Samandar",
+      statement_lines: ["Haqiqiy sharoitda", "ishlaydigan", "mahsulotlar."],
+      statement_aria: "Haqiqiy sharoitda ishlaydigan mahsulotlar.",
+      signature: "Samandar Mansurkhodjaev · Product engineer",
       title_lines: ["Full-stack.", "AI Avtomatlashtirish.", "Builder + QA."],
       tagline:
         "Biznes vazifasini ishlovchi mahsulotga aylantiraman — sifatiga o'zim javob beraman. Dizayn, kod, AI, testlar — bir kishi, vositachisiz.",
+      tagline_mobile: "Mahsulotni g'oyadan relizgacha o'zim loyihalayman, quraman va tekshiraman.",
       cta_primary: "Loyihani muhokama qilish",
       cta_secondary: "Loyihalar",
       status: "loyihalar uchun ochiqman",
+      status_mobile: "ochiq",
       proof_label: "Yagona javobgarlik konturi",
       proof_steps: [
         { code: "01", k: "BUILD", v: "mahsulotni quraman" },
@@ -2078,6 +2096,45 @@ const PROJECT_GITHUB = PRODUCT_ORDER.reduce(function indexGithub(map, product) {
   return map;
 }, {});
 
+const PROJECT_GITHUB_ROLE_LABELS = {
+  ru: {
+    evidence: "Доказательства",
+    showcase: "Showcase",
+    entrypoint: "Точка входа",
+    rust_implementation: "Rust-версия",
+    source: "Исходники",
+  },
+  en: {
+    evidence: "Evidence",
+    showcase: "Showcase",
+    entrypoint: "Entrypoint",
+    rust_implementation: "Rust build",
+    source: "Source",
+  },
+  uz: {
+    evidence: "Dalillar",
+    showcase: "Showcase",
+    entrypoint: "Kirish nuqtasi",
+    rust_implementation: "Rust-versiya",
+    source: "Manba kodi",
+  },
+};
+
+function projectGithubRole(meta) {
+  if (!meta || !meta.githubUrl || !Array.isArray(meta.repositoryAliases)) return null;
+  const repoName = String(meta.githubUrl).replace(/\/+$/, "").split("/").pop().toLowerCase();
+  const match = meta.repositoryAliases.find(function findRepository(alias) {
+    return alias.visibility === "public" && String(alias.name).toLowerCase() === repoName;
+  });
+  return match ? match.role : null;
+}
+
+function projectGithubLabel(meta, lang) {
+  const role = projectGithubRole(meta);
+  const labels = PROJECT_GITHUB_ROLE_LABELS[lang] || PROJECT_GITHUB_ROLE_LABELS.ru;
+  return (role && labels[role]) || null;
+}
+
 const PROJECT_UI = {
   ru: {
     open_live: "Открыть сайт",
@@ -2161,6 +2218,7 @@ Object.keys(CONTENT).forEach(function hydrateProjectCatalog(lang) {
       portfolioState: meta ? meta.portfolioState : "catalog",
       url: meta ? (meta.presentation === "live" ? meta.liveUrl : meta.casePage) : item.url,
       github: meta ? meta.githubUrl : (PROJECT_GITHUB[item.name] || item.github || null),
+      githubLabel: meta ? projectGithubLabel(meta, lang) : null,
     }));
   });
 
@@ -2182,6 +2240,7 @@ Object.keys(CONTENT).forEach(function hydrateProjectCatalog(lang) {
       portfolioState: meta ? meta.portfolioState : "catalog",
       url: meta ? (meta.presentation === "live" ? meta.liveUrl : meta.casePage) : product.url,
       github: meta ? meta.githubUrl : product.github,
+      githubLabel: meta ? projectGithubLabel(meta, lang) : null,
     });
   });
 

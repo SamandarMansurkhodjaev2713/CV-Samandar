@@ -4,6 +4,69 @@
 
 ## [Unreleased]
 
+### Added
+
+- V3 `Proof Laboratory` art direction: proposition-led Hero с физической Proof
+  Chamber (raw graphite → optical QA gate → finished release), единый chapter
+  Index, смысловые motion-signatures для 12 сцен и
+  отдельные compact-phone/short-desktop композиции.
+- 16 индивидуальных case hero profiles (`vault`, `wave`, `converge`,
+  `transformation`, `evidence`, `gateway`, `measure`, `threshold`, `factory`,
+  `rotor`, `lens`, `gauge`, `timetable`, `calendar`, `reconcile`, `outbox`) с
+  полными RU / EN / UZ страницами.
+- Семь заново сгенерированных предметных project covers для Birthday Agent,
+  ChAT, Marketbot, Sentinel Edge, AI Classroom Intelligence, CardioGuard и
+  3D Landing, включая 768/1152/1536 responsive WebP.
+- Архитектурный контракт `docs/ART-DIRECTION-V3.md` и регрессии для уникальности
+  16 case-профилей, mobile first view, короткого меню и полной Hero-матрицы.
+
+### Changed
+
+- Hero теперь сначала сообщает продуктовый результат, затем авторство и
+  ownership loop `BUILD → VERIFY → SHIP`; Intro использует содержательный
+  boot-handoff и ускоренный повторный путь без однократного скрытия.
+- Projects преобразован в читаемый продуктовый музей: асимметричный feature
+  grid на desktop, управляемый horizontal filmstrip на mobile и единый архив
+  после явного «Все проекты».
+- Builder собран как scope console с более ясной архитектурой brief; Signal,
+  About, Skills, Services, Process, FAQ, CV, Trust и Contact получили отдельные
+  материалы, композиции и конечные reveal-позы.
+- 16 case definitions объединены в один source of truth
+  `src/projects/landings-data.js`; временный `landings-new.js` удалён из build,
+  validation и документации.
+
+### Fixed
+
+- 320×568 Hero больше не наследует 700px floor: CTA, proof rail и минимум 64px
+  следующей сцены помещаются в первый экран во всех трёх локалях.
+- На 360×800 и коротком landscape CTA не пересекаются с proof rail; на
+  920×720 action band использует отдельную двухколоночную композицию.
+- Все 12 пунктов fullscreen menu имеют разделённые text line boxes при
+  920×720–1440×800, а mobile close control остаётся поверх прокручиваемого
+  списка после смены языка.
+- Светлые CV/Trust сцены используют документный ink с читаемым контрастом,
+  вместо полупрозрачного тёмно-тематического текста.
+
+### Performance
+
+- Единственный responsive Hero `<picture>` теперь присутствует в frame zero,
+  до React root, и остаётся LCP/fallback-слоем при ошибке приложения; React не
+  загружает дублирующее изображение.
+- Authored CSS детерминированно собирается pinned `lightningcss` в production
+  bundle; running copy переведён на platform UI stack, сохранив Oswald,
+  JetBrains Mono и Cormorant Garamond как характерные self-hosted роли.
+
+### Quality
+
+- Локальный `v2.14.0 / v236`: deterministic build — 55 byte-identical
+  generated artifacts; Playwright — 156 passed / 112 profile-skipped / 0
+  failed / 0 flaky; isolated performance — 2/2; visual release — 4/4;
+  focused WebKit stalled-intro stress — 8/8; all-case mobile viewport stress
+  после cold-layout коррекции — 8/8.
+- Desktop, portrait mobile и 844×390 landscape Hero, Projects и case contact
+  sheets просмотрены вручную в локальном Chromium. Physical iPhone/Android,
+  NVDA, VoiceOver и TalkBack этим не подменяются и остаются `NOT RUN`.
+
 ## [2.13.2] - 2026-08-17
 
 ### Added

@@ -435,6 +435,7 @@
       "ai-classroom": ["#6879BF", "104 121 191"],
       laplacefx: ["#659575", "101 149 117"],
       "vacation-control": ["#A59755", "165 151 85"],
+      "birthday-agent": ["#C77B30", "199 123 48"],
       "b24-sales-analyst": ["#4E7A5C", "78 122 92"],
       "chat-app": ["#A4423F", "164 66 63"]
     };
@@ -443,21 +444,22 @@
 
   function projectHeroProfile(slug) {
     var profiles = {
-      ttyl: "offset",
-      "task-manager": "panorama",
-      marketbot: "split",
-      forge: "panorama",
-      belfproctor: "reverse",
-      "vfs-killer": "offset",
-      "med-exe": "gallery",
-      bioflux: "reverse",
-      "growthops-ai": "panorama",
-      "car-superapp": "split",
-      "ai-classroom": "offset",
-      laplacefx: "reverse",
-      "vacation-control": "gallery",
-      "b24-sales-analyst": "panorama",
-      "chat-app": "offset"
+      ttyl: "vault",
+      "task-manager": "wave",
+      marketbot: "converge",
+      forge: "transformation",
+      belfproctor: "evidence",
+      "vfs-killer": "gateway",
+      "med-exe": "measure",
+      bioflux: "threshold",
+      "growthops-ai": "factory",
+      "car-superapp": "rotor",
+      "ai-classroom": "lens",
+      laplacefx: "gauge",
+      "vacation-control": "timetable",
+      "birthday-agent": "calendar",
+      "b24-sales-analyst": "reconcile",
+      "chat-app": "outbox"
     };
     return profiles[slug] || "split";
   }

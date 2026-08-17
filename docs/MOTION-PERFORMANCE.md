@@ -198,10 +198,10 @@ Intro — readiness gate, а не симулированный loader. VERIFY ж
 
 | Параметр | Значение |
 |---|---:|
-| visual timeline до 90% | `1750 ms` |
-| обычный minimum | `2100 ms` |
+| visual timeline | `1950 ms` |
+| обычный minimum | `2400 ms` |
 | minimum после user skip | `1300 ms` |
-| shell-present fallback reveal | `2550 ms` |
+| shell-present fallback reveal | `2850 ms` |
 | no-shell recovery deadline | `2750 ms` |
 | reveal transition | `420 ms` |
 | hold перед reveal | `90 ms` |
@@ -211,16 +211,20 @@ Intro — readiness gate, а не симулированный loader. VERIFY ж
 
 | Параметр | Значение |
 |---|---:|
-| visual timeline | `1050 ms` |
-| обычный minimum | `1350 ms` |
-| minimum после skip | `900 ms` |
-| shell-present fallback reveal | `1650 ms` |
-| no-shell recovery deadline | `1850 ms` |
+| visual timeline | `1450 ms` |
+| обычный minimum | `1950 ms` |
+| minimum после skip | `1050 ms` |
+| shell-present fallback reveal | `2250 ms` |
+| no-shell recovery deadline | `2450 ms` |
 | reveal transition | `330 ms` |
 | hold | `60 ms` |
 | skip affordance появляется | `450 ms` |
 
-Deep links пропускают intro. Reduced mode не создаёт particle canvas и завершает открытие opacity fade. Независимый head safety cap — `3150 ms`; pre-React application watchdog — `5500 ms`.
+Deep links пропускают intro. Reduced mode не создаёт particle canvas и
+завершает открытие opacity fade. Независимый production head safety cap —
+`3800 ms`; deterministic E2E test mode проверяет ту же release-ветку с cap
+`900 ms`, чтобы optional application work не мог вытеснить safety callback за
+границу теста. Pre-React application watchdog — `5500 ms`.
 
 ## 9. ImgFx и optional WebGL
 

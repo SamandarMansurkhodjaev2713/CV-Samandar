@@ -3,8 +3,26 @@
 /* The observer-backed near zone lets the browser stop infinite decorative
    timelines several screens away without flattening the experience. No-JS
    rendering is unaffected because the root class is added by motion.js only. */
-html.motion-zones section[data-section]:not(.is-motion-near),
-html.motion-zones section[data-section]:not(.is-motion-near) * {
+/* Pause only perpetual decoration outside the observer-backed near zone.
+   Pausing every descendant also froze finite entrance animations in their
+   first (often dark) frame after a deep link or a fast flick. */
+html.motion-zones section[data-section]:not(.is-motion-near) :is(
+  .pe-live-dot,
+  .cc-live-dot,
+  .status-dot,
+  .about-avatar-shine,
+  .about-id-status-dot,
+  .about-id-dot,
+  .about-gh-dot,
+  .svc-io-tok,
+  .proc-rail-pulse,
+  .proc-stage-caret,
+  .proc-stage-spin,
+  .proc-terminal-cursor,
+  .builder-hud-dot,
+  .builder-flow,
+  .signal-pulse i
+) {
   animation-play-state: paused !important;
 }
 
@@ -202,6 +220,13 @@ html.motion-zones section[data-section]:not(.is-motion-near) * {
 }
 [data-reveal].rv-bound {
   transition: opacity .85s cubic-bezier(.2,.6,.18,1), transform .85s cubic-bezier(.2,.6,.18,1);
+}
+/* The section entrance is the authoritative visibility gate. If a nested
+   IntersectionObserver callback arrives a frame late (deep links and rapid
+   flicks are the common cases), content still resolves to a readable pose. */
+section.sec-in [data-reveal].rv-bound:not(.rv-in) {
+  opacity: 1;
+  transform: none;
 }
 
 /* Words: parent stays visible — children (.rv-w) animate. */
@@ -683,6 +708,12 @@ html[data-motion-lite] .pin-host > section[data-enter].sec-in > .shell {
   animation: secFlatFade .5s linear both !important;
   filter: none !important;
   clip-path: none !important;
+}
+/* A pinned chapter owns its fade on the shell only; never fade both the
+   section and its shell, which multiplies opacity during the transition. */
+html[data-motion-lite] .pin-host > section[data-enter].sec-in {
+  animation: none !important;
+  opacity: 1 !important;
 }
 /* Low tier and motion-lite drop every signature: they are the first thing to
    go when the frame budget is tight, because the sections read perfectly well

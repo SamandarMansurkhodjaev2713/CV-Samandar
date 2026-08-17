@@ -83,13 +83,13 @@ function heroLetters(word, depthScale) {
   return word.split("").map((ch, i) => (
     <span
       key={i}
-      className="hn-l"
+      className={`hn-l${ch === " " ? " hn-l--space" : ""}`}
       style={{
         "--l-i": i,
         "--hd": ((0.3 + (mid > 0 ? Math.abs(i - mid) / mid : 0) * 1.1) * depthScale).toFixed(2),
       }}
     >
-      <span className="hn-i">{ch}</span>
+      <span className="hn-i">{ch === " " ? "\u00A0" : ch}</span>
     </span>
   ));
 }
@@ -211,6 +211,9 @@ function Hero({ t, links }) {
   // Trailing full stops are dropped: they belonged to the stacked reading and
   // read as noise inside a slash-separated rule.
   const roles = (t.hero.title_lines || []).map((s) => s.replace(/\.\s*$/, ""));
+  const statementLines = Array.isArray(t.hero.statement_lines) && t.hero.statement_lines.length
+    ? t.hero.statement_lines
+    : [HERO_GIVEN, HERO_FAMILY];
   const proofSteps = Array.isArray(t.hero.proof_steps) && t.hero.proof_steps.length
     ? t.hero.proof_steps
     : [
@@ -264,7 +267,7 @@ function Hero({ t, links }) {
 
   return (
     <section
-      data-section="hero" id="hero" className={`hero${lit ? " is-lit" : ""}`} ref={ref}
+      data-section="hero" id="hero" className={`hero hero--proof-chamber${lit ? " is-lit" : ""}`} ref={ref}
     >
       {/* A material calibration field, not borrowed sci-fi imagery. The three
           physical checkpoints echo the Build → Verify → Ship proof rail while
@@ -283,38 +286,19 @@ function Hero({ t, links }) {
           picture remains ordinary responsive media; depth is driven by the
           Hero's existing shared motion subscription and therefore has the
           same reduced/low-tier path as the rest of the scene. */}
-      <figure className="hero-instrument" aria-hidden="true">
-        <span className="hero-instrument-orbit hero-instrument-orbit--outer" />
-        <span className="hero-instrument-orbit hero-instrument-orbit--inner" />
-        <picture>
-          <source media="(max-width: 760px)" srcSet="assets/hero/responsive/proof-instrument-768.webp" />
-          <source media="(max-width: 1280px)" srcSet="assets/hero/responsive/proof-instrument-1152.webp" />
-          <img
-            className="hero-instrument-img"
-            src="assets/hero/proof-instrument.webp"
-            width="1536"
-            height="1024"
-            alt=""
-            loading="eager"
-            fetchPriority="high"
-            decoding="async"
-          />
-        </picture>
-        <span className="hero-instrument-index mono">PROOF / 01</span>
-        <span className="hero-instrument-axis mono">BUILD · VERIFY · SHIP</span>
-        <div className="hero-instrument-plate">
-          <span className="hero-instrument-plate-label mono">PROOF INSTRUMENT</span>
-          <span className="hero-instrument-plate-state mono">CALIBRATED / 03</span>
-          <ol className="hero-instrument-scale">
-            {proofSteps.map((step, index) => (
-              <li key={`instrument-${step.code}`} style={{ "--instrument-i": index }}>
-                <i />
-                <span className="mono">{step.code}</span>
-                <strong>{step.k}</strong>
-              </li>
-            ))}
-          </ol>
-        </div>
+      <figure className="hero-instrument hero-chamber" aria-hidden="true">
+        <span className="hero-chamber-vignette" />
+        <span className="hero-chamber-beam" />
+        <span className="hero-chamber-scan" />
+        <ol className="hero-chamber-map">
+          {proofSteps.map((step, index) => (
+            <li key={`chamber-${step.code}`} style={{ "--chamber-i": index }}>
+              <span className="mono">{step.code}</span>
+              <strong>{step.k}</strong>
+            </li>
+          ))}
+        </ol>
+        <span className="hero-chamber-caption mono">RAW INPUT / OPTICAL GATE / RELEASE</span>
       </figure>
 
       {/* Four horizontal bands, top to bottom: identification, the masthead,
@@ -324,20 +308,38 @@ function Hero({ t, links }) {
           edges is a masthead. */}
       <div className="hero-stack">
         <div className="shell hero-band hero-band--top">
-          <span className="eyebrow">{t.hero.eyebrow}</span>
+          <span className="eyebrow hero-eyebrow">
+            <span className="hero-eyebrow-desktop">{t.hero.eyebrow}</span>
+            <span className="hero-eyebrow-mobile">{t.hero.eyebrow_mobile || t.hero.eyebrow}</span>
+          </span>
           <span className="hero-status">
             <span className="status-dot" />
-            <span className="mono">{t.hero.status}</span>
+            <span className="mono hero-status-copy">
+              <span className="hero-status-desktop">{t.hero.status}</span>
+              <span className="hero-status-mobile">{t.hero.status_mobile || t.hero.status}</span>
+            </span>
           </span>
         </div>
 
-        {/* aria-label carries the name as one readable string — the letters are
-            individual spans for the animation, and a screen reader walking 22
-            of them would spell the name out loud. */}
-        <h1 className="hero-name" aria-label={`${HERO_GIVEN} ${HERO_FAMILY}`}>
-          <span className="hn-line hn-line--given" aria-hidden="true">{heroLetters(HERO_GIVEN, 1)}</span>
-          <span className="hn-line hn-line--family" aria-hidden="true">{heroLetters(HERO_FAMILY, 0.55)}</span>
-        </h1>
+        {/* The first viewport now leads with the product promise, not a giant
+            signature. The name remains visible as authorship, while the h1
+            says what a visitor actually gets. Per-letter spans preserve the
+            authored Intro hand-off; aria-label exposes one natural sentence. */}
+        <div className="hero-copy-stage">
+          <p className="hero-signature mono">{t.hero.signature || `${HERO_GIVEN} ${HERO_FAMILY}`}</p>
+          <h1 className="hero-name" aria-label={t.hero.statement_aria || statementLines.join(" ")}>
+            {statementLines.map((line, lineIndex) => (
+              <span
+                className={`hn-line hero-statement-line hero-statement-line--${lineIndex + 1} ${lineIndex === 0 ? "hn-line--given" : ""} ${lineIndex === statementLines.length - 1 ? "hn-line--family" : ""}`}
+                style={{ "--hs-line": lineIndex }}
+                aria-hidden="true"
+                key={`${lineIndex}-${line}`}
+              >
+                {heroLetters(line, Math.max(.48, 1 - lineIndex * .2))}
+              </span>
+            ))}
+          </h1>
+        </div>
 
         <div className="shell hero-band hero-band--rule">
           <p className="hero-roles">
@@ -367,7 +369,10 @@ function Hero({ t, links }) {
         </div>
 
         <div className="shell hero-band hero-band--act">
-          <p className="hero-tagline">{t.hero.tagline}</p>
+          <p className="hero-tagline">
+            <span className="hero-tagline-desktop">{t.hero.tagline}</span>
+            <span className="hero-tagline-mobile">{t.hero.tagline_mobile || t.hero.tagline}</span>
+          </p>
           <div className="hero-ctas">
             <a
               href="#contact" className="btn btn-primary" data-magnetic
@@ -948,9 +953,9 @@ function ProjectCard({ p, i, labels }) {
             className="proj-repo mono"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={`${labels.github || "GitHub"} · ${p.name}`}
+            aria-label={`${p.githubLabel || labels.github || "GitHub"} · ${p.name}`}
           >
-            {labels.github || "GitHub"} <span aria-hidden="true">↗</span>
+            {p.githubLabel || labels.github || "GitHub"} <span aria-hidden="true">↗</span>
           </a>
         ) : null}
       </div>

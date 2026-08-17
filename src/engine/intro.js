@@ -9,20 +9,20 @@
   "use strict";
 
   var FIRST = {
-    visualMs: 1750,
-    minMs: 2100,
+    visualMs: 1950,
+    minMs: 2400,
     skipMinMs: 1300,
-    hardRevealMs: 2550,
+    hardRevealMs: 2850,
     recoveryMs: 2750,
     revealMs: 420,
     holdMs: 90,
   };
   var REPEAT = {
-    visualMs: 1050,
-    minMs: 1350,
-    skipMinMs: 900,
-    hardRevealMs: 1650,
-    recoveryMs: 1850,
+    visualMs: 1450,
+    minMs: 1950,
+    skipMinMs: 1050,
+    hardRevealMs: 2250,
+    recoveryMs: 2450,
     revealMs: 330,
     holdMs: 60,
   };
@@ -309,13 +309,16 @@
         panel.appendChild(canvas);
         setupParticles();
 
-        var core = document.createElement("div");
-        core.className = "sm-boot-core";
-        core.style.top = (CORE_Y * 100).toFixed(1) + "%";
-        core.setAttribute("aria-hidden", "true");
-        core.innerHTML = "<b></b><i></i>";
-        panel.appendChild(core);
       }
+
+      /* Reduced motion keeps the physical core as a static orientation mark;
+         only its pulse/ring animation and particles are removed. */
+      var core = document.createElement("div");
+      core.className = "sm-boot-core";
+      core.style.top = (CORE_Y * 100).toFixed(1) + "%";
+      core.setAttribute("aria-hidden", "true");
+      core.innerHTML = "<b></b><i></i>";
+      panel.appendChild(core);
 
       boot = document.createElement("div");
       boot.className = "sm-boot";

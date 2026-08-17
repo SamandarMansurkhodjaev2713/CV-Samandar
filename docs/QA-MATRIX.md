@@ -1,6 +1,6 @@
 # QA matrix и release gates
 
-Актуально на: 2026-08-17
+Актуально на: 2026-08-18
 
 Тестовый runner: Playwright 1.62.0 + Axe 4.12.1
 
@@ -30,27 +30,26 @@
 
 | Gate | Статус | Доказательство |
 |---|---|---|
-| Generated site contract | **GREEN** | local candidate `v234` `npm run validate` → `OK — 25 products, 9 live routes, 16 case routes, 3 locales`; 48 generated case pages и 49 sitemap URL (2026-08-17) |
-| Full Playwright matrix | **GREEN** | local candidate `v234` `npm test` → 266 scenarios, 155 passed / 111 осознанно profile-skipped / 0 failed / 0 flaky за 15.4 min; Windows — 1 worker, 0 retry; Firefox и WebKit получают чистые процессы до Chromium desktop/mobile, затем выполняется reduced-motion (2026-08-17) |
-| Isolated performance budgets | **GREEN** | local candidate `v234` `npm run test:performance` → desktop/mobile 2/2 за 29.6 s, serial worker=1; LCP element attribution сохранён в report (2026-08-17) |
-| Navigation/motion/focus stress | **GREEN** | exact-card + locale/background navigation → 30/30 desktop и exact-card → 10/10 mobile; CV focus → 50/50; reduced scheduler final-frame contract → 50/50 (2026-08-17) |
-| iPhone WebKit critical path | **GREEN** | полный финальный gate 3/3; focused first-load + намеренно stalled authored Intro stress → 20/20; head safety освобождает shell до 5 s без ослабления assertions (2026-08-17) |
-| Build determinism | **GREEN** | local candidate `v234` `npm run check:build` → 54 generated artifacts byte-identical в двух последовательных сборках (2026-08-14) |
-| Dependency/secret gates | **GREEN** | local candidate: `npm audit --audit-level=high` → 0 vulnerabilities; `npm run scan:secrets` → no credential signatures (2026-08-14) |
-| External live routes | **GREEN** | local candidate `npm run check:live` → 9/9 live-маршрутов вернули usable HTML (2026-08-14) |
+| Generated site contract | **GREEN** | local `v2.14.0 / v236`: `npm run validate` → `OK — 25 products, 9 live routes, 16 case routes, 3 locales`; 48 generated case pages и 49 sitemap URL (2026-08-18) |
+| Full Playwright matrix | **GREEN** | local `v2.14.0 / v236`: `npm test` → 268 scenarios, 156 passed / 112 осознанно profile-skipped / 0 failed / 0 flaky за 23.9 min; Windows — 1 worker, 0 retry; Firefox, iPhone WebKit, Chromium desktop/mobile и reduced-motion включены (2026-08-18) |
+| Isolated performance budgets | **GREEN** | local `v2.14.0 / v236`: `npm run test:performance` → desktop/mobile 2/2 за 30.8 s, serial worker=1; Hero LCP — единственный frame-zero responsive image (2026-08-18) |
+| Mobile case geometry stress | **GREEN** | после cold-layout фикса all-16-case viewport sweep прошёл 8/8 подряд без retry; затем тот же контракт прошёл внутри полного gate (2026-08-18) |
+| iPhone WebKit critical path | **GREEN** | полный gate 3/3; focused intentionally stalled authored Intro stress → 8/8 без retry; production safety cap не увеличен, E2E использует deterministic 900-ms branch того же release path (2026-08-18) |
+| Build determinism | **GREEN** | local `v2.14.0 / v236`: `npm run check:build` → 55 generated artifacts byte-identical в двух последовательных сборках, включая compact JS и CSS bundle (2026-08-18) |
+| Dependency/secret gates | **GREEN** | local `v2.14.0 / v236`: `npm audit --audit-level=high` → 0 vulnerabilities; `npm run scan:secrets` → no credential signatures (2026-08-18) |
+| External live routes | **GREEN** | local `v2.14.0 / v236`: `npm run check:live` → 9/9 live-маршрутов вернули usable HTML (2026-08-18) |
 | Deployed production smoke | **GREEN** | merge SHA `8958aa5`, GitHub Actions `32013952249`: build/deploy/verify-production success; независимый `npm run test:production` → 3/3; production HTML HTTP 200, 30 refs `v234`, 0 refs `v233`; 48 case routes и exact-card return подтверждены (2026-08-17) |
 | Post-deploy synthetic production monitor | **GREEN** | независимый local runner на опубликованном `v234`: desktop LCP 1388 ms / CLS 0.0049 / frame p95 116.7 ms; mobile LCP 1604 ms / CLS 0.0025 / frame p95 33.4 ms; 0 first-party failures / 0 budget violations. Это synthetic evidence, не field RUM; новое 24–48h окно ещё продолжается (2026-08-17) |
-| Visual capture + human review | **GREEN** | local candidate `v234` `VISUAL_QA=1` → 4/4 за 5.1 min: 13 main states (12 scenes + fullscreen menu) + 16 full-page cases на desktop/mobile, 58 direct PNG + 4 contact sheets; main/contact sheets и menu desktop/mobile просмотрены вручную (2026-08-14) |
-| Manual local browser review | **GREEN (local candidate only)** | Chromium 1230×768 и 390×844: fullscreen menu, 12 глав, светлые сцены и touch-композиция просмотрены вручную; это не production/physical-device proof (2026-08-14) |
+| Visual capture + human review | **GREEN** | local `v2.14.0 / v236` `VISUAL_QA=1` → 4/4 за 6.4 min: 13 main states (12 scenes + fullscreen menu) + 16 full-page cases на desktop/mobile, direct PNG и 4 contact sheets; Hero, Projects и все case heroes просмотрены вручную (2026-08-18) |
+| Manual local browser review | **GREEN (local candidate only)** | Chromium desktop, 390×844 portrait и 844×390 landscape: Proof Chamber Hero, first-view handoff, Projects filmstrip/grid и case first views просмотрены вручную; это не production/physical-device proof (2026-08-18) |
 | Manual production browser journey | **GREEN (v2.13.0 only)** | опубликованный `v232` ранее проверен вручную в Chromium; для `v2.13.2` отдельный physical/manual PASS не заявляется. Production Chromium smoke 3/3 и synthetic desktop/mobile monitor вынесены в отдельные строки |
 | NVDA / VoiceOver / physical devices | **NOT RUN** | локальная headless-среда не может честно подтвердить эти проверки |
 
-Production `v2.13.2 / v234` опубликован из merge SHA `8958aa5` и прошёл все
-локальные automated gates, GitHub Pages deploy/verify-production, независимый
-smoke и первый synthetic monitor. `v2.13.1 / v233` остаётся ближайшим зелёным
-rollback baseline. Physical device и
-assistive-technology проверки остаются отдельным внешним доказательством и не
-объявляются выполненными.
+Production всё ещё `v2.13.2 / v234`, опубликованный из merge SHA `8958aa5`;
+он остаётся проверенным rollback baseline. V3 `v2.14.0` является только
+локальным release candidate до final `v236` gate, merge/deploy и независимого
+post-deploy smoke. Physical device и assistive-technology проверки остаются
+отдельным внешним доказательством и не объявляются выполненными.
 
 ## 3. Блокирующий automated pipeline
 

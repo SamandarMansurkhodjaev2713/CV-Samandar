@@ -24,6 +24,7 @@ function generatedPaths() {
   const files = [
     path.join(ROOT, "index.html"),
     path.join(ROOT, "sitemap.xml"),
+    path.join(ROOT, "src", "styles", "app.bundle.min.css"),
   ];
   const components = path.join(ROOT, "src", "components");
   fs.readdirSync(components, { withFileTypes: true }).forEach((entry) => {

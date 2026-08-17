@@ -47,8 +47,10 @@ test("iPhone WebKit head safety releases a stalled authored intro module", async
     });
   });
 
-  await page.goto("/?webkit-stalled-intro=1", { waitUntil: "domcontentloaded" });
-  await expect(page.locator("#sm-intro")).toHaveCount(0, { timeout: 5000 });
+  // Deterministic low-tier mode isolates the safety timer from optional motion
+  // work while exercising the exact production head-boot implementation.
+  await page.goto("/?e2e=1&webkit-stalled-intro=1", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("#sm-intro")).toHaveCount(0, { timeout: 6000 });
   await expect(page.locator("html")).not.toHaveClass(/intro-lock/);
   await expect(page.locator("#root")).not.toBeEmpty();
   await expect(page.locator(".hero-ctas .btn").first()).toBeEnabled();
