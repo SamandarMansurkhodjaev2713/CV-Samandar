@@ -46,6 +46,7 @@
 | 13. Документация | выполнен | 17 обязательных документов, ADR, QA-матрица, physical/AT protocol, runbook и автоматический docs-contract |
 | 14. Предрелиз и выпуск | выполнен | `v2.13.2 / v234` опубликован из merge SHA `8958aa5`; Actions `32013952249`, deploy, verify-production, независимый smoke 3/3 и live 9/9 зелёные |
 | 15. После выпуска | в работе | первый synthetic monitor `v234` зелёный; submission copy, automated review media и physical/AT protocol готовы; новое 24–48-часовое окно начато 2026-08-17, pending: final 60-fps/native media и внешний physical/AT sign-off |
+| 16. V3 Proof Laboratory | release candidate | Hero Proof Chamber, Intro, Index, cursor, 12 сцен, 25 карточек, 16 case × 3 локали, responsive/motion/performance и локальная visual QA переработаны; публикация и post-deploy proof выполняются отдельным gate |
 
 Статус отражает только зафиксированные и проверенные контракты. Детальные
 доказательства, версии и результаты тестов находятся в

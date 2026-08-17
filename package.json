@@ -1,6 +1,6 @@
 {
   "name": "samandar-executive-ai-code-lab",
-  "version": "2.13.2",
+  "version": "2.14.0",
   "private": true,
   "description": "Static trilingual portfolio with generated product case pages.",
   "scripts": {
@@ -25,7 +25,8 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "4.12.1",
-    "@playwright/test": "1.62.0"
+    "@playwright/test": "1.62.0",
+    "lightningcss": "1.33.0"
   },
   "engines": {
     "node": ">=20"

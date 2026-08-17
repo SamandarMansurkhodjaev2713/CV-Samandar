@@ -83,7 +83,7 @@ npm run qa:visual
 |---|---|---|
 | Идентичность продукта, порядок, live/case-маршрут, evidence/confidentiality, изображение | `src/content/product-registry.js` | Порядок карточек, URL, sitemap и contract validation |
 | Тексты главной и карточек на RU / EN / UZ | `src/content/content.js` | Данные, которые получает React-приложение |
-| Полный контент 16 case-страниц | `src/projects/landings-data.js` + `src/projects/landings-new.js` | Локализованные страницы в `projects/<slug>/` |
+| Полный контент 16 case-страниц | `src/projects/landings-data.js` | Локализованные страницы в `projects/<slug>/` |
 | Разметка case-страниц | `src/projects/render.js` | Одинаковый SSR-like HTML на build-time и client-side при смене языка |
 | UI-компоненты | `src/components/*.jsx` | `src/components/*.js`, сгенерированные `build.js` |
 | Дизайн и runtime-эффекты | `src/styles/`, `src/projects/landing.css`, `src/engine/` | Progressive motion/WebGL с читаемым fallback |

@@ -590,7 +590,7 @@ function MobileScrollDock({ t, lang, activeSection, visible }) {
     flyTo("contact");
   }
   return (
-    <div className={`mobile-dock ${visible ? "is-visible" : ""}`} role="region" aria-label={lang === "ru" ? "Положение на странице" : lang === "uz" ? "Sahifadagi joylashuv" : "Page position"}>
+    <div className={`mobile-dock ${visible ? "is-visible" : ""} ${activeSection === "projects" ? "is-project-context" : ""}`} role="region" aria-label={lang === "ru" ? "Положение на странице" : lang === "uz" ? "Sahifadagi joylashuv" : "Page position"}>
       <ol className="mobile-dock-dots" aria-hidden="true">
         {FULL_MENU_SECTIONS.map((id, i) => (
           <li key={id}><span className={`mobile-dock-dot ${i === activeIdx ? "is-active" : ""}`} /></li>

@@ -850,3 +850,44 @@ optimization target для следующей художественной ит�
 Новое 24–48-часовое production-наблюдение начато 2026-08-17. Physical
 iPhone/Android, NVDA/VoiceOver/TalkBack и финальный 2560×1440/60-fps master
 остаются внешними незавершёнными доказательствами.
+
+## v2.14.0 V3 Proof Laboratory candidate — v236 pre-release
+
+После отдельной критики первых пяти секунд Hero перестроен из типографического
+экрана в физическую `Proof Chamber`: raw material проходит через оптический
+quality gate к release-модулю, а тезис, author line и proof rail объясняют
+`BUILD → VERIFY → SHIP`. Единственный responsive Hero `<picture>` находится в
+frame zero до React root, имеет high fetch priority и остаётся fallback/LCP
+слоем; приложение не загружает его второй раз.
+
+V3-проход охватил Intro, fullscreen Index, cursor, все 12 глав, 25 project
+cards и 16 case routes × RU/EN/UZ. Projects использует асимметричный desktop
+museum и mobile horizontal filmstrip с видимым продолжением. Каждый case
+сохранил общую главную систему, но получил собственный hero-profile, material
+cue, архитектурную схему, QA-аргументацию и privacy boundary.
+
+Инженерный проход добавил deterministic `lightningcss` bundle и compact AOT
+JS. Running copy переведён на platform UI stack; Oswald, JetBrains Mono и
+Cormorant Garamond остались характерными self-hosted ролями. Это убрало
+дублирующий Cyrillic/Latin Inter decode path, сохранив читаемость и снизив CSS
+до примерно 316 KB. Production performance budgets не расширялись.
+
+Фактическое локальное доказательство финального asset graph `v236`:
+
+- deterministic build — 55 generated artifacts byte-identical в двух сборках;
+- полный Playwright gate — 268 scenarios: 156 passed, 112 profile-skipped,
+  0 failed / 0 flaky за 23.9 минуты;
+- isolated performance — desktop/mobile 2/2 за 30.8 секунды;
+- visual release — 4/4 за 6.4 минуты, main/case desktop/mobile contact sheets
+  просмотрены вручную;
+- intentionally stalled Intro WebKit stress — 8/8 без retry;
+- all-16-case mobile viewport stress после cold-layout коррекции — 8/8, затем
+  тот же sweep зелёный в полном gate;
+- axe WCAG 2.2 A/AA, 200% text, orientation, exact-card return, optional asset
+  failure, reduced motion и WebGL context-loss входят в полный gate.
+
+Production при этой записи остаётся `v2.13.2 / v234`. V3 нельзя объявлять
+опубликованным до merge через `main`, Pages verification и
+независимого post-deploy smoke. Physical iPhone/Android,
+NVDA/VoiceOver/TalkBack и final 60-fps/native submission media остаются
+`NOT RUN` и не подменяются эмуляцией.

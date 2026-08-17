@@ -15,7 +15,7 @@
 - live/GitHub/case routes, repository aliases, визуал и privacy boundary;
 - краткие RU/EN/UZ name/descriptor.
 
-Расширенный текст главной остаётся в `src/content/content.js`, а содержание 16 кейсов — в `src/projects/landings-data.js` и `src/projects/landings-new.js`. Валидатор связывает эти слои и останавливает build, если нарушены уникальность, порядок, 25/9/16 split, route contract, локальный паритет, asset contract или public-safety boundary.
+Расширенный текст главной остаётся в `src/content/content.js`, а содержание всех 16 кейсов — в `src/projects/landings-data.js`. Валидатор связывает эти слои и останавливает build, если нарушены уникальность, порядок, 25/9/16 split, route contract, локальный паритет, asset contract или public-safety boundary.
 
 ## Consequences
 

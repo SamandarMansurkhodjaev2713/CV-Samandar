@@ -3,7 +3,7 @@
 const { test, expect } = require("@playwright/test");
 const { settleMain, expectNoHorizontalOverflow } = require("./helpers");
 
-test("Builder + QA proof rail and local type system survive every viewport", async ({ page }) => {
+test("Builder + QA proof rail and authored type hierarchy survive every viewport", async ({ page }) => {
   const remoteFontRequests = [];
   const retiredHeroMediaRequests = [];
   page.on("request", (request) => {
@@ -18,6 +18,11 @@ test("Builder + QA proof rail and local type system survive every viewport", asy
 
   await settleMain(page, "#hero");
   await expect(page.locator(".hero-material-field")).toBeVisible();
+  await expect(page.locator("#sm-hero-media .hero-chamber-static")).toBeVisible();
+  await expect(page.locator("#hero .hero-chamber")).toBeVisible();
+  await expect(page.locator("#sm-hero-media .hero-instrument-img")).toHaveAttribute("fetchpriority", "high");
+  await expect(page.locator(".hero-chamber-map li")).toHaveCount(3);
+  await expect(page.locator(".hero-instrument-orbit")).toHaveCount(0);
   await expect(page.locator(".hero-proof-step")).toHaveCount(3);
   await expect(page.locator(".hero-roles")).toContainText(/Builder/i);
   await expect(page.locator(".hero-roles")).toContainText("QA");
@@ -28,7 +33,7 @@ test("Builder + QA proof rail and local type system survive every viewport", asy
     mono: getComputedStyle(document.querySelector(".hero-proof-label")).fontFamily,
   }));
   expect(type.heading).toContain("Oswald");
-  expect(type.body).toContain("Inter");
+  expect(type.body).toMatch(/Segoe UI|-apple-system|BlinkMacSystemFont/);
   expect(type.mono).toContain("JetBrains Mono");
   expect(remoteFontRequests).toEqual([]);
   expect(retiredHeroMediaRequests).toEqual([]);
@@ -252,6 +257,11 @@ test("mobile command dock reports the exact chapter with a truthful twelve-part 
 
 test("mobile Hero keeps its CTA, proof rail and Signal handoff collision-free", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile-chromium", "mobile geometry contract");
+  /* This is one deterministic 27-state matrix (3 locales × 9 viewports), not
+     a single interaction. A clean serial run takes ~49s on the Windows visual
+     runner before any assertion fails, so give the matrix its own bounded
+     budget while keeping the default timeout for every user journey. */
+  test.setTimeout(70_000);
   await settleMain(page, "#hero");
   const viewports = [
     { width: 320, height: 568 },
@@ -267,10 +277,20 @@ test("mobile Hero keeps its CTA, proof rail and Signal handoff collision-free", 
   for (const language of ["RU", "EN", "UZ"]) {
     await page.setViewportSize({ width: 390, height: 844 });
     if ((await page.locator("html").getAttribute("lang")) !== language.toLowerCase()) {
-      await page.locator(".nav-burger").click();
-      await page.locator(".nav-menu-lang button").filter({ hasText: new RegExp(`^${language}$`) }).click();
+      /* This test owns Hero geometry, not menu actionability. The dedicated
+         fullscreen-menu test above exercises real pointer input, focus trap
+         and close restoration. Dispatch the same DOM events synchronously
+         here so 27 viewport measurements do not spend most of the 45-second
+         contract waiting for the menu's authored transition to stabilize. */
+      await page.evaluate((nextLanguage) => {
+        document.querySelector(".nav-burger")?.click();
+        const button = Array.from(document.querySelectorAll(".nav-menu-lang button"))
+          .find((node) => node.textContent.trim() === nextLanguage);
+        button?.click();
+      }, language);
       await expect(page.locator("html")).toHaveAttribute("lang", language.toLowerCase());
-      await page.locator(".nav-menu-close").click();
+      await page.evaluate(() => document.querySelector(".nav-menu-close")?.click());
+      await expect(page.locator(".nav-menu")).not.toHaveClass(/is-open/);
     }
 
     for (const viewport of viewports) {

@@ -1,6 +1,6 @@
 # Awwwards submission package
 
-Актуально для локального кандидата: `v2.13.2`, asset graph `v234`, 2026-08-17
+Актуально для локального кандидата: `v2.14.0 / v236`, 2026-08-18
 
 Production: <https://samandarmansurkhodjaev2713.github.io/CV-Samandar/>
 
@@ -99,8 +99,9 @@ Credits нельзя сокращать до формулировки, кото�
 - тёплый graphite вместо стандартного pure black;
 - paper/protocol как намеренные светлые контрастные сцены;
 - редакционная предметная фотография вместо UI-мокапов и неонового AI-арта;
-- Oswald для архитектурного display-ритма, Inter для чтения, JetBrains Mono для
-  evidence и Cormorant Garamond как редкий человеческий акцент;
+- Oswald для архитектурного display-ритма, platform UI для быстрого и
+  привычного чтения, JetBrains Mono для evidence и Cormorant Garamond как
+  редкий человеческий акцент;
 - свет показывает действие, границу или подтверждение, а не служит случайным
   glow;
 - motion объясняет вход, смену состояния и причинно-следственную связь.
@@ -167,12 +168,12 @@ mobile performance. Он используется только как допол
 | Локализация | RU / EN / UZ; 48 generated case HTML |
 | Главная | 12 смысловых сцен |
 | Обложки | 25 предметных WebP-наборов 1536/1152/768, 3:1 |
-| Release source | `v2.13.2 / v234`, merge SHA `8958aa5` |
-| Current production | `v2.13.2 / v234`; Pages workflow `32013952249`, release tag pending final evidence commit |
-| Build | 54 generated artifacts, byte-identical double build |
-| Automated suite | 266 scenarios; 155 pass, 111 profile skips, 0 fail/flaky |
+| Local V3 candidate | `v2.14.0 / v236` |
+| Current production / rollback | `v2.13.2 / v234`, merge SHA `8958aa5`; Pages workflow `32013952249` |
+| Build | 55 generated artifacts, byte-identical double build |
+| Automated suite | 268 scenarios; 156 pass, 112 profile skips, 0 fail/flaky |
 | Visual release review | 13 main states + 16 cases в desktop/mobile; 58 PNG + 4 contact sheets |
-| Production routes | main + 48 case URL + 9 live routes проверены |
+| Production routes | для V3 ещё не заявлены; опубликованный v234 имеет main + 48 case URL + 9 live routes proof |
 
 Первый независимый monitor опубликованного `v2.13.2 / v234`, success:
 
@@ -257,10 +258,12 @@ case и exact-card return, portrait→landscape. Пальцы/касания н�
 
 - [x] 25 / 9 / 16 product contract подтверждён canonical registry.
 - [x] 48 case routes и RU / EN / UZ parity подтверждены build/validation.
-- [x] `v2.13.2 / v234` local candidate: deterministic build, audit, secret
-  scan, browser, axe, performance, live-route и visual gates зелёные.
+- [x] `v2.14.0 / v236` final local candidate: deterministic build, audit,
+  secret scan, browser, axe, performance, live-route и visual gates зелёные.
 - [x] `v2.13.2 / v234` опубликован из `8958aa5`; Pages build/deploy/verify,
   независимый production smoke 3/3 и первый synthetic monitor зелёные.
+- [ ] `v2.14.0 / v236` опубликован и имеет независимый production smoke/live
+  proof; до этого submission media не называется актуальным V3 production.
 - [x] Credits и public claims прошли truth-boundary review.
 - [x] Rollback tag и release runbook существуют.
 - [x] Automated submission review set: 8 stills + 74.8 s desktop WebM;

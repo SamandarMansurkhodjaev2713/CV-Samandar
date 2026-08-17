@@ -21,6 +21,12 @@ test("Project Sketch exposes native choices and an honest immediate result", asy
   const after = await page.locator(".builder-readout-row dd").allTextContents();
   expect(after[0]).not.toBe(before[0]);
   expect(after[1]).not.toBe(before[1]);
+  const architectureToggle = page.locator(".builder-architecture-toggle");
+  await expect(architectureToggle).toBeVisible();
+  await expect(architectureToggle).toHaveAttribute("aria-expanded", "false");
+  await expect(page.locator(".builder-layer--ai")).not.toBeVisible();
+  await architectureToggle.click();
+  await expect(architectureToggle).toHaveAttribute("aria-expanded", "true");
   await expect(page.locator(".builder-layer--ai")).toBeVisible();
   await expect(page.locator(".builder-layer--qa")).toBeVisible();
 });

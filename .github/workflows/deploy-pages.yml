@@ -42,11 +42,11 @@ jobs:
 
       - name: Verify generated files are committed
         run: |
-          drift="$(git status --porcelain --untracked-files=all -- index.html src/components projects sitemap.xml)"
+          drift="$(git status --porcelain --untracked-files=all -- index.html src/components src/styles/app.bundle.min.css projects sitemap.xml)"
           if [ -n "$drift" ]; then
             echo "Generated drift detected:"
             echo "$drift"
-            git diff -- index.html src/components projects sitemap.xml
+            git diff -- index.html src/components src/styles/app.bundle.min.css projects sitemap.xml
             exit 1
           fi
 

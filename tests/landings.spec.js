@@ -39,8 +39,44 @@ test("all case pages fit the mobile viewport", async ({ page, isMobile }) => {
       await expect(page.locator("h1")).toHaveText(product.i18n.ru.name);
       await expect(page.locator("img").first()).toBeVisible();
       await expectNoHorizontalOverflow(expect, page, product.slug);
+      const heroContract = await page.evaluate(() => {
+        const rect = (selector) => document.querySelector(selector)?.getBoundingClientRect();
+        const hero = rect(".lp-hero");
+        const title = rect(".lp-title");
+        const cta = rect(".lp-cta");
+        const visual = rect(".lp-hero-visual");
+        const targets = [...document.querySelectorAll(".lp-bar a, .lp-bar button, .lp-cta a")]
+          .map((node) => node.getBoundingClientRect().height);
+        return {
+          heroBottom: hero && hero.bottom,
+          titleWidth: title && title.width,
+          ctaBottom: cta && cta.bottom,
+          visualBottom: visual && visual.bottom,
+          viewportHeight: innerHeight,
+          minTarget: Math.min(...targets),
+        };
+      });
+      expect(heroContract.heroBottom, product.slug + " hero should end inside the first viewport").toBeLessThanOrEqual(heroContract.viewportHeight + 1);
+      expect(heroContract.ctaBottom, product.slug + " CTA should remain visible in the first viewport").toBeLessThan(heroContract.viewportHeight - 120);
+      expect(heroContract.visualBottom, product.slug + " visual should remain visible in the first viewport").toBeLessThan(heroContract.viewportHeight - 42);
+      expect(heroContract.titleWidth, product.slug + " title should keep a readable measure").toBeGreaterThan(260);
+      expect(heroContract.minTarget, product.slug + " interactive target").toBeGreaterThanOrEqual(44);
     });
   }
+});
+
+test("every case hero has its own authored spatial profile", async ({ page, isMobile }) => {
+  test.skip(isMobile, "The profile is source-defined and only needs one route sweep.");
+  test.setTimeout(180000);
+  const profiles = new Map();
+  for (const product of caseProducts) {
+    await page.goto("/" + product.casePage, { waitUntil: "domcontentloaded" });
+    const profile = await page.locator(".lp-hero").getAttribute("data-hero-profile");
+    expect(profile, product.slug + " hero profile").toBeTruthy();
+    expect(profiles.has(profile), product.slug + " must not reuse " + profile).toBe(false);
+    profiles.set(profile, product.slug);
+  }
+  expect(profiles.size).toBe(caseProducts.length);
 });
 
 test("new cases switch RU / EN / UZ without losing chapter or route", async ({ page, isMobile }) => {

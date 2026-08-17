@@ -13,7 +13,7 @@ The production contract is enforced by `scripts/validate-site.js`:
 - exact `768 × 256`, `1152 × 384` and `1536 × 512` outputs (`3:1`);
 - byte budgets of 60, 100 and 150 KB respectively;
 - every registry path must resolve;
-- the full set currently contains 24 covers.
+- the full set currently contains 25 covers.
 
 ## Art direction
 
@@ -63,6 +63,7 @@ vector illustration.
 | `vacation-control.webp` | Vacation Control Agent | A policy-controlled shutter with exactly one approved open slot |
 | `b24-sales-analyst.webp` | B24 Sales Analyst | A deterministic measurement carriage aligned to one physical notch |
 | `chat-app.webp` | ChAT | Two self-contained local peers joined by one reliable short bridge |
+| `birthday-agent.webp` | Birthday Agent | A precision date cam that releases exactly one brass event pin |
 
 ## Generation and post-processing
 

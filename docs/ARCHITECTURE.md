@@ -41,15 +41,14 @@ flowchart TD
 | product id, slug, rank, lifecycle, confidentiality, presentation, live/GitHub/case route, image, accent, evidence boundary | `src/content/product-registry.js` | карточки, metadata, sitemap, route expectations |
 | тексты 12 сцен и 25 карточек на главной | `src/content/content.js` | runtime `window.CONTENT` |
 | React-компоненты | `src/components/*.jsx` | соседние `*.js`, создаваемые `build.js` |
-| основной набор case content | `src/projects/landings-data.js` | baked body и runtime re-render |
-| три добавленных audited case definition | `src/projects/landings-new.js` | merge внутри `landings-data.js` |
+| полный набор 16 case definitions | `src/projects/landings-data.js` | baked body и runtime re-render |
 | единая HTML-разметка кейса и locale UI labels | `src/projects/render.js` | 48 `projects/**/index.html` и browser re-render |
 | case runtime: язык, chapter spy, reveal, image fallback | `src/projects/landing.js` | поведение уже сгенерированной страницы |
-| дизайн и responsive layout | `src/styles/*.css`, `src/projects/landing.css` | computed layout в браузере |
-| CSP, JSX compilation, case generation, sitemap | `build.js` | `index.html` CSP, compiled JS, case HTML, `sitemap.xml` |
+| дизайн и responsive layout | authored `src/styles/*.css` (кроме generated bundle), `src/projects/landing.css` | `src/styles/app.bundle.min.css`, computed layout в браузере |
+| CSP, JSX/CSS compilation, case generation, sitemap | `build.js` | `index.html` CSP, compiled JS/CSS, case HTML, `sitemap.xml` |
 | структурные инварианты | `scripts/validate-site.js` | успешная или остановленная сборка |
 
-Generated `.js` и `projects/**/index.html` не являются местом ручного редактирования. Если нужно изменить кейс, меняются data/renderer/CSS и повторно запускается сборка.
+Generated `.js`, `src/styles/app.bundle.min.css` и `projects/**/index.html` не являются местом ручного редактирования. Если нужно изменить сцену или кейс, меняются JSX/data/renderer/authored CSS и повторно запускается сборка.
 
 ## 3. Canonical product model
 
@@ -96,11 +95,18 @@ Primary CTA идёт на `liveUrl`. GitHub показывается втори�
 
 Порядок загрузки задаёт `index.html`:
 
-1. `head-boot.js` выполняется parser-blocking в `<head>` и создаёт frame-zero intro до первого Hero paint.
-2. CSS и core scripts preloaded с тем же asset version query.
-3. В `<body>` `app-watchdog.js` ставит pre-React recovery watchdog на 5500 ms.
-4. `intro.js` обогащает frame-zero shell и ждёт readiness `shell + fonts + hero`.
-5. `bootstrap.js` последовательно исполняет preloaded dependency graph и делает три cooperative yield boundary.
+1. `head-boot.js` выполняется parser-blocking в `<head>` и создаёт frame-zero
+   Intro до первого содержательного paint.
+2. CSS, Hero media и core scripts preloaded с тем же asset version query.
+3. В `<body>` до React root находится единственный статичный
+   `#sm-hero-media`: responsive `<picture>` с `fetchpriority="high"`. Он уже
+   является доступным LCP/fallback-слоем; React добавляет поверх него только
+   смысловую разметку и motion-overlay, не дублируя изображение.
+4. `app-watchdog.js` ставит pre-React recovery watchdog на 5500 ms.
+5. `intro.js` обогащает frame-zero shell и ждёт readiness
+   `shell + fonts + hero`.
+6. `bootstrap.js` последовательно исполняет preloaded dependency graph и
+   делает три cooperative yield boundary.
 
 Deep link с hash пропускает intro, чтобы прямой переход к сцене или `#proj-<slug>` не отправлял читателя сначала в начало. Head safety fallback срабатывает независимо от `requestAnimationFrame`: если shell есть, intro снимается; если shell не появился, показывается recovery surface.
 
@@ -122,18 +128,27 @@ Deep link с hash пропускает intro, чтобы прямой перех
 
 `hero → signal → about → projects → builder → skills → services → cv → process → faq → trust → contact`
 
-Hero/Signal используют нативный `position: sticky`. Services/CV и Trust/Contact находятся в `data-pin` host и получают progress из общего motion runtime. `useScrollEngine` публикует активную сцену для меню, counter, dock, acts и history; отдельные UI-поверхности не вычисляют собственную конкурирующую главу.
+Hero/Signal используют нативный `position: sticky`. Фоновый Proof Chamber
+принадлежит статичному `#sm-hero-media`, а React Hero — единственный владелец
+контентных overlay и интерактивных состояний. Services/CV и Trust/Contact
+находятся в `data-pin` host и получают progress из общего motion runtime.
+`useScrollEngine` публикует активную сцену для меню, counter, dock, acts и
+history; отдельные UI-поверхности не вычисляют собственную конкурирующую главу.
 
 ## 5. Build architecture
 
 `npm run build` вызывает `node build.js`. Pipeline выполняется fail-fast:
 
 1. source validation без требования generated files;
-2. AOT JSX → JS для четырёх entry-файлов через vendored `vendor/babel.min.js` и React preset;
-3. пересчёт CSP главной по точным hash всех inline data blocks;
-4. генерация 16 кейсов по 3 локали — 48 HTML-файлов;
-5. генерация sitemap: главная + 48 case locale URLs = 49 URL;
-6. повторная validation уже с generated files и проверкой source/generated parity.
+2. AOT JSX → compact JS для четырёх entry-файлов через vendored
+   `vendor/babel.min.js` и React preset;
+3. детерминированная сборка authored CSS через pinned `lightningcss` в
+   `src/styles/app.bundle.min.css`;
+4. пересчёт CSP главной по точным hash всех inline data blocks;
+5. генерация 16 кейсов по 3 локали — 48 HTML-файлов;
+6. генерация sitemap: главная + 48 case locale URLs = 49 URL;
+7. повторная validation уже с generated files и проверкой source/generated
+   parity.
 
 Запись выполняется только при изменении байтов. Для кратковременных Windows file locks предусмотрены ограниченные синхронные повторы; это не скрывает постоянную ошибку записи.
 

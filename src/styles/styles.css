@@ -71,11 +71,10 @@
      what gets reached for by default, while a narrow caps face has an author's
      voice from the first screen. Oswald rather than Bebas Neue because Bebas
      ships no Cyrillic at all — a Russian-first site would silently fall back
-     and lose the whole point. Inter stays as the fallback and carries every
-     word of running text, so
-     readability is untouched. */
-  --f-display: "Oswald", "Inter", -apple-system, system-ui, sans-serif;
-  --f-body: "Inter", -apple-system, system-ui, sans-serif;
+     and lose the whole point. A platform-native UI face carries running copy:
+     it is neutral, highly hinted and available before the first paint. */
+  --f-display: "Oswald", "Arial Narrow", sans-serif;
+  --f-body: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --f-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
   --f-serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
 
@@ -1141,14 +1140,14 @@ html.is-flying body::after { opacity: 1; }
 
 /* ── 1. Display voice ─────────────────────────────────────────────────────
    Oswald is a NARROW face: it wants uppercase, tight tracking and size. Used
-   only where strings are short — headings, names, numbers, nav. Every word of
-   running text stays in Inter, so nothing about readability changes. */
+   only where strings are short — headings, names, numbers, nav. Running text
+   stays in the platform UI face, so long-form readability remains neutral. */
 /* --f-head, NOT --f-display: the tweak panel writes --f-display INLINE on
    <html> (applyFontStack in themes.js), and an inline custom property beats
    every stylesheet rule — the display voice would silently revert to Geist.
    The heading face is identity, not a user preference, so it gets its own
    token that nothing overwrites. */
-:root { --f-head: "Oswald", "Inter", -apple-system, system-ui, sans-serif; }
+:root { --f-head: "Oswald", "Arial Narrow", sans-serif; }
 h1, h2, h3,
 .sec-head h2,
 .hero-line,

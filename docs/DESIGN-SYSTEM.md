@@ -10,6 +10,9 @@
 
 Этот документ фиксирует уже реализованную визуальную систему. Он не заменяет исходный код и не является доказательством прохождения ручной проверки или получения Awwwards-награды.
 
+Текущая режиссура V3 и её адаптивные/motion-контракты дополнительно описаны в
+`docs/ART-DIRECTION-V3.md`.
+
 ## 1. Источники истины
 
 | Область | Авторитетный источник |
@@ -18,11 +21,12 @@
 | компоненты главной | `src/components/*.jsx`; одноимённые `.js` — generated artifacts |
 | тексты главной и карточек RU/EN/UZ | `src/content/content.js` |
 | идентичность, порядок, маршруты и публичные границы 25 продуктов | `src/content/product-registry.js` |
-| содержимое 16 кейсов | `src/projects/landings-data.js` и `src/projects/landings-new.js` |
+| содержимое 16 кейсов | `src/projects/landings-data.js` |
 | разметка кейсов и общий UI-копирайт | `src/projects/render.js` |
 | базовые токены и shell | `src/styles/styles.css` |
-| композиции сцен и адаптивность главной | `src/styles/sections.css`, `src/styles/features.css`, `src/styles/cv-doc.css` |
+| композиции сцен и адаптивность главной | `src/styles/sections.css`, `src/styles/features.css`, `src/styles/cv-doc.css`, финальный V3 layer `src/styles/art-direction.css` |
 | визуальная система кейсов | `src/projects/landing.css` |
+| production CSS главной | generated `src/styles/app.bundle.min.css`; собирается `build.js` из authored sources в фиксированном порядке |
 | адаптивные и визуальные проверяемые контракты | `tests/responsive-matrix.spec.js`, `tests/stage5-sections.spec.js`, `tests/landings.spec.js`, `tests/visual-release.spec.js` |
 
 Если текст документа расходится с этими файлами, верен код. Числа `25 / 9 / 16 / 3` дополнительно закреплены в `scripts/validate-site.js` и проверяются до и после сборки.
@@ -49,7 +53,7 @@ Signature motif — Proof Rail. Это линия с тремя контроль
 
 | № | ID | Роль в истории | Motion-сигнатура / композиционный контракт |
 |---:|---|---|---|
-| 01 | `hero` | имя, роль, главный тезис | самостоятельная первая сцена; нативный sticky-переход в Signal |
+| 01 | `hero` | продуктовый тезис, авторство и ownership loop | proposition-led первая сцена с физическим Proof Instrument; на мобильном — самостоятельная композиция с видимым переходом в Signal |
 | 02 | `signal` | причины работать вместе | `emerge`; читатель сам управляет disclosure |
 | 03 | `about` | профиль и проверяемый контекст | `develop`; README-композиция и безопасный GitHub fallback |
 | 04 | `projects` | 25 продуктов | `rise`; desktop grid и mobile horizontal gallery |
@@ -93,12 +97,16 @@ CV и Trust — намеренные светлые `paper/protocol` исклю�
 
 ## 5. Типографика
 
-Шрифты self-hosted в `assets/fonts/`; внешнего font CDN нет. Для RU, EN и UZ поставляются отдельные Cyrillic, Latin и Latin Extended диапазоны.
+Три характерных семейства self-hosted в `assets/fonts/`; внешнего font CDN
+нет. Для RU, EN и UZ поставляются отдельные Cyrillic, Latin и Latin Extended
+диапазоны. Основной текст использует нативный system UI stack: это сокращает
+критический font/decode path и сохраняет привычную читаемость интерфейса на
+каждой платформе.
 
 | Роль | Семейство | Использование |
 |---|---|---|
 | Display | Oswald variable, `300–700` | имена, крупные заголовки, номерные сцены |
-| Body | Inter variable, `300–700` | тексты, формы, интерфейс |
+| Body | `-apple-system`, `BlinkMacSystemFont`, `Segoe UI`, `sans-serif` | тексты, формы, интерфейс без дополнительной web-font загрузки |
 | Mono | JetBrains Mono variable, `300–600` | статусы, telemetry, evidence, metadata |
 | Editorial | Cormorant Garamond, `500` normal/italic | редкий человеческий и документный акцент |
 

@@ -106,6 +106,11 @@
     // blocked or starts and then loses its final rAF/transition callback. This
     // independent wall-clock ceiling stays armed for the whole Intro; the
     // authored module may finish earlier, but must never cancel its backstop.
+    // E2E mode shortens only the independent backstop. Normal visitors keep
+    // the authored 3.8 s ceiling; deterministic failure-path tests reach the
+    // same release branch before optional application work can starve WebKit's
+    // timer queue on a contended host.
+    var safetyDelayMs = window.__SM_TEST_MODE ? 900 : 3800;
     window.__SM_INTRO.safety = setTimeout(function () {
       if (!panel.parentNode) return;
       var root = document.getElementById("root");
@@ -116,6 +121,6 @@
       panel.remove();
       window.__SM_INTRO.release(root && root.childElementCount ?
         "head-safety-shell" : "head-safety-empty");
-    }, 3800);
+    }, safetyDelayMs);
   } catch (e) { /* DOM/matchMedia unavailable: skip the intro safely. */ }
 })();
