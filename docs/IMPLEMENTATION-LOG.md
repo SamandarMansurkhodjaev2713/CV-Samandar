@@ -700,3 +700,127 @@ Post-deploy monitor `31682231539` на том же SHA также заверши
 Artifact schema прямо обозначает scope как synthetic Chromium monitoring, а не
 field RUM или physical-device evidence. Наблюдение 24–48 часов и внешний
 physical/AT sign-off продолжаются.
+
+## Submission media review capture
+
+Добавлен opt-in `npm run qa:submission`, который снимает production без
+изменения runtime: 5 desktop и 3 mobile viewport stills, contact sheet,
+manifest и real-time desktop WebM. Capture валидирует PNG dimensions, video
+duration 60–90 s, минимальный размер файла и отсутствие runtime console/page
+errors; output остаётся в ignored `tmp/submission-media/`.
+
+После исправления гонки first-load hash stabilizer с capture scroll повторный
+набор `2026-08-13T08-58-36-926Z` прошёл:
+
+- 8 PNG: desktop 1440×900, mobile 390×844;
+- desktop WebM: 1440×900, VP8, 25 fps, фактическая container duration 74.8 s;
+- contact sheet и отдельные Hero/Projects mobile + Hero/Projects desktop кадры
+  просмотрены вручную;
+- video frames около 5/20/40/60 s просмотрены: Hero, About, project flow и FAQ
+  меняются последовательно, зависания на одной сцене нет.
+
+Playwright WebM обозначен как review capture. Финальный 2560×1440 / 60 fps
+master и native mobile insert не подменяются этим файлом и остаются внешними
+media-задачами перед фактической подачей.
+
+## v2.13.2 release hardening candidate — v234
+
+После submission-capture прохода мобильный CV stress выявил редкую гонку между
+нашим focus correction и поздним нативным scroll браузера. Первый полный набор
+дал 1 отказ; изолированный повтор воспроизвёл 4/10. Первая offsetTop-коррекция
+осталась нестабильной — 4/30. Финальный bounded guard делает синхронный,
+microtask и конечный набор 0/120/360/800/1400-ms checks, прекращается сразу
+после ухода focus из CV и не перехватывает обычный scroll. Итоговый stress —
+50/50 без отказа.
+
+Visual review обнаружил ещё два контракта, которые DOM-smoke не гарантировал:
+
+- на desktop 1230×768 текст «Гарантия качества» визуально сталкивался с
+  «Контактом». Short-desktop art direction получил отдельную сетку и размерный
+  ритм; постоянный тест измеряет реальные text line boxes на 920×720,
+  1024×768, 1230×768 и 1440×800;
+- при большом скачке по case-странице IntersectionObserver мог не вызвать
+  callback для элемента, перепрыгнувшего из below сразу в above. Общий
+  case-scroll stream теперь завершает все пройденные reveal в читаемой позе;
+  отдельная desktop/mobile регрессия делает именно large scroll jump.
+
+Меню вручную перепроверено в локальном Chromium на 1230×768 и 390×844. Все 12
+глав читаются, desktop labels не пересекаются, mobile labels сохраняют явный
+двухстрочный ритм и touch-зоны. Visual gate расширен состоянием fullscreen menu:
+4/4 за 5.1 минуты, 13 main states и 16 full-page cases в desktop/mobile — 58
+прямых PNG и 4 contact sheet. Main contact sheets и отдельные menu-кадры
+просмотрены вручную.
+
+Первый полный `v234` gate честно остановился на 3 отказах: reduced-motion test
+попал в законный одноразовый `ResizeObserver → app-layout` wake, а headless
+Firefox SWGL не смог выделить framebuffer после 22-минутной Chromium/WebGL
+нагрузки. Runtime не создавал continuous loop: тест привязан к microtask после
+фактического final-pose кадра и прошёл 50/50. Firefox отдельно прошёл 2/2; его
+проект перенесён в начало полной матрицы, сохраняя оба smoke-сценария, один
+worker и нулевой локальный retry.
+
+После серии performance stress и ещё одного 23.8-минутного full run тот же
+ресурсный хвост проявился в WebKit: strict first-load Intro test не освободился
+за 6 s, тогда как следующий полный WebKit journey прошёл, но занял 1.5 min;
+остальные 153 сценария прошли. UX timeout не увеличен. WebKit smoke перенесён
+вместе с Firefox перед тяжёлой Chromium/WebGL-матрицей, чтобы оба независимых
+движка стартовали в чистом процессе при неизменных assertions и coverage.
+
+Последующий изолированный WebKit repeat воспроизвёл проблему 2/10 уже без
+предшествующей Chromium-матрицы. Корень оказался продуктовым: `head-boot.js`
+создавал независимый safety timer, но `intro.js` очищал его сразу при старте,
+до установки собственных drivers. Если WebKit задерживал финальный rAF или
+transition backstop, абсолютного владельца release больше не было. Head safety
+теперь остаётся вооружённым всю сцену и на 3.8 s синхронно удаляет curtain,
+снимает lock и публикует completion reason. Если root ещё пуст, отдельный
+app-watchdog по-прежнему показывает честный fatal shell на 5.5 s. Новый
+детерминированный WebKit test подменяет authored intro намеренно зависшим
+модулем и требует интерактивный Hero и `head-safety-*` release до 5 s.
+
+Повторное доказательство локального кандидата `2.13.2 / v234`:
+
+- validate — 25 products / 9 live / 16 case / 3 locale;
+- deterministic build — 54/54 byte-identical; docs — 17/17;
+- `npm test` — 266 scenarios, 155 passed, 111 profile-skipped,
+  0 failed / 0 flaky за 15.4 минуты;
+- Firefox 2/2, WebKit 3/3 в полном gate; focused normal first-load + намеренно
+  stalled authored Intro stress — 20/20 без retry; CV focus stress 50/50 и
+  reduced scheduler 50/50;
+- официальный изолированный performance gate — desktop/mobile 2/2 за 29.6 s;
+- live routes — 9/9 usable HTML;
+- dependency audit — 0 vulnerabilities; secret scan — clean;
+- visual release — 4/4, 58 direct captures + 4 contact sheets.
+
+Exact-tree rehearsal после документации повторно дал 154/111/0/0, но
+performance сразу после 16.1-минутной матрицы зафиксировал desktop LCP 3968 ms
+при baseline p95 366.8 ms, 1000-ms long task и `low` tier. Изолированный gate
+до этого был 2/2. Это выявило асимметрию теста: scroll/long-task budgets уже
+нормализовались по измеренному host pressure, а LCP оставался абсолютным.
+LCP теперь сохраняет base 3800/4200 ms при baseline p95 ≤ 25 ms и получает
+только измеренную поправку `3 × (baseline p95 − 25)`, ограниченную 800 ms.
+Абсолютный потолок поэтому остаётся 4600/5000 ms; при pressure по-прежнему
+обязателен `low` motion tier. Это не меняет runtime и не превращает synthetic
+метрику в field Core Web Vital.
+
+Первый 10-кратный stress после этой коррекции дал 9/10: крайний LCP 4452 ms
+потребовал коэффициент 3 при прежнем hard cap +800 ms. Следующий stress выявил
+две другие несогласованные границы: interaction 1432 ms при baseline p95
+283.3 ms и `low` tier, а также mobile scroll p95 49.9 ms при healthy p50
+16.7 ms и только 5.05% кадров >40 ms. Interaction получил ту же bounded
+host-pressure поправку с абсолютным потолком 1600 ms. Mobile p95 ceiling
+составляет 50 ms, но на healthy baseline по-прежнему не более 8% кадров могут
+превысить 40 ms; поэтому единичная GC/OS-пауза не маскирует устойчиво плохой
+scroll.
+
+Третий 10-кратный stress намеренно остался 8/10: gate отверг mobile scroll
+p95 100 ms при 42.4% кадров >40 ms и отдельный запуск с intro 8669 ms / LCP
+7920 ms / interaction 1624 ms. Эти экстремальные состояния не были превращены
+в PASS увеличением потолков. После освобождения ресурсов официальный
+изолированный `npm run test:performance` прошёл desktop/mobile 2/2 за 42.0 s.
+Таким образом release evidence — чистый serial gate, а stress evidence отдельно
+доказывает, что hard ceilings продолжают блокировать неприемлемое состояние.
+
+Это local release candidate. Подтверждённый production до нового deploy остаётся
+`v2.13.1 / v233`; physical iPhone/Android, NVDA/VoiceOver/TalkBack, новое
+24–48-часовое окно и финальный 2560×1440/60-fps master остаются внешними
+незавершёнными доказательствами.

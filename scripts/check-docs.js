@@ -41,6 +41,7 @@ const CURRENT_CATALOG_DOCS = [
   "docs/MOTION-PERFORMANCE.md",
   "docs/PRODUCTION-MONITORING.md",
   "docs/QA-MATRIX.md",
+  "docs/adr/0003-canonical-product-registry.md",
 ];
 const CATALOG = {
   products: productRegistry.length,

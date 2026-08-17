@@ -4,11 +4,16 @@
 
 ## [Unreleased]
 
+## [2.13.2] - 2026-08-17
+
 ### Added
 
 - Воспроизводимый physical mobile/assistive-technology protocol с отдельными
   iPhone, Android, NVDA, VoiceOver и TalkBack сценариями, evidence header,
   severity model и честным исходным статусом `NOT RUN`.
+- Opt-in `npm run qa:submission`: восемь exact-size production stills,
+  60–90-секундный desktop review-video, manifest и contact sheet с проверкой
+  размеров, длительности, веса и runtime errors.
 
 ### Changed
 
@@ -20,6 +25,34 @@
   25 продуктов, 9 live, 16 case, 48 локализованных case pages.
 - Documentation gate теперь выводит каталог из реестра и отклоняет возврат
   устаревших текущих claims 24/15/45.
+- Firefox и WebKit smoke выполняются до тяжёлой Chromium/WebGL-матрицы. Состав
+  тестов и строгие таймауты не уменьшены: кроссдвижковые профили больше не
+  наследуют графическое давление от предшествующих сцен на Windows.
+
+### Fixed
+
+- Мобильный CV удерживает клавиатурный фокус между верхней навигацией и
+  фиксированным dock даже при позднем нативном focus-scroll, смене breakpoint
+  и входной анимации панели. Исправление ограничено коротким конечным guard и
+  не перехватывает обычный скролл.
+- Короткое desktop-меню сохраняет все 12 названий в одну строку без наложения
+  «Гарантии качества» на «Контакт»; mobile-композиция оставляет все главы
+  видимыми и доступными без уменьшения touch target.
+- Case reveal получает финальную читаемую позу даже после большого скачка
+  скролла, когда IntersectionObserver не сообщает переход через viewport.
+- Reduced-motion scheduler test синхронизирован с фактическим завершением
+  собственного final-pose кадра и больше не принимает законный внешний
+  `ResizeObserver` wake за непрерывный animation loop.
+- Frame-zero Intro watchdog больше не отключается в начале authored timeline:
+  независимый 3.8-second ceiling синхронно снимает curtain и scroll lock, если
+  WebKit потерял финальный rAF/transition; app-watchdog отдельно владеет
+  recovery, когда React действительно не смонтирован к 5.5 секундам.
+- LCP gate сохраняет исходный лимит на здоровом runner и допускает только
+  измеренную, ограниченную сверху host-contention поправку, если idle RAF уже
+  деградировал; абсолютный потолок и обязательный `low` motion tier остаются.
+- Interaction timing использует ту же bounded host-pressure модель, а healthy
+  mobile scroll допускает p95 до 50 ms только вместе с прежним строгим лимитом
+  не более 8% кадров медленнее 40 ms.
 
 ### Quality
 
@@ -32,6 +65,14 @@
 - Documentation hardening повторно прошло полный gate: 261 scenario,
   151 passed / 110 profile-skipped / 0 failed / 0 flaky; performance 2/2;
   deterministic build 54/54; validate 25/9/16/3; audit 0 и secret scan clean.
+- Локальный кандидат `v2.13.2 / v234`: 266 scenarios, 155 passed / 111
+  profile-skipped / 0 failed / 0 flaky за 15.4 минуты; CV focus 50/50 и
+  reduced-motion scheduler 50/50 в отдельных стресс-прогонах; Firefox 2/2,
+  WebKit 3/3 в полном gate и 20/20 в focused Intro stress; изолированный
+  performance gate 2/2 за 29.6 секунды; live routes 9/9.
+- Visual QA — 4/4: 13 состояний главной и 16 full-page case в desktop/mobile,
+  всего 58 прямых кадров и 4 contact sheet. Desktop/mobile menu и все сцены
+  главной просмотрены вручную; physical-device/AT proof этим не подменяется.
 
 ## [2.13.1] - 2026-08-13
 

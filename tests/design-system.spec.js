@@ -180,6 +180,66 @@ test("navigation never clips focusable links at intermediate desktop widths", as
   }
 });
 
+test("short desktop menu keeps all twelve localized chapters separated", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "desktop visual geometry contract");
+  await settleMain(page, "#hero");
+  for (const viewport of [
+    { width: 920, height: 720 },
+    { width: 1024, height: 768 },
+    { width: 1230, height: 768 },
+    { width: 1440, height: 800 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const menu = page.locator(".nav-menu");
+    if (!await menu.evaluate((node) => node.classList.contains("is-open"))) {
+      await page.locator(".nav-burger").click();
+    }
+    await expect(menu).toHaveClass(/is-open/);
+    await page.waitForTimeout(900);
+    const geometry = await page.locator(".nav-menu-links a").evaluateAll((links) => {
+      const rects = links.map((link) => {
+        const rect = link.getBoundingClientRect();
+        const word = link.querySelector(".nav-menu-word");
+        const range = document.createRange();
+        if (word) range.selectNodeContents(word);
+        const lines = word
+          ? Array.from(range.getClientRects()).filter((line) => line.width > 1 && line.height > 1).map((line) => ({
+              top: line.top,
+              bottom: line.bottom,
+              left: line.left,
+              right: line.right,
+            }))
+          : [];
+        return {
+          top: rect.top,
+          bottom: rect.bottom,
+          left: rect.left,
+          right: rect.right,
+          lines,
+          wordWraps: lines.length !== 1,
+        };
+      });
+      const lineBoxes = rects.flatMap((rect) => rect.lines);
+      const labelsSeparate = lineBoxes.every((line, index) => lineBoxes.every((other, otherIndex) => {
+        if (index === otherIndex) return true;
+        return line.right <= other.left || other.right <= line.left || line.bottom <= other.top || other.bottom <= line.top;
+      }));
+      return {
+        count: rects.length,
+        inside: rects.every((rect) => rect.top >= 0 && rect.bottom <= innerHeight && rect.left >= 0 && rect.right <= innerWidth),
+        separate: labelsSeparate,
+        singleLine: rects.every((rect) => !rect.wordWraps),
+      };
+    });
+    expect(geometry.count, JSON.stringify(viewport)).toBe(12);
+    expect(geometry.inside, `menu clipping at ${viewport.width}x${viewport.height}: ${JSON.stringify(geometry)}`).toBe(true);
+    expect(geometry.separate, `menu overlap at ${viewport.width}x${viewport.height}: ${JSON.stringify(geometry)}`).toBe(true);
+    expect(geometry.singleLine, `menu label wrap at ${viewport.width}x${viewport.height}: ${JSON.stringify(geometry)}`).toBe(true);
+    await page.locator(".nav-menu-close").click();
+    await expect(menu).not.toHaveClass(/is-open/);
+  }
+});
+
 test("mobile command dock reports the exact chapter with a truthful twelve-part rail", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile-chromium", "mobile shell contract");
   await settleMain(page, "#process");

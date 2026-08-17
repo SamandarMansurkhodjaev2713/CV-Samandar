@@ -1,6 +1,6 @@
 # Awwwards submission package
 
-Актуально для: `v2.13.1`, asset graph `v233`, 2026-08-13
+Актуально для локального кандидата: `v2.13.2`, asset graph `v234`, 2026-08-17
 
 Production: <https://samandarmansurkhodjaev2713.github.io/CV-Samandar/>
 
@@ -167,9 +167,11 @@ mobile performance. Он используется только как допол
 | Локализация | RU / EN / UZ; 48 generated case HTML |
 | Главная | 12 смысловых сцен |
 | Обложки | 25 предметных WebP-наборов 1536/1152/768, 3:1 |
-| Release | `v2.13.1`, code SHA `374d4c80`, tagged release SHA `07cb769` |
+| Local candidate | `v2.13.2 / v234`; commit/deploy evidence появится только после release gate |
+| Current production | `v2.13.1`, code SHA `374d4c80`, tagged release SHA `07cb769` |
 | Build | 54 generated artifacts, byte-identical double build |
-| Automated suite | 261 scenarios; 151 pass, 110 profile skips, 0 fail/flaky |
+| Automated suite | 266 scenarios; 155 pass, 111 profile skips, 0 fail/flaky |
+| Visual release review | 13 main states + 16 cases в desktop/mobile; 58 PNG + 4 contact sheets |
 | Production routes | main + 48 case URL + 9 live routes проверены |
 
 Последний monitor на опубликованном tagged release SHA `07cb769` — workflow
@@ -190,6 +192,11 @@ physical-device Core Web Vitals. В обоих профилях адаптивн
 Файлы готовятся в отдельный submission-export и не становятся runtime assets
 сайта.
 
+Воспроизводимый review-набор снимается с production командой
+`npm run qa:submission`. Она создаёт в `tmp/submission-media/<timestamp>/`
+восемь exact-size PNG, contact sheet, manifest и 60–90-секундный desktop WebM.
+Скрипт валидирует размеры, длительность, минимальный вес и runtime errors.
+
 | ID | Формат | Содержание | Обязательное условие |
 |---|---|---|---|
 | `cover-desktop` | 1440×900 PNG/WebP | Hero после завершения Intro | имя, CTA, instrument и proof rail в кадре |
@@ -200,12 +207,18 @@ physical-device Core Web Vitals. В обоих профилях адаптивн
 | `hero-mobile` | 390×844 PNG/WebP | mobile Hero | CTA и proof rail внутри первой сцены |
 | `projects-mobile` | 390×844 PNG/WebP | горизонтальная gallery | виден next-card peek и pager |
 | `case-mobile` | 390×844 PNG/WebP | один локализованный case | menu/CTA не закрывают текст |
-| `site-tour` | 2560×1440, 60 fps | честный 75–90 s walkthrough | без speed ramp, fake cursor и скрытия ожидания |
+| `site-tour-review` | 1440×900, 25 fps WebM | автоматизированный честный 60–90 s walkthrough | review/evidence, не финальный submission master |
+| `site-tour-master` | 2560×1440, 60 fps | финальный 75–90 s walkthrough | без speed ramp, fake cursor и скрытия ожидания |
 | `mobile-insert` | native device capture | touch/menu/gallery/case return | только после physical-device run |
 
 Нельзя подменять `mobile-insert` viewport-эмуляцией. До появления реального
 устройства desktop video может быть готов, но media package остаётся
 незавершённым.
+
+Последний локальный review-набор фактически создан 2026-08-13 на production и
+прошёл ручной просмотр contact sheet и кадров видео на 5/20/40/60 секунде:
+8 PNG, WebM 1440×900 / 25 fps / 74.8 s. Это доказательство capture-пути, а не
+замена `site-tour-master` и native mobile insert.
 
 ## 8. Video shot list — 82 секунды
 
@@ -245,17 +258,21 @@ case и exact-card return, portrait→landscape. Пальцы/касания н�
 
 - [x] 25 / 9 / 16 product contract подтверждён canonical registry.
 - [x] 48 case routes и RU / EN / UZ parity подтверждены build/validation.
-- [x] Deterministic build, audit, secret scan, browser, axe, performance и
-  production smoke зелёные для `v2.13.1`.
+- [x] `v2.13.2 / v234` local candidate: deterministic build, audit, secret
+  scan, browser, axe, performance, live-route и visual gates зелёные.
+- [ ] `v2.13.2` опубликован и прошёл независимый production smoke; текущий
+  подтверждённый production остаётся `v2.13.1 / v233`.
 - [x] Credits и public claims прошли truth-boundary review.
 - [x] Rollback tag и release runbook существуют.
+- [x] Automated submission review set: 8 stills + 74.8 s desktop WebM;
+  contact sheet и выборка video frames просмотрены.
 - [ ] Наблюдение production не менее 24 часов после final deploy завершено без
   P0/P1.
 - [ ] Physical iPhone/Android пройдены по
   [physical/AT protocol](PHYSICAL-AT-QA-PROTOCOL.md).
 - [ ] NVDA, VoiceOver и TalkBack имеют фактический signed evidence.
-- [ ] Dedicated screenshots, desktop video и native mobile insert просмотрены
-  владельцем продукта.
+- [ ] Финальный 2560×1440 / 60 fps master и native mobile insert записаны и
+  просмотрены владельцем продукта.
 - [ ] Фактическая форма Awwwards повторно проверена перед оплатой/отправкой.
 
 ## 11. Truth boundary

@@ -1946,6 +1946,30 @@ section.sec-in .sec-head .sec-meta { animation: adMetaIn .75s var(--ad-ease) .18
    recomposed around the available height; nothing is hidden or scaled as one
    blurry canvas. */
 @media (min-width: 901px) and (max-height: 800px) {
+  /* Twelve editorial chapters must remain twelve distinct hit areas in short
+     desktop/split-screen windows. The default display scale let the longest
+     localized label wrap into the following fractional row at 1230x768.
+     Preserve the two-column art direction, but give the index a compact,
+     single-line typographic rhythm and reclaim space from the outer gutters. */
+  .nav-menu .nav-menu-inner {
+    grid-template-columns: minmax(430px, .98fr) minmax(340px, 1.02fr);
+    gap: clamp(30px, 4vw, 58px);
+    padding: 72px clamp(30px, 5vw, 72px) 58px;
+  }
+
+  .nav-menu-links a {
+    min-height: 34px;
+    grid-template-columns: 34px minmax(0, 1fr) 24px;
+  }
+
+  .nav-menu-word {
+    font-size: clamp(24px, 2.45vw, 34px);
+    line-height: .94;
+    white-space: nowrap;
+  }
+
+  .nav-menu-foot { padding-top: 14px; }
+
   .hero {
     height: 100vh;
     height: 100svh;

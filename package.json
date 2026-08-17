@@ -1,6 +1,6 @@
 {
   "name": "samandar-executive-ai-code-lab",
-  "version": "2.13.1",
+  "version": "2.13.2",
   "private": true,
   "description": "Static trilingual portfolio with generated product case pages.",
   "scripts": {
@@ -20,6 +20,7 @@
     "test:production": "node scripts/run-production-smoke.js",
     "monitor:production": "node scripts/monitor-production.js",
     "qa:visual": "node scripts/run-visual-qa.js",
+    "qa:submission": "node scripts/capture-submission-media.js",
     "test:update-snapshots": "playwright test --update-snapshots"
   },
   "devDependencies": {
