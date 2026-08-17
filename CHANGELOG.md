@@ -31,6 +31,10 @@
 
 ### Fixed
 
+- Репозиторий фиксирует LF для runtime/generated text artifacts через
+  `.gitattributes`: Windows `core.autocrlf` больше не может изменить точные
+  байты inline JSON-LD после checkout и рассинхронизировать CSP hash до
+  следующей сборки.
 - Мобильный CV удерживает клавиатурный фокус между верхней навигацией и
   фиксированным dock даже при позднем нативном focus-scroll, смене breakpoint
   и входной анимации панели. Исправление ограничено коротким конечным guard и
@@ -56,6 +60,14 @@
 
 ### Quality
 
+- `v2.13.2 / v234` опубликован из merge SHA `8958aa5`; Pages workflow
+  `32013952249` завершил build, deploy и verify-production. Независимый
+  post-deploy smoke прошёл 3/3, production HTML содержит 30 refs `v234` и 0
+  refs `v233`, внешние live-маршруты — 9/9.
+- Первый независимый production monitor `v234` не обнаружил first-party
+  failures или budget violations: desktop LCP 1388 ms / CLS 0.0049, mobile
+  LCP 1604 ms / CLS 0.0025. Desktop frame p95 116.7 ms зафиксирован как
+  runner-pressure/следующий optimization target, а не скрыт под общим PASS.
 - Финальный production monitor `31678896168` на docs/release SHA `07cb769`
   завершился без first-party failures и budget violations; эти synthetic
   показатели отделены от ещё не выполненного physical/AT sign-off.

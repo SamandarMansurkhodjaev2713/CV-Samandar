@@ -38,16 +38,16 @@
 | Build determinism | **GREEN** | local candidate `v234` `npm run check:build` → 54 generated artifacts byte-identical в двух последовательных сборках (2026-08-14) |
 | Dependency/secret gates | **GREEN** | local candidate: `npm audit --audit-level=high` → 0 vulnerabilities; `npm run scan:secrets` → no credential signatures (2026-08-14) |
 | External live routes | **GREEN** | local candidate `npm run check:live` → 9/9 live-маршрутов вернули usable HTML (2026-08-14) |
-| Deployed production smoke | **GREEN** | code SHA `374d4c80`, GitHub Actions `31677200638`: build/deploy/verify-production success; независимый `npm run test:production` → 3/3; production HTML HTTP 200, 30 refs `v233`, 0 refs `v232`; 48 case routes и exact-card return подтверждены (2026-08-13) |
-| Scheduled synthetic production monitor | **GREEN** | manual run `31677968144` на `374d4c80`: functional smoke, 9/9 live routes и desktop/mobile vitals success; JSON artifact → 0 failures / 0 violations (2026-08-13) |
+| Deployed production smoke | **GREEN** | merge SHA `8958aa5`, GitHub Actions `32013952249`: build/deploy/verify-production success; независимый `npm run test:production` → 3/3; production HTML HTTP 200, 30 refs `v234`, 0 refs `v233`; 48 case routes и exact-card return подтверждены (2026-08-17) |
+| Post-deploy synthetic production monitor | **GREEN** | независимый local runner на опубликованном `v234`: desktop LCP 1388 ms / CLS 0.0049 / frame p95 116.7 ms; mobile LCP 1604 ms / CLS 0.0025 / frame p95 33.4 ms; 0 first-party failures / 0 budget violations. Это synthetic evidence, не field RUM; новое 24–48h окно ещё продолжается (2026-08-17) |
 | Visual capture + human review | **GREEN** | local candidate `v234` `VISUAL_QA=1` → 4/4 за 5.1 min: 13 main states (12 scenes + fullscreen menu) + 16 full-page cases на desktop/mobile, 58 direct PNG + 4 contact sheets; main/contact sheets и menu desktop/mobile просмотрены вручную (2026-08-14) |
 | Manual local browser review | **GREEN (local candidate only)** | Chromium 1230×768 и 390×844: fullscreen menu, 12 глав, светлые сцены и touch-композиция просмотрены вручную; это не production/physical-device proof (2026-08-14) |
-| Manual production browser journey | **GREEN (v2.13.0 only)** | опубликованный `v232` ранее проверен вручную в Chromium; для `v2.13.1` отдельный in-app browser runtime не подключился, поэтому manual PASS не заявляется. Production Chromium smoke 3/3 и synthetic desktop/mobile monitor вынесены в отдельные строки |
+| Manual production browser journey | **GREEN (v2.13.0 only)** | опубликованный `v232` ранее проверен вручную в Chromium; для `v2.13.2` отдельный physical/manual PASS не заявляется. Production Chromium smoke 3/3 и synthetic desktop/mobile monitor вынесены в отдельные строки |
 | NVDA / VoiceOver / physical devices | **NOT RUN** | локальная headless-среда не может честно подтвердить эти проверки |
 
-Production `v2.13.1 / v233` опубликован из code SHA `374d4c80` и прошёл все
+Production `v2.13.2 / v234` опубликован из merge SHA `8958aa5` и прошёл все
 локальные automated gates, GitHub Pages deploy/verify-production, независимый
-smoke и synthetic monitor. `v2.13.0 / v232` из SHA `4d3c423` остаётся зелёным
+smoke и первый synthetic monitor. `v2.13.1 / v233` остаётся ближайшим зелёным
 rollback baseline. Physical device и
 assistive-technology проверки остаются отдельным внешним доказательством и не
 объявляются выполненными.

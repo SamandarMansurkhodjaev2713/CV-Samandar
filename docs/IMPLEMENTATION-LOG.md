@@ -820,7 +820,33 @@ p95 100 ms при 42.4% кадров >40 ms и отдельный запуск �
 Таким образом release evidence — чистый serial gate, а stress evidence отдельно
 доказывает, что hard ceilings продолжают блокировать неприемлемое состояние.
 
-Это local release candidate. Подтверждённый production до нового deploy остаётся
-`v2.13.1 / v233`; physical iPhone/Android, NVDA/VoiceOver/TalkBack, новое
-24–48-часовое окно и финальный 2560×1440/60-fps master остаются внешними
-незавершёнными доказательствами.
+## v2.13.2 production release — v234
+
+PR `#2` прошёл независимый GitHub quality workflow `32013231366` и был слит в
+`main` merge SHA `8958aa5`. Pages workflow `32013952249` повторно выполнил
+build/quality/performance gate, опубликовал static artifact и завершил
+verify-production без отказов.
+
+Независимое post-deploy доказательство с локальной машины:
+
+- `npm run test:production` — 3/3: main + 25-card catalog, 48 RU/EN/UZ case
+  routes и точный возврат к исходной карточке без повторного Intro;
+- production HTML — 30 refs `v234`, 0 refs `v233`;
+- `npm run check:live` — 9/9 usable live routes;
+- `npm run monitor:production` — 0 first-party failures / 0 violations;
+  desktop main ready 3605 ms, LCP 1388 ms, CLS 0.0049, frame p95 116.7 ms,
+  long-task max 151 ms; mobile main ready 3472 ms, LCP 1604 ms, CLS 0.0025,
+  frame p95 33.4 ms, long-task max 88 ms.
+
+После переключения feature-ветки на `main` Windows `core.autocrlf=true`
+восстановил `index.html` с CRLF. Git content оставался логически чистым, но
+exact-byte CSP validator корректно отклонил inline JSON-LD hash. Штатная сборка
+вернула LF и снова прошла validate; корень устранён новым `.gitattributes`,
+который фиксирует LF для runtime/generated text artifacts во всех средах.
+
+Desktop frame p95 отражает конкретный synthetic runner и выбранный runtime
+`low`, поэтому не объявляется доказательством 60 FPS. Он сохранён как явный
+optimization target для следующей художественной итерации Hero/Projects.
+Новое 24–48-часовое production-наблюдение начато 2026-08-17. Physical
+iPhone/Android, NVDA/VoiceOver/TalkBack и финальный 2560×1440/60-fps master
+остаются внешними незавершёнными доказательствами.

@@ -1,0 +1,25 @@
+* text=auto
+.gitattributes text eol=lf
+
+# Runtime and generated artifacts participate in byte-exact CSP and
+# deterministic-build contracts. Keep their checkout bytes identical on
+# Windows, macOS and Linux even when a developer enables core.autocrlf.
+*.html text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+*.css text eol=lf
+*.xml text eol=lf
+*.svg text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+*.webp binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.pdf binary
+*.woff2 binary
+*.mp4 binary
+*.webm binary

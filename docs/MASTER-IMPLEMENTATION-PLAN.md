@@ -44,8 +44,8 @@
 | 5–8. Главная, изображения, кейсы и контент | выполнен | 12 сцен, 25 обложек, 16 case × 3 локали, truth audit и Awwwards-полировка |
 | 9–12. Responsive, motion, WCAG и QA | выполнен | viewport/browser-матрица, performance budgets и regression gates |
 | 13. Документация | выполнен | 17 обязательных документов, ADR, QA-матрица, physical/AT protocol, runbook и автоматический docs-contract |
-| 14. Предрелиз и выпуск | выполнен | `v2.13.1 / v233` опубликован из `374d4c80`; Actions `31677200638`, deploy, verify-production, независимый smoke и live 9/9 зелёные |
-| 15. После выпуска | в работе | `v2.13.2 / v234` локально прошёл расширенный browser/performance/visual gate; submission copy, automated review media и physical/AT protocol готовы; pending: deploy/post-deploy proof, новое 24–48-часовое окно, final 60-fps/native media и внешний sign-off |
+| 14. Предрелиз и выпуск | выполнен | `v2.13.2 / v234` опубликован из merge SHA `8958aa5`; Actions `32013952249`, deploy, verify-production, независимый smoke 3/3 и live 9/9 зелёные |
+| 15. После выпуска | в работе | первый synthetic monitor `v234` зелёный; submission copy, automated review media и physical/AT protocol готовы; новое 24–48-часовое окно начато 2026-08-17, pending: final 60-fps/native media и внешний physical/AT sign-off |
 
 Статус отражает только зафиксированные и проверенные контракты. Детальные
 доказательства, версии и результаты тестов находятся в

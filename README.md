@@ -9,12 +9,10 @@
 - главная и все case-страницы поддерживают **RU / EN / UZ**;
 - 16 кейсов × 3 языка генерируются как **48 самостоятельных HTML-страниц**.
 
-> Runtime `v2.13.1 / v233` опубликован на GitHub Pages. Любой более новый
-> commit считается production-подтверждённым только после зелёного Pages
-> workflow и post-deploy проверки, записанной в implementation log.
->
-> Локальный release candidate — `v2.13.2 / v234`; до deploy и независимого
-> production smoke он не объявляется опубликованным runtime.
+> Runtime `v2.13.2 / v234` опубликован на GitHub Pages из merge SHA `8958aa5`.
+> Pages workflow `32013952249`, независимый production smoke 3/3, asset graph
+> и первый synthetic monitor подтверждены; physical-device/AT и новое
+> 24–48-часовое окно остаются отдельными незавершёнными доказательствами.
 
 ## Технологии
 
