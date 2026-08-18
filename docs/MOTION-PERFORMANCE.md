@@ -295,7 +295,7 @@ Reduced motion не имеет права самостоятельно меня�
 | total long tasks | `≤max(5200 ms, baseline p95 × 25)` | то же | сумма observed long tasks |
 | max observed event duration | `≤800 ms` | `≤800 ms` | Event Timing proxy, не полный INP |
 | scroll RAF p95 | `≤max(40 ms, baseline p95 × 2.5)` | `≤max(45 ms, baseline p95 × 2.5)` | 100-frame scripted native scroll |
-| frames `>40 ms` при baseline p95 `≤25 ms` | `≤8%` | `≤8%` | иначе policy обязана уйти в `low` |
+| frames `>40 ms` | `≤8%` при baseline p95 `≤25 ms` | то же | на constrained runner допускается не более `baseline + 8 п.п.`; severe baseline (`p95 ≥50 ms` или `>20%` кадров >40 ms) либо материальная scroll-регрессия требуют tier `low` |
 | JS transfer | `≤900,000 bytes` | `≤900,000 bytes` | Resource Timing |
 | CSS transfer | `≤500,000 bytes` | `≤500,000 bytes` | Resource Timing |
 

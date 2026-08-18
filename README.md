@@ -9,11 +9,10 @@
 - главная и все case-страницы поддерживают **RU / EN / UZ**;
 - 16 кейсов × 3 языка генерируются как **48 самостоятельных HTML-страниц**.
 
-> Runtime `v2.14.0 / v236` опубликован на GitHub Pages из merge SHA `86f96ec`.
-> Pages workflow `32075205087` завершил build/deploy/verify-production;
-> независимый production smoke 3/3 и 30/30 cache refs `v236` подтверждены.
-> Локальный Release Gate кандидат — `v2.14.1 / v237`; до его deploy нельзя
-> переносить на него production-утверждения. Physical-device/AT остаются
+> Runtime `v2.14.1 / v237` опубликован на GitHub Pages из merge SHA `adc3e861`.
+> Pages workflow `32084173961` завершил build/deploy/verify-production;
+> независимый production smoke 3/3, live routes 9/9 и cache graph
+> 30 refs `v237` / 0 refs `v236` подтверждены. Physical-device/AT остаются
 > отдельными незавершёнными доказательствами.
 
 ## Технологии

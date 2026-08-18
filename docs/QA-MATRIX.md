@@ -38,19 +38,18 @@
 | Build determinism | **GREEN** | local `v2.14.1 / v237`: `npm run check:build` → 55 generated artifacts byte-identical в двух последовательных сборках, включая compact JS и CSS bundle (2026-08-18) |
 | Dependency/secret gates | **GREEN** | local `v2.14.1 / v237`: `npm audit --audit-level=high` → 0 vulnerabilities; `npm run scan:secrets` → no credential signatures (2026-08-18) |
 | External live routes | **GREEN** | local `v2.14.1 / v237`: `npm run check:live` → 9/9 live-маршрутов вернули usable HTML (2026-08-18) |
-| Deployed production smoke | **GREEN (v2.14.0 baseline)** | merge SHA `86f96ec`, GitHub Actions `32075205087`: build/deploy/verify-production success; независимый `npm run test:production` → 3/3; production HTML HTTP 200 и содержит 30 refs `v236`; 48 case routes и exact-card return подтверждены (2026-08-18) |
-| Historical post-deploy synthetic monitor | **GREEN (v234 only)** | независимый local runner на опубликованном `v234`: desktop LCP 1388 ms / CLS 0.0049 / frame p95 116.7 ms; mobile LCP 1604 ms / CLS 0.0025 / frame p95 33.4 ms; 0 first-party failures / 0 budget violations. Это historical synthetic evidence, не field RUM и не monitor для v236/v237 (2026-08-17) |
+| Deployed production smoke | **GREEN (v2.14.1)** | merge SHA `adc3e861`, GitHub Actions `32084173961`: build/deploy/verify-production success; независимый `npm run test:production` → 3/3; production HTML HTTP 200, содержит 30 refs `v237` и 0 refs `v236`; 48 case routes и exact-card return подтверждены (2026-08-18) |
+| Post-deploy synthetic monitor | **GREEN (v2.14.1)** | независимый local runner на опубликованном `v237`: desktop LCP 1656 ms / CLS 0.0928 / frame p95 83.4 ms; mobile LCP 1680 ms / CLS 0.0075 / frame p95 33.3 ms; 0 first-party failures / 0 budget violations. Это synthetic Chromium evidence, не field RUM и не physical-device proof (2026-08-18) |
 | Visual capture + human review | **GREEN** | local `v2.14.1 / v237` `VISUAL_QA=1` → 4/4 за 7.5 min: 13 main states (12 scenes + fullscreen menu) + 16 full-page cases на desktop/mobile, direct PNG и 4 contact sheets; все четыре sheets и direct mobile Hero просмотрены вручную (2026-08-18) |
 | Manual local browser review | **GREEN (local candidate only)** | Chromium 1440×1000, 920×720, 390×844, 320×568 и 844×390: Release Gate Hero, Intro handoff, CTA/proof/Signal и Index continuity просмотрены вручную; contact sheets покрывают Projects и все case first views. Это не production/physical-device proof (2026-08-18) |
 | Manual production browser journey | **GREEN (v2.13.0 only)** | опубликованный `v232` ранее проверен вручную в Chromium; для `v2.13.2` отдельный physical/manual PASS не заявляется. Production Chromium smoke 3/3 и synthetic desktop/mobile monitor вынесены в отдельные строки |
 | NVDA / VoiceOver / physical devices | **NOT RUN** | локальная headless-среда не может честно подтвердить эти проверки |
 
-Production сейчас `v2.14.0 / v236`, опубликованный из merge SHA `86f96ec` и
-проверенный workflow `32075205087`; он остаётся rollback baseline. Release
-Gate `v2.14.1 / v237` является только локальным release candidate до
-merge/deploy и независимого post-deploy smoke. Physical device и
-assistive-technology проверки остаются отдельным внешним доказательством и не
-объявляются выполненными.
+Production сейчас `v2.14.1 / v237`, опубликованный из merge SHA `adc3e861` и
+проверенный workflow `32084173961`, независимым smoke 3/3, live check 9/9 и
+synthetic production monitor без violations. `v2.14.0 / v236` остаётся
+предыдущим rollback baseline. Physical device и assistive-technology проверки
+остаются отдельным внешним доказательством и не объявляются выполненными.
 
 ## 3. Блокирующий automated pipeline
 
@@ -159,7 +158,7 @@ Validator не проверяет внешний uptime, реальное пов
 | Total long tasks | ≤ `max(5200 ms, baselineP95 × 25)` |
 | Max observed interaction event | ≤ 800 ms |
 | Scroll frame p95 | ≤ `max(40 ms desktop / 45 ms mobile, baselineP95 × 2.5)` |
-| Frames over 40 ms | ≤ 8% только при baseline p95 ≤ 25 ms; иначе policy обязана перейти в `low` |
+| Frames over 40 ms | при baseline p95 ≤ 25 ms — ≤ 8%; на стабильном constrained runner scroll может превышать его собственный baseline не более чем на 8 п.п.; severe baseline или материальная scroll-регрессия требуют `low` |
 | JavaScript transfer | ≤ 900,000 bytes |
 | CSS transfer | ≤ 500,000 bytes |
 

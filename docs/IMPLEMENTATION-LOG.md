@@ -947,3 +947,70 @@ SHA `86f96ec`, Pages workflow `32075205087`, production smoke 3/3. Release Gate
 `v237` нельзя называть production до merge, Pages verify-production и нового
 независимого post-deploy smoke. Physical iPhone/Android,
 NVDA/VoiceOver/TalkBack и final native/60-fps media остаются `NOT RUN`.
+
+## v2.14.1 Release Gate production — v237
+
+PR `#4` прошёл независимый GitHub quality workflow `32083562875` за 8m35s и
+был объединён с `main` merge-коммитом `adc3e861`. Pages workflow `32084173961`
+на том же merge SHA завершил build, deploy и verify-production со статусом
+success.
+
+Независимое post-deploy доказательство с локальной машины:
+
+- production HTML → HTTP 200, 30 cache refs `v237`, 0 refs `v236`, frame-zero
+  Release Gate присутствует;
+- `npm run test:production` → 3/3: 25-card main, 48 RU/EN/UZ case routes и
+  точный возврат из case к исходной карточке без повторного Intro;
+- `npm run check:live` → 9/9 usable external live routes;
+- `npm run monitor:production` → 0 first-party failures / 0 violations;
+  desktop main ready 4090 ms, LCP 1656 ms, CLS 0.0928, frame p95 83.4 ms,
+  long-task max 266 ms; mobile main ready 4018 ms, LCP 1680 ms, CLS 0.0075,
+  frame p95 33.3 ms, long-task max 329 ms.
+
+Перед docs-evidence commit первый повтор полного локального gate завершился
+155/112/1: один Chromium worker остановился на cold mount до появления
+`.proj-card`, ещё до проверки порядка меню. Trace показал HTTP 200 для всех
+runtime-ресурсов и отсутствие page/console error. Сценарий затем прошёл 10/10
+в отдельных clean workers, а полный serial rerun — 156 passed / 112
+profile-skipped / 0 failed / 0 flaky за 13.8 минуты. Отдельный performance gate
+прошёл 2/2 за 29.0 секунды; timeout, retry и assertions не менялись.
+
+Monitor — synthetic Chromium evidence этого runner, а не field RUM,
+physical-device или assistive-technology proof. Physical iPhone/Android,
+NVDA/VoiceOver/TalkBack, 24–48-часовое окно наблюдения и final native/60-fps
+submission media остаются незавершёнными внешними проверками.
+
+Первый GitHub gate evidence PR `#5`, run `32087235173`, прошёл весь functional,
+browser и accessibility suite, но остановился на desktop performance assertion.
+Runner стабильно выдавал baseline p95 33.4 ms и scroll p95 33.4 ms с 0–3%
+кадров >40 ms; test при этом требовал tier `low` только из-за baseline >25 ms,
+хотя активный scroll не был медленнее idle. Контракт исправлен без расширения
+LCP, CLS, long-task, interaction, transfer или normalized-scroll ceilings:
+healthy runner сохраняет абсолютные 8%, constrained runner допускает не более
+8 п.п. сверх собственного baseline, а p95 ≥50 ms, >20% кадров >40 ms или
+материальная scroll-регрессия по-прежнему требуют tier `low`. Детерминированный
+policy-unit сохранил downgrade 2/2; локальный performance stress после правки
+прошёл desktop/mobile 10/10 за 2.2 минуты без retry.
+
+Следующий run `32088146187` не дал test result: GitHub cold install браузеров
+занял 7m52s, после чего общий 15-минутный job timeout отменил functional suite
+через 7m06s и не запустил performance step. Quality job ceiling увеличен до
+30 минут, чтобы инфраструктурная подготовка не обрывала полный gate. Per-test
+timeout 45s, CI retry policy, browser coverage и performance assertions при
+этом не менялись.
+
+Run `32089149711` показал, что одного увеличения общего ceiling недостаточно:
+browser install не вернул управление за 30 минут и job был отменён до build и
+тестов. Install-контур сделан bounded: максимум две попытки по 12 минут с
+30-секундным kill grace и одним коротким retry; общий job ceiling — 45 минут,
+чтобы после успешной cold-попытки осталось время на полный serial suite и
+performance. Если обе попытки неуспешны, workflow теперь завершится явным
+install failure, а не неопределённой отменой. Test timeout 45s и все продуктовые
+assertions остались прежними.
+
+Тот же внешний риск присутствовал в Pages build, verify-production и scheduled
+monitor. Политика вынесена в один `scripts/install-playwright-runtime.sh`:
+full-профиль (Chromium/Firefox/WebKit) использует две попытки по 12 минут,
+Chromium-only smoke/monitor — две по 8 минут. Quality и Pages build имеют общий
+ceiling 45 минут, post-deploy verify и monitor — 25 минут. Это единый
+orchestration contract; браузерное покрытие и продуктовые тесты не сокращены.
