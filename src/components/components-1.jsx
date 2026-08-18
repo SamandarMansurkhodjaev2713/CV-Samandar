@@ -288,8 +288,16 @@ function Hero({ t, links }) {
           same reduced/low-tier path as the rest of the scene. */}
       <figure className="hero-instrument hero-chamber" aria-hidden="true">
         <span className="hero-chamber-vignette" />
+        <span className="hero-chamber-floor" />
+        <span className="hero-chamber-trace"><i /></span>
         <span className="hero-chamber-beam" />
         <span className="hero-chamber-scan" />
+        <span className="hero-chamber-gate"><i /><i /></span>
+        <span className="hero-chamber-shutters">
+          {proofSteps.map((step, index) => (
+            <i key={`shutter-${step.code}`} style={{ "--shutter-i": index }} />
+          ))}
+        </span>
         <ol className="hero-chamber-map">
           {proofSteps.map((step, index) => (
             <li key={`chamber-${step.code}`} style={{ "--chamber-i": index }}>
@@ -384,7 +392,8 @@ function Hero({ t, links }) {
                 <span className="arrow">→</span>
               </a>
               <a href="#projects" className="btn btn-ghost" data-magnetic data-cursor="link" data-cursor-label="→ projects">
-                <span className="btn-label">{t.hero.cta_secondary}</span>
+                <span className="btn-label hero-cta-desktop">{t.hero.cta_secondary}</span>
+                <span className="btn-label hero-cta-mobile">{t.hero.cta_secondary_mobile || t.hero.cta_secondary}</span>
                 <span className="arrow">↘</span>
               </a>
           </div>

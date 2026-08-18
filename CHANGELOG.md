@@ -6,6 +6,11 @@
 
 ### Added
 
+- V5 `Release Gate` для первых пяти секунд: новая предметная hero-сцена
+  `rough input → optical verification → finished module`, три shutter-плоскости,
+  одноразовая измерительная трасса и единый визуальный объект в Intro, Hero и
+  fullscreen Index. Master и responsive WebP производятся воспроизводимым
+  `scripts/process-hero-image.py`.
 - V3 `Proof Laboratory` art direction: proposition-led Hero с физической Proof
   Chamber (raw graphite → optical QA gate → finished release), единый chapter
   Index, смысловые motion-signatures для 12 сцен и
@@ -22,6 +27,10 @@
 
 ### Changed
 
+- Hero больше не использует предмет как обрезанный правый декор: изображение
+  владеет всей сценой, а headline, proof map и action-band встроены в один
+  физический маршрут. Portrait mobile, short phone, phone landscape и compact
+  desktop получили самостоятельные camera/layout states без потери CTA.
 - Hero теперь сначала сообщает продуктовый результат, затем авторство и
   ownership loop `BUILD → VERIFY → SHIP`; Intro использует содержательный
   boot-handoff и ускоренный повторный путь без однократного скрытия.
@@ -40,7 +49,9 @@
 - 320×568 Hero больше не наследует 700px floor: CTA, proof rail и минимум 64px
   следующей сцены помещаются в первый экран во всех трёх локалях.
 - На 360×800 и коротком landscape CTA не пересекаются с proof rail; на
-  920×720 action band использует отдельную двухколоночную композицию.
+  920×720 action band использует отдельную двухколоночную композицию. Финальная
+  поза и декодированное Release Gate media закреплены автоматическим
+  дизайн-контрактом, а не только координатной проверкой.
 - Все 12 пунктов fullscreen menu имеют разделённые text line boxes при
   920×720–1440×800, а mobile close control остаётся поверх прокручиваемого
   списка после смены языка.
@@ -58,9 +69,10 @@
 
 ### Quality
 
-- Локальный `v2.14.0 / v236`: deterministic build — 55 byte-identical
+- Локальный `v2.14.1 / v237`: deterministic build — 55 byte-identical
   generated artifacts; Playwright — 156 passed / 112 profile-skipped / 0
-  failed / 0 flaky; isolated performance — 2/2; visual release — 4/4;
+  failed / 0 flaky за 16.2 min; isolated performance — 2/2 за 31.8 s;
+  visual release — 4/4 за 7.5 min;
   focused WebKit stalled-intro stress — 8/8; all-case mobile viewport stress
   после cold-layout коррекции — 8/8.
 - Desktop, portrait mobile и 844×390 landscape Hero, Projects и case contact

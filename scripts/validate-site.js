@@ -28,6 +28,11 @@ const PROJECT_IMAGE_SPECS = [
   { suffix: "-1152", width: 1152, height: 384, maxBytes: 100000, responsive: true },
   { suffix: "", width: 1536, height: 512, maxBytes: 150000, responsive: false },
 ];
+const HERO_IMAGE_SPECS = [
+  { file: path.join("assets", "hero", "responsive", "release-gate-768.webp"), width: 768, height: 512, maxBytes: 60000 },
+  { file: path.join("assets", "hero", "responsive", "release-gate-1152.webp"), width: 1152, height: 768, maxBytes: 100000 },
+  { file: path.join("assets", "hero", "release-gate.webp"), width: 1536, height: 1024, maxBytes: 150000 },
+];
 const REQUIRED_CASE_COPY = [
   "tag", "role", "signal", "quick", "what", "problem", "architecture",
   "why", "unique", "employer", "quality", "boundary",
@@ -401,6 +406,7 @@ function validateRuntimeShell(generated) {
   const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
   const appSource = fs.readFileSync(path.join(ROOT, "src", "components", "app.jsx"), "utf8");
   const headBoot = fs.readFileSync(path.join(ROOT, "src", "engine", "head-boot.js"), "utf8");
+  const introSource = fs.readFileSync(path.join(ROOT, "src", "engine", "intro.js"), "utf8");
   const watchdog = fs.readFileSync(path.join(ROOT, "src", "engine", "app-watchdog.js"), "utf8");
   const deployWorkflow = fs.readFileSync(path.join(ROOT, ".github", "workflows", "deploy-pages.yml"), "utf8");
   const cacheTokens = Array.from(html.matchAll(/\?v=(\d+)/g), (match) => match[1]);
@@ -412,6 +418,17 @@ function validateRuntimeShell(generated) {
   assert(html.includes('src/styles/app.bundle.min.css'), "index.html must load the generated production style bundle");
   assert(html.includes('id="sm-hero-media"'), "index.html must ship the frame-zero Hero media outside React root");
   assert(html.indexOf('id="sm-hero-media"') < html.indexOf('id="root"'), "frame-zero Hero media must precede the React root");
+  HERO_IMAGE_SPECS.forEach(function validateHeroImage(spec) {
+    const filePath = path.join(ROOT, spec.file);
+    assert(fs.existsSync(filePath), spec.file + " is missing");
+    const size = readWebpSize(filePath);
+    assert(size.width === spec.width && size.height === spec.height, spec.file + " must be " + spec.width + "x" + spec.height);
+    assert(fs.statSync(filePath).size <= spec.maxBytes, spec.file + " exceeds " + spec.maxBytes + " bytes");
+    assert(html.includes(spec.file.replace(/\\/g, "/")), "index.html must reference " + spec.file);
+  });
+  assert(appSource.includes("release-gate-1152.webp"), "fullscreen Index must continue the Release Gate visual system");
+  assert(introSource.includes("release-gate-1152.webp"), "Intro must continue the Release Gate visual system");
+  assert(!html.includes("proof-instrument") && !appSource.includes("proof-instrument") && !introSource.includes("proof-instrument"), "retired Proof Instrument must not return to the critical path");
   assert(!html.includes('rel="stylesheet" href="src/styles/sections.css'), "index.html must not bypass the generated style bundle");
   if (generated) {
     const styleBundle = path.join(ROOT, "src", "styles", "app.bundle.min.css");

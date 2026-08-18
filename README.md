@@ -9,10 +9,12 @@
 - главная и все case-страницы поддерживают **RU / EN / UZ**;
 - 16 кейсов × 3 языка генерируются как **48 самостоятельных HTML-страниц**.
 
-> Runtime `v2.13.2 / v234` опубликован на GitHub Pages из merge SHA `8958aa5`.
-> Pages workflow `32013952249`, независимый production smoke 3/3, asset graph
-> и первый synthetic monitor подтверждены; physical-device/AT и новое
-> 24–48-часовое окно остаются отдельными незавершёнными доказательствами.
+> Runtime `v2.14.0 / v236` опубликован на GitHub Pages из merge SHA `86f96ec`.
+> Pages workflow `32075205087` завершил build/deploy/verify-production;
+> независимый production smoke 3/3 и 30/30 cache refs `v236` подтверждены.
+> Локальный Release Gate кандидат — `v2.14.1 / v237`; до его deploy нельзя
+> переносить на него production-утверждения. Physical-device/AT остаются
+> отдельными незавершёнными доказательствами.
 
 ## Технологии
 
@@ -47,7 +49,7 @@ node scripts/static-server.js 4173
 | Команда | Назначение |
 |---|---|
 | `npm run build` | Проверяет source-контракт, компилирует JSX, обновляет CSP, генерирует 48 case-страниц и sitemap, затем валидирует результат. |
-| `npm run check:build` | Дважды выполняет сборку и требует байтовой идентичности 54 generated artifacts. |
+| `npm run check:build` | Дважды выполняет сборку и требует байтовой идентичности 55 generated artifacts. |
 | `npm run validate` | Проверяет уже сгенерированный сайт: 25 продуктов, маршруты, локали, тексты, изображения, discovery-артефакты и runtime-контракты. |
 | `npm run check:docs` | Проверяет обязательные документы, локальные ссылки, package scripts и количественные контракты. |
 | `npm test` | Запускает валидацию и полную Playwright-матрицу: Chromium desktop/mobile, WebKit mobile smoke, Firefox desktop smoke и reduced-motion. |

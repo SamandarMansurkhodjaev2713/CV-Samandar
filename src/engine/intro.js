@@ -298,8 +298,8 @@
       instrument.innerHTML =
         '<span class="sm-boot-aperture sm-boot-aperture--a"></span>' +
         '<span class="sm-boot-aperture sm-boot-aperture--b"></span>' +
-        '<picture><source media="(max-width:760px)" srcset="assets/hero/responsive/proof-instrument-768.webp">' +
-        '<img src="assets/hero/responsive/proof-instrument-1152.webp" width="1152" height="768" alt="" decoding="async"></picture>';
+        '<picture><source media="(max-width:760px)" srcset="assets/hero/responsive/release-gate-768.webp">' +
+        '<img src="assets/hero/responsive/release-gate-1152.webp" width="1152" height="768" alt="" decoding="async"></picture>';
       panel.appendChild(instrument);
 
       if (!reduced) {
