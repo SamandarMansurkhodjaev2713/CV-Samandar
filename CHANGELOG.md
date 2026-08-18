@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [2.14.1] - 2026-08-18
+
 ### Added
 
 - V5 `Release Gate` для первых пяти секунд: новая предметная hero-сцена
@@ -57,6 +59,15 @@
   списка после смены языка.
 - Светлые CV/Trust сцены используют документный ink с читаемым контрастом,
   вместо полупрозрачного тёмно-тематического текста.
+- Performance gate больше не принимает стабильную 30 Hz частоту headless
+  runner за page regression: constrained scroll сравнивается с собственным
+  idle baseline. Severe baseline и материальное ухудшение при скролле всё ещё
+  обязаны перевести motion policy в `low`.
+- Quality, Pages deploy/verify и scheduled monitor используют единый bounded
+  browser-install helper: две попытки с профилями full/chromium и общими job
+  ceilings 45/25 минут. Это покрывает transient cold-download, но завершает
+  зависший install явным failure; per-test timeout 45s, browser coverage,
+  retry policy и продуктовые performance ceilings сохранены.
 
 ### Performance
 
@@ -78,6 +89,14 @@
 - Desktop, portrait mobile и 844×390 landscape Hero, Projects и case contact
   sheets просмотрены вручную в локальном Chromium. Physical iPhone/Android,
   NVDA, VoiceOver и TalkBack этим не подменяются и остаются `NOT RUN`.
+- PR `#4` прошёл независимый GitHub quality gate `32083562875`; merge SHA
+  `adc3e861` опубликован Pages workflow `32084173961`, где build, deploy и
+  verify-production завершились успешно. Независимый smoke — 3/3, cache graph
+  — 30 refs `v237` / 0 refs `v236`, live routes — 9/9.
+- Synthetic production monitor для `v237` завершился без first-party failures
+  и budget violations: desktop LCP 1656 ms / CLS 0.0928 / frame p95 83.4 ms;
+  mobile LCP 1680 ms / CLS 0.0075 / frame p95 33.3 ms. Это Chromium synthetic,
+  а не field RUM или physical-device evidence.
 
 ## [2.13.2] - 2026-08-17
 

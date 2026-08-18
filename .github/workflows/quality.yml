@@ -10,7 +10,11 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Browser installation is an external network step. Two bounded 12-minute
+    # attempts leave enough room for the unchanged serial suite while turning
+    # a stuck download into an explicit failure instead of an endless job.
+    # Per-test timeouts and product assertions remain untouched.
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -31,7 +35,7 @@ jobs:
         run: npm run scan:secrets
 
       - name: Install browser test runtime
-        run: npx playwright install --with-deps chromium firefox webkit
+        run: bash scripts/install-playwright-runtime.sh full 12m
 
       - name: Build and validate generated assets
         run: npm run check:build

@@ -44,9 +44,9 @@
 | 5–8. Главная, изображения, кейсы и контент | выполнен | 12 сцен, 25 обложек, 16 case × 3 локали, truth audit и Awwwards-полировка |
 | 9–12. Responsive, motion, WCAG и QA | выполнен | viewport/browser-матрица, performance budgets и regression gates |
 | 13. Документация | выполнен | 17 обязательных документов, ADR, QA-матрица, physical/AT protocol, runbook и автоматический docs-contract |
-| 14. Предрелиз и выпуск | выполнен | `v2.14.0 / v236` опубликован из merge SHA `86f96ec`; Actions `32075205087`, deploy, verify-production, независимый smoke 3/3 и live 9/9 зелёные |
-| 15. После выпуска | в работе | historical synthetic monitor `v234` зелёный; submission copy, automated review media и physical/AT protocol готовы; для следующего release pending: новое 24–48-часовое окно, final 60-fps/native media и внешний physical/AT sign-off |
-| 16. V5 Release Gate | release candidate | `v2.14.1 / v237`: Intro, full-stage Hero, Index continuity, five responsive compositions, 27-state locale/viewport contract, performance и visual QA зелёные; публикация и post-deploy proof выполняются отдельным gate |
+| 14. Предрелиз и выпуск | выполнен | `v2.14.1 / v237` опубликован из merge SHA `adc3e861`; Actions `32084173961`, deploy, verify-production, независимый smoke 3/3, live 9/9 и cache graph 30/30 зелёные |
+| 15. После выпуска | в работе | synthetic monitor `v237` зелёный без violations; submission copy, automated review media и physical/AT protocol готовы; pending: 24–48-часовое окно, final 60-fps/native media и внешний physical/AT sign-off |
+| 16. V5 Release Gate | выполнен | `v2.14.1 / v237`: Intro, full-stage Hero, Index continuity, five responsive compositions, 27-state locale/viewport contract, performance/visual QA и production proof зелёные |
 
 Статус отражает только зафиксированные и проверенные контракты. Детальные
 доказательства, версии и результаты тестов находятся в

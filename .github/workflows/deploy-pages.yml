@@ -15,6 +15,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -35,7 +36,7 @@ jobs:
         run: npm run scan:secrets
 
       - name: Install browser test runtime
-        run: npx playwright install --with-deps chromium firefox webkit
+        run: bash scripts/install-playwright-runtime.sh full 12m
 
       - name: Build and validate generated assets
         run: npm run check:build
@@ -94,6 +95,7 @@ jobs:
   verify-production:
     needs: deploy
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     permissions:
       contents: read
     steps:
@@ -110,7 +112,7 @@ jobs:
         run: npm ci
 
       - name: Install Chromium smoke runtime
-        run: npx playwright install --with-deps chromium
+        run: bash scripts/install-playwright-runtime.sh chromium 8m
 
       - name: Verify deployed main and every generated case route
         run: npm run test:production
