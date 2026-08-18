@@ -891,3 +891,59 @@ Production при этой записи остаётся `v2.13.2 / v234`. V3 н
 независимого post-deploy smoke. Physical iPhone/Android,
 NVDA/VoiceOver/TalkBack и final 60-fps/native submission media остаются
 `NOT RUN` и не подменяются эмуляцией.
+
+## v2.14.1 Release Gate candidate — v237 pre-release
+
+Повторная критика первых пяти секунд показала, что V3 Proof Chamber всё ещё
+воспринимался как крупный текст поверх обрезанного предмета. V5 заменил этот
+приём одной причинно-следственной сценой `Release Gate`: rough graphite входит
+в физическую рейку, проходит optical QA frame и выходит законченным модулем.
+Три shutter-плоскости открывают BUILD / VERIFY / SHIP, одноразовые trace/scan
+объясняют проверку и заканчиваются в спокойной финальной позе. Тот же предмет
+теперь продолжает Intro и fullscreen Index вместо трёх разных визуальных
+мотивов.
+
+Desktop использует full-stage camera, portrait mobile показывает весь маршрут
+в отдельной рамке, short phone 320×568 сохраняет headline, два подписанных CTA,
+proof rail и минимум 64 px следующей сцены. 568×320 и 844×390 получили
+landscape-композицию; 920×720 — compact-desktop action band с нормальной длиной
+строки. Нативный scroll, shared motion runtime, reduced-motion final state и
+44×44+ touch targets не менялись.
+
+Новый raster set: `release-gate.webp` 1536×1024 / 90,824 bytes,
+`release-gate-1152.webp` 1152×768 / 53,124 bytes и
+`release-gate-768.webp` 768×512 / 25,130 bytes. Конвертацию фиксирует
+`scripts/process-hero-image.py` с pinned Pillow 12.2.0; повторная конвертация
+дала три byte-identical файла. Structural validator проверяет наличие,
+dimensions, weight ceilings, critical-path ссылки Intro/Hero/Index и запрещает
+возврат retired `proof-instrument` в этот путь. Browser regression дополнительно
+требует decoded image, три shutter stage и видимую финальную headline pose.
+
+Фактическое локальное доказательство `v2.14.1 / v237`:
+
+- validate — 25 products / 9 live / 16 case / 3 locales, 48 generated pages,
+  49 sitemap URL и Hero asset contract;
+- deterministic build — 55/55 generated artifacts byte-identical;
+- `npm test` — 268 scenarios: 156 passed, 112 profile-skipped, 0 failed,
+  0 flaky за 16.2 минуты, local Windows worker=1 и retry=0;
+- isolated performance — desktop/mobile 2/2 за 31.8 секунды;
+- dependency audit — 0 vulnerabilities; secret scan — clean; live routes —
+  9/9 usable HTML;
+- visual release — 4/4 за 7.5 минуты: 13 main states и 16 full-page case
+  routes на desktop/mobile; четыре contact sheet и direct mobile Hero
+  просмотрены вручную;
+- ручной Chromium review — 1440×1000, 920×720, 390×844, 320×568 и
+  844×390, включая Intro handoff и settled final pose.
+
+Первый полный test attempt был признан недействительным: одновременно открытый
+in-app visual preview удерживал отдельный animated/WebGL context, после чего
+Firefox зависал на context teardown, а WebKit попадал в pre-React recovery.
+Preview был закрыт; Firefox отдельно прошёл 2/2, WebKit 3/3, затем полный clean
+run дал 156/112/0/0 без retry. Ни timeout, ни production safety cap, ни
+assertion не ослаблялись.
+
+Опубликованный rollback baseline при этой записи — `v2.14.0 / v236`, merge
+SHA `86f96ec`, Pages workflow `32075205087`, production smoke 3/3. Release Gate
+`v237` нельзя называть production до merge, Pages verify-production и нового
+независимого post-deploy smoke. Physical iPhone/Android,
+NVDA/VoiceOver/TalkBack и final native/60-fps media остаются `NOT RUN`.

@@ -544,8 +544,8 @@ function Nav({ t, lang, setLang, active }) {
               <span className="nav-peek-name">{t.nav[menuPreview.k] || FULL_MENU_LABELS[lang][menuPreview.k]}</span>
             </div>
             <picture className="nav-peek-object">
-              <source media="(max-width: 900px)" srcSet="assets/hero/responsive/proof-instrument-768.webp" />
-              <img src="assets/hero/responsive/proof-instrument-1152.webp" width="1152" height="768" alt="" />
+              <source media="(max-width: 900px)" srcSet="assets/hero/responsive/release-gate-768.webp" />
+              <img src="assets/hero/responsive/release-gate-1152.webp" width="1152" height="768" alt="" />
             </picture>
             <span className="nav-peek-ring nav-peek-ring--a" />
             <span className="nav-peek-ring nav-peek-ring--b" />

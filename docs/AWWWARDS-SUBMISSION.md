@@ -1,6 +1,6 @@
 # Awwwards submission package
 
-Актуально для локального кандидата: `v2.14.0 / v236`, 2026-08-18
+Актуально для локального кандидата: `v2.14.1 / v237`, 2026-08-18
 
 Production: <https://samandarmansurkhodjaev2713.github.io/CV-Samandar/>
 
@@ -114,8 +114,9 @@ Credits нельзя сокращать до формулировки, кото�
 
 1. **Start / Intro** — 2–3-секундный optical boot-сеанс загружает критический
    runtime; повторный вход короче, но не исчезает полностью.
-2. **Hero** — Proof Instrument собирается в самостоятельную desktop/mobile
-   композицию; имя, позиционирование, CTA и proof rail читаются без скролла.
+2. **Hero** — физический Release Gate проводит rough input через optical QA к
+   finished module; desktop/mobile используют самостоятельные камеры, а тезис,
+   CTA и proof rail читаются без дополнительного свайпа.
 3. **Why me** — Builder + QA раскрывается как один контур ответственности.
 4. **About** — профиль становится живым README с честным GitHub fallback.
 5. **Projects** — четыре editorial featured-записи переходят в полный каталог;
@@ -168,14 +169,15 @@ mobile performance. Он используется только как допол
 | Локализация | RU / EN / UZ; 48 generated case HTML |
 | Главная | 12 смысловых сцен |
 | Обложки | 25 предметных WebP-наборов 1536/1152/768, 3:1 |
-| Local V3 candidate | `v2.14.0 / v236` |
-| Current production / rollback | `v2.13.2 / v234`, merge SHA `8958aa5`; Pages workflow `32013952249` |
+| Local Release Gate candidate | `v2.14.1 / v237` |
+| Current production / rollback | `v2.14.0 / v236`, merge SHA `86f96ec`; Pages workflow `32075205087` |
 | Build | 55 generated artifacts, byte-identical double build |
 | Automated suite | 268 scenarios; 156 pass, 112 profile skips, 0 fail/flaky |
 | Visual release review | 13 main states + 16 cases в desktop/mobile; 58 PNG + 4 contact sheets |
-| Production routes | для V3 ещё не заявлены; опубликованный v234 имеет main + 48 case URL + 9 live routes proof |
+| Production routes | для v237 ещё не заявлены; опубликованный v236 имеет main + 48 case URL + 9 live routes proof |
 
-Первый независимый monitor опубликованного `v2.13.2 / v234`, success:
+Historical независимый monitor опубликованного `v2.13.2 / v234`, success
+(он не переносится на v236/v237):
 
 - desktop 1440×1000: main ready 3605 ms, FCP 1080 ms, LCP 1388 ms,
   CLS 0.0049, frame p95 116.7 ms, long-task max 151 ms;
@@ -258,12 +260,13 @@ case и exact-card return, portrait→landscape. Пальцы/касания н�
 
 - [x] 25 / 9 / 16 product contract подтверждён canonical registry.
 - [x] 48 case routes и RU / EN / UZ parity подтверждены build/validation.
-- [x] `v2.14.0 / v236` final local candidate: deterministic build, audit,
+- [x] `v2.14.1 / v237` final local candidate: deterministic build, audit,
   secret scan, browser, axe, performance, live-route и visual gates зелёные.
-- [x] `v2.13.2 / v234` опубликован из `8958aa5`; Pages build/deploy/verify,
-  независимый production smoke 3/3 и первый synthetic monitor зелёные.
-- [ ] `v2.14.0 / v236` опубликован и имеет независимый production smoke/live
-  proof; до этого submission media не называется актуальным V3 production.
+- [x] `v2.14.0 / v236` опубликован из `86f96ec`; Pages
+  build/deploy/verify и независимый production smoke 3/3 зелёные.
+- [ ] `v2.14.1 / v237` опубликован и имеет независимый production smoke/live
+  proof; до этого submission media не называется актуальным Release Gate
+  production.
 - [x] Credits и public claims прошли truth-boundary review.
 - [x] Rollback tag и release runbook существуют.
 - [x] Automated submission review set: 8 stills + 74.8 s desktop WebM;

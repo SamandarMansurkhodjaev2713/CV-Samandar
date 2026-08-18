@@ -11,7 +11,7 @@ test("Builder + QA proof rail and authored type hierarchy survive every viewport
     if (host === "fonts.googleapis.com" || host === "fonts.gstatic.com") {
       remoteFontRequests.push(request.url());
     }
-    if (/hero-cockpit|orbital-station/.test(request.url())) {
+    if (/hero-cockpit|orbital-station|proof-instrument/.test(request.url())) {
       retiredHeroMediaRequests.push(request.url());
     }
   });
@@ -21,20 +21,33 @@ test("Builder + QA proof rail and authored type hierarchy survive every viewport
   await expect(page.locator("#sm-hero-media .hero-chamber-static")).toBeVisible();
   await expect(page.locator("#hero .hero-chamber")).toBeVisible();
   await expect(page.locator("#sm-hero-media .hero-instrument-img")).toHaveAttribute("fetchpriority", "high");
+  await expect(page.locator("#sm-hero-media .hero-instrument-img")).toHaveAttribute("src", /release-gate\.webp/);
   await expect(page.locator(".hero-chamber-map li")).toHaveCount(3);
+  await expect(page.locator(".hero-chamber-shutters > i")).toHaveCount(3);
   await expect(page.locator(".hero-instrument-orbit")).toHaveCount(0);
   await expect(page.locator(".hero-proof-step")).toHaveCount(3);
   await expect(page.locator(".hero-roles")).toContainText(/Builder/i);
   await expect(page.locator(".hero-roles")).toContainText("QA");
 
-  const type = await page.evaluate(() => ({
-    heading: getComputedStyle(document.querySelector(".hero-name")).fontFamily,
-    body: getComputedStyle(document.body).fontFamily,
-    mono: getComputedStyle(document.querySelector(".hero-proof-label")).fontFamily,
-  }));
+  const type = await page.evaluate(() => {
+    const image = document.querySelector("#sm-hero-media .hero-instrument-img");
+    const letters = Array.from(document.querySelectorAll(".hero-name .hn-i"));
+    return {
+      heading: getComputedStyle(document.querySelector(".hero-name")).fontFamily,
+      body: getComputedStyle(document.body).fontFamily,
+      mono: getComputedStyle(document.querySelector(".hero-proof-label")).fontFamily,
+      imageDecoded: image.complete && image.naturalWidth >= 768,
+      headlineSettled: letters.length > 0 && letters.every((letter) =>
+        Number.parseFloat(getComputedStyle(letter).opacity) >= 0.99 &&
+        letter.getBoundingClientRect().height > 0
+      ),
+    };
+  });
   expect(type.heading).toContain("Oswald");
   expect(type.body).toMatch(/Segoe UI|-apple-system|BlinkMacSystemFont/);
   expect(type.mono).toContain("JetBrains Mono");
+  expect(type.imageDecoded).toBe(true);
+  expect(type.headlineSettled).toBe(true);
   expect(remoteFontRequests).toEqual([]);
   expect(retiredHeroMediaRequests).toEqual([]);
   await expectNoHorizontalOverflow(expect, page, "design-system hero");

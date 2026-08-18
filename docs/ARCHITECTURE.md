@@ -99,7 +99,8 @@ Primary CTA идёт на `liveUrl`. GitHub показывается втори�
    Intro до первого содержательного paint.
 2. CSS, Hero media и core scripts preloaded с тем же asset version query.
 3. В `<body>` до React root находится единственный статичный
-   `#sm-hero-media`: responsive `<picture>` с `fetchpriority="high"`. Он уже
+   `#sm-hero-media`: responsive Release Gate `<picture>` с
+   `fetchpriority="high"`. Он уже
    является доступным LCP/fallback-слоем; React добавляет поверх него только
    смысловую разметку и motion-overlay, не дублируя изображение.
 4. `app-watchdog.js` ставит pre-React recovery watchdog на 5500 ms.
@@ -128,9 +129,12 @@ Deep link с hash пропускает intro, чтобы прямой перех
 
 `hero → signal → about → projects → builder → skills → services → cv → process → faq → trust → contact`
 
-Hero/Signal используют нативный `position: sticky`. Фоновый Proof Chamber
-принадлежит статичному `#sm-hero-media`, а React Hero — единственный владелец
-контентных overlay и интерактивных состояний. Services/CV и Trust/Contact
+Hero/Signal используют нативный `position: sticky`. Фоновый Release Gate
+внутри Proof Chamber принадлежит статичному `#sm-hero-media`, а React Hero —
+единственный владелец контентных overlay и интерактивных состояний. Master
+hero-изображение и две responsive derivative воспроизводимо создаёт
+`scripts/process-hero-image.py`; offline dependency закреплена в
+`scripts/requirements-image-tools.txt`. Services/CV и Trust/Contact
 находятся в `data-pin` host и получают progress из общего motion runtime.
 `useScrollEngine` публикует активную сцену для меню, counter, dock, acts и
 history; отдельные UI-поверхности не вычисляют собственную конкурирующую главу.
