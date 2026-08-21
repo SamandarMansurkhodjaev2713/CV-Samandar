@@ -1266,7 +1266,7 @@ function Contact({ t, links }) {
   // Budget slider — 5 fixed buckets so we don't ask for awkward exact numbers.
   // Confirmed directly against the real Uzbekistan market (client's own
   // numbers, 2026-07) — see BUILDER_SCALE_META above for the same pass.
-  const BUDGET_BUCKETS = ["< $200", "$200-600", "$600-1.5k", "$1.5-3k", "$3k+"];
+  const BUDGET_BUCKETS = ["< $150", "$150–400", "$400–900", "$900–2k", "$2k+"];
   const [budgetIdx, setBudgetIdx] = useState2(1);
   const [builderBudget, setBuilderBudget] = useState2("");
   // Timeline preference — small chip row for urgency, helps scoping.

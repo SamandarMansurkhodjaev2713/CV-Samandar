@@ -74,7 +74,7 @@
      and lose the whole point. A platform-native UI face carries running copy:
      it is neutral, highly hinted and available before the first paint. */
   --f-display: "Oswald", "Arial Narrow", sans-serif;
-  --f-body: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --f-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --f-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
   --f-serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
 

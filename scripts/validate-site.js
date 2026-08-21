@@ -28,11 +28,6 @@ const PROJECT_IMAGE_SPECS = [
   { suffix: "-1152", width: 1152, height: 384, maxBytes: 100000, responsive: true },
   { suffix: "", width: 1536, height: 512, maxBytes: 150000, responsive: false },
 ];
-const HERO_IMAGE_SPECS = [
-  { file: path.join("assets", "hero", "responsive", "release-gate-768.webp"), width: 768, height: 512, maxBytes: 60000 },
-  { file: path.join("assets", "hero", "responsive", "release-gate-1152.webp"), width: 1152, height: 768, maxBytes: 100000 },
-  { file: path.join("assets", "hero", "release-gate.webp"), width: 1536, height: 1024, maxBytes: 150000 },
-];
 const REQUIRED_CASE_COPY = [
   "tag", "role", "signal", "quick", "what", "problem", "architecture",
   "why", "unique", "employer", "quality", "boundary",
@@ -130,6 +125,11 @@ function validateRegistry(registry) {
   assertUnique(registry, (p) => p.githubUrl, "GitHub URL");
   assertUnique(registry, (p) => p.casePage, "case route");
   assertUnique(registry, (p) => p.featuredRank, "featured rank");
+  // A product cover and its accent are part of the card's identity. Reusing
+  // either one makes two products collapse into the same visual signature,
+  // which is exactly the regression the curated catalog must prevent.
+  assertUnique(registry, (p) => p.image, "project image");
+  assertUnique(registry, (p) => String(p.accent || "").toUpperCase(), "project accent");
 
   registry.forEach(function validateProduct(product) {
     const label = product.id || "<missing-id>";
@@ -340,6 +340,7 @@ function validateLandings(registry, landings, generated) {
         assert(html.includes(base + "src/content/product-registry.js"), meta.id + "/" + locale + ": product registry is not loaded");
         assert(html.includes('hreflang="ru"') && html.includes('hreflang="en"') && html.includes('hreflang="uz"') && html.includes('hreflang="x-default"'), meta.id + "/" + locale + ": hreflang set is incomplete");
         assert(html.includes('"@type":"CreativeWork"') && html.includes('"inLanguage":"' + locale + '"'), meta.id + "/" + locale + ": localized schema is missing");
+        assert(html.includes('"@type":"WebPage"') && html.includes('"@type":"BreadcrumbList"'), meta.id + "/" + locale + ": case schema graph is incomplete");
         assert(html.includes('name="twitter:image" content="https://'), meta.id + "/" + locale + ": Twitter image must be absolute");
         assert(html.includes('href="' + base + '#proj-' + meta.slug + '"'), meta.id + "/" + locale + ": return link does not preserve card context");
         assert(html.includes("assets/proj/responsive/" + meta.slug + "-768.webp 768w"), meta.id + "/" + locale + ": no 768px image candidate");
@@ -405,6 +406,7 @@ function validateMotionArchitecture() {
 function validateRuntimeShell(generated) {
   const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
   const appSource = fs.readFileSync(path.join(ROOT, "src", "components", "app.jsx"), "utf8");
+  const heroSource = fs.readFileSync(path.join(ROOT, "src", "components", "components-1.jsx"), "utf8");
   const headBoot = fs.readFileSync(path.join(ROOT, "src", "engine", "head-boot.js"), "utf8");
   const introSource = fs.readFileSync(path.join(ROOT, "src", "engine", "intro.js"), "utf8");
   const watchdog = fs.readFileSync(path.join(ROOT, "src", "engine", "app-watchdog.js"), "utf8");
@@ -416,18 +418,12 @@ function validateRuntimeShell(generated) {
   assert(html.includes('src/engine/head-boot.js'), "index.html must load the parser-blocking frame-zero boot");
   assert(html.includes('src/engine/app-watchdog.js'), "index.html must load the pre-React watchdog");
   assert(html.includes('src/styles/app.bundle.min.css'), "index.html must load the generated production style bundle");
-  assert(html.includes('id="sm-hero-media"'), "index.html must ship the frame-zero Hero media outside React root");
-  assert(html.indexOf('id="sm-hero-media"') < html.indexOf('id="root"'), "frame-zero Hero media must precede the React root");
-  HERO_IMAGE_SPECS.forEach(function validateHeroImage(spec) {
-    const filePath = path.join(ROOT, spec.file);
-    assert(fs.existsSync(filePath), spec.file + " is missing");
-    const size = readWebpSize(filePath);
-    assert(size.width === spec.width && size.height === spec.height, spec.file + " must be " + spec.width + "x" + spec.height);
-    assert(fs.statSync(filePath).size <= spec.maxBytes, spec.file + " exceeds " + spec.maxBytes + " bytes");
-    assert(html.includes(spec.file.replace(/\\/g, "/")), "index.html must reference " + spec.file);
-  });
-  assert(appSource.includes("release-gate-1152.webp"), "fullscreen Index must continue the Release Gate visual system");
-  assert(introSource.includes("release-gate-1152.webp"), "Intro must continue the Release Gate visual system");
+  assert(html.includes('id="sm-hero-media"'), "index.html must ship the frame-zero Hero scene outside React root");
+  assert(html.indexOf('id="sm-hero-media"') < html.indexOf('id="root"'), "frame-zero Hero scene must precede the React root");
+  assert(html.includes("hero-compiler--static"), "frame-zero Hero must ship the static Proof Compiler");
+  assert(heroSource.includes('className="hero-compiler"'), "authored Hero must ship the live Proof Compiler");
+  assert(introSource.includes("sm-boot-compiler"), "Intro must preview the Proof Compiler system");
+  assert(!/release-gate(?:-\d+)?\.webp/.test(html + appSource + heroSource + introSource), "retired Release Gate raster must not remain on the critical path");
   assert(!html.includes("proof-instrument") && !appSource.includes("proof-instrument") && !introSource.includes("proof-instrument"), "retired Proof Instrument must not return to the critical path");
   assert(!html.includes('rel="stylesheet" href="src/styles/sections.css'), "index.html must not bypass the generated style bundle");
   if (generated) {
@@ -470,6 +466,7 @@ function validateDiscoveryArtifacts(registry, generated) {
     assert(main.includes('hreflang="' + locale + '"'), "main hreflang is missing: " + locale);
   });
   assert(main.includes('"@type": "Person"'), "main Person structured data is missing");
+  assert(main.includes('"@type": "WebSite"') && main.includes('"@type": "ProfilePage"'), "main structured-data graph is incomplete");
 
   const robotsPath = path.join(ROOT, "robots.txt");
   const notFoundPath = path.join(ROOT, "404.html");

@@ -15,9 +15,9 @@ window.DEFAULT_THEME_KEY = "claude";
 
 window.FONT_STACKS = {
   geist: {
-    name: "Oswald · System UI · JetBrains",
+    name: "Oswald · Inter · JetBrains",
     display: "'Oswald', 'Arial Narrow', sans-serif",
-    body:    "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    body:    "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     mono:    "'JetBrains Mono', ui-monospace, monospace",
     serif:   "'Cormorant Garamond', 'Iowan Old Style', Georgia, serif",
   },
@@ -31,7 +31,7 @@ window.FONT_STACKS = {
   editorial: {
     name: "Editorial Serif",
     display: "'Cormorant Garamond', 'Iowan Old Style', Georgia, serif",
-    body:    "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    body:    "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     mono:    "'JetBrains Mono', ui-monospace, monospace",
     serif:   "'Cormorant Garamond', Georgia, serif",
   },

@@ -11,42 +11,38 @@ test("Builder + QA proof rail and authored type hierarchy survive every viewport
     if (host === "fonts.googleapis.com" || host === "fonts.gstatic.com") {
       remoteFontRequests.push(request.url());
     }
-    if (/hero-cockpit|orbital-station|proof-instrument/.test(request.url())) {
+    if (/hero-cockpit|orbital-station|proof-instrument|release-gate/.test(request.url())) {
       retiredHeroMediaRequests.push(request.url());
     }
   });
 
   await settleMain(page, "#hero");
-  await expect(page.locator(".hero-material-field")).toBeVisible();
-  await expect(page.locator("#sm-hero-media .hero-chamber-static")).toBeVisible();
-  await expect(page.locator("#hero .hero-chamber")).toBeVisible();
-  await expect(page.locator("#sm-hero-media .hero-instrument-img")).toHaveAttribute("fetchpriority", "high");
-  await expect(page.locator("#sm-hero-media .hero-instrument-img")).toHaveAttribute("src", /release-gate\.webp/);
-  await expect(page.locator(".hero-chamber-map li")).toHaveCount(3);
-  await expect(page.locator(".hero-chamber-shutters > i")).toHaveCount(3);
+  await expect(page.locator("#sm-hero-media .hero-compiler--static")).toBeVisible();
+  await expect(page.locator("#hero .hero-compiler")).toBeVisible();
+  await expect(page.locator("#hero .hero-compiler-map li")).toHaveCount(3);
+  await expect(page.locator("#hero .hero-input-cluster > i")).toHaveCount(5);
   await expect(page.locator(".hero-instrument-orbit")).toHaveCount(0);
   await expect(page.locator(".hero-proof-step")).toHaveCount(3);
   await expect(page.locator(".hero-roles")).toContainText(/Builder/i);
   await expect(page.locator(".hero-roles")).toContainText("QA");
 
   const type = await page.evaluate(() => {
-    const image = document.querySelector("#sm-hero-media .hero-instrument-img");
     const letters = Array.from(document.querySelectorAll(".hero-name .hn-i"));
     return {
-      heading: getComputedStyle(document.querySelector(".hero-name")).fontFamily,
+      headingPrimary: getComputedStyle(document.querySelector(".hero-statement-line--1")).fontFamily,
+      headingAccent: getComputedStyle(document.querySelector(".hero-statement-line--2")).fontFamily,
       body: getComputedStyle(document.body).fontFamily,
       mono: getComputedStyle(document.querySelector(".hero-proof-label")).fontFamily,
-      imageDecoded: image.complete && image.naturalWidth >= 768,
       headlineSettled: letters.length > 0 && letters.every((letter) =>
         Number.parseFloat(getComputedStyle(letter).opacity) >= 0.99 &&
         letter.getBoundingClientRect().height > 0
       ),
     };
   });
-  expect(type.heading).toContain("Oswald");
-  expect(type.body).toMatch(/Segoe UI|-apple-system|BlinkMacSystemFont/);
+  expect(type.headingPrimary).toContain("Inter");
+  expect(type.headingAccent).toContain("Cormorant Garamond");
+  expect(type.body).toContain("Inter");
   expect(type.mono).toContain("JetBrains Mono");
-  expect(type.imageDecoded).toBe(true);
   expect(type.headlineSettled).toBe(true);
   expect(remoteFontRequests).toEqual([]);
   expect(retiredHeroMediaRequests).toEqual([]);
@@ -165,7 +161,7 @@ test("menu chapter navigation focuses the selected destination", async ({ page }
   await expect(page).toHaveURL(/#projects$/);
 });
 
-test("navigation never clips focusable links at intermediate desktop widths", async ({ page }, testInfo) => {
+test("instrument-rail navigation stays unclipped at intermediate desktop widths", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-chromium", "desktop breakpoint contract");
   await settleMain(page, "#hero");
   for (const width of [920, 1024, 1160, 1280, 1440]) {
@@ -189,12 +185,11 @@ test("navigation never clips focusable links at intermediate desktop widths", as
     });
     expect(state.linksInside, `link clipping at ${width}px`).toBe(true);
     expect(state.overflow, `page overflow at ${width}px`).toBeLessThanOrEqual(1);
-    if (width <= 1160) {
-      expect(state.visibleLinks, `compact nav at ${width}px`).toBe(0);
-      expect(state.counterVisible, `chapter counter at ${width}px`).toBe(true);
-    } else {
-      expect(state.visibleLinks, `full nav at ${width}px`).toBe(7);
-    }
+    // Primary destinations live in the fullscreen Index at every desktop
+    // width. The top rail owns identity, chapter orientation, language and a
+    // single contact action instead of reintroducing a second navigation.
+    expect(state.visibleLinks, `instrument rail at ${width}px`).toBe(0);
+    expect(state.counterVisible, `chapter counter at ${width}px`).toBe(true);
   }
 });
 

@@ -44,6 +44,8 @@
   var cursorCoords = null;
   var cursorMode = "default";
   var cursorText = "";
+  var cursorSection = "";
+  var cursorAccent = "";
   var cursorPosition = { x: -100, y: -100 };
   var cursorTarget = { x: -100, y: -100 };
   var ring = { width: 28, height: 28, radius: 50, offsetX: 0, offsetY: 0, scale: 1 };
@@ -230,6 +232,7 @@
       '<div class="sc-cross sc-cross-h"></div>',
       '<div class="sc-cross sc-cross-v"></div>',
       '<div class="sc-ring"></div>',
+      '<div class="sc-caliper"><i></i><i></i><b></b></div>',
       '<div class="sc-dot"></div>',
       '<div class="sc-label"><span class="sc-label-key"></span><span class="sc-label-val"></span></div>',
       '<div class="sc-coords"></div>',
@@ -294,7 +297,19 @@
     var value = cursorLabel && cursorLabel.querySelector(".sc-label-val");
     if (key && value) {
       var parts = cursorText.split(":");
-      key.textContent = parts.length > 1 ? parts.shift() + ":" : "";
+      var actionNames = {
+        link: "OPEN",
+        drag: "MOVE",
+        file: "FILE",
+        copy: "COPY",
+        send: "SHIP",
+        input: "INPUT",
+        tab: "SELECT",
+        target: "INSPECT",
+      };
+      key.textContent = (parts.length > 1
+        ? parts.shift().toUpperCase()
+        : (actionNames[cursorMode] || "VERIFY")) + " //";
       value.textContent = parts.length ? parts.join(":").trim() : cursorText;
     }
     cursor.classList.toggle("has-label", Boolean(cursorText));
@@ -321,6 +336,8 @@
   function onPointerOver(event) {
     if (!cursor) return;
     var info = cursorInfo(event.target);
+    var section = event.target && event.target.closest ? event.target.closest("section[data-section]") : null;
+    cursorSection = section ? (section.id || section.getAttribute("data-section") || "") : "";
     if (!info) {
       setCursorMode("default", "");
       morphElement = null;
@@ -331,6 +348,11 @@
     spotlightElement = event.target && event.target.closest
       ? event.target.closest(".card, .proj-card")
       : null;
+    var accentOwner = spotlightElement || (info && info.element);
+    cursorAccent = accentOwner && accentOwner.isConnected
+      ? getComputedStyle(accentOwner).getPropertyValue("--proj-accent").trim()
+      : "";
+    cursor.style.color = cursorAccent || "";
     cursorMoving = true;
     if (runtime) runtime.wake("pointer-over");
   }
@@ -339,6 +361,8 @@
     if (!event.relatedTarget || !cursorInfo(event.relatedTarget)) {
       setCursorMode("default", "");
       morphElement = null;
+      cursorAccent = "";
+      if (cursor) cursor.style.color = "";
     }
     if (spotlightElement && (!event.relatedTarget || !spotlightElement.contains(event.relatedTarget))) {
       spotlightElement = null;
@@ -490,8 +514,11 @@
     if (!cursor) return;
     cursor.style.transform = "translate3d(" + cursorPosition.x.toFixed(2) + "px," + cursorPosition.y.toFixed(2) + "px,0)";
     if (cursorCoords) {
-      cursorCoords.textContent = "x:" + String(Math.round(cursorTarget.x)).padStart(4, "0") +
-        "  y:" + String(Math.round(cursorTarget.y)).padStart(4, "0");
+      cursorCoords.textContent = morphRect
+        ? (cursorSection ? "#" + cursorSection.toUpperCase() + " · " : "") +
+          Math.round(morphRect.width) + "×" + Math.round(morphRect.height)
+        : "X" + String(Math.round(cursorTarget.x)).padStart(4, "0") +
+          " / Y" + String(Math.round(cursorTarget.y)).padStart(4, "0");
     }
     if (cursorRing) {
       cursorRing.style.width = ring.width.toFixed(2) + "px";

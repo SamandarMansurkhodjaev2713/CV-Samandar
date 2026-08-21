@@ -97,6 +97,11 @@ composed source; regenerate that source instead.
   the accessibility tree.
 - Card and case-page markup must expose all three candidates through `srcset`,
   an accurate `sizes` contract and explicit `width` / `height` attributes.
+- Every product must keep a unique registry accent. Cards may use that accent
+  for a restrained edge, status, CTA and ambient wash, but never recolour the
+  photograph itself or make colour the only identity signal.
+- The card layer may define a per-product crop position; the complete semantic
+  object must still remain inside the central safe zone at every breakpoint.
 - Case-page hero images follow the same rule because the semantic hero copy is
   immediately adjacent.
 - The original `<img>` is always the reliable fallback. Optional WebGL image
@@ -117,5 +122,6 @@ Before accepting a new cover, verify all of the following:
 4. Materials look physically plausible and avoid glossy CGI.
 5. No text-like artefacts or pseudo-UI are present.
 6. The composition is not a duplicate of another product.
-7. The registry path, dimensions, format and byte budget pass validation.
-8. The card and case-page fallbacks remain useful with WebGL disabled.
+7. The registry accent is not reused by another product.
+8. The registry path, dimensions, format and byte budget pass validation.
+9. The card and case-page fallbacks remain useful with WebGL disabled.

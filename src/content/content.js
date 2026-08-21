@@ -18,14 +18,15 @@ const CONTENT = {
       eyebrow: "Builder · QA Engineer · AI Code Lab — v.2026",
       eyebrow_mobile: "Product engineering · QA",
       name: "Samandar",
-      statement_lines: ["Продукты,", "которые выдерживают", "реальность."],
-      statement_aria: "Продукты, которые выдерживают реальность.",
+      statement_lines: ["Из задачи —", "в продукт."],
+      statement_aria: "Из задачи — в работающий продукт.",
       signature: "Samandar Mansurkhodjaev · Product engineer",
       title_lines: ["Full-stack.", "AI Automation.", "Builder + QA."],
       tagline:
-        "Превращаю задачу бизнеса в работающий продукт — и сам отвечаю за его качество. Дизайн, код, AI, тесты — без посредников.",
-      tagline_mobile: "Проектирую, собираю и проверяю продукт сам — от идеи до релиза.",
+        "Проектирую интерфейс, собираю full-stack и проверяю релиз как QA. Один инженер ведёт продукт от первого решения до production.",
+      tagline_mobile: "Дизайн, full-stack, AI и QA — один контур от идеи до релиза.",
       cta_primary: "Обсудить проект",
+      cta_primary_mobile: "Обсудить",
       cta_secondary: "Смотреть работы",
       cta_secondary_mobile: "Проекты",
       status: "доступен для проектов",
@@ -427,7 +428,7 @@ const CONTENT = {
     builder: {
       eyebrow: "Scope preview",
       title: "Проектный эскиз",
-      meta: "estimate · v2026.1",
+      meta: "estimate · v2026.2",
       lead: "Отметьте формат, стадию и реальные усложнения. Получите честный диапазон для первого разговора — с рисками, QA-контуром и предварительной архитектурой.",
       step1: "Что строим",
       step2: "Стадия продукта",
@@ -595,14 +596,15 @@ const CONTENT = {
       eyebrow: "Builder · QA Engineer · AI Code Lab — v.2026",
       eyebrow_mobile: "Product engineering · QA",
       name: "Samandar",
-      statement_lines: ["Products", "built for", "the real world."],
-      statement_aria: "Products built for the real world.",
+      statement_lines: ["From brief —", "to product."],
+      statement_aria: "From a business brief to a working product.",
       signature: "Samandar Mansurkhodjaev · Product engineer",
       title_lines: ["Full-stack.", "AI Automation.", "Builder + QA."],
       tagline:
-        "I turn a business problem into a working product — and own its quality. Design, code, AI, tests — one person, no handoffs.",
-      tagline_mobile: "I design, build and verify the product myself — from idea to release.",
+        "I design the interface, build the full stack and verify the release as QA. One engineer owns the route from first decision to production.",
+      tagline_mobile: "Design, full-stack, AI and QA — one ownership loop from idea to release.",
       cta_primary: "Discuss a project",
+      cta_primary_mobile: "Discuss",
       cta_secondary: "View work",
       cta_secondary_mobile: "Projects",
       status: "available for projects",
@@ -985,7 +987,7 @@ const CONTENT = {
     builder: {
       eyebrow: "Scope preview",
       title: "Project sketch",
-      meta: "estimate · v2026.1",
+      meta: "estimate · v2026.2",
       lead: "Choose the format, stage and real complexity drivers. Get an honest first-conversation range with risks, QA scope and a candidate architecture.",
       step1: "What we build",
       step2: "Product stage",
@@ -1149,14 +1151,15 @@ const CONTENT = {
       eyebrow: "Builder · QA Engineer · AI Code Lab — v.2026",
       eyebrow_mobile: "Product engineering · QA",
       name: "Samandar",
-      statement_lines: ["Haqiqiy sharoitda", "ishlaydigan", "mahsulotlar."],
-      statement_aria: "Haqiqiy sharoitda ishlaydigan mahsulotlar.",
+      statement_lines: ["Vazifadan —", "mahsulotga."],
+      statement_aria: "Biznes vazifasidan ishlaydigan mahsulotgacha.",
       signature: "Samandar Mansurkhodjaev · Product engineer",
       title_lines: ["Full-stack.", "AI Avtomatlashtirish.", "Builder + QA."],
       tagline:
-        "Biznes vazifasini ishlovchi mahsulotga aylantiraman — sifatiga o'zim javob beraman. Dizayn, kod, AI, testlar — bir kishi, vositachisiz.",
-      tagline_mobile: "Mahsulotni g'oyadan relizgacha o'zim loyihalayman, quraman va tekshiraman.",
+        "Interfeysni loyihalayman, full-stack'ni quraman va relizni QA sifatida tekshiraman. Bir muhandis mahsulotni birinchi qarordan production'gacha olib boradi.",
+      tagline_mobile: "Dizayn, full-stack, AI va QA — g'oyadan relizgacha yagona javobgarlik konturi.",
       cta_primary: "Loyihani muhokama qilish",
+      cta_primary_mobile: "Muhokama",
       cta_secondary: "Loyihalar",
       cta_secondary_mobile: "Loyihalar",
       status: "loyihalar uchun ochiqman",
@@ -1539,7 +1542,7 @@ const CONTENT = {
     builder: {
       eyebrow: "Scope preview",
       title: "Loyiha eskizi",
-      meta: "estimate · v2026.1",
+      meta: "estimate · v2026.2",
       lead: "Format, bosqich va haqiqiy murakkablik omillarini belgilang. Dastlabki suhbat uchun risklar, QA-kontur va taxminiy arxitektura bilan halol diapazon oling.",
       step1: "Nima quramiz",
       step2: "Mahsulot bosqichi",
@@ -1747,7 +1750,7 @@ const PROJECT_ADDITIONS = [
     i18n: {
       ru: {
         tag: "LEGALTECH · CRM",
-        problem: "Частная юридическая практика теряет контекст между списком клиентов, заметками, статусами дел и следующим шагом.",
+        problem: "Юридическая практика теряет контекст между клиентом, статусом дела и следующим шагом.",
         solution: "Рабочая CRM с таблицей и Kanban, историей статусов, RLS, уведомлениями и изолированной демо-средой.",
         role: "Full-stack + Product + QA",
         outcome: "live CRM · автоматическая регрессия · CI",
@@ -1778,7 +1781,7 @@ const PROJECT_ADDITIONS = [
     i18n: {
       ru: {
         tag: "EDTECH · PRIVACY AI",
-        problem: "Оценка занятия превращается в непрозрачный AI-score без доказательств, контекста и права человека пересмотреть вывод.",
+        problem: "AI-оценка занятия теряет доверие без доказательств, контекста и human review.",
         solution: "Локальная evidence-first платформа: события с таймкодом, confidence, качеством данных и обязательным human review.",
         role: "AI Systems + Backend + QA",
         outcome: "on-prem foundation · traceable evidence · review flow",
@@ -1809,21 +1812,21 @@ const PROJECT_ADDITIONS = [
     i18n: {
       ru: {
         tag: "AUTO SERVICE · OPERATIONS",
-        problem: "Автосервису сложно держать заказы, филиалы, согласования, медиа, оплату и клиентский статус в одном надёжном процессе.",
+        problem: "Заказы, филиалы, согласования, медиа и оплата автосервиса живут в разных потоках.",
         solution: "Проработанная discovery- и architecture-фаза multi-tenant PWA для СТО: карта ролей, границы модулей, модель данных и проверяемый план реализации.",
         role: "Product Discovery + Architecture + QA Planning",
         outcome: "discovery · architecture · implementation plan",
       },
       en: {
         tag: "AUTO SERVICE · OPERATIONS",
-        problem: "Auto workshops struggle to keep orders, branches, approvals, media, payments and customer status in one reliable flow.",
+        problem: "Orders, branches, approvals, media and payments drift across disconnected workshop flows.",
         solution: "A documented discovery and architecture phase for a multi-tenant workshop PWA: roles, module boundaries, data model and a verifiable implementation plan.",
         role: "Product Discovery + Architecture + QA Planning",
         outcome: "discovery · architecture · implementation plan",
       },
       uz: {
         tag: "AUTO SERVICE · OPERATIONS",
-        problem: "Avtoservis buyurtma, filial, tasdiq, media, to‘lov va mijoz holatini bitta ishonchli jarayonda ushlashda qiynaladi.",
+        problem: "Buyurtma, filial, tasdiq, media va to‘lovlar avtoservisda alohida oqimlarga tarqaladi.",
         solution: "O‘zbekiston STOlari uchun multi-tenant PWA’ning hujjatlashtirilgan discovery va arxitektura bosqichi: rollar, modul chegaralari, ma’lumot modeli va tekshiriladigan amalga oshirish rejasi.",
         role: "Product Discovery + Architecture + QA Planning",
         outcome: "discovery · architecture · implementation plan",
@@ -1963,21 +1966,21 @@ const PROJECT_ADDITIONS = [
     i18n: {
       ru: {
         tag: "HR OPS · DOCUMENT AUTOMATION",
-        problem: "Ручной отпускной процесс распадается между Excel-графиком, подготовкой приказа, последовательными подтверждениями и контролем незакрытых случаев.",
+        problem: "Отпуск распадается между Excel-графиком, приказом, цепочкой подтверждений и контролем статуса.",
         solution: "Telegram-агент ведёт один контролируемый workflow: читает график, формирует документ, хранит state, запрашивает подтверждения по порядку и защищает от повторной отправки.",
         role: "Product Engineering + Automation + QA",
         outcome: "72 теста · persistent state · dedupe/retry",
       },
       en: {
         tag: "HR OPS · DOCUMENT AUTOMATION",
-        problem: "A manual leave process fragments across an Excel schedule, order preparation, sequential confirmations and unresolved-case tracking.",
+        problem: "Leave fragments across the Excel schedule, order document, approval chain and status tracking.",
         solution: "A Telegram agent owns one controlled workflow: reads the schedule, creates the document, persists state, requests confirmations in order and prevents duplicate sends.",
         role: "Product Engineering + Automation + QA",
         outcome: "72 tests · persistent state · dedupe/retry",
       },
       uz: {
         tag: "HR OPS · DOCUMENT AUTOMATION",
-        problem: "Qo‘lda boshqariladigan ta’til jarayoni Excel jadvali, buyruq tayyorlash, ketma-ket tasdiqlar va yopilmagan holatlar nazorati orasida tarqaladi.",
+        problem: "Ta’til Excel jadvali, buyruq, tasdiqlar zanjiri va status nazorati orasida tarqaladi.",
         solution: "Telegram-agent bitta boshqariladigan workflow’ni olib boradi: jadvalni o‘qiydi, hujjat yaratadi, state’ni saqlaydi, tasdiqlarni tartib bilan so‘raydi va takroriy yuborishni to‘xtatadi.",
         role: "Product Engineering + Automation + QA",
         outcome: "72 test · persistent state · dedupe/retry",
@@ -2025,21 +2028,21 @@ const PROJECT_ADDITIONS = [
     i18n: {
       ru: {
         tag: "MOBILE · OFFLINE-FIRST · SECURITY",
-        problem: "Мобильный чат становится ненадёжным при нестабильной сети: сообщения дублируются, теряются, а правила доступа сложно доказать.",
+        problem: "При нестабильной сети чат дублирует или теряет сообщения, а права доступа трудно проверить.",
         solution: "Offline-first мессенджер с SQLite outbox, idempotency, retry, server-side OTP и тестируемыми Firebase security rules.",
         role: "Mobile Architecture + Full-stack + QA",
         outcome: "234 automated checks · offline outbox · security rules",
       },
       en: {
         tag: "MOBILE · OFFLINE-FIRST · SECURITY",
-        problem: "A mobile chat becomes unreliable on unstable networks: messages duplicate or disappear, while access rules are hard to prove.",
+        problem: "On unstable networks, chat can duplicate or lose messages while access rules remain hard to verify.",
         solution: "An offline-first messenger with a SQLite outbox, idempotency, retries, server-side OTP and testable Firebase security rules.",
         role: "Mobile Architecture + Full-stack + QA",
         outcome: "234 automated checks · offline outbox · security rules",
       },
       uz: {
         tag: "MOBILE · OFFLINE-FIRST · SECURITY",
-        problem: "Beqaror tarmoqda mobil chat ishonchsiz bo‘lib qoladi: xabarlar takrorlanadi yoki yo‘qoladi, kirish qoidalarini esa isbotlash qiyin.",
+        problem: "Beqaror tarmoqda chat xabarni takrorlaydi yoki yo‘qotadi, kirish qoidalarini tekshirish esa qiyin.",
         solution: "SQLite outbox, idempotency, retry, server-side OTP va test qilinadigan Firebase security rules bilan offline-first messenjer.",
         role: "Mobile Architecture + Full-stack + QA",
         outcome: "234 automated checks · offline outbox · security rules",
@@ -2056,21 +2059,21 @@ const PROJECT_ADDITIONS = [
     i18n: {
       ru: {
         tag: "HR OPS · RELIABILITY",
-        problem: "Поздравление в корпоративном канале нельзя пропустить, повторить или отправить с неверными персональными данными — ручная таблица этого не гарантирует.",
+        problem: "Корпоративное поздравление нельзя пропустить, повторить или отправить с неверными данными.",
         solution: "Приватный Telegram-агент импортирует Excel через preview/apply, публикует ровно один раз, сохраняет append-only аудит и восстанавливается без потери состояния.",
         role: "Product Engineering + Backend + QA",
         outcome: "718 тестов · 10 инвариантов · audit/recovery",
       },
       en: {
         tag: "HR OPS · RELIABILITY",
-        problem: "A corporate greeting cannot be missed, duplicated or published with incorrect personal data — a manual spreadsheet cannot guarantee that.",
+        problem: "A corporate greeting cannot be missed, duplicated or sent with incorrect personal data.",
         solution: "A private Telegram agent imports Excel through preview/apply, publishes exactly once, keeps an append-only audit trail and recovers without losing state.",
         role: "Product Engineering + Backend + QA",
         outcome: "718 tests · 10 invariants · audit/recovery",
       },
       uz: {
         tag: "HR OPS · RELIABILITY",
-        problem: "Korporativ tabrikni o‘tkazib yuborish, takrorlash yoki noto‘g‘ri shaxsiy ma’lumot bilan yuborish mumkin emas — oddiy jadval bunga kafolat bermaydi.",
+        problem: "Korporativ tabrikni o‘tkazib yuborish, takrorlash yoki noto‘g‘ri ma’lumot bilan yuborish mumkin emas.",
         solution: "Private Telegram-agent Excel’ni preview/apply orqali import qiladi, faqat bir marta yuboradi, append-only audit saqlaydi va state’ni yo‘qotmasdan tiklanadi.",
         role: "Product Engineering + Backend + QA",
         outcome: "718 test · 10 invariant · audit/recovery",
@@ -2140,6 +2143,7 @@ function projectGithubLabel(meta, lang) {
 
 const PROJECT_UI = {
   ru: {
+    catalog_unit: "продуктов",
     open_live: "Открыть сайт",
     github: "GitHub",
     collapse: "Свернуть",
@@ -2154,6 +2158,7 @@ const PROJECT_UI = {
     outcome_label: "результат",
   },
   en: {
+    catalog_unit: "products",
     open_live: "Open live site",
     github: "GitHub",
     collapse: "Collapse",
@@ -2168,6 +2173,7 @@ const PROJECT_UI = {
     outcome_label: "outcome",
   },
   uz: {
+    catalog_unit: "mahsulot",
     open_live: "Saytni ochish",
     github: "GitHub",
     collapse: "Yig‘ish",

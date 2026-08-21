@@ -10,7 +10,7 @@
 })(typeof window !== "undefined" ? window : globalThis, function createBuilderEstimator() {
   "use strict";
 
-  var VERSION = "2026.1";
+  var VERSION = "2026.2";
   var TYPE_IDS = ["web", "ai", "bot", "automation"];
   var STAGE_IDS = ["prototype", "mvp", "production"];
   var DRIVER_IDS = ["ai", "integrations", "auth", "payments", "realtime", "migration", "motion", "load"];
@@ -23,9 +23,9 @@
     automation: { factor: 0.92, client: ["Webhooks / n8n"], logic: ["Python / Node.js"] },
   };
   var STAGES = {
-    prototype: { weeks: { min: 1, max: 2 }, budget: { min: 250, max: 700 }, confidenceBase: 0.82 },
-    mvp: { weeks: { min: 2, max: 5 }, budget: { min: 700, max: 2000 }, confidenceBase: 0.76 },
-    production: { weeks: { min: 6, max: 12 }, budget: { min: 2200, max: 6500 }, confidenceBase: 0.68 },
+    prototype: { weeks: { min: 1, max: 2 }, budget: { min: 150, max: 450 }, confidenceBase: 0.82 },
+    mvp: { weeks: { min: 2, max: 5 }, budget: { min: 450, max: 1400 }, confidenceBase: 0.76 },
+    production: { weeks: { min: 6, max: 12 }, budget: { min: 1500, max: 4200 }, confidenceBase: 0.68 },
   };
   var DRIVER_WEIGHT = {
     ai: 0.24,

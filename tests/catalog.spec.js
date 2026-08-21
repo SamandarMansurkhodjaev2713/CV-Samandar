@@ -78,8 +78,12 @@ test.describe("project catalog", () => {
     await page.goto("/" + product.casePage, { waitUntil: "domcontentloaded" });
     const back = page.locator(".lp-back");
     await expect(back).toHaveAttribute("href", "../../#proj-" + product.slug);
-    await back.click();
-    await expect(page).toHaveURL(new RegExp("#proj-" + product.slug + "$"));
+    await Promise.all([
+      page.waitForURL(new RegExp("#proj-" + product.slug + "$"), { waitUntil: "domcontentloaded" }),
+      back.click(),
+    ]);
+    await page.locator("#main").waitFor({ state: "attached" });
+    await page.locator(".proj-card").first().waitFor({ state: "attached" });
     const card = page.locator("#proj-" + product.slug);
     await expect(card).toBeVisible();
     await expect(page.locator("#sm-intro")).toHaveCount(0);
@@ -98,5 +102,11 @@ test.describe("project catalog", () => {
     expectResponsiveProjectImage(expect, image, "case-return card image");
     await expectNoHorizontalOverflow(expect, page, "case-return");
     expect(transitionErrors).toEqual([]);
+
+    // Release the long-lived WebGL/motion document before Playwright tears
+    // down video + trace capture. On constrained Windows runners closing the
+    // whole context while that document is still rendering can exceed the
+    // product-test timeout even though every assertion has already passed.
+    await page.goto("about:blank", { waitUntil: "commit" });
   });
 });

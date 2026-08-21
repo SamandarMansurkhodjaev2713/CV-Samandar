@@ -481,7 +481,7 @@
       githubUrl: null,
       casePage: "projects/b24-sales-analyst/",
       image: "assets/proj/b24-sales-analyst.webp",
-      accent: "#4E7A5C",
+      accent: "#5D806B",
       repositoryAliases: [repo("b24agent", "private", "source")],
       evidenceLevel: "private_source",
       claims: [

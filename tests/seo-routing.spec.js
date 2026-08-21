@@ -43,14 +43,20 @@ test("main and case pages expose canonical social and locale metadata", async ({
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/CV-Samandar\/$/);
   await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /^https:\/\//);
   await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(4);
+  const mainStructuredData = JSON.parse(await page.locator('script[type="application/ld+json"]').textContent());
+  expect(mainStructuredData["@graph"].map((item) => item["@type"])).toEqual(
+    expect.arrayContaining(["Person", "WebSite", "ProfilePage"])
+  );
 
   const product = caseProducts.find((item) => item.slug === "chat-app");
   await page.goto("/" + product.casePage, { waitUntil: "domcontentloaded" });
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", new RegExp(product.casePage + "$"));
   await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(4);
   await expect(page.locator('meta[name="twitter:image"]')).toHaveAttribute("content", /^https:\/\//);
-  const structuredData = await page.locator('script[type="application/ld+json"]').textContent();
-  expect(structuredData).toContain('"@type":"CreativeWork"');
+  const structuredData = JSON.parse(await page.locator('script[type="application/ld+json"]').textContent());
+  expect(structuredData["@graph"].map((item) => item["@type"])).toEqual(
+    expect.arrayContaining(["CreativeWork", "Person", "WebPage", "BreadcrumbList"])
+  );
 });
 
 test("localized case URLs ship translated metadata and body before JavaScript", async ({ request }) => {

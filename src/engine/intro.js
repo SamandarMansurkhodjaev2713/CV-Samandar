@@ -289,27 +289,22 @@
       panel.setAttribute("aria-busy", "true");
       panel.innerHTML = "";
       panel.style.background =
-        "linear-gradient(180deg, rgba(31,30,27,.96), #1F1E1B)," +
+        "linear-gradient(180deg, #151512, #0b0d0c)," +
         "radial-gradient(circle at 68% 42%, rgba(" + accent.join(",") + ",.12), transparent 42%)";
 
       var instrument = document.createElement("div");
-      instrument.className = "sm-boot-instrument";
+      instrument.className = "sm-boot-instrument sm-boot-compiler";
       instrument.setAttribute("aria-hidden", "true");
       instrument.innerHTML =
-        '<span class="sm-boot-aperture sm-boot-aperture--a"></span>' +
-        '<span class="sm-boot-aperture sm-boot-aperture--b"></span>' +
-        '<picture><source media="(max-width:760px)" srcset="assets/hero/responsive/release-gate-768.webp">' +
-        '<img src="assets/hero/responsive/release-gate-1152.webp" width="1152" height="768" alt="" decoding="async"></picture>';
+        '<span class="hero-compiler-depth"></span>' +
+        '<svg class="hero-compiler-rail" viewBox="0 0 1000 620" preserveAspectRatio="none">' +
+        '<path class="hero-compiler-rail-base" d="M72 382 C214 382 236 328 360 328 S520 382 618 382 S790 382 928 316"></path>' +
+        '<path class="hero-compiler-rail-live" d="M72 382 C214 382 236 328 360 328 S520 382 618 382 S790 382 928 316"></path></svg>' +
+        '<span class="hero-input-cluster"><i></i><i></i><i></i><i></i><i></i></span>' +
+        '<span class="hero-build-core"><b></b><i></i><i></i><i></i></span>' +
+        '<span class="hero-verify-gate"><b></b><i class="hero-verify-scan"></i><i class="hero-verify-axis"></i></span>' +
+        '<span class="hero-release-block"><b></b><i></i></span>';
       panel.appendChild(instrument);
-
-      if (!reduced) {
-        canvas = document.createElement("canvas");
-        canvas.className = "sm-boot-particles";
-        canvas.setAttribute("aria-hidden", "true");
-        panel.appendChild(canvas);
-        setupParticles();
-
-      }
 
       /* Reduced motion keeps the physical core as a static orientation mark;
          only its pulse/ring animation and particles are removed. */
@@ -513,7 +508,10 @@
         window.requestAnimationFrame(function () {
           panel.style.clipPath = "inset(50% 0 50% 0)";
           panel.style.webkitClipPath = "inset(50% 0 50% 0)";
-          panel.style.opacity = "0.18";
+          // Keep the remaining shutter opaque while it collapses. Fading the
+          // whole panel exposed two typographic systems at once (the 100%
+          // readout over Hero), which looked like a broken loading state.
+          panel.style.opacity = "1";
         });
         window.setTimeout(finishReveal, timing.revealMs + 80);
       }, timing.holdMs);

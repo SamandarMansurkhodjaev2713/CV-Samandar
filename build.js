@@ -239,7 +239,10 @@ function htmlAttr(s) {
 function renderLandingPage(p, R, version, lang, base) {
   const copy = (p.i18n && p.i18n[lang]) || (p.i18n && p.i18n.ru) || {};
   const v = version ? "?v=" + version : "";
-  const title = p.name + (copy.tag ? " — " + copy.tag.replace(/ · /g, " / ") : "");
+  const caseTitle = lang === "en"
+    ? "Product engineering case"
+    : (lang === "uz" ? "Mahsulot ishlab chiqish keysi" : "Кейс продуктовой разработки");
+  const title = p.name + " — " + caseTitle + " | Samandar";
   const desc = copy.signal || "";
   const route = "projects/" + p.slug + "/" + (lang === "ru" ? "" : lang + "/");
   const ogUrl = SITE_BASE + route;
@@ -247,20 +250,50 @@ function renderLandingPage(p, R, version, lang, base) {
   // Each case owns a photographic 3:1 social preview instead of sharing the
   // portfolio cover. This keeps Telegram/LinkedIn links visually distinct.
   const ogImg = SITE_BASE + "assets/proj/" + p.visual;
+  const personId = SITE_BASE + "#person";
+  const pageId = ogUrl + "#page";
+  const workId = ogUrl + "#case";
   const structuredData = JSON.stringify({
     "@context": "https://schema.org",
-    "@type": "CreativeWork",
-    name: p.name,
-    description: desc,
-    url: ogUrl,
-    image: ogImg,
-    inLanguage: lang,
-    author: {
-      "@type": "Person",
-      name: "Samandar Mansurkhodjaev",
-      url: SITE_BASE,
-    },
-    keywords: (p.stack || []).join(", "),
+    "@graph": [
+      {
+        "@type": "CreativeWork",
+        "@id": workId,
+        name: p.name,
+        description: desc,
+        url: ogUrl,
+        image: ogImg,
+        inLanguage: lang,
+        author: { "@id": personId },
+        mainEntityOfPage: { "@id": pageId },
+        keywords: (p.stack || []).join(", "),
+      },
+      {
+        "@type": "Person",
+        "@id": personId,
+        name: "Samandar Mansurkhodjaev",
+        url: SITE_BASE,
+      },
+      {
+        "@type": "WebPage",
+        "@id": pageId,
+        url: ogUrl,
+        name: title,
+        description: desc,
+        inLanguage: lang,
+        mainEntity: { "@id": workId },
+        isPartOf: { "@id": SITE_BASE + "#website" },
+        breadcrumb: { "@id": ogUrl + "#breadcrumb" },
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": ogUrl + "#breadcrumb",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Samandar", item: SITE_BASE },
+          { "@type": "ListItem", position: 2, name: p.name, item: ogUrl },
+        ],
+      },
+    ],
   }).replace(/</g, "\\u003c");
   const csp = contentSecurityPolicy([structuredData]);
   const body = R.LP_render(p, lang, base);
@@ -287,6 +320,7 @@ function renderLandingPage(p, R, version, lang, base) {
     '<meta property="og:image" content="' + htmlAttr(ogImg) + '">',
     '<meta property="og:image:width" content="1536">',
     '<meta property="og:image:height" content="512">',
+    '<meta property="og:image:type" content="image/webp">',
     '<meta property="og:image:alt" content="' + htmlAttr(p.name + " — editorial product study") + '">',
     '<meta property="og:locale" content="' + localeCode + '">',
     '<meta property="og:locale:alternate" content="' + (lang === "ru" ? "en_US" : "ru_RU") + '">',

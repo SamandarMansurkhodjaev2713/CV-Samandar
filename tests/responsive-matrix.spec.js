@@ -170,6 +170,15 @@ test.describe("stage 9 responsive regression matrix", () => {
     );
   });
 
+  test.afterEach(async ({ page }) => {
+    // Release WebGL and the shared motion runtime before trace/video teardown.
+    // This keeps Windows GPU-process cleanup outside the assertion timeout;
+    // the full matrix above still runs against the real document.
+    if (!page.isClosed()) {
+      await page.goto("about:blank", { waitUntil: "commit", timeout: 5000 }).catch(() => {});
+    }
+  });
+
   test("main shell, project gallery and unobscured focus survive the canonical viewport sweep", async ({ page }) => {
     // Eleven real reflows plus focus hit-testing are intentionally serialized
     // in one browser page. The larger ceiling is for that matrix, not a wait.

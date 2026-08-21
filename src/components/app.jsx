@@ -433,7 +433,11 @@ function Nav({ t, lang, setLang, active }) {
     // inside the 60px bar (it opened, but as a 1280x59 sliver). Keeping it
     // outside is the only robust fix; z-index keeps the burger clickable above it.
     <>
-    <nav aria-label={t.nav.label || "Primary navigation"} className={`nav ${open ? "nav-open" : ""} ${capsule ? "is-capsule" : ""}`}>
+    <nav
+      aria-label={t.nav.label || "Primary navigation"}
+      className={`nav ${open ? "nav-open" : ""} ${capsule ? "is-capsule" : ""}`}
+      style={{ "--nav-progress": `${Math.max(0.04, progress) * 100}%` }}
+    >
       <div className="nav-inner">
         <a href="#hero" className="brand" data-cursor="link" data-cursor-label="↑ top" onClick={(e) => go(e, "hero")}>
           <span className="brand-mark" />
@@ -543,10 +547,9 @@ function Nav({ t, lang, setLang, active }) {
               </span>
               <span className="nav-peek-name">{t.nav[menuPreview.k] || FULL_MENU_LABELS[lang][menuPreview.k]}</span>
             </div>
-            <picture className="nav-peek-object">
-              <source media="(max-width: 900px)" srcSet="assets/hero/responsive/release-gate-768.webp" />
-              <img src="assets/hero/responsive/release-gate-1152.webp" width="1152" height="768" alt="" />
-            </picture>
+            <div className="nav-peek-proof">
+              <span /><span /><span />
+            </div>
             <span className="nav-peek-ring nav-peek-ring--a" />
             <span className="nav-peek-ring nav-peek-ring--b" />
           </div>
@@ -657,26 +660,29 @@ function App() {
     const root = document.getElementById("root");
     if (!intent || !intent.panel) return;
 
-    // The hard ceiling may have shown recovery milliseconds before React
-    // mounted. If the shell subsequently arrives, promote it immediately
-    // instead of leaving a stale recovery dialog over a healthy application.
-    if (intent.doneFired) {
+    function clearCompletedOverlay() {
+      // A saturated browser can commit the React tree, defer passive effects
+      // until after the Intro recovery deadline, and then deliver completion
+      // while the healthy shell already exists. A completed Intro must never
+      // retain a full-screen interaction shield, regardless of which bounded
+      // fallback produced the completion reason.
       if (
-        intent.reason === "recovery" &&
-        intent.panel.parentNode &&
-        root &&
-        root.childElementCount
-      ) {
-        // Recovery can win the deadline milliseconds before React commits on
-        // a saturated WebKit main thread. Once the real shell exists, promote
-        // it synchronously: another transition + timer can be starved by the
-        // same workload and leave an invisible full-screen panel intercepting
-        // input even though the application is already complete.
-        intent.prepared = true;
-        intent.panel.remove();
-        root.inert = false;
-        root.removeAttribute("aria-hidden");
-      } else if (root) {
+        !intent.doneFired ||
+        !intent.panel.parentNode ||
+        !root ||
+        !root.childElementCount
+      ) return false;
+      intent.prepared = true;
+      intent.panel.remove();
+      root.inert = false;
+      root.removeAttribute("aria-hidden");
+      return true;
+    }
+
+    // The hard ceiling may have completed milliseconds before React's passive
+    // effect. Promote the mounted shell synchronously in that state.
+    if (intent.doneFired) {
+      if (!clearCompletedOverlay() && root) {
         root.inert = false;
         root.removeAttribute("aria-hidden");
       }
@@ -721,27 +727,17 @@ function App() {
       else root.setAttribute("aria-hidden", previousAriaHidden);
     }
 
+    function onIntroDone() {
+      clearCompletedOverlay();
+      restoreShell();
+    }
+
     markReady("shell", false);
 
-    // The signature proof instrument is now the Hero's selected critical
-    // media. Wait for a real decode/load, but keep a strict fallback so a bad
-    // image can never turn the Intro into an interaction lock.
-    const heroImage = document.querySelector(".hero-instrument-img");
-    let heroTimer = window.setTimeout(() => markReady("hero", true), 1250);
-    const markHero = (fallback) => {
-      window.clearTimeout(heroTimer);
-      heroTimer = 0;
-      markReady("hero", fallback);
-    };
-    if (!heroImage) {
-      markHero(true);
-    } else if (heroImage.complete && heroImage.naturalWidth > 0) {
-      if (typeof heroImage.decode === "function") heroImage.decode().then(() => markHero(false)).catch(() => markHero(true));
-      else markHero(false);
-    } else {
-      heroImage.addEventListener("load", () => markHero(false), { once: true });
-      heroImage.addEventListener("error", () => markHero(true), { once: true });
-    }
+    // The proof compiler is code-native HTML/SVG and already exists in the
+    // parser-painted frame zero. There is no raster decode to wait for and no
+    // false media fallback to report; the mounted shell is the truthful gate.
+    markReady("hero", false);
 
     fontTimer = window.setTimeout(() => markReady("fonts", true), 1250);
     if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === "function") {
@@ -751,14 +747,13 @@ function App() {
       }).catch(() => markReady("fonts", true));
     } else {
       window.clearTimeout(fontTimer);
-      window.clearTimeout(heroTimer);
       markReady("fonts", true);
     }
 
-    window.addEventListener("sm:intro-done", restoreShell, { once: true });
+    window.addEventListener("sm:intro-done", onIntroDone, { once: true });
     return () => {
       window.clearTimeout(fontTimer);
-      window.removeEventListener("sm:intro-done", restoreShell);
+      window.removeEventListener("sm:intro-done", onIntroDone);
       restoreShell();
     };
   }, []);
@@ -908,6 +903,14 @@ function App() {
       if (cancelled || !settling) return;
       const el = document.getElementById(id);
       if (el && el.offsetParent !== null) {
+        // A fresh hash load does not pass through SceneCinema, so give it the
+        // same single-motion-owner contract here. Otherwise the section can
+        // be correctly positioned while its scroll entrance still holds the
+        // entire scene at opacity:0/blur — a visually blank deep link.
+        const scene = el.matches && el.matches("section[data-enter]")
+          ? el
+          : (el.closest ? el.closest("section[data-enter]") : null);
+        if (scene) scene.classList.add("sec-in", "sec-nav-landed");
         // Force an instant jump even though the root stylesheet declares
         // smooth scrolling. This prevents the delayed two-stage return that
         // was visible for cards near the end of the 21-item catalog.

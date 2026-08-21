@@ -206,6 +206,139 @@ html.motion-zones section[data-section]:not(.is-motion-near) :is(
 .sc-cursor[data-mode="drag"] .sc-coords,
 .sc-cursor.is-down .sc-coords { opacity: 1; }
 
+/* V2 / QA CALIPER CURSOR --------------------------------------------------
+   The cursor behaves like a verification instrument: a precise centre point,
+   two measuring jaws and a target frame that locks to authored controls. The
+   frame inherits each project's accent and reports the measured target, so the
+   response is contextual rather than a decorative follower. */
+.sc-cursor { color: var(--accent, #d97757); }
+.sc-cursor::before,
+.sc-cursor::after {
+  position: fixed;
+  opacity: .26;
+  background: currentColor;
+  transition: width .22s ease, height .22s ease, opacity .22s ease;
+}
+.sc-cursor::before { left: -28px; top: 0; width: 56px; height: 1px; }
+.sc-cursor::after { left: 0; top: -28px; width: 1px; height: 56px; }
+.sc-cursor[data-mode="default"]::before,
+.sc-cursor[data-mode="default"]::after { opacity: .16; }
+.sc-cursor:not([data-mode="default"])::before { left: -38px; width: 76px; opacity: .38; }
+.sc-cursor:not([data-mode="default"])::after { top: -38px; height: 76px; opacity: .38; }
+
+.sc-dot {
+  width: 3px;
+  height: 3px;
+  left: -1.5px;
+  top: -1.5px;
+  background: #f2eadc;
+  box-shadow: 0 0 0 1px currentColor, 0 0 12px rgba(217,119,87,.22);
+}
+
+.sc-caliper {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 42px;
+  height: 20px;
+  transform: translate(-21px, -10px);
+  opacity: .72;
+  transition: width .28s cubic-bezier(.16,1,.3,1), transform .28s cubic-bezier(.16,1,.3,1), opacity .2s ease;
+}
+.sc-caliper::before {
+  content: "QA";
+  position: absolute;
+  left: 50%;
+  top: -13px;
+  padding-inline: 3px;
+  color: currentColor;
+  background: rgba(8,10,9,.82);
+  font: 500 6px/1 "JetBrains Mono", ui-monospace, monospace;
+  letter-spacing: .14em;
+  opacity: .5;
+  transform: translateX(-50%);
+}
+.sc-caliper::after {
+  content: "";
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  bottom: -6px;
+  height: 3px;
+  opacity: .42;
+  background: repeating-linear-gradient(90deg, currentColor 0 1px, transparent 1px 7px);
+}
+.sc-caliper i,
+.sc-caliper b { position: absolute; display: block; background: currentColor; }
+.sc-caliper i { top: 0; width: 1px; height: 20px; }
+.sc-caliper i:first-child { left: 0; }
+.sc-caliper i:nth-child(2) { right: 0; }
+.sc-caliper i::before,
+.sc-caliper i::after { content: ""; position: absolute; width: 6px; height: 1px; background: currentColor; }
+.sc-caliper i:first-child::before,
+.sc-caliper i:first-child::after { left: 0; }
+.sc-caliper i:nth-child(2)::before,
+.sc-caliper i:nth-child(2)::after { right: 0; }
+.sc-caliper i::before { top: 0; }
+.sc-caliper i::after { bottom: 0; }
+.sc-caliper b { left: 50%; bottom: -5px; width: 1px; height: 4px; opacity: .65; }
+.sc-cursor:not([data-mode="default"]) .sc-caliper { width: 58px; transform: translate(-29px, -10px); opacity: 1; }
+.sc-cursor.is-down .sc-caliper { width: 30px; transform: translate(-15px, -10px); }
+
+.sc-ring {
+  border-color: rgba(217,119,87,.52);
+  background: transparent;
+  box-shadow: none;
+}
+.sc-cursor:not([data-mode="default"]) .sc-ring {
+  border-color: transparent;
+  border-radius: 0 !important;
+  opacity: .95;
+  background:
+    linear-gradient(currentColor,currentColor) left top / 10px 1px no-repeat,
+    linear-gradient(currentColor,currentColor) left top / 1px 10px no-repeat,
+    linear-gradient(currentColor,currentColor) right top / 10px 1px no-repeat,
+    linear-gradient(currentColor,currentColor) right top / 1px 10px no-repeat,
+    linear-gradient(currentColor,currentColor) left bottom / 10px 1px no-repeat,
+    linear-gradient(currentColor,currentColor) left bottom / 1px 10px no-repeat,
+    linear-gradient(currentColor,currentColor) right bottom / 10px 1px no-repeat,
+    linear-gradient(currentColor,currentColor) right bottom / 1px 10px no-repeat;
+}
+.sc-cursor[data-mode="input"] .sc-ring { background: linear-gradient(currentColor,currentColor) center / 1px 100% no-repeat; }
+.sc-cursor.is-idle .sc-ring { animation: none; opacity: .5; }
+
+.sc-label {
+  top: 25px;
+  left: 29px;
+  gap: 5px;
+  min-height: 26px;
+  padding: 5px 9px 5px 11px;
+  border: 0;
+  border-left: 1px solid currentColor;
+  border-radius: 0;
+  background: linear-gradient(90deg, rgba(8,10,9,.94), rgba(8,10,9,.68));
+  box-shadow: 10px 16px 34px rgba(0,0,0,.2);
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  backdrop-filter: blur(7px);
+}
+.sc-label-key { color: rgba(242,234,220,.45); }
+.sc-label-val { color: #f2eadc; font-weight: 500; }
+.sc-cursor.has-label .sc-label { transform: translate(3px, 0); }
+
+.sc-coords {
+  top: -31px;
+  left: 16px;
+  padding-left: 7px;
+  border-left: 1px solid currentColor;
+  color: rgba(242,234,220,.48);
+  font-size: 7px;
+  letter-spacing: .1em;
+}
+.sc-cursor:not([data-mode="default"]) .sc-coords { opacity: 1; }
+.sc-ripple { border-radius: 0; transform: rotate(45deg); }
+
 
 /* ════════════════════════════════════════════════════════════
    MOTION — Reveal, stagger, split-text
@@ -396,6 +529,44 @@ section.sec-in [data-reveal].rv-bound:not(.rv-in) {
 /* ---- Hidden start poses (instant paint, no transition) ---------------- */
 section[data-enter].sec-bound:not(.sec-in) { opacity: 0; }
 .pin-host > section[data-enter].sec-bound:not(.sec-in) > .shell { opacity: 0; }
+
+/* Menu/deep-link navigation uses the document transition as its sole motion
+   owner. The destination must be fully readable on the first committed frame,
+   without also replaying its scroll-only entrance underneath the snapshot. */
+section[data-enter].sec-nav-landed {
+  opacity: 1 !important;
+  filter: none !important;
+  animation: none !important;
+}
+.pin-host > section[data-enter].sec-nav-landed > .shell {
+  opacity: 1 !important;
+  filter: none !important;
+  clip-path: none !important;
+  transform: none !important;
+  animation: none !important;
+}
+section[data-enter].sec-nav-landed [data-reveal].rv-bound {
+  opacity: 1 !important;
+  filter: none !important;
+  clip-path: none !important;
+  transform: none !important;
+  animation: none !important;
+}
+/* SecHead has a second, intentionally local line mask and child animation.
+   Finishing only the reveal parent can therefore leave the actual glyphs
+   below the mask in Firefox or during a long cross-section jump. Explicit
+   navigation commits every descendant to the same readable final pose. */
+section[data-enter].sec-nav-landed .sec-head > div,
+section[data-enter].sec-nav-landed .sec-head .sec-meta,
+section[data-enter].sec-nav-landed .sec-head .lm-i,
+section[data-enter].sec-nav-landed .rv-w,
+section[data-enter].sec-nav-landed .rv-c {
+  opacity: 1 !important;
+  filter: none !important;
+  clip-path: none !important;
+  transform: none !important;
+  animation: none !important;
+}
 
 /* ---- Triggered entrances (run once, settle to rest) ------------------- */
 

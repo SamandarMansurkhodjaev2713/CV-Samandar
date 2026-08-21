@@ -6,10 +6,16 @@ const registry = require(path.join(__dirname, "..", "src", "content", "product-r
 const orderedProducts = registry.slice().sort((a, b) => a.featuredRank - b.featuredRank);
 const caseProducts = orderedProducts.filter((product) => product.presentation === "case");
 const liveProducts = orderedProducts.filter((product) => product.presentation === "live");
+let settleSequence = 0;
 
 async function settleMain(page, hash) {
   const destination = (hash || "#hero").replace(/^#/, "");
-  await page.goto("/?e2e=1#" + destination, { waitUntil: "domcontentloaded" });
+  // A hash-only goto can stay in the same document, while the deep-link
+  // settling effect is intentionally mounted once. Give every requested
+  // destination its own navigation so repeated checks cannot wait on stale
+  // state from the previous hash.
+  settleSequence += 1;
+  await page.goto("/?e2e=1&settle=" + settleSequence + "#" + destination, { waitUntil: "domcontentloaded" });
   await page.locator("#main").waitFor({ state: "attached" });
   await page.locator(".proj-card").first().waitFor({ state: "attached" });
   await page.locator("html").waitFor({ state: "attached" });

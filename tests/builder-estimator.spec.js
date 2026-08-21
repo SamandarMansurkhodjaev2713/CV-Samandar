@@ -4,6 +4,29 @@ const { test } = require("@playwright/test");
 const assert = require("node:assert/strict");
 const estimator = require("../src/engine/builder-estimator.js");
 
+test("builder estimator exposes the approved lower 2026.2 entry bands", () => {
+  assert.equal(estimator.VERSION, "2026.2");
+
+  const expected = {
+    prototype: { min: 150, max: 450 },
+    mvp: { min: 450, max: 1400 },
+    production: { min: 1500, max: 4200 },
+  };
+
+  for (const [stageId, budget] of Object.entries(expected)) {
+    const result = estimator.estimateProject({
+      typeId: "web",
+      stageId,
+      readinessIds: estimator.READINESS_IDS,
+    });
+    assert.deepEqual(
+      { min: result.budget.min, max: result.budget.max },
+      budget,
+      `${stageId}: approved base band`
+    );
+  }
+});
+
 test("builder estimator covers every type, stage and driver combination safely", () => {
   const subsets = [];
   for (let mask = 0; mask < (1 << estimator.DRIVER_IDS.length); mask += 1) {

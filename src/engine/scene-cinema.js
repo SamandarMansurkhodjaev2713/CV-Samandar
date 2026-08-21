@@ -54,8 +54,19 @@
     if (document.body) document.body.setAttribute(BODY_SECTION_ATTR, id);
   }
 
+  // Explicit navigation already owns one document-level transition. Letting
+  // the destination's scroll entrance start at the same time creates a double
+  // blur/translate and can leave deep links unreadable while the IO catches
+  // up. A menu/link destination therefore lands in its authored final pose;
+  // ordinary scrolling still gets the section-specific choreography.
+  function prepareExplicitDestination(target) {
+    if (!target || !target.classList) return;
+    target.classList.add("sec-in", "sec-nav-landed");
+  }
+
   function instantScroll(target) {
     if (!target || typeof target.scrollIntoView !== "function") return;
+    prepareExplicitDestination(target);
     var previous = document.documentElement.style.scrollBehavior;
     document.documentElement.style.scrollBehavior = "auto";
     try {
@@ -69,6 +80,7 @@
   }
 
   function fallbackScroll(target, reduced) {
+    prepareExplicitDestination(target);
     if (reduced) {
       instantScroll(target);
       return;

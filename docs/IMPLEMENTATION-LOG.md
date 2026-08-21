@@ -5,6 +5,73 @@ Awwwards-переработки. План и критерии готовност
 `MASTER-IMPLEMENTATION-PLAN.md`; архитектурные контракты — в
 `ARCHITECTURE.md`.
 
+## v2.14.1 layout, catalog, SEO and pricing candidate — v239
+
+Hero V6 заменяет растровый Release Gate на code-native Proof Compiler:
+`INPUT → BUILD → QUALITY GATE → RELEASE`. Frame zero, Intro, React Hero и
+fullscreen Index используют одну причинную сцену; application readiness больше
+не ждёт фиктивный image decode. Первый сеанс Intro сохраняет 2–3-секундное
+окно подготовки, повторный — тот же характер в более коротком ритме, а deep
+link обходит заставку.
+
+Навигация пересобрана как полноширинная instrument rail. Текущая глава,
+progress, язык, contact и Index не конкурируют с обрезаемым рядом ссылок;
+12-главный Index имеет отдельные 3×4, 2×6 и short-landscape композиции.
+Desktop smart cursor стал контекстным измерительным инструментом и использует
+только shared pointer stream. Touch-профили курсор не имитируют.
+
+Typography pass закрепляет Inter как self-hosted body face для RU/EN/UZ, а
+Oswald/Cormorant оставляет в display/editorial ролях. CV и Quality сохраняют
+светлую документную материальность внутри тёмного section-world вместо двух
+случайных полноэкранных белых разрывов.
+
+Browser-проверка V6: 27/27 Hero locale/viewport states и полный regression gate
+164 passed / 112 project-specific skipped / 0 failed. Проверены Firefox,
+iPhone WebKit, desktop/mobile Chromium, CTA, proof-rail, Signal handoff, menu
+geometry, focus trap, deep-link, 200% zoom, orientation change, degraded paths
+и shared motion lifecycle. Отдельный performance gate прошёл 2/2 на desktop и
+mobile.
+
+Первый полный gate локализовал редкую lifecycle-гонку: на насыщенном mobile
+runner аварийный Intro deadline мог завершиться после commit React, но до его
+passive effect, оставляя completed overlay над здоровым shell. Теперь любой
+completed overlay удаляется синхронно при наличии смонтированного приложения.
+Проблемный keyboard-сценарий прошёл пять повторов подряд, связанная пара
+keyboard/late-shell — 9 passed / 3 viewport-specific skipped, после чего полный
+276-сценарный gate прошёл без ошибок.
+
+`npm run qa:visual` завершил 4/4 captures. Вручную просмотрены свежие contact
+sheets 12 глав и 16 case routes на desktop/mobile, а также крупные кадры Hero,
+Projects, Index, Builder, CV, Quality и Contact. Видимых обрезок, конфликтующих
+документных фонов, непрочитанных reveal-поз или старых raster Hero-композиций не
+обнаружено. Physical iOS/Android и NVDA/VoiceOver/TalkBack этой проверкой не
+заявляются.
+
+Точечный browser-аудит после пользовательского feedback выявил три класса
+риска: скрытый reveal-контент при длинном явном переходе, конкуренцию project
+pager с mobile dock и недостаточную различимость карточек при общей студийной
+арт-дирекции. Navigation handoff теперь заранее фиксирует целевую секцию и её
+вложенные reveal-элементы в конечной читаемой позе. Нативный scroll, shared
+runtime и chapter semantics не менялись.
+
+Каталог сохраняет 25 канонических продуктов без дублей, но desktop-ритм снова
+использует feature-пропорцию `7/5`. Карточки получают уникальные registry
+accent, ambient placement и object crop, короткий task/outcome copy и
+product-count вместо ложного общего case-count. На mobile собственный pager
+Projects остаётся компактнее 72 px и временно заменяет общий dock. Все 25
+accent values и все 25 image paths закреплены validator как уникальные.
+
+Builder estimate model обновлён до `2026.2`: базовые ориентиры составляют
+`$150–450`, `$450–1,400` и `$1,500–4,200`; Contact использует buckets от
+`< $150`. Это deterministic scope preview с диапазоном, assumptions и
+confidence, а не оферта. Главная и 48 локализованных case routes получили
+полный SEO graph и локализованные title/description/Open Graph данные.
+
+Автоматизированные доказательства и внешний статус этой ветки дописываются
+только после полного release gate. На момент записи production остаётся на
+`v237`; physical iOS/Android и NVDA/VoiceOver/TalkBack в этой итерации не
+заявляются как выполненные.
+
 ## Контрольная точка v210
 
 - исходный commit: `6aa3665`;

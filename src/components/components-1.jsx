@@ -269,44 +269,29 @@ function Hero({ t, links }) {
     <section
       data-section="hero" id="hero" className={`hero hero--proof-chamber${lit ? " is-lit" : ""}`} ref={ref}
     >
-      {/* A material calibration field, not borrowed sci-fi imagery. The three
-          physical checkpoints echo the Build → Verify → Ship proof rail while
-          the angled slab gives the full-bleed type real depth. Everything is
-          CSS-native, so frame zero and reduced motion stay equally complete. */}
-      <div className="hero-material-field" aria-hidden="true">
-        <span className="hero-material-plane" />
-        <span className="hero-material-cut" />
-        <span className="hero-material-spine"><i /><i /><i /></span>
-      </div>
-      <div className="hero-seam" aria-hidden="true" />
-
-      {/* The portfolio's signature object: a real graphite / optical-glass /
-          brass proof instrument. It gives the first five seconds an owned,
-          physical image instead of another developer-portfolio HUD. The
-          picture remains ordinary responsive media; depth is driven by the
-          Hero's existing shared motion subscription and therefore has the
-          same reduced/low-tier path as the rest of the scene. */}
-      <figure className="hero-instrument hero-chamber" aria-hidden="true">
-        <span className="hero-chamber-vignette" />
-        <span className="hero-chamber-floor" />
-        <span className="hero-chamber-trace"><i /></span>
-        <span className="hero-chamber-beam" />
-        <span className="hero-chamber-scan" />
-        <span className="hero-chamber-gate"><i /><i /></span>
-        <span className="hero-chamber-shutters">
+      {/* Proof Compiler — an authored, code-native system rather than a stock
+          "tech" image. Rough inputs are assembled, checked at a QA gate and
+          leave as one release block. The scene is meaningful in its static
+          final pose; CSS motion only explains causality on capable devices. */}
+      <figure className="hero-compiler" aria-hidden="true">
+        <span className="hero-compiler-depth" />
+        <svg className="hero-compiler-rail" viewBox="0 0 1000 620" preserveAspectRatio="none">
+          <path className="hero-compiler-rail-base" d="M72 382 C214 382 236 328 360 328 S520 382 618 382 S790 382 928 316" />
+          <path className="hero-compiler-rail-live" d="M72 382 C214 382 236 328 360 328 S520 382 618 382 S790 382 928 316" />
+        </svg>
+        <span className="hero-input-cluster"><i /><i /><i /><i /><i /></span>
+        <span className="hero-build-core"><b /><i /><i /><i /></span>
+        <span className="hero-verify-gate"><b /><i className="hero-verify-scan" /><i className="hero-verify-axis" /></span>
+        <span className="hero-release-block"><b /><i /></span>
+        <ol className="hero-compiler-map">
           {proofSteps.map((step, index) => (
-            <i key={`shutter-${step.code}`} style={{ "--shutter-i": index }} />
-          ))}
-        </span>
-        <ol className="hero-chamber-map">
-          {proofSteps.map((step, index) => (
-            <li key={`chamber-${step.code}`} style={{ "--chamber-i": index }}>
+            <li key={`compiler-${step.code}`} style={{ "--compiler-i": index }}>
               <span className="mono">{step.code}</span>
               <strong>{step.k}</strong>
             </li>
           ))}
         </ol>
-        <span className="hero-chamber-caption mono">RAW INPUT / OPTICAL GATE / RELEASE</span>
+        <figcaption className="hero-compiler-caption mono">INPUT / BUILD / QUALITY GATE / RELEASE</figcaption>
       </figure>
 
       {/* Four horizontal bands, top to bottom: identification, the masthead,
@@ -388,7 +373,8 @@ function Hero({ t, links }) {
               onMouseEnter={onCtaFocus} onMouseLeave={onCtaBlur}
               onFocus={onCtaFocus} onBlur={onCtaBlur}
               >
-                <span className="btn-label">{t.hero.cta_primary}</span>
+                <span className="btn-label hero-cta-desktop">{t.hero.cta_primary}</span>
+                <span className="btn-label hero-cta-mobile">{t.hero.cta_primary_mobile || t.hero.cta_primary}</span>
                 <span className="arrow">→</span>
               </a>
               <a href="#projects" className="btn btn-ghost" data-magnetic data-cursor="link" data-cursor-label="→ projects">
@@ -828,6 +814,7 @@ const PROJ_CARD = (window.PRODUCT_REGISTRY || []).reduce((cards, product) => {
 
 function ProjectCard({ p, i, labels }) {
   const cardRef = useRef(null);
+  const visualVariant = i % 4;
 
   // Cards that open an in-site landing get a stable anchor (id="proj-<slug>") so
   // returning from that landing lands the reader back on THIS exact card (see
@@ -868,7 +855,8 @@ function ProjectCard({ p, i, labels }) {
     <article
       ref={cardRef}
       id={p.slug ? "proj-" + p.slug : (landingSlug ? "proj-" + landingSlug : undefined)}
-      className={`proj-card card ${i < 4 ? "proj-card--feature" : "proj-card--archive"} ${i % 2 ? "is-reverse" : ""}`}
+      className={`proj-card card proj-visual-${visualVariant} ${i < 4 ? "proj-card--feature" : "proj-card--archive"} ${i % 2 ? "is-reverse" : ""}`}
+      data-project={p.slug || undefined}
       // Alternating parallax rates. The two desktop columns are already offset
       // vertically in CSS; this makes the offset LIVE — the left column lags
       // the scroll, the right column leads it, so the pair drifts apart and
@@ -878,7 +866,11 @@ function ProjectCard({ p, i, labels }) {
       // motion.js writes --plx from this; the card's own transform composes it
       // with the card's CSS hover/focus states (see sections.css).
       data-plx={i % 2 === 0 ? "0.05" : "-0.03"}
-      style={{ "--proj-i": i, "--proj-accent": (PROJ_CARD[p.slug] && PROJ_CARD[p.slug].accent) || "var(--accent)" }}
+      style={{
+        "--proj-i": i,
+        "--proj-accent": (PROJ_CARD[p.slug] && PROJ_CARD[p.slug].accent) || "var(--accent)",
+        "--proj-object-x": `${[50, 48, 52, 50][visualVariant]}%`,
+      }}
     >
       <div className="proj-glow" />
       <span className="proj-num mono" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
@@ -1049,7 +1041,13 @@ function ProjectChapterDots({ items, gridRef, labels }) {
   const visibleItems = items.slice(windowStart, windowStart + dotWindow);
 
   return (
-    <nav className="proj-chapters" aria-label={(labels && labels.list_label) || "project list"}>
+    <nav
+      className="proj-chapters"
+      aria-label={(labels && labels.list_label) || "project list"}
+      style={{
+        "--proj-accent": (PROJ_CARD[items[activeIdx]?.slug] && PROJ_CARD[items[activeIdx].slug].accent) || "var(--accent)",
+      }}
+    >
       <ol className="proj-chapters-dots" ref={dotsRef}>
         {visibleItems.map((p, localIndex) => {
           const i = windowStart + localIndex;
@@ -1110,6 +1108,7 @@ function Projects({ t }) {
   });
   const hiddenCount = Math.max(0, items.length - FEATURED_PROJECT_COUNT);
   const chapterItems = expanded ? items : items.slice(0, FEATURED_PROJECT_COUNT);
+  const catalogUnit = t.projects.catalog_unit || "products";
 
   // Deep-link: arriving at #proj-<slug> (returning from that product's landing)
   // for a card the collapsed desktop grid hides (index >= 4) → expand the grid
@@ -1163,7 +1162,13 @@ function Projects({ t }) {
   return (
     <section data-section="projects" id="projects" data-enter="rise" ref={ref} onFocusCapture={keepProjectFocusVisible}>
       <div className="shell">
-        <SecHead num="04" eyebrow={t.projects.eyebrow} title={t.projects.title} meta={`${items.length} cases · 2024–26`} />
+        <SecHead num="04" eyebrow={t.projects.eyebrow} title={t.projects.title} meta={`${items.length} ${catalogUnit} · 2024–26`} />
+
+        {/* On touch the chapter rail belongs before the filmstrip: orientation
+            is available before the first swipe and never ends up below a tall
+            card. CSS keeps it out of the desktop composition. */}
+        <ProjectChapterDots items={chapterItems} gridRef={gridRef} labels={t.projects} />
+
         <div className={`proj-grid ${expanded ? "is-expanded" : "is-collapsed"}`} ref={gridRef}>
           {items.map((p, i) => <ProjectCard key={p.slug || i} p={p} i={i} labels={t.projects} />)}
         </div>
@@ -1189,9 +1194,6 @@ function Projects({ t }) {
             <span className="proj-expand-ico" aria-hidden="true">{expanded ? "↑" : "↓"}</span>
           </button>
         ) : null}
-
-        {/* Mobile-only carousel pager (CSS hides it on desktop). */}
-        <ProjectChapterDots items={chapterItems} gridRef={gridRef} labels={t.projects} />
       </div>
     </section>
   );

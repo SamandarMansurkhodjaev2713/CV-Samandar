@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-tE+8oSRDz8YXUcRHHsVG0fEiwxhsgCAM8wZ8t9u5P6s='; style-src 'self'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.github.com; media-src 'self'; worker-src 'self' blob:; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-fQxNatlXJsRhvAL/QuJfv6CxwgCOoymEHGDAInX5jSk='; style-src 'self'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.github.com; media-src 'self'; worker-src 'self' blob:; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="theme-color" content="#1F1E1B" />
+  <meta name="color-scheme" content="dark" />
 
   <!-- Intro curtain: paint a solid warm panel over the page on frame 0 so there
        is no flash of hero before the "Boot Sequence" loader (percentage +
@@ -13,10 +14,10 @@
        LCP text (h1/CTA) still renders underneath (occluded, not delayed: the
        element IS painted, the LCP timestamp is unaffected by being visually
        covered while loading). -->
-  <script src="src/engine/head-boot.js?v=237"></script>
+  <script src="src/engine/head-boot.js?v=239"></script>
 
   <title>Samandar — Product Engineer · AI Automation · QA</title>
-  <meta name="description" content="Product engineer and QA engineer in Tashkent: I design, build, verify and deploy web products, AI automation and reliable internal systems end to end." />
+  <meta name="description" content="Samandar Mansurkhodjaev — product engineer и QA-инженер из Ташкента. Создаю web-продукты, AI-автоматизации и внутренние системы: UX, код, тесты и deploy." />
   <meta name="author" content="Samandar Mansurkhodjaev" />
   <meta name="robots" content="index,follow,max-image-preview:large" />
 
@@ -26,13 +27,14 @@
 
   <!-- Open Graph — absolute URLs are required by Telegram / LinkedIn crawlers. -->
   <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="Samandar — Executive AI Code Lab" />
+  <meta property="og:site_name" content="Samandar — Product Engineer · AI Automation · QA" />
   <meta property="og:title" content="Samandar — Product Engineer · AI Automation · QA" />
-  <meta property="og:description" content="I design, build, verify and deploy web products, AI automation and reliable internal systems end to end." />
+  <meta property="og:description" content="Создаю и проверяю web-продукты, AI-автоматизации и внутренние системы — от UX и архитектуры до тестов и deploy." />
   <meta property="og:image" content="https://samandarmansurkhodjaev2713.github.io/CV-Samandar/og-image.png" />
   <meta property="og:image:secure_url" content="https://samandarmansurkhodjaev2713.github.io/CV-Samandar/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/png" />
   <meta property="og:image:alt" content="Samandar — Product Engineer, AI Automation and QA" />
   <meta property="og:locale" content="ru_RU" />
   <meta property="og:locale:alternate" content="en_US" />
@@ -41,7 +43,7 @@
   <!-- Twitter / X card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Samandar — Product Engineer · AI Automation · QA" />
-  <meta name="twitter:description" content="I design, build, verify and deploy reliable digital products end to end." />
+  <meta name="twitter:description" content="Web-продукты, AI-автоматизация и QA: полный цикл от задачи до проверенного релиза." />
   <meta name="twitter:image" content="https://samandarmansurkhodjaev2713.github.io/CV-Samandar/og-image.png" />
   <meta name="twitter:image:alt" content="Samandar — Product Engineer, AI Automation and QA" />
 
@@ -53,30 +55,52 @@
   <link rel="alternate" hreflang="x-default" href="https://samandarmansurkhodjaev2713.github.io/CV-Samandar/" />
   <meta property="og:url" content="https://samandarmansurkhodjaev2713.github.io/CV-Samandar/" />
 
-  <!-- Structured data — schema.org Person. Helps search engines + social show
-       a rich, correct identity card; a small but real "handled professionally"
-       signal. Kept in sync with the real facts (IT Park University, live products). -->
+  <!-- Structured data — one connected identity graph: author, portfolio site
+       and profile page. Kept in sync with verified public facts only. -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "Person",
-    "name": "Samandar Mansurkhodjaev",
-    "alternateName": "Samandar",
-    "jobTitle": "Product Engineer · AI Automation · QA Engineer",
-    "description": "Product engineer who designs, builds, verifies and deploys web products, AI automation and reliable internal systems end to end.",
-    "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/",
-    "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/og-image.png",
-    "email": "mailto:sam4k27@gmail.com",
-    "sameAs": [
-      "https://github.com/SamandarMansurkhodjaev2713",
-      "https://t.me/killallofthem13",
-      "https://klawis.uz",
-      "https://softlylove.uz"
-    ],
-    "address": { "@type": "PostalAddress", "addressLocality": "Tashkent", "addressCountry": "UZ" },
-    "knowsLanguage": ["ru", "uz", "en"],
-    "knowsAbout": ["Product engineering", "Quality assurance", "Test automation", "Playwright", "Full-stack development", "AI automation", "RAG", "Telegram bots", "Next.js", "FastAPI", "TypeScript", "Python", "Rust"],
-    "alumniOf": { "@type": "CollegeOrUniversity", "name": "IT Park University" }
+    "@graph": [
+      {
+        "@type": "Person",
+        "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person",
+        "name": "Samandar Mansurkhodjaev",
+        "alternateName": "Samandar",
+        "jobTitle": "Product Engineer · AI Automation · QA Engineer",
+        "description": "Product engineer who designs, builds, verifies and deploys web products, AI automation and reliable internal systems end to end.",
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/",
+        "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/og-image.png",
+        "email": "mailto:sam4k27@gmail.com",
+        "sameAs": [
+          "https://github.com/SamandarMansurkhodjaev2713",
+          "https://t.me/killallofthem13",
+          "https://klawis.uz",
+          "https://softlylove.uz"
+        ],
+        "address": { "@type": "PostalAddress", "addressLocality": "Tashkent", "addressCountry": "UZ" },
+        "knowsLanguage": ["ru", "uz", "en"],
+        "knowsAbout": ["Product engineering", "Quality assurance", "Test automation", "Playwright", "Full-stack development", "AI automation", "RAG", "Telegram bots", "Next.js", "FastAPI", "TypeScript", "Python", "Rust"],
+        "alumniOf": { "@type": "CollegeOrUniversity", "name": "IT Park University" }
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#website",
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/",
+        "name": "Samandar — Product Engineer · AI Automation · QA",
+        "inLanguage": ["ru", "en", "uz"],
+        "author": { "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person" }
+      },
+      {
+        "@type": "ProfilePage",
+        "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#profile",
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/",
+        "name": "Портфолио Samandar Mansurkhodjaev",
+        "description": "Web-продукты, AI-автоматизация и QA: от задачи до проверенного релиза.",
+        "inLanguage": ["ru", "en", "uz"],
+        "mainEntity": { "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person" },
+        "isPartOf": { "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#website" }
+      }
+    ]
   }
   </script>
 
@@ -93,51 +117,44 @@
   <!-- The seven authored CSS sources are compiled in their original cascade
        order into one deterministic blocking bundle. Source files stay readable;
        visitors avoid six requests and repeated parser setup. -->
-  <link rel="stylesheet" href="src/styles/app.bundle.min.css?v=237" />
-
-  <!-- The signature Hero instrument is the only critical raster on frame one.
-       Preload it while the Intro is visible so the curtain opens onto a fully
-       decoded scene instead of a late image pop. -->
-  <link rel="preload" as="image" href="assets/hero/release-gate.webp?v=237"
-        imagesrcset="assets/hero/responsive/release-gate-768.webp?v=237 768w, assets/hero/responsive/release-gate-1152.webp?v=237 1152w, assets/hero/release-gate.webp?v=237 1536w"
-        imagesizes="100vw" type="image/webp" />
+  <link rel="stylesheet" href="src/styles/app.bundle.min.css?v=239" />
 
   <!-- Fetch the application graph in parallel, but execute it in frame-sized
        stages through bootstrap.js. This keeps the intro responsive instead
        of turning parser work into one monolithic main-thread task. -->
-  <link rel="preload" as="script" href="vendor/react.production.min.js?v=237" />
-  <link rel="preload" as="script" href="vendor/react-dom.production.min.js?v=237" />
-  <link rel="preload" as="script" href="src/content/product-registry.js?v=237" />
-  <link rel="preload" as="script" href="src/content/content.js?v=237" />
-  <link rel="preload" as="script" href="src/engine/themes.js?v=237" />
-  <link rel="preload" as="script" href="src/engine/perf.js?v=237" />
-  <link rel="preload" as="script" href="src/engine/motion-runtime.js?v=237" />
-  <link rel="preload" as="script" href="src/engine/builder-estimator.js?v=237" />
-  <link rel="preload" as="script" href="src/engine/acts.js?v=237" />
-  <link rel="preload" as="script" href="src/engine/sound.js?v=237" />
-  <link rel="preload" as="script" href="src/engine/gh.js?v=237" />
-  <link rel="preload" as="script" href="src/engine/motion.js?v=237" />
-  <link rel="preload" as="script" href="src/engine/scene-cinema.js?v=237" />
-  <link rel="preload" as="script" href="src/engine/lazy-effects.js?v=237" />
-  <link rel="preload" as="script" href="src/components/tweaks-panel.js?v=237" />
-  <link rel="preload" as="script" href="src/components/components-1.js?v=237" />
-  <link rel="preload" as="script" href="src/components/components-2.js?v=237" />
-  <link rel="preload" as="script" href="src/components/app.js?v=237" />
+  <link rel="preload" as="script" href="vendor/react.production.min.js?v=239" />
+  <link rel="preload" as="script" href="vendor/react-dom.production.min.js?v=239" />
+  <link rel="preload" as="script" href="src/content/product-registry.js?v=239" />
+  <link rel="preload" as="script" href="src/content/content.js?v=239" />
+  <link rel="preload" as="script" href="src/engine/themes.js?v=239" />
+  <link rel="preload" as="script" href="src/engine/perf.js?v=239" />
+  <link rel="preload" as="script" href="src/engine/motion-runtime.js?v=239" />
+  <link rel="preload" as="script" href="src/engine/builder-estimator.js?v=239" />
+  <link rel="preload" as="script" href="src/engine/acts.js?v=239" />
+  <link rel="preload" as="script" href="src/engine/sound.js?v=239" />
+  <link rel="preload" as="script" href="src/engine/gh.js?v=239" />
+  <link rel="preload" as="script" href="src/engine/motion.js?v=239" />
+  <link rel="preload" as="script" href="src/engine/scene-cinema.js?v=239" />
+  <link rel="preload" as="script" href="src/engine/lazy-effects.js?v=239" />
+  <link rel="preload" as="script" href="src/components/tweaks-panel.js?v=239" />
+  <link rel="preload" as="script" href="src/components/components-1.js?v=239" />
+  <link rel="preload" as="script" href="src/components/components-2.js?v=239" />
+  <link rel="preload" as="script" href="src/components/app.js?v=239" />
 </head>
 <body>
-  <!-- Frame-zero Proof Chamber media. It is intentionally outside #root so
-       React never replaces the LCP image during mount. The authored Hero owns
-       all semantic copy and motion overlays; this layer only supplies the
-       responsive photographic material already preloaded above. -->
+  <!-- Frame-zero Proof Compiler. It is intentionally outside #root so the
+       first paint already contains the Hero's authored system while React is
+       mounting. The interactive copy and animated final layer arrive above it. -->
   <div id="sm-hero-media" aria-hidden="true">
-    <figure class="hero-instrument hero-chamber hero-chamber-static">
-      <picture>
-        <source media="(max-width: 760px)" srcset="assets/hero/responsive/release-gate-768.webp?v=237" />
-        <source media="(max-width: 1280px)" srcset="assets/hero/responsive/release-gate-1152.webp?v=237" />
-        <img class="hero-instrument-img" src="assets/hero/release-gate.webp?v=237"
-             width="1536" height="1024" alt="" loading="eager"
-             fetchpriority="high" decoding="async" />
-      </picture>
+    <figure class="hero-compiler hero-compiler--static">
+      <span class="hero-compiler-depth"></span>
+      <svg class="hero-compiler-rail" viewBox="0 0 1000 620" preserveAspectRatio="none">
+        <path class="hero-compiler-rail-base" d="M72 382 C214 382 236 328 360 328 S520 382 618 382 S790 382 928 316"></path>
+      </svg>
+      <span class="hero-input-cluster"><i></i><i></i><i></i><i></i><i></i></span>
+      <span class="hero-build-core"><b></b><i></i><i></i><i></i></span>
+      <span class="hero-verify-gate"><b></b><i class="hero-verify-axis"></i></span>
+      <span class="hero-release-block"><b></b><i></i></span>
     </figure>
   </div>
   <div id="root"></div>
@@ -152,11 +169,11 @@
       </div>
     </main>
   </noscript>
-  <script src="src/engine/app-watchdog.js?v=237"></script>
+  <script src="src/engine/app-watchdog.js?v=239"></script>
 
   <!-- Intro starts before the application graph. Bootstrap yields between
        scripts, so the sequence remains responsive while the app mounts. -->
-  <script src="src/engine/intro.js?v=237"></script>
-  <script src="src/engine/bootstrap.js?v=237"></script>
+  <script src="src/engine/intro.js?v=239"></script>
+  <script src="src/engine/bootstrap.js?v=239"></script>
 </body>
 </html>
