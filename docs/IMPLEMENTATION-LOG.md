@@ -26,7 +26,7 @@ Oswald/Cormorant оставляет в display/editorial ролях. CV и Quali
 случайных полноэкранных белых разрывов.
 
 Browser-проверка V6: 27/27 Hero locale/viewport states и полный regression gate
-164 passed / 112 project-specific skipped / 0 failed. Проверены Firefox,
+165 passed / 113 project-specific skipped / 0 failed. Проверены Firefox,
 iPhone WebKit, desktop/mobile Chromium, CTA, proof-rail, Signal handoff, menu
 geometry, focus trap, deep-link, 200% zoom, orientation change, degraded paths
 и shared motion lifecycle. Отдельный performance gate прошёл 2/2 на desktop и
@@ -46,6 +46,32 @@ Projects, Index, Builder, CV, Quality и Contact. Видимых обрезок,
 документных фонов, непрочитанных reveal-поз или старых raster Hero-композиций не
 обнаружено. Physical iOS/Android и NVDA/VoiceOver/TalkBack этой проверкой не
 заявляются.
+
+Первый Pages run `32460314162` не дошёл до deploy: весь cloud browser /
+accessibility gate прошёл, но constrained desktop performance runner показал
+idle baseline p95 83.3 ms и scroll p95 50–83.4 ms; бинарная доля кадров выше
+40 ms выросла на 9–17 п.п. при уже активном `low` tier. Диагностика обнаружила
+реальную лишнюю работу: low-tier shared runtime продолжал на каждом scroll-frame
+читать геометрию всех 12 section-worlds и вычислять CSS-параллаксы, которые
+визуально уже были отключены политикой.
+
+Runtime теперь очищает неиспользуемые pin/parallax/magnetic owners при переходе
+в `low`, Hero не пишет неизменившиеся CSS variables, navbar не отправляет
+повторный React state, а geometry fallback для observer-delivery ограничен
+96/240-мс sweep. Продуктовые performance assertions не расширялись. Новый
+lifecycle-контракт доказывает, что authored cursor остаётся доступным на fine
+pointer, тогда как выключенная layout-работа действительно освобождается.
+После правки isolated performance прошёл desktop/mobile 2/2 как до, так и после
+полного 15.9-минутного browser run.
+
+Первый повтор полного локального gate выявил отдельную starvation-гонку
+iPhone WebKit в искусственном сценарии заблокированного `intro.js`: одиночный
+head-safety timer мог быть доставлен после собственного wall-clock deadline.
+Safety теперь дополнительно перепроверяет просроченный дедлайн синхронно на
+`DOMContentLoaded/pageshow`, не сокращая нормальный authored Intro. Сценарий
+прошёл stress 5/5 без retry; затем чистый полный gate завершился 165 passed /
+113 profile-skipped / 0 failed, а visual gate — 4/4. Свежие desktop/mobile
+contact sheets главной и всех 16 case routes просмотрены вручную повторно.
 
 Точечный browser-аудит после пользовательского feedback выявил три класса
 риска: скрытый reveal-контент при длинном явном переходе, конкуренцию project

@@ -11,9 +11,15 @@ async function settleMotion(page, query = "motion-contract=1") {
   await expect(page.locator("html")).toHaveAttribute("data-deep-link-settled", "hero", { timeout: 9000 });
 }
 
+async function forceHighMotion(page) {
+  await page.evaluate(() => window.__SM_MOTION_POLICY.__set("high"));
+  await expect.poll(() => page.evaluate(() => window.__SM_MOTION_POLICY.tier)).toBe("high");
+}
+
 test("authored motion uses two shared runtime subscribers and individual magnetic translate", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-chromium", "desktop fine pointer owns the magnetic interaction");
   await settleMotion(page);
+  await forceHighMotion(page);
 
   const before = await page.evaluate(() => window.Motion.__debug());
   expect(before.runtimeSubscribers.sort()).toEqual(["authored-cursor", "scroll-composition"]);
@@ -52,6 +58,7 @@ test("authored motion uses two shared runtime subscribers and individual magneti
 test("parallax measures only elements near the viewport", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-chromium", "desktop owns authored parallax");
   await settleMotion(page);
+  await forceHighMotion(page);
 
   await expect.poll(() => page.evaluate(() => window.Motion.__debug().activeParallax)).toBeGreaterThan(0);
   const debug = await page.evaluate(() => window.Motion.__debug());
@@ -59,9 +66,39 @@ test("parallax measures only elements near the viewport", async ({ page }, testI
   expect(debug.measuredMagnets).toBe(debug.magnets);
 });
 
+test("low tier keeps the authored cursor but releases disabled layout work", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "desktop fine pointer owns the authored cursor");
+  await settleMotion(page, "motion-low-layout=1");
+  await forceHighMotion(page);
+
+  await expect.poll(() => page.evaluate(() => window.Motion.__debug().parallax)).toBeGreaterThan(0);
+  const state = await page.evaluate(() => {
+    const pin = document.querySelector("[data-pin]");
+    const parallax = document.querySelector("[data-plx]");
+    if (pin) pin.style.setProperty("--pin-p", ".5");
+    if (parallax) parallax.style.setProperty("--plx", "12px");
+    window.__SM_MOTION_POLICY.__set("low");
+    return {
+      motion: window.Motion.__debug(),
+      cursorCount: document.querySelectorAll(".sc-cursor").length,
+      pinValue: pin && pin.style.getPropertyValue("--pin-p"),
+      parallaxValue: parallax && parallax.style.getPropertyValue("--plx"),
+    };
+  });
+
+  expect(state.motion.cursor).toBe(true);
+  expect(state.cursorCount).toBe(1);
+  expect(state.motion.magnets).toBe(0);
+  expect(state.motion.pins).toBe(0);
+  expect(state.motion.parallax).toBe(0);
+  expect(state.pinValue).toBe("");
+  expect(state.parallaxValue).toBe("");
+});
+
 test("offscreen sections pause decorative timelines and resume before entry", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-chromium", "one browser owns observer scheduling semantics");
   await settleMotion(page);
+  await forceHighMotion(page);
 
   const candidate = await page.evaluate(() => {
     const sections = Array.from(document.querySelectorAll("section[data-section]:not(.is-motion-near)"));

@@ -164,7 +164,7 @@ function Hero({ t, links }) {
     const heroEl = document.getElementById("hero");
     const runtime = window.__SM_MOTION_RUNTIME;
     if (!heroEl || !runtime || typeof runtime.subscribe !== "function") return undefined;
-    const state = { rect: null, hx: 0, hy: 0, fieldX: 0, fieldY: 0, progress: 0 };
+    const state = { rect: null, hx: 0, hy: 0, fieldX: 0, fieldY: 0, progress: 0, rendered: "" };
     const unsubscribe = runtime.subscribe({
       id: "hero-depth-field",
       priority: 34,
@@ -176,21 +176,30 @@ function Hero({ t, links }) {
       compute(context) {
         const rect = state.rect;
         const active = rect && rect.bottom > 0 && rect.top < context.input.viewportHeight;
-        const canLean = active && !context.policy.reducedMotion && context.policy.tier !== "low" &&
+        const expressive = !context.policy.reducedMotion && context.policy.tier !== "low";
+        const canLean = active && expressive &&
           context.policy.pointerClass === "fine" && context.input.pointerActive;
         state.hx = canLean ? (context.input.pointerX / Math.max(1, context.input.viewportWidth) - 0.5) : 0;
         state.hy = canLean ? (context.input.pointerY / Math.max(1, context.input.viewportHeight) - 0.5) : 0;
-        const progress = active && rect ? Math.max(0, Math.min(1, -rect.top / Math.max(1, rect.height))) : 0;
+        const progress = active && rect && expressive ? Math.max(0, Math.min(1, -rect.top / Math.max(1, rect.height))) : 0;
         state.progress = progress;
         state.fieldX = state.hx * 10;
         state.fieldY = progress * 24 + state.hy * 8;
       },
       mutate() {
-        heroEl.style.setProperty("--hx", state.hx.toFixed(3));
-        heroEl.style.setProperty("--hy", state.hy.toFixed(3));
-        heroEl.style.setProperty("--hero-field-x", state.fieldX.toFixed(1) + "px");
-        heroEl.style.setProperty("--hero-field-y", state.fieldY.toFixed(1) + "px");
-        heroEl.style.setProperty("--hero-phase", state.progress.toFixed(4));
+        const hx = state.hx.toFixed(3);
+        const hy = state.hy.toFixed(3);
+        const fieldX = state.fieldX.toFixed(1) + "px";
+        const fieldY = state.fieldY.toFixed(1) + "px";
+        const progress = state.progress.toFixed(4);
+        const rendered = [hx, hy, fieldX, fieldY, progress].join("|");
+        if (rendered === state.rendered) return;
+        state.rendered = rendered;
+        heroEl.style.setProperty("--hx", hx);
+        heroEl.style.setProperty("--hy", hy);
+        heroEl.style.setProperty("--hero-field-x", fieldX);
+        heroEl.style.setProperty("--hero-field-y", fieldY);
+        heroEl.style.setProperty("--hero-phase", progress);
       },
       dispose() {
         heroEl.style.removeProperty("--hx");

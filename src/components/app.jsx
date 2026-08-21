@@ -254,11 +254,15 @@ function Nav({ t, lang, setLang, active }) {
     setSecOrder([...document.querySelectorAll("section[data-section]")].map((el) => el.getAttribute("data-section")));
     const runtime = window.__SM_MOTION_RUNTIME;
     if (runtime && typeof runtime.subscribe === "function") {
+      let capsuleState = false;
       const unsubscribe = runtime.subscribe({
         id: "nav-capsule",
         priority: 5,
         mutate(context) {
-          setCapsule(context.input.scrollY > 64);
+          const next = context.input.scrollY > 64;
+          if (next === capsuleState) return;
+          capsuleState = next;
+          setCapsule(next);
         },
       });
       runtime.wake("nav-capsule-init");

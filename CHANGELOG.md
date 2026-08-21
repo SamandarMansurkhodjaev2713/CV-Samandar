@@ -48,6 +48,16 @@
 
 ### Fixed
 
+- Low-tier scroll больше не перечитывает геометрию всех 12 глав и не вычисляет
+  уже отключённые pin/parallax/magnetic transforms на каждом кадре. Авторский
+  desktop-cursor и нативный Hero→Signal handoff сохраняются, а observer fallback
+  выполняет ограниченный geometry sweep только для гарантии читаемой финальной
+  позы. Новый lifecycle-тест закрепляет освобождение layout-работы отдельно от
+  high-tier motion.
+- Head Intro safety теперь проверяет wall-clock deadline не только одним
+  `setTimeout`, но и синхронно на `DOMContentLoaded/pageshow`. Это закрывает
+  starvation-гонку WebKit: просроченный loader не остаётся поверх уже здорового
+  React shell, не сокращая нормальный 2–3-секундный authored Intro.
 - Intro больше не просвечивает собранным Hero под shutter: первый сеанс
   сохраняет полезные 2–3 секунды загрузочного окна, повторный короче, а deep
   link по-прежнему обходит заставку. Code-native Hero отмечается готовым без

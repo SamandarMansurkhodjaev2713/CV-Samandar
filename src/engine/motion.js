@@ -37,6 +37,7 @@
   var morphElement = null;
   var morphRect = null;
   var currentCenterCard = null;
+  var lastFallbackSweepAt = 0;
 
   var cursor = null;
   var cursorRing = null;
@@ -389,8 +390,9 @@
 
   function refreshInteractiveElements() {
     var state = currentPolicy();
+    var lite = state.reducedMotion || state.tier === "low";
     magnets = [];
-    if (shouldUseCursor()) {
+    if (shouldUseCursor() && !lite) {
       document.querySelectorAll("[data-magnetic]").forEach(function (element) {
         magnets.push({
           element: element,
@@ -401,9 +403,15 @@
         });
       });
     }
-    pinHosts = Array.from(document.querySelectorAll("[data-pin]"));
+    var allPinHosts = Array.from(document.querySelectorAll("[data-pin]"));
+    var allParallaxElements = Array.from(document.querySelectorAll("[data-plx]"));
+    if (lite) {
+      allPinHosts.forEach(function (element) { element.style.removeProperty("--pin-p"); });
+      allParallaxElements.forEach(function (element) { element.style.removeProperty("--plx"); });
+    }
+    pinHosts = lite ? [] : allPinHosts;
     pinHosts.forEach(function (element) { element.classList.add("pin-bound"); });
-    parallaxElements = Array.from(document.querySelectorAll("[data-plx]"));
+    parallaxElements = lite ? [] : allParallaxElements;
     visibleParallax.clear();
     if (parallaxObserver) parallaxObserver.disconnect();
     parallaxObserver = null;
@@ -546,42 +554,56 @@
   function measureLayout(context) {
     if (!layoutDirty && !context.input.scrolled && !context.input.resized) return;
     var height = context.input.viewportHeight || window.innerHeight || 1;
-    pinMeasurements = pinHosts.map(function (element) {
-      if (!element.isConnected) return null;
-      var rect = element.getBoundingClientRect();
-      var range = rect.height - height;
-      return {
-        element: element,
-        value: range > 0 ? Math.max(0, Math.min(1, -rect.top / range)) : 0,
-      };
-    });
-    parallaxMeasurements = Array.from(visibleParallax).map(function (element) {
-      if (!element.isConnected) return null;
-      var rect = element.getBoundingClientRect();
-      if (rect.bottom < -100 || rect.top > height + 100) return null;
-      var speed = parseFloat(element.getAttribute("data-plx")) || 0.05;
-      return {
-        element: element,
-        value: -(rect.top + rect.height / 2 - height / 2) * speed,
-      };
-    });
+    var lite = context.policy.reducedMotion || context.policy.tier === "low";
+    if (lite) {
+      pinMeasurements = [];
+      parallaxMeasurements = [];
+    } else {
+      pinMeasurements = pinHosts.map(function (element) {
+        if (!element.isConnected) return null;
+        var rect = element.getBoundingClientRect();
+        var range = rect.height - height;
+        return {
+          element: element,
+          value: range > 0 ? Math.max(0, Math.min(1, -rect.top / range)) : 0,
+        };
+      });
+      parallaxMeasurements = Array.from(visibleParallax).map(function (element) {
+        if (!element.isConnected) return null;
+        var rect = element.getBoundingClientRect();
+        if (rect.bottom < -100 || rect.top > height + 100) return null;
+        var speed = parseFloat(element.getAttribute("data-plx")) || 0.05;
+        return {
+          element: element,
+          value: -(rect.top + rect.height / 2 - height / 2) * speed,
+        };
+      });
+    }
     // IntersectionObserver remains the low-cost primary path. This shared
-    // scroll-frame measurement is the deterministic fallback for throttled or
-    // delayed observer delivery (background pressure, WebKit and test runners).
-    var zoneMargin = height * 0.65;
-    motionZoneMeasurements = Array.from(motionZones).map(function (element) {
-      if (!element.isConnected) return null;
-      var rect = element.getBoundingClientRect();
-      return { element: element, near: rect.bottom >= -zoneMargin && rect.top <= height + zoneMargin };
-    });
+    // geometry pass is only a bounded fallback for throttled/delayed observer
+    // delivery. Reading every chapter on every scroll frame forced avoidable
+    // layout work precisely on constrained devices, after the policy had
+    // already removed their decorative transforms.
+    var sweepInterval = lite ? 240 : 96;
+    var sweepDue = layoutDirty || context.input.resized || context.now - lastFallbackSweepAt >= sweepInterval;
+    motionZoneMeasurements = [];
     visiblePendingReveals = [];
-    pendingReveals.forEach(function (element) {
-      if (isVisible(element, 220)) visiblePendingReveals.push(element);
-    });
     visiblePendingSections = [];
-    pendingSections.forEach(function (element) {
-      if (isVisible(element, 220)) visiblePendingSections.push(element);
-    });
+    if (sweepDue) {
+      lastFallbackSweepAt = context.now;
+      var zoneMargin = height * 0.65;
+      motionZoneMeasurements = Array.from(motionZones).map(function (element) {
+        if (!element.isConnected) return null;
+        var rect = element.getBoundingClientRect();
+        return { element: element, near: rect.bottom >= -zoneMargin && rect.top <= height + zoneMargin };
+      });
+      pendingReveals.forEach(function (element) {
+        if (isVisible(element, 220)) visiblePendingReveals.push(element);
+      });
+      pendingSections.forEach(function (element) {
+        if (isVisible(element, 220)) visiblePendingSections.push(element);
+      });
+    }
     layoutDirty = false;
   }
 
@@ -714,6 +736,7 @@
     visiblePendingReveals = [];
     visiblePendingSections = [];
     magnetMeasurements = [];
+    lastFallbackSweepAt = 0;
     spotlightElement = null;
     spotlightRect = null;
     morphElement = null;

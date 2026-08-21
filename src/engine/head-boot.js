@@ -111,7 +111,8 @@
     // same release branch before optional application work can starve WebKit's
     // timer queue on a contended host.
     var safetyDelayMs = window.__SM_TEST_MODE ? 900 : 3800;
-    window.__SM_INTRO.safety = setTimeout(function () {
+    var safetyDeadline = createdAt + safetyDelayMs;
+    function releaseHeadSafety() {
       if (!panel.parentNode) return;
       var root = document.getElementById("root");
       // This is an exceptional hard ceiling, not the normal visual exit.
@@ -121,6 +122,20 @@
       panel.remove();
       window.__SM_INTRO.release(root && root.childElementCount ?
         "head-safety-shell" : "head-safety-empty");
-    }, safetyDelayMs);
+    }
+    window.__SM_INTRO.safety = setTimeout(releaseHeadSafety, safetyDelayMs);
+
+    // WebKit may starve a timer while parser/defer work saturates the main
+    // thread. The safety contract is a wall-clock deadline, not a promise that
+    // one timer task will be delivered promptly. Re-check it synchronously at
+    // lifecycle boundaries so an already-expired Intro cannot remain above a
+    // healthy late shell. These listeners never shorten the authored window.
+    function releaseExpiredHeadSafety() {
+      if (!panel.parentNode) return;
+      var now = performance && performance.now ? performance.now() : Date.now();
+      if (now >= safetyDeadline) releaseHeadSafety();
+    }
+    document.addEventListener("DOMContentLoaded", releaseExpiredHeadSafety, { once: true });
+    window.addEventListener("pageshow", releaseExpiredHeadSafety, { once: true });
   } catch (e) { /* DOM/matchMedia unavailable: skip the intro safely. */ }
 })();
