@@ -93,10 +93,27 @@ Builder estimate model обновлён до `2026.2`: базовые ориен
 confidence, а не оферта. Главная и 48 локализованных case routes получили
 полный SEO graph и локализованные title/description/Open Graph данные.
 
-Автоматизированные доказательства и внешний статус этой ветки дописываются
-только после полного release gate. На момент записи production остаётся на
-`v237`; physical iOS/Android и NVDA/VoiceOver/TalkBack в этой итерации не
-заявляются как выполненные.
+## v239 production evidence
+
+Release commit `6e427aa` опубликован из `main` workflow
+[`32464443015`](https://github.com/SamandarMansurkhodjaev2713/CV-Samandar/actions/runs/32464443015).
+Cloud build завершился за 9m53s: install, audit, secret scan, deterministic
+build, docs, полный browser/accessibility gate и isolated desktop/mobile
+performance прошли; Pages deploy занял 10s, встроенный production verify — 51s.
+Он проверил главную, все generated case routes и все внешние live-продукты.
+
+Независимая post-deploy проверка с локальной машины:
+
+- production HTML → HTTP 200, 23 asset refs `v239`, 0 refs `v237`;
+- frame-zero и React graph содержат `hero-compiler`, старого
+  `release-gate.webp` в critical path нет;
+- `npm run test:production` → 3/3: 25-card каталог, 48 RU/EN/UZ case routes и
+  точный возврат из case к исходной карточке без повторного Intro;
+- `npm run check:live` → 9/9 usable external live routes.
+
+Production synthetic/browser proof не подменяет physical iPhone/Android или
+assistive-technology проверку. Physical iOS/Android и
+NVDA/VoiceOver/TalkBack в этой итерации остаются `NOT RUN`.
 
 ## Контрольная точка v210
 
