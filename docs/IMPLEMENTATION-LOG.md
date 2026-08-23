@@ -67,6 +67,21 @@ overflow, пустой первый кадр Intro, нераскрытый ко�
 project images. Эта матрица не заявляет physical iOS/Android, NVDA,
 VoiceOver или TalkBack как выполненные проверки.
 
+Release commit `51ec750` опубликован из `main` workflow run
+`32633902371`. Cloud build завершил dependency/security, deterministic build,
+documentation, desktop/mobile/accessibility и isolated performance gates;
+Pages deploy занял 10 секунд, встроенный production verify — 1m02s. Независимый
+post-deploy `npm run test:production` прошёл 3/3: production shell монтирует 25
+канонических карточек, все 48 RU/EN/UZ case pages возвращают статический shell,
+а case возвращает к точной исходной карточке без повторного Intro. Повторный
+`npm run check:live` подтвердил 9/9 внешних продуктов.
+
+Cache-busted production-аудит загрузил asset version `v=240`, headline
+«ИЗ ЗАДАЧИ — / В ПРОДУКТ.», `overflow = 0` и Index в состоянии `is-open` без
+fatal runtime state. Опубликованные Hero и Index просмотрены отдельными
+production screenshots; новый Release Specimen, typographic grid и contextual
+close-cursor соответствуют локально принятому release-кандидату.
+
 ## Hero V7 and navigation polish candidate — v240
 
 После повторного пользовательского visual review первая сцена получила
