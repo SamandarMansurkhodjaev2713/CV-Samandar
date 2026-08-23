@@ -17,10 +17,11 @@ test("Builder + QA proof rail and authored type hierarchy survive every viewport
   });
 
   await settleMain(page, "#hero");
-  await expect(page.locator("#sm-hero-media .hero-compiler--static")).toBeVisible();
-  await expect(page.locator("#hero .hero-compiler")).toBeVisible();
-  await expect(page.locator("#hero .hero-compiler-map li")).toHaveCount(3);
-  await expect(page.locator("#hero .hero-input-cluster > i")).toHaveCount(5);
+  await expect(page.locator("#sm-hero-media .release-specimen--static")).toBeVisible();
+  await expect(page.locator("#hero .release-specimen")).toBeVisible();
+  await expect(page.locator("#hero .release-specimen-map li")).toHaveCount(3);
+  await expect(page.locator("#hero .release-specimen-layer")).toHaveCount(3);
+  await expect(page.locator("#hero .hero-input-cluster")).toHaveCount(0);
   await expect(page.locator(".hero-instrument-orbit")).toHaveCount(0);
   await expect(page.locator(".hero-proof-step")).toHaveCount(3);
   await expect(page.locator(".hero-roles")).toContainText(/Builder/i);
@@ -39,8 +40,8 @@ test("Builder + QA proof rail and authored type hierarchy survive every viewport
       ),
     };
   });
-  expect(type.headingPrimary).toContain("Inter");
-  expect(type.headingAccent).toContain("Cormorant Garamond");
+  expect(type.headingPrimary).toContain("Oswald");
+  expect(type.headingAccent).toContain("Oswald");
   expect(type.body).toContain("Inter");
   expect(type.mono).toContain("JetBrains Mono");
   expect(type.headlineSettled).toBe(true);
@@ -86,6 +87,8 @@ test("fullscreen menu owns the interaction layer and its language controls recei
   await settleMain(page, "#hero");
   await page.locator(".nav-burger").click();
   await expect(page.locator(".nav-menu")).toHaveClass(/is-open/);
+  await expect(page.locator(".sc-ripple")).toHaveCount(0);
+  await expect(page.locator(".nav-menu .nav-peek")).toBeHidden();
 
   const layers = await page.evaluate(() => ({
     menu: Number.parseInt(getComputedStyle(document.querySelector(".nav-menu")).zIndex, 10),

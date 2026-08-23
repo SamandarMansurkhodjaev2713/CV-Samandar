@@ -171,8 +171,21 @@ async function contactSheet(page, title, captures, fileName, portrait) {
     { waitUntil: "load" }
   );
   await expect(page.locator("img")).toHaveCount(captures.length);
-  await expect.poll(() => page.locator("img").evaluateAll((images) => (
-    images.every((image) => image.complete && image.naturalWidth > 0)
+  // `load` only guarantees that the data-URL bytes arrived; sixteen large
+  // desktop full-page PNGs can still be waiting in Chromium's decode queue.
+  // Waiting a fixed/polled seven seconds made the evidence harness race the
+  // image decoder on slower machines. `decode()` is the actual readiness
+  // contract and still rejects immediately for a corrupt capture.
+  const decoded = await page.locator("img").evaluateAll(async (images) => {
+    await Promise.all(images.map((image) => image.decode()));
+    return images.map((image) => ({
+      complete: image.complete,
+      naturalWidth: image.naturalWidth,
+      naturalHeight: image.naturalHeight,
+    }));
+  });
+  expect(decoded.every((image) => (
+    image.complete && image.naturalWidth > 0 && image.naturalHeight > 0
   ))).toBe(true);
   await page.screenshot({ path: path.join(OUTPUT, fileName), fullPage: true });
 }

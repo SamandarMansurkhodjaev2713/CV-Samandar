@@ -14,7 +14,7 @@
        LCP text (h1/CTA) still renders underneath (occluded, not delayed: the
        element IS painted, the LCP timestamp is unaffected by being visually
        covered while loading). -->
-  <script src="src/engine/head-boot.js?v=239"></script>
+  <script src="src/engine/head-boot.js?v=240"></script>
 
   <title>Samandar — Product Engineer · AI Automation · QA</title>
   <meta name="description" content="Samandar Mansurkhodjaev — product engineer и QA-инженер из Ташкента. Создаю web-продукты, AI-автоматизации и внутренние системы: UX, код, тесты и deploy." />
@@ -117,44 +117,46 @@
   <!-- The seven authored CSS sources are compiled in their original cascade
        order into one deterministic blocking bundle. Source files stay readable;
        visitors avoid six requests and repeated parser setup. -->
-  <link rel="stylesheet" href="src/styles/app.bundle.min.css?v=239" />
+  <link rel="stylesheet" href="src/styles/app.bundle.min.css?v=240" />
 
   <!-- Fetch the application graph in parallel, but execute it in frame-sized
        stages through bootstrap.js. This keeps the intro responsive instead
        of turning parser work into one monolithic main-thread task. -->
-  <link rel="preload" as="script" href="vendor/react.production.min.js?v=239" />
-  <link rel="preload" as="script" href="vendor/react-dom.production.min.js?v=239" />
-  <link rel="preload" as="script" href="src/content/product-registry.js?v=239" />
-  <link rel="preload" as="script" href="src/content/content.js?v=239" />
-  <link rel="preload" as="script" href="src/engine/themes.js?v=239" />
-  <link rel="preload" as="script" href="src/engine/perf.js?v=239" />
-  <link rel="preload" as="script" href="src/engine/motion-runtime.js?v=239" />
-  <link rel="preload" as="script" href="src/engine/builder-estimator.js?v=239" />
-  <link rel="preload" as="script" href="src/engine/acts.js?v=239" />
-  <link rel="preload" as="script" href="src/engine/sound.js?v=239" />
-  <link rel="preload" as="script" href="src/engine/gh.js?v=239" />
-  <link rel="preload" as="script" href="src/engine/motion.js?v=239" />
-  <link rel="preload" as="script" href="src/engine/scene-cinema.js?v=239" />
-  <link rel="preload" as="script" href="src/engine/lazy-effects.js?v=239" />
-  <link rel="preload" as="script" href="src/components/tweaks-panel.js?v=239" />
-  <link rel="preload" as="script" href="src/components/components-1.js?v=239" />
-  <link rel="preload" as="script" href="src/components/components-2.js?v=239" />
-  <link rel="preload" as="script" href="src/components/app.js?v=239" />
+  <link rel="preload" as="script" href="vendor/react.production.min.js?v=240" />
+  <link rel="preload" as="script" href="vendor/react-dom.production.min.js?v=240" />
+  <link rel="preload" as="script" href="src/content/product-registry.js?v=240" />
+  <link rel="preload" as="script" href="src/content/content.js?v=240" />
+  <link rel="preload" as="script" href="src/engine/themes.js?v=240" />
+  <link rel="preload" as="script" href="src/engine/perf.js?v=240" />
+  <link rel="preload" as="script" href="src/engine/motion-runtime.js?v=240" />
+  <link rel="preload" as="script" href="src/engine/builder-estimator.js?v=240" />
+  <link rel="preload" as="script" href="src/engine/acts.js?v=240" />
+  <link rel="preload" as="script" href="src/engine/sound.js?v=240" />
+  <link rel="preload" as="script" href="src/engine/gh.js?v=240" />
+  <link rel="preload" as="script" href="src/engine/motion.js?v=240" />
+  <link rel="preload" as="script" href="src/engine/scene-cinema.js?v=240" />
+  <link rel="preload" as="script" href="src/engine/lazy-effects.js?v=240" />
+  <link rel="preload" as="script" href="src/components/tweaks-panel.js?v=240" />
+  <link rel="preload" as="script" href="src/components/components-1.js?v=240" />
+  <link rel="preload" as="script" href="src/components/components-2.js?v=240" />
+  <link rel="preload" as="script" href="src/components/app.js?v=240" />
 </head>
 <body>
-  <!-- Frame-zero Proof Compiler. It is intentionally outside #root so the
-       first paint already contains the Hero's authored system while React is
-       mounting. The interactive copy and animated final layer arrive above it. -->
+  <!-- Frame-zero release specimen. It is intentionally outside #root so the
+       first paint already contains the Hero's authored material while React is
+       mounting. The interactive copy and calibrated motion arrive above it. -->
   <div id="sm-hero-media" aria-hidden="true">
-    <figure class="hero-compiler hero-compiler--static">
-      <span class="hero-compiler-depth"></span>
-      <svg class="hero-compiler-rail" viewBox="0 0 1000 620" preserveAspectRatio="none">
-        <path class="hero-compiler-rail-base" d="M72 382 C214 382 236 328 360 328 S520 382 618 382 S790 382 928 316"></path>
-      </svg>
-      <span class="hero-input-cluster"><i></i><i></i><i></i><i></i><i></i></span>
-      <span class="hero-build-core"><b></b><i></i><i></i><i></i></span>
-      <span class="hero-verify-gate"><b></b><i class="hero-verify-axis"></i></span>
-      <span class="hero-release-block"><b></b><i></i></span>
+    <figure class="release-specimen release-specimen--static">
+      <span class="release-specimen-shadow"></span>
+      <div class="release-specimen-object">
+        <span class="release-specimen-layer release-specimen-layer--01"><i></i><b></b></span>
+        <span class="release-specimen-layer release-specimen-layer--02"><i></i><b></b></span>
+        <span class="release-specimen-layer release-specimen-layer--03"><i></i><b></b></span>
+        <span class="release-specimen-spine"></span>
+      </div>
+      <span class="release-specimen-light"></span>
+      <span class="release-specimen-measure release-specimen-measure--x"></span>
+      <span class="release-specimen-measure release-specimen-measure--y"></span>
     </figure>
   </div>
   <div id="root"></div>
@@ -169,11 +171,11 @@
       </div>
     </main>
   </noscript>
-  <script src="src/engine/app-watchdog.js?v=239"></script>
+  <script src="src/engine/app-watchdog.js?v=240"></script>
 
   <!-- Intro starts before the application graph. Bootstrap yields between
        scripts, so the sequence remains responsive while the app mounts. -->
-  <script src="src/engine/intro.js?v=239"></script>
-  <script src="src/engine/bootstrap.js?v=239"></script>
+  <script src="src/engine/intro.js?v=240"></script>
+  <script src="src/engine/bootstrap.js?v=240"></script>
 </body>
 </html>

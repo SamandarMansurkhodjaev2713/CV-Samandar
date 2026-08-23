@@ -32,7 +32,7 @@
 
   var EMBER = "217, 119, 87";   // --accent
   var BRASS = "200, 155, 94";   // --accent-2
-  var STEEL = "110, 139, 166";  // analytical cool (matches SM steel telemetry)
+  var STEEL = "110, 139, 166";  // retained for compatibility with older CSS
 
   function topGlow(rgb, a) {
     return "radial-gradient(ellipse 95% 70% at 50% -12%, rgba(" + rgb + ", " + a + "), transparent 62%)";
@@ -62,19 +62,22 @@
   // The glow layer carries the legible part of the journey.
   // Light acts (CV, trust) invert the ground entirely — see the .act-light
   // class applied below and the light-section styles in sections.css.
+  // One material world. Chapters change depth and composition, not palette.
+  // The tiny background deltas are enough to separate stacked plates while a
+  // single brass inspection light keeps the complete route coherent.
   var ACTS = {
-    hero:     { bg: "#161719", accent: BONE,   glow: topGlow(BONE, 0.035) },               // coolest, near-graphite
-    signal:   { bg: "#18181A", accent: BONE,   glow: topGlow(BONE, 0.030) },
-    about:    { bg: "#1A1A19", accent: ASH,    glow: topGlow(BONE, 0.028) },
-    projects: { bg: "#1E1B17", accent: COPPER, glow: topGlow(EMBER, 0.055) },              // reserved warmth — the heart
-    builder:  { bg: "#1B1916", accent: SAND,   glow: topGlow(BRASS, 0.038) },              // scope becomes a delivery sketch
-    skills:   { bg: "#171819", accent: SLATE,  glow: topGlow(SLATE, 0.040) },              // the one cool dip
-    services: { bg: "#1B1A17", accent: ASH,    glow: topGlow(BONE, 0.030) },
-    cv:       { bg: "#E8E6E1", accent: ASH,    glow: "none", light: true },                // LIGHT — the document
-    process:  { bg: "#18191A", accent: ASH,    glow: topGlow(BONE, 0.028) },
-    faq:      { bg: "#1B1A17", accent: ASH,    glow: topGlow(BONE, 0.030) },
-    trust:    { bg: "#E9E7E2", accent: SLATE,  glow: "none", light: true },                // LIGHT — the protocol
-    contact:  { bg: "#221D16", accent: SAND,   glow: topGlow(EMBER, 0.070) + ", " + duskGlow(BRASS, 0.055) }, // warmest — destination
+    hero:     { bg: "#090A09", accent: BRASS, glow: topGlow(BRASS, 0.030) },
+    signal:   { bg: "#0A0B0A", accent: BRASS, glow: topGlow(BRASS, 0.026) },
+    about:    { bg: "#0B0C0B", accent: BRASS, glow: topGlow(BRASS, 0.024) },
+    projects: { bg: "#0C0D0B", accent: BRASS, glow: topGlow(BRASS, 0.032) },
+    builder:  { bg: "#0B0C0A", accent: BRASS, glow: topGlow(BRASS, 0.028) },
+    skills:   { bg: "#090B0A", accent: BRASS, glow: topGlow(BRASS, 0.024) },
+    services: { bg: "#0A0B0A", accent: BRASS, glow: topGlow(BRASS, 0.025) },
+    cv:       { bg: "#0B0C0B", accent: BRASS, glow: topGlow(BRASS, 0.022) },
+    process:  { bg: "#090A09", accent: BRASS, glow: topGlow(BRASS, 0.024) },
+    faq:      { bg: "#0A0B0A", accent: BRASS, glow: topGlow(BRASS, 0.025) },
+    trust:    { bg: "#0B0C0A", accent: BRASS, glow: topGlow(BRASS, 0.026) },
+    contact:  { bg: "#100E0A", accent: BRASS, glow: topGlow(BRASS, 0.040) + ", " + duskGlow(EMBER, 0.030) },
   };
   var DEFAULT_ACT = "about"; // the neutral base — what no-JS/unknown ids resolve to
 

@@ -3,7 +3,7 @@
 const fs = require("fs");
 const path = require("path");
 const { test, expect } = require("@playwright/test");
-const { settleMain, expectNoHorizontalOverflow } = require("./helpers");
+const { settleMain, switchMainLanguage, expectNoHorizontalOverflow } = require("./helpers");
 
 const PDF_ROUTE = "/assets/docs/Samandar_Mansurkhodjaev_CV_QA.pdf";
 
@@ -81,7 +81,7 @@ test("CV document controls and facts localize in RU, EN and UZ", async ({ page }
   ];
 
   for (const item of cases) {
-    await page.locator(".nav .lang button", { hasText: item.button }).click();
+    await switchMainLanguage(page, item.button);
     await expect(page.locator("html")).toHaveAttribute("lang", item.lang);
     await expect(page.locator(".cv-action--primary")).toContainText(item.download);
     await expect(page.locator("#cv .cv-role-title", { hasText: item.role })).toHaveCount(1);

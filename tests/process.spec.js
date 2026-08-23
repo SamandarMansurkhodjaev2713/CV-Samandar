@@ -1,7 +1,7 @@
 "use strict";
 
 const { test, expect } = require("@playwright/test");
-const { settleMain, expectNoHorizontalOverflow } = require("./helpers");
+const { settleMain, switchMainLanguage, expectNoHorizontalOverflow } = require("./helpers");
 
 test("Method is a four-phase evidence ledger, not simulated terminal activity", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-chromium", "one engine covers the semantic contract");
@@ -30,7 +30,7 @@ test("Method keeps its complete information architecture in RU, EN and UZ", asyn
   await settleMain(page, "#process");
 
   for (const language of ["RU", "EN", "UZ"]) {
-    await page.locator(".nav .lang button").filter({ hasText: new RegExp(`^${language}$`) }).click();
+    await switchMainLanguage(page, language);
     await expect(page.locator("html")).toHaveAttribute("lang", language.toLowerCase());
     await expect(page.locator("#process .proc-ledger-row")).toHaveCount(4);
     await expect(page.locator("#process .proc-ledger-proof dt")).toHaveCount(8);

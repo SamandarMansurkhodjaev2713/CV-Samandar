@@ -6,6 +6,7 @@ const {
   caseProducts,
   liveProducts,
   settleMain,
+  switchMainLanguage,
   expectNoHorizontalOverflow,
   expectResponsiveProjectImage,
 } = require("./helpers");
@@ -47,18 +48,11 @@ test.describe("project catalog", () => {
     await expect(page.getByRole("button", { name: "Свернуть" })).toBeVisible();
   });
 
-  test("RU, EN and UZ keep all cards and canonical routes", async ({ page, isMobile }) => {
+  test("RU, EN and UZ keep all cards and canonical routes", async ({ page }) => {
     await settleMain(page, "#projects");
-    if (isMobile) {
-      await page.locator(".nav-burger").evaluate((button) => button.click());
-      await expect(page.locator(".nav-menu")).toHaveAttribute("aria-hidden", "false");
-    }
 
     for (const language of ["EN", "UZ", "RU"]) {
-      const button = isMobile
-        ? page.locator(".nav-menu-lang button").filter({ hasText: new RegExp("^" + language + "$") })
-        : page.locator(".nav .lang button").filter({ hasText: new RegExp("^" + language + "$") });
-      await button.evaluate((node) => node.click());
+      await switchMainLanguage(page, language);
       await expect(page.locator(".proj-card")).toHaveCount(orderedProducts.length);
       await expect(page.locator("html")).toHaveAttribute("lang", language.toLowerCase());
     }

@@ -293,17 +293,18 @@
         "radial-gradient(circle at 68% 42%, rgba(" + accent.join(",") + ",.12), transparent 42%)";
 
       var instrument = document.createElement("div");
-      instrument.className = "sm-boot-instrument sm-boot-compiler";
+      instrument.className = "sm-boot-instrument sm-boot-specimen";
       instrument.setAttribute("aria-hidden", "true");
       instrument.innerHTML =
-        '<span class="hero-compiler-depth"></span>' +
-        '<svg class="hero-compiler-rail" viewBox="0 0 1000 620" preserveAspectRatio="none">' +
-        '<path class="hero-compiler-rail-base" d="M72 382 C214 382 236 328 360 328 S520 382 618 382 S790 382 928 316"></path>' +
-        '<path class="hero-compiler-rail-live" d="M72 382 C214 382 236 328 360 328 S520 382 618 382 S790 382 928 316"></path></svg>' +
-        '<span class="hero-input-cluster"><i></i><i></i><i></i><i></i><i></i></span>' +
-        '<span class="hero-build-core"><b></b><i></i><i></i><i></i></span>' +
-        '<span class="hero-verify-gate"><b></b><i class="hero-verify-scan"></i><i class="hero-verify-axis"></i></span>' +
-        '<span class="hero-release-block"><b></b><i></i></span>';
+        '<span class="release-specimen-shadow"></span>' +
+        '<div class="release-specimen-object">' +
+        '<span class="release-specimen-layer release-specimen-layer--01"><i></i><b></b></span>' +
+        '<span class="release-specimen-layer release-specimen-layer--02"><i></i><b></b></span>' +
+        '<span class="release-specimen-layer release-specimen-layer--03"><i></i><b></b></span>' +
+        '<span class="release-specimen-spine"></span></div>' +
+        '<span class="release-specimen-light"></span>' +
+        '<span class="release-specimen-measure release-specimen-measure--x"></span>' +
+        '<span class="release-specimen-measure release-specimen-measure--y"></span>';
       panel.appendChild(instrument);
 
       /* Reduced motion keeps the physical core as a static orientation mark;

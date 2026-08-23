@@ -58,15 +58,11 @@ test("primary navigation and language controls are keyboard reachable", async ({
   await expect(page).toHaveURL(/#main$/);
   await expect(page.locator("html")).not.toHaveClass(/is-cinema-transitioning/, { timeout: 10000 });
 
-  const languageButton = isMobile
-    ? page.locator(".nav-menu-lang button").filter({ hasText: /^EN$/ })
-    : page.locator(".nav .lang button").filter({ hasText: /^EN$/ });
-  if (isMobile) {
-    const menuButton = page.locator(".nav-burger");
-    await menuButton.focus();
-    await page.keyboard.press("Enter");
-    await expect(page.locator(".nav-menu")).toHaveAttribute("aria-hidden", "false");
-  }
+  const menuButton = page.locator(".nav-burger");
+  await menuButton.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".nav-menu")).toHaveAttribute("aria-hidden", "false");
+  const languageButton = page.locator(".nav-menu-lang button").filter({ hasText: /^EN$/ });
   await expect(languageButton).toBeVisible();
   await languageButton.focus();
   await expect(languageButton).toBeFocused();

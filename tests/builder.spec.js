@@ -1,7 +1,7 @@
 "use strict";
 
 const { test, expect } = require("@playwright/test");
-const { settleMain, expectNoHorizontalOverflow } = require("./helpers");
+const { settleMain, switchMainLanguage, expectNoHorizontalOverflow } = require("./helpers");
 
 test("Project Sketch exposes native choices and an honest immediate result", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-chromium", "one engine covers the deterministic UI contract");
@@ -36,8 +36,7 @@ for (const language of ["RU", "EN", "UZ"]) {
     test.skip(testInfo.project.name !== "desktop-chromium", "handoff semantics are engine-independent");
     await settleMain(page, "#builder");
     if (language !== "RU") {
-      const button = page.locator(".nav .lang button").filter({ hasText: new RegExp("^" + language + "$") });
-      await button.click();
+      await switchMainLanguage(page, language);
       await expect(page.locator("html")).toHaveAttribute("lang", language.toLowerCase());
     }
 

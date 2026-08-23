@@ -5,6 +5,92 @@ Awwwards-переработки. План и критерии готовност
 `MASTER-IMPLEMENTATION-PLAN.md`; архитектурные контракты — в
 `ARCHITECTURE.md`.
 
+## Release Field V8.1 candidate — v240
+
+После сравнения с авторским Stones art direction переведён из набора
+«технологичных» микромиров в один Release Field. `src/engine/acts.js` сохраняет
+near-black material canvas и brass/ember accent для всех 12 глав; CV и Quality
+используют светлые document surfaces внутри тёмного shell, а не два белых
+полноэкранных разрыва.
+
+Hero получил code-native Release Specimen: три физические обработанные пластины,
+одна измерительная ось и один inspection-light. Parser frame-zero, Intro и React
+Hero используют один объект. Заголовок состоит из двух цельных Oswald phrase
+spans; deep link помечает `sm-intro-skip` и сразу показывает их финальную позу.
+Это устраняет полустёртый кадр при возврате из case route и не сокращает
+обычный readiness-driven Intro.
+
+Navbar разгружен: desktop-языки перенесены в fullscreen Index, где они остаются
+доступными; rail сохраняет brand, chapter coordinate, contact и trigger.
+Декоративные кольца/preview-glow Index удалены. Desktop smart cursor упрощён до
+sampling reticle: тихая точка в покое и измерительная рамка только над реальным
+действием; crosshair, QA-jaws и постоянные координаты удалены. Touch cursor не
+имитирует. В Index скрыт устаревший preview-HUD; 12 глав образуют чистую
+типографическую матрицу, а burger/close не создают click-ripple поверх своей
+контрольной анимации.
+
+Все 16 case routes получили общий Release Field поверх существующих фактов и
+локалей: Oswald display, Inter body, один grid/chapter rhythm, прямоугольные
+controls и единый reveal. Старые wave/gauge/lens pseudo-HUD cues отключены;
+уникальность сохраняют предметное изображение, registry accent, схема,
+QA-аргументация и текст. Mobile first viewport показывает смысл, две CTA и
+объект без горизонтального overflow.
+
+Parser-frame теперь семантически блокирует `#root` сразу при его появлении, до
+React passive effect. Изолированный Intro-contract подтвердил один release,
+снятие `inert/aria-hidden` и читаемый Hero. Исходный целевой design/layout
+прогон дал 23 passed / 12 viewport-specific skipped / 3 локализованных fail;
+после исправления все затронутые сценарии прошли изолированный повтор: 3 passed
+/ 1 project skip. Полный повтор и release gate фиксируются ниже только после
+фактического запуска.
+
+Отдельная cold-start проверка под шестикратным CPU throttling выявила пустой
+compositor-кадр: wall-clock progress уже достигал 80–90%, когда CSS entrance
+ещё оставался на `opacity: 0`. Boot-readout теперь видим с первого keyframe, а
+Specimen начинает entrance из различимой позы без blur. Повторная проверка на
+250 и 650 мс подтвердила содержательный кадр даже при остановившемся CSS
+timeline.
+
+Финальный локальный release gate выполнен повторно уже после Intro/Index/cursor
+правок. Детерминированная сборка подтвердила 55/55 byte-identical generated
+artifacts; validator — 25 продуктов, 9 live routes, 16 case routes и 3 локали;
+dependency audit — 0 vulnerabilities; secret scan и documentation contracts
+прошли. Изолированный performance budget завершился desktop/mobile 2/2 без
+изменения порогов. Полная браузерная матрица завершилась 165 passed / 113
+profile-specific skipped / 0 failed за 16.5 минуты: Firefox, iPhone WebKit,
+desktop/mobile Chromium и reduced motion.
+
+Свежий `npm run qa:visual` завершился 4/4 за 5.2 минуты. Вручную просмотрены
+contact sheets 12 глав и 16 case routes на desktop/mobile, а также отдельные
+кадры Intro и Index. Не обнаружены смещённые headline baseline, horizontal
+overflow, пустой первый кадр Intro, нераскрытый контент или незагруженные
+project images. Эта матрица не заявляет physical iOS/Android, NVDA,
+VoiceOver или TalkBack как выполненные проверки.
+
+## Hero V7 and navigation polish candidate — v240
+
+После повторного пользовательского visual review первая сцена получила
+отдельный release owner `src/styles/release-polish.css`. Proof Compiler теперь
+занимает полноэкранное причинное поле вместо рамочной dashboard-композиции,
+proposition состоит из двух цельных phrase spans, а role rail больше не
+использует посимвольный transform/font fitting. Это устраняет наблюдавшееся
+расхождение baseline после font settling и сохраняет один visual owner на
+строку.
+
+Instrument rail с frame zero показывает реальную главу и прогресс. Desktop
+trigger локализован как `МЕНЮ / MENU / MENYU`; fullscreen Index сохраняет
+modal/focus contracts. Для 901–1180 px action band переходит в две полноценные
+CTA-колонки, а в phone landscape дублирующая top telemetry скрыта и не
+пересекает заголовок/Compiler.
+
+Browser-аудит выполнен на 1440×1000, 390×844 и 568×320: horizontal overflow
+отсутствует, headline имеет цельные стабильные строки, portrait CTA не
+пересекают proof rail, а landscape оставляет между CTA и rail 8.3 px. Свежие
+desktop/mobile contact sheets главной просмотрены для всех 12 сцен. Отдельная
+матрица 16 desktop case routes прошла после замены фиксированного ожидания
+contact sheet на фактический `HTMLImageElement.decode()`; сама продуктовая
+проверка не ослаблялась.
+
 ## v2.14.1 layout, catalog, SEO and pricing candidate — v239
 
 Hero V6 заменяет растровый Release Gate на code-native Proof Compiler:

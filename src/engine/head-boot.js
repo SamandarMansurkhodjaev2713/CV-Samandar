@@ -10,7 +10,14 @@
     if (window.__SM_TEST_MODE) document.documentElement.classList.add("e2e-stable");
 
     // Shared section/project deep links must open immediately at their target.
-    if (window.location && window.location.hash && window.location.hash.length > 1) return;
+    // Mark that path before returning: the Hero reveal is normally prepared
+    // behind Intro, but a deep link has no curtain to hide its starting pose.
+    // A deterministic final pose also prevents a back-navigation from showing
+    // half-clipped headline lines while fonts and React settle.
+    if (window.location && window.location.hash && window.location.hash.length > 1) {
+      document.documentElement.classList.add("sm-intro-skip");
+      return;
+    }
 
     var mm = window.matchMedia;
     var reduced = mm && mm("(prefers-reduced-motion: reduce)").matches;
@@ -28,9 +35,10 @@
       "position:fixed;inset:0;z-index:2147483000;background:#1F1E1B;color:#F5F0E6;" +
       "pointer-events:auto;overflow:hidden;isolation:isolate;font-family:Arial,sans-serif;";
     panel.innerHTML =
-      '<div class="sm-boot-frame-object" aria-hidden="true" style="position:absolute;right:7vw;top:10vh;width:min(48vw,620px);aspect-ratio:1;border:1px solid rgba(200,155,94,.18);border-radius:50%;opacity:.72;transform:rotate(-12deg)">' +
-        '<i style="position:absolute;inset:12%;border:1px solid rgba(245,240,230,.10);border-radius:50%"></i>' +
-        '<i style="position:absolute;inset:28%;border:1px solid rgba(217,119,87,.32);border-radius:50%"></i>' +
+      '<div class="sm-boot-frame-object" aria-hidden="true" style="position:absolute;right:5vw;top:14vh;width:min(52vw,720px);height:min(58vh,520px);border:1px solid rgba(200,155,94,.14);opacity:.78">' +
+        '<i style="position:absolute;left:9%;right:15%;top:17%;height:18%;border:1px solid rgba(245,240,230,.12);background:linear-gradient(90deg,rgba(245,240,230,.035),transparent);transform:translateX(-4%)"></i>' +
+        '<i style="position:absolute;left:15%;right:9%;top:41%;height:18%;border:1px solid rgba(200,155,94,.26);background:linear-gradient(90deg,rgba(200,155,94,.045),transparent)"></i>' +
+        '<i style="position:absolute;left:21%;right:3%;top:65%;height:18%;border:1px solid rgba(245,240,230,.12);background:linear-gradient(90deg,rgba(245,240,230,.035),transparent);transform:translateX(4%)"></i>' +
       '</div>' +
       '<div class="sm-boot sm-boot--head" style="position:absolute;left:50%;top:42%;width:min(520px,82vw);transform:translate(-50%,-50%);display:flex;flex-direction:column;gap:16px">' +
         '<div class="sm-boot-label" style="font:600 10px/1.4 monospace;letter-spacing:.22em;color:#B8AC97">SAMANDAR / PRODUCT LAB <span class="sm-boot-state" style="color:#D97757">BUILD</span></div>' +
@@ -67,6 +75,12 @@
       document.documentElement.style.overflow = previousOverflow;
       document.documentElement.removeAttribute("aria-busy");
       panel.setAttribute("aria-busy", "false");
+      var mountedRoot = document.getElementById("root");
+      if (mountedRoot && mountedRoot.getAttribute("data-sm-intro-lock") === "head") {
+        mountedRoot.inert = false;
+        mountedRoot.removeAttribute("aria-hidden");
+        mountedRoot.removeAttribute("data-sm-intro-lock");
+      }
       try {
         window.dispatchEvent(new CustomEvent("sm:intro-done", {
           detail: { reason: window.__SM_INTRO.reason },
@@ -101,6 +115,26 @@
     document.documentElement.setAttribute("aria-busy", "true");
     document.documentElement.style.overflow = "hidden";
     document.documentElement.appendChild(panel);
+
+    // The parser creates #root after this head script. Lock it at the exact
+    // moment it appears instead of waiting for a passive React effect: the
+    // Intro then owns both pointer input and the accessibility tree from the
+    // first semantic frame, even on a saturated browser.
+    function lockMountedRoot() {
+      var mountedRoot = document.getElementById("root");
+      if (!mountedRoot) return false;
+      mountedRoot.inert = true;
+      mountedRoot.setAttribute("aria-hidden", "true");
+      mountedRoot.setAttribute("data-sm-intro-lock", "head");
+      return true;
+    }
+    if (!lockMountedRoot() && typeof MutationObserver !== "undefined") {
+      var rootObserver = new MutationObserver(function () {
+        if (!lockMountedRoot()) return;
+        rootObserver.disconnect();
+      });
+      rootObserver.observe(document.documentElement, { childList: true, subtree: true });
+    }
 
     // The critical shell must always release even if the main intro module is
     // blocked or starts and then loses its final rAF/transition callback. This

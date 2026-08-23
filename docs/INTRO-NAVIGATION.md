@@ -13,7 +13,8 @@
 
 ## 2. Источники истины
 
-- `index.html` — frame-zero shell, scroll lock и аварийная поверхность;
+- `src/engine/head-boot.js` — parser frame-zero shell, первичный semantic/
+  scroll lock и аварийная поверхность;
 - `src/engine/intro.js` — визуальная последовательность и release state
   machine;
 - `src/components/app.jsx` — готовность shell/fonts/Hero, modal menu,
@@ -28,14 +29,22 @@
 ## 3. Readiness state machine
 
 Frame-zero создаётся синхронно до загрузки React и содержит доступное состояние
-`INITIALIZING`, Proof Rail и ненулевой визуальный прогресс.
+`INITIALIZING`, Proof Rail, Release Specimen и ненулевой визуальный прогресс.
+MutationObserver блокирует появившийся `#root` через `inert` и `aria-hidden`
+ещё до passive React effect; release снимает только принадлежащий Intro lock.
+
+Первый authored CSS keyframe также обязан быть содержательным: boot-readout
+имеет ненулевую opacity до старта animation timeline, а Release Specimen
+начинается из различимой позы. Нельзя полагаться на то, что compositor успеет
+отрисовать entrance-анимацию до скачка wall-clock progress на загруженном
+устройстве.
 
 Приложение независимо сообщает:
 
 ```text
 shell  — React root смонтирован
 fonts  — document.fonts.ready либо ограниченный timeout
-hero   — code-native Proof Compiler смонтирован вместе с shell
+hero   — code-native Release Specimen смонтирован вместе с shell
 ```
 
 Переходы состояния:
@@ -77,7 +86,8 @@ fallback.
 
 ## 5. Bypass, skip и reduced motion
 
-- Любой содержательный hash обходит интро до создания панели.
+- Любой содержательный hash обходит интро до создания панели и помечает
+  документ `sm-intro-skip`, чтобы Hero сразу имел финальную читаемую позу.
 - Escape, колесо и touch могут запросить раннее завершение после безопасного
   минимума.
 - Явная skip-кнопка имеет touch target не меньше 44×44 px.
@@ -90,7 +100,7 @@ fallback.
 
 Если шрифт или иной критический ресурс не подготовился, используется timed
 fallback: семантический контент не ждёт его бесконечно. Hero не имеет
-растрового readiness gate — его frame-zero и React-версии code-native.
+растрового readiness gate — его frame-zero и React Release Specimen code-native.
 
 Если React не смонтирован, пользователь получает:
 
@@ -141,10 +151,14 @@ deep link и возврате из project case.
 Desktop:
 
 - полноширинная instrument rail показывает brand, текущую главу, progress,
-  язык, contact CTA и Index trigger без конкурирующего ряда ссылок;
+  contact CTA и Index trigger без конкурирующего ряда ссылок; язык находится
+  внутри Index и не перегружает первый экран;
 - Index собирает главы в 3×4 на широком экране, 2×6 на compact desktop и 4×3
   в коротком landscape;
 - menu scene полностью владеет верхним слоем, включая кнопку закрытия.
+- sampling cursor над close control схлопывается в datum-point; отдельный
+  click-ripple для burger/close не создаётся, потому что сам control уже даёт
+  достаточный визуальный ответ.
 
 Mobile:
 
@@ -155,6 +169,12 @@ Mobile:
 - dock появляется после Signal, учитывает safe area и показывает одну из
   двенадцати реальных глав;
 - landscape не создаёт горизонтального overflow.
+
+Hero headline раскрывается двумя цельными Oswald phrase spans. Запрещено возвращать
+per-character transforms или независимый font fitting для glyph: заголовок
+должен сохранять общую baseline на RU/EN/UZ и во всех motion tiers. В коротком
+phone landscape дублирующий top telemetry скрыт, потому что role rail уже
+передаёт ту же информацию и остаётся доступным.
 
 ## 10. Обязательная проверка
 

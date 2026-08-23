@@ -216,16 +216,32 @@ function Drum({ value }) {
   );
 }
 
+// One quiet coordinate system across all twelve chapters. This replaces the
+// feeling of unrelated per-section HUD fragments with a single truthful route
+// from brief to release. It is decorative; semantic navigation remains in Nav
+// and the mobile command dock.
+function SystemFrame({ active }) {
+  const index = Math.max(0, FULL_MENU_SECTIONS.indexOf(active));
+  const total = FULL_MENU_SECTIONS.length;
+  const progress = total > 1 ? index / (total - 1) : 0;
+  const phase = index < 4 ? "DISCOVER" : index < 8 ? "BUILD" : index < 11 ? "VERIFY" : "RELEASE";
+  return (
+    <div className="system-frame" aria-hidden="true" style={{ "--system-progress": progress }}>
+      <div className="system-frame-tele system-frame-tele--left mono">LAT 41.31 · LON 69.24</div>
+      <div className="system-frame-tele system-frame-tele--center mono">BRIEF / BUILD / VERIFY / RELEASE</div>
+      <div className="system-frame-tele system-frame-tele--right mono">{phase} · {String(index + 1).padStart(2, "0")}/{String(total).padStart(2, "0")}</div>
+      <div className="system-frame-depth"><span className="mono">DELIVERY</span><i /><b /></div>
+      <span className="system-frame-corner system-frame-corner--bl" />
+      <span className="system-frame-corner system-frame-corner--br" />
+    </div>
+  );
+}
+
 // Per-chapter accents for the menu preview. Deliberately the SAME values
 // acts.js paints when you arrive, so the peek is a promise the page keeps.
 // Kept as a plain map rather than read from acts.js: the menu must render
 // correctly even if that engine failed to load.
-const MENU_ACCENT = {
-  hero: "110, 139, 166", signal: "110, 139, 166", about: "217, 119, 87",
-  projects: "205, 122, 74", skills: "122, 145, 168", services: "196, 160, 108",
-  cv: "122, 145, 168", process: "122, 145, 168", builder: "196, 160, 108",
-  faq: "196, 160, 108", trust: "200, 155, 94", contact: "200, 155, 94",
-};
+const MENU_ACCENT = Object.fromEntries(FULL_MENU_SECTIONS.map((id) => [id, "205, 165, 103"]));
 
 function Nav({ t, lang, setLang, active }) {
   const [open, setOpen] = useS(false);
@@ -245,10 +261,10 @@ function Nav({ t, lang, setLang, active }) {
   const [secOrder, setSecOrder] = useS([]);
   const [clock, setClock] = useS("");
   const menuCopy = {
-    ru: { dialog: "Навигация по сайту", open: "Открыть меню", close: "Закрыть меню", language: "Язык", sound: "Звук интерфейса" },
-    en: { dialog: "Site navigation", open: "Open menu", close: "Close menu", language: "Language", sound: "Interface sound" },
-    uz: { dialog: "Sayt bo‘yicha navigatsiya", open: "Menyuni ochish", close: "Menyuni yopish", language: "Til", sound: "Interfeys ovozi" },
-  }[lang] || { dialog: "Site navigation", open: "Open menu", close: "Close menu", language: "Language", sound: "Interface sound" };
+      ru: { dialog: "Навигация по сайту", open: "Открыть меню", close: "Закрыть меню", trigger: "МЕНЮ", language: "Язык", sound: "Звук интерфейса" },
+      en: { dialog: "Site navigation", open: "Open menu", close: "Close menu", trigger: "MENU", language: "Language", sound: "Interface sound" },
+      uz: { dialog: "Sayt bo‘yicha navigatsiya", open: "Menyuni ochish", close: "Menyuni yopish", trigger: "MENYU", language: "Til", sound: "Interfeys ovozi" },
+  }[lang] || { dialog: "Site navigation", open: "Open menu", close: "Close menu", trigger: "MENU", language: "Language", sound: "Interface sound" };
 
   useE(() => {
     setSecOrder([...document.querySelectorAll("section[data-section]")].map((el) => el.getAttribute("data-section")));
@@ -481,6 +497,7 @@ function Nav({ t, lang, setLang, active }) {
             aria-label={open ? menuCopy.close : menuCopy.open}
             aria-expanded={open}
             aria-controls="site-menu"
+            data-label={menuCopy.trigger}
             onClick={toggleMenu}
           >
             <span /><span /><span />
@@ -509,6 +526,7 @@ function Nav({ t, lang, setLang, active }) {
           ref={closeRef}
           type="button"
           className="nav-menu-close"
+          data-cursor="close"
           aria-label={menuCopy.close}
           onClick={closeMenu}
         >
@@ -694,14 +712,16 @@ function App() {
     }
     if (!intent.panel.parentNode) return;
 
-    const previousAriaHidden = root ? root.getAttribute("aria-hidden") : null;
-    const previousInert = root ? root.inert : false;
+    const headOwnsRootLock = root && root.getAttribute("data-sm-intro-lock") === "head";
+    const previousAriaHidden = headOwnsRootLock ? null : (root ? root.getAttribute("aria-hidden") : null);
+    const previousInert = headOwnsRootLock ? false : (root ? root.inert : false);
     let restored = false;
     let fontTimer = 0;
 
     if (root) {
       root.inert = true;
       root.setAttribute("aria-hidden", "true");
+      root.removeAttribute("data-sm-intro-lock");
     }
 
     function markReady(key, fallback) {
@@ -1093,6 +1113,7 @@ function App() {
 
       <div className="bg-noise" />
       <div className="scroll-progress" />
+      <SystemFrame active={activeSection} />
 
       <Nav
         t={t}

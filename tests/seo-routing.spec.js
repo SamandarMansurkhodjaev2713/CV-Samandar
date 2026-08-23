@@ -1,7 +1,7 @@
 "use strict";
 
 const { test, expect } = require("@playwright/test");
-const { caseProducts } = require("./helpers");
+const { caseProducts, switchMainLanguage } = require("./helpers");
 
 test("@smoke discovery artifacts and the real 404 route are deployable", async ({ request, page }) => {
   const robots = await request.get("/robots.txt");
@@ -29,7 +29,7 @@ test("main language URLs are shareable and preserve deep-link context", async ({
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page).toHaveURL(/\?e2e=1&lang=en#projects$/);
 
-  await page.locator(".nav .lang button").filter({ hasText: /^UZ$/ }).click();
+  await switchMainLanguage(page, "UZ");
   await expect(page.locator("html")).toHaveAttribute("lang", "uz");
   await expect(page).toHaveURL(/\?e2e=1&lang=uz#projects$/);
 

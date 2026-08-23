@@ -72,48 +72,17 @@ function SecHead({ num, eyebrow, title, meta, em, titleId }) {
 const HERO_GIVEN = "SAMANDAR";
 const HERO_FAMILY = "MANSURKHODJAEV";
 
-// One masked, depth-planed span per letter. `--l-i` drives the entrance
-// stagger; `--hd` the pointer lean. The arc (0 at the centre of the word, 1 at
-// its ends) is what makes the lean read as a curved surface rather than a
-// uniform slide — a uniform one would just be the whole word moving, which is
-// exactly the "sticker" effect this is avoiding.
-function heroLetters(word, depthScale) {
-  const n = word.length;
-  const mid = (n - 1) / 2;
-  return word.split("").map((ch, i) => (
-    <span
-      key={i}
-      className={`hn-l${ch === " " ? " hn-l--space" : ""}`}
-      style={{
-        "--l-i": i,
-        "--hd": ((0.3 + (mid > 0 ? Math.abs(i - mid) / mid : 0) * 1.1) * depthScale).toFixed(2),
-      }}
-    >
-      <span className="hn-i">{ch === " " ? "\u00A0" : ch}</span>
+// The previous Hero assembled every headline character on its own transform
+// plane. It looked precise in one reference viewport, but glyph baselines and
+// hinting differed across Chromium/WebKit and while fonts settled. Keep one
+// mask per authored line instead: the line can still reveal and lean as a
+// physical object, while the browser remains responsible for shaping the
+// complete phrase. This is both more typographically correct and more robust.
+function heroLetters(line) {
+  return (
+    <span className="hn-l hn-l--phrase">
+      <span className="hn-i">{line}</span>
     </span>
-  ));
-}
-
-// The role lines get the same per-character treatment, for one reason that has
-// nothing to do with animation: on mobile they are set flush to both margins,
-// and CSS cannot do that to a single word.
-//
-// `text-align-last: justify` was the obvious first answer and it is a trap —
-// justification distributes slack at word boundaries, so "FULL-STACK" (no
-// spaces at all) does not move a pixel, and "AI AUTOMATION" opens one grotesque
-// canyon at its single space instead of spreading. Measured: the first line
-// stopped 12px short of the margin, the others "justified" into two words at
-// opposite ends of the screen.
-//
-// Characters in a `justify-content: space-between` row distribute the slack
-// evenly, which is what tracking-to-fit actually means. No mask or depth plane
-// here — these are supporting lines, and on desktop the spans simply flow back
-// inline as ordinary text.
-function spreadChars(text) {
-  return text.split("").map((ch, i) =>
-    ch === " "
-      ? <span className="hr-sp" key={i}>&nbsp;</span>
-      : <span className="hr-c" key={i}>{ch}</span>
   );
 }
 
@@ -169,6 +138,14 @@ function Hero({ t, links }) {
       id: "hero-depth-field",
       priority: 34,
       measure(context) {
+        const expressive = !context.policy.reducedMotion && context.policy.tier !== "low";
+        if (!expressive) {
+          // Keep the static specimen fully composed without forcing layout on
+          // every low-tier scroll frame. Normal/high tiers retain the authored
+          // pointer lean and scroll depth unchanged.
+          state.rect = null;
+          return;
+        }
         if (context.input.scrolled || context.input.resized || context.input.pointerMoved || !state.rect) {
           state.rect = heroEl.getBoundingClientRect();
         }
@@ -231,76 +208,35 @@ function Hero({ t, links }) {
         { code: "03", k: "SHIP", v: "production" },
       ];
 
-  // Mobile roles are justified character-by-character, so a font size chosen
-  // from character count alone breaks as soon as a locale contains wider
-  // glyphs. Fit the actual loaded Oswald metrics to the available line width.
-  // This runs under the intro curtain on first load and again after a language
-  // switch; the conservative CSS fallback keeps the pre-fit frame contained.
-  useEffect(() => {
-    const heroEl = document.getElementById("hero");
-    if (!heroEl) return undefined;
-    let cancelled = false;
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-
-    function fitRoles() {
-      if (cancelled || !ctx || !window.matchMedia("(max-width: 900px)").matches) return;
-      const list = heroEl.querySelector(".hero-roles");
-      if (!list) return;
-      const available = list.clientWidth;
-      if (!available) return;
-      list.querySelectorAll(".hero-role").forEach((role) => {
-        const copy = role.querySelector(".a11y-only");
-        const text = (copy ? copy.textContent : role.textContent || "").toUpperCase();
-        const family = getComputedStyle(role).fontFamily;
-        ctx.font = `600 100px ${family}`;
-        let units = 0;
-        for (const ch of text) units += /\s/.test(ch) ? 16 : ctx.measureText(ch).width;
-        if (!units) return;
-        const cap = Math.min(76, window.innerWidth * 0.188);
-        const fitted = Math.max(30, Math.min(cap, (available * 0.985 * 100) / units));
-        role.style.setProperty("--role-size", `${fitted.toFixed(2)}px`);
-      });
-    }
-
-    const list = heroEl.querySelector(".hero-roles");
-    fitRoles();
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitRoles);
-    const ro = list && "ResizeObserver" in window ? new ResizeObserver(fitRoles) : null;
-    if (ro) ro.observe(list);
-    return () => {
-      cancelled = true;
-      if (ro) ro.disconnect();
-    };
-  }, [t]);
-
   return (
     <section
       data-section="hero" id="hero" className={`hero hero--proof-chamber${lit ? " is-lit" : ""}`} ref={ref}
     >
-      {/* Proof Compiler — an authored, code-native system rather than a stock
-          "tech" image. Rough inputs are assembled, checked at a QA gate and
-          leave as one release block. The scene is meaningful in its static
-          final pose; CSS motion only explains causality on capable devices. */}
-      <figure className="hero-compiler" aria-hidden="true">
-        <span className="hero-compiler-depth" />
-        <svg className="hero-compiler-rail" viewBox="0 0 1000 620" preserveAspectRatio="none">
-          <path className="hero-compiler-rail-base" d="M72 382 C214 382 236 328 360 328 S520 382 618 382 S790 382 928 316" />
-          <path className="hero-compiler-rail-live" d="M72 382 C214 382 236 328 360 328 S520 382 618 382 S790 382 928 316" />
-        </svg>
-        <span className="hero-input-cluster"><i /><i /><i /><i /><i /></span>
-        <span className="hero-build-core"><b /><i /><i /><i /></span>
-        <span className="hero-verify-gate"><b /><i className="hero-verify-scan" /><i className="hero-verify-axis" /></span>
-        <span className="hero-release-block"><b /><i /></span>
-        <ol className="hero-compiler-map">
+      {/* Release specimen — one physical system, not a dashboard of unrelated
+          HUD widgets. Three machined layers represent product engineering,
+          implementation and QA; the restrained inspection light is the only
+          continuous motion. The final object remains meaningful when every
+          enhancement is disabled. */}
+      <figure className="release-specimen" aria-hidden="true">
+        <span className="release-specimen-shadow" />
+        <div className="release-specimen-object">
+          <span className="release-specimen-layer release-specimen-layer--01"><i /><b /></span>
+          <span className="release-specimen-layer release-specimen-layer--02"><i /><b /></span>
+          <span className="release-specimen-layer release-specimen-layer--03"><i /><b /></span>
+          <span className="release-specimen-spine" />
+        </div>
+        <span className="release-specimen-light" />
+        <span className="release-specimen-measure release-specimen-measure--x" />
+        <span className="release-specimen-measure release-specimen-measure--y" />
+        <ol className="release-specimen-map">
           {proofSteps.map((step, index) => (
-            <li key={`compiler-${step.code}`} style={{ "--compiler-i": index }}>
+            <li key={`specimen-${step.code}`} style={{ "--specimen-i": index }}>
               <span className="mono">{step.code}</span>
               <strong>{step.k}</strong>
             </li>
           ))}
         </ol>
-        <figcaption className="hero-compiler-caption mono">INPUT / BUILD / QUALITY GATE / RELEASE</figcaption>
+        <figcaption className="release-specimen-caption mono">ONE SYSTEM / THREE GATES / ONE OWNER</figcaption>
       </figure>
 
       {/* Four horizontal bands, top to bottom: identification, the masthead,
@@ -337,7 +273,7 @@ function Hero({ t, links }) {
                 aria-hidden="true"
                 key={`${lineIndex}-${line}`}
               >
-                {heroLetters(line, Math.max(.48, 1 - lineIndex * .2))}
+                {heroLetters(line)}
               </span>
             ))}
           </h1>
@@ -348,17 +284,11 @@ function Hero({ t, links }) {
             {roles.map((r, i) => (
               <React.Fragment key={i}>
                 {i ? <i className="hero-roles-sep" aria-hidden="true">/</i> : null}
-                {/* The visible text is one span per character, which a screen
-                    reader on the mobile layout would spell out letter by
-                    letter (each char is a flex item there, i.e. its own text
-                    run). So the characters are hidden from the a11y tree and
-                    a plain, off-screen copy of the string carries the meaning. */}
                 <span
                   className="hero-role"
-                  style={{ "--role-size": "12vw" }}
                 >
                   <span className="a11y-only">{r}</span>
-                  <span className="hero-role-ink" aria-hidden="true">{spreadChars(r)}</span>
+                  <span className="hero-role-ink" aria-hidden="true">{r}</span>
                 </span>
               </React.Fragment>
             ))}

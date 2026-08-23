@@ -6,11 +6,12 @@
 
 Локали: RU, EN, UZ.
 
-Визуальный режим: одна тёмная тема Ember с двумя светлыми документными сценами.
+Визуальный режим: единый тёмный Release Field; CV и Trust содержат светлые
+документные поверхности, но не меняют фон всей главы.
 
 Этот документ фиксирует уже реализованную визуальную систему. Он не заменяет исходный код и не является доказательством прохождения ручной проверки или получения Awwwards-награды.
 
-Текущая режиссура V3 и её адаптивные/motion-контракты дополнительно описаны в
+Текущая режиссура V8.1 и её адаптивные/motion-контракты дополнительно описаны в
 `docs/ART-DIRECTION-V3.md`.
 
 ## 1. Источники истины
@@ -24,7 +25,7 @@
 | содержимое 16 кейсов | `src/projects/landings-data.js` |
 | разметка кейсов и общий UI-копирайт | `src/projects/render.js` |
 | базовые токены и shell | `src/styles/styles.css` |
-| композиции сцен и адаптивность главной | `src/styles/sections.css`, `src/styles/features.css`, `src/styles/cv-doc.css`, финальный V3 layer `src/styles/art-direction.css` |
+| композиции сцен и адаптивность главной | `src/styles/sections.css`, `src/styles/features.css`, `src/styles/cv-doc.css`, V3 layer `src/styles/art-direction.css` и финальный release owner `src/styles/release-polish.css` |
 | визуальная система кейсов | `src/projects/landing.css` |
 | production CSS главной | generated `src/styles/app.bundle.min.css`; собирается `build.js` из authored sources в фиксированном порядке |
 | адаптивные и визуальные проверяемые контракты | `tests/responsive-matrix.spec.js`, `tests/stage5-sections.spec.js`, `tests/landings.spec.js`, `tests/visual-release.spec.js` |
@@ -47,32 +48,32 @@
 
 Signature motif — Proof Rail. Это линия с тремя контрольными состояниями BUILD, VERIFY и SHIP. Она обозначает реальный путь работы, а не процент готовности, live-телеметрию или обещание production-статуса.
 
-В первой сцене Proof Rail материализован как `Proof Compiler`: входные фрагменты
-собираются в build-core, проходят через измеримый QA-gate и превращаются в
-спокойный release-block. Сцена строится HTML/CSS/SVG и существует уже в frame
-zero, поэтому Intro, Hero и chapter preview меню используют один причинный
-мотив без raster decode и без трёх несвязанных декоративных изображений.
+В первой сцене Proof Rail материализован как `Release Specimen`: три физических
+слоя собраны одной измерительной осью и одним inspection-light. Это предметная
+метафора продукта, прошедшего BUILD, VERIFY и SHIP, а не HUD-схема. Сцена
+строится HTML/CSS и существует уже в parser frame-zero, поэтому Intro и Hero
+используют один объект без raster decode и layout shift.
 
 ## 3. Двенадцать сцен главной
 
 Порядок ниже одновременно является порядком DOM, полноэкранного меню, счётчика
 и мобильного rail. Компактная инструментальная рейка сознательно показывает
-только текущую главу, прогресс, язык и главное действие; полноэкранный Index
-раскрывает все двенадцать глав.
+только текущую главу, прогресс и главное действие; язык находится в Index,
+который раскрывает все двенадцать глав.
 
 | № | ID | Роль в истории | Motion-сигнатура / композиционный контракт |
 |---:|---|---|---|
-| 01 | `hero` | продуктовый тезис, авторство и ownership loop | proposition-led Proof Compiler; split-stage desktop и самостоятельная mobile/landscape композиция с видимым переходом в Signal |
+| 01 | `hero` | продуктовый тезис, авторство и ownership loop | proposition-led Release Specimen; split-stage desktop и самостоятельная mobile/landscape композиция с видимым переходом в Signal |
 | 02 | `signal` | причины работать вместе | `emerge`; читатель сам управляет disclosure |
 | 03 | `about` | профиль и проверяемый контекст | `develop`; README-композиция и безопасный GitHub fallback |
 | 04 | `projects` | 25 продуктов | `rise`; desktop grid и mobile horizontal gallery |
 | 05 | `builder` | конфигурация будущего проекта | `assemble`; параметры превращаются в структурированный brief |
 | 06 | `skills` | инженерная и QA-компетенция | `converge`; аналитический холодный акт |
 | 07 | `services` | форматы сотрудничества | `slide-left`; первая половина pinned-overlap с CV |
-| 08 | `cv` | документированная карьера | `curtain`; светлая paper-сцена поверх Services |
+| 08 | `cv` | документированная карьера | `curtain`; светлый документ внутри тёмной главы |
 | 09 | `process` | способ работы | `line-stagger`; последовательный delivery pipeline |
 | 10 | `faq` | снятие возражений | `transcript`; раскрываемые ответы с явным affordance |
-| 11 | `trust` | QA-протокол и границы | `slide-right`; светлая protocol-сцена |
+| 11 | `trust` | QA-протокол и границы | `slide-right`; светлый protocol внутри тёмной главы |
 | 12 | `contact` | финальное действие | `rise-bright`; тёплая кульминация и второй pinned-overlap |
 
 Два `Interlude` между крупными актами являются связками, а не самостоятельными секциями: у них нет `data-section`, поэтому они не искажают нумерацию и навигацию.
@@ -100,9 +101,14 @@ RGB-токены хранят каналы через пробел, наприм
 
 ### 4.2 Драматургия актов
 
-`src/engine/acts.js` меняет фон и атмосферный акцент при смене активной сцены. Дуга идёт от холодного graphite Hero к тёплому Projects, делает аналитический спад в Skills, переходит в светлые CV и Trust и завершается самым тёплым Contact. Брендовые цвета CTA не меняются между сценами.
+`src/engine/acts.js` меняет плотность и температуру материала при смене
+активной сцены, но сохраняет один near-black canvas и один brass/ember accent.
+Главы отличаются композицией и смысловым жестом, а не отдельной цветной темой.
+Contact получает самый тёплый локальный акцент без разрыва общего мира.
 
-CV и Trust — намеренные светлые `paper/protocol` исключения. Они меняют material context, но сохраняют ту же типографическую, пространственную и интерактивную систему.
+CV и Trust — светлые `paper/protocol` поверхности внутри тёмного chapter shell.
+Они используют собственные document ink tokens, но сохраняют общую
+типографическую, пространственную и интерактивную систему.
 
 ## 5. Типографика
 
@@ -119,6 +125,11 @@ CV и Trust — намеренные светлые `paper/protocol` исклю�
 | Editorial | Cormorant Garamond, `500` normal/italic | редкий человеческий и документный акцент |
 
 Базовый текст главной — `16px / 1.62`. Размеры заголовков fluid через `clamp()`. Длинные RU/EN/UZ строки проверяются как отдельные layout-сценарии; нельзя оценивать переносы только по английской версии.
+
+Hero proposition анимируется строками, а не отдельными glyph. Обе Oswald-строки
+являются цельными phrase spans с одним владельцем transform на строку.
+Посимвольный depth/stagger и отдельный italic-output запрещены: они нарушают
+baseline при font settling и между browser engines.
 
 ## 6. Пространство, форма и слой
 
@@ -206,6 +217,8 @@ scroll snap, видимым краем следующей карточки и я
 ## 9. Навигация и интерактивность
 
 - fixed navigation сохраняет brand, язык, chapter counter и menu trigger;
+- menu trigger имеет локализованную видимую метку `МЕНЮ / MENU / MENYU` на
+  desktop и самостоятельную 44×44+ icon-позу на touch;
 - при ширине `>1160px` видны семь primary links; в диапазоне `901–1160px` они заменяются компактным chapter counter;
 - fullscreen menu всегда повторяет реальный порядок двенадцати DOM-сцен;
 - mobile command dock появляется после Signal, но скрывается на Contact;
@@ -213,6 +226,12 @@ scroll snap, видимым краем следующей карточки и я
 - disclosure обязан иметь согласованные визуальное и ARIA-состояния;
 - keyboard focus не должен уходить под nav, sticky chapter bar или mobile dock;
 - smart cursor существует только для fine pointer и не заменяет нативный focus ring.
+- cursor отвечает контексту: action-reticle появляется только над реальным
+  действием, а навигационные burger/close не дублируют собственную анимацию
+  отдельным click-ripple;
+- low/reduced tier сохраняет типографику, пространственную композицию и
+  нативный scroll, но не выполняет full-document geometry sweep, blur navigation
+  и вычисления для уже отключённых transform owners.
 
 ## 10. Responsive contracts
 

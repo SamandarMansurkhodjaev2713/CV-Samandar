@@ -42,6 +42,34 @@ async function expectNoHorizontalOverflow(expect, page, label) {
   expect.soft(geometry.bodyWidth).toBeLessThanOrEqual(geometry.clientWidth + 1);
 }
 
+async function switchMainLanguage(page, language, options) {
+  const target = String(language || "ru").toLowerCase();
+  const keepMenuOpen = Boolean(options && options.keepMenuOpen);
+  if ((await page.locator("html").getAttribute("lang")) === target) return;
+
+  const menu = page.locator("#site-menu");
+  if ((await menu.getAttribute("aria-hidden")) !== "false") {
+    await page.locator(".nav-burger").click();
+    await page.waitForFunction(() => {
+      const element = document.getElementById("site-menu");
+      return element && element.getAttribute("aria-hidden") === "false";
+    });
+  }
+
+  await page.locator(".nav-menu-lang button")
+    .filter({ hasText: new RegExp("^" + target.toUpperCase() + "$") })
+    .click();
+  await page.waitForFunction((lang) => document.documentElement.lang === lang, target);
+
+  if (!keepMenuOpen) {
+    await page.locator(".nav-menu-close").click();
+    await page.waitForFunction(() => {
+      const element = document.getElementById("site-menu");
+      return element && element.getAttribute("aria-hidden") === "true";
+    });
+  }
+}
+
 function expectResponsiveProjectImage(expect, image, label) {
   const name = label || "project image";
   expect(image.complete, name + " did not finish loading").toBe(true);
@@ -63,6 +91,7 @@ module.exports = {
   caseProducts,
   liveProducts,
   settleMain,
+  switchMainLanguage,
   expectNoHorizontalOverflow,
   expectResponsiveProjectImage,
 };

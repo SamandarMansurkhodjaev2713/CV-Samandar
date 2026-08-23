@@ -1,7 +1,7 @@
 "use strict";
 
 const { test, expect } = require("@playwright/test");
-const { settleMain, expectNoHorizontalOverflow } = require("./helpers");
+const { settleMain, switchMainLanguage, expectNoHorizontalOverflow } = require("./helpers");
 
 test.describe("Firefox release smoke", () => {
   test("main catalog, navigation and language controls remain functional", async ({ page }) => {
@@ -15,7 +15,7 @@ test.describe("Firefox release smoke", () => {
     await page.getByRole("button", { name: /Показать ещё 21/ }).click();
     await expect(page.locator(".proj-card:visible")).toHaveCount(25);
 
-    await page.locator(".nav .lang button").filter({ hasText: /^EN$/ }).click();
+    await switchMainLanguage(page, "EN");
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await expect(page.locator("#projects .sec-head h2")).toContainText("Featured projects");
     await expectNoHorizontalOverflow(expect, page, "Firefox main");

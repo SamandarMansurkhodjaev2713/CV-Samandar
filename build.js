@@ -58,6 +58,7 @@ const STYLE_SOURCES = [
   "cv-doc.css",
   "features.css",
   "art-direction.css",
+  "release-polish.css",
 ];
 const STYLES_DIR = path.join(__dirname, "src", "styles");
 const STYLE_BUNDLE = "app.bundle.min.css";

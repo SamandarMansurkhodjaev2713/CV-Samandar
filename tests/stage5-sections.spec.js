@@ -1,7 +1,7 @@
 "use strict";
 
 const { test, expect } = require("@playwright/test");
-const { settleMain, expectNoHorizontalOverflow } = require("./helpers");
+const { settleMain, switchMainLanguage, expectNoHorizontalOverflow } = require("./helpers");
 
 test("Stack presents QA as a cross-cutting layer and lists the verified toolset", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-chromium", "Content structure is engine-independent");
@@ -59,7 +59,7 @@ test("Services names, metadata and related-case language are complete in RU, EN 
     { button: "UZ", lang: "uz", first: "Veb-mahsulotlar", meta: "8 · xizmat", related: "Bog'liq keys" },
   ];
   for (const item of cases) {
-    await page.locator(".nav .lang button", { hasText: item.button }).click();
+    await switchMainLanguage(page, item.button);
     await expect(page.locator("html")).toHaveAttribute("lang", item.lang);
     await expect(page.locator("#services .svc-tab").first()).toContainText(item.first);
     await expect(page.locator("#services .sec-meta")).toContainText(item.meta);

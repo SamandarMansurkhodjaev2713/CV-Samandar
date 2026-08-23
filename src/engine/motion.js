@@ -377,7 +377,10 @@
 
   function onPointerUp(event) {
     if (cursor) cursor.classList.remove("is-down");
-    spawnRipple(event.clientX, event.clientY);
+    var navigationControl = event.target && event.target.closest
+      ? event.target.closest(".nav-burger, .nav-menu-close")
+      : null;
+    if (!navigationControl) spawnRipple(event.clientX, event.clientY);
   }
 
   function onPointerLeave() {
@@ -555,6 +558,19 @@
     if (!layoutDirty && !context.input.scrolled && !context.input.resized) return;
     var height = context.input.viewportHeight || window.innerHeight || 1;
     var lite = context.policy.reducedMotion || context.policy.tier === "low";
+    // Once the low-tier final pose has been published there is no scroll-owned
+    // layout work left: pin/parallax are disabled, reveals are complete and
+    // motion-zone proximity is maintained by IntersectionObserver. Returning
+    // here removes a periodic all-section getBoundingClientRect sweep that was
+    // visible as a 50-80 ms hitch on mobile Chromium.
+    if (lite && !layoutDirty && !context.input.resized) {
+      pinMeasurements = [];
+      parallaxMeasurements = [];
+      motionZoneMeasurements = [];
+      visiblePendingReveals = [];
+      visiblePendingSections = [];
+      return;
+    }
     if (lite) {
       pinMeasurements = [];
       parallaxMeasurements = [];
@@ -584,8 +600,8 @@
     // delivery. Reading every chapter on every scroll frame forced avoidable
     // layout work precisely on constrained devices, after the policy had
     // already removed their decorative transforms.
-    var sweepInterval = lite ? 240 : 96;
-    var sweepDue = layoutDirty || context.input.resized || context.now - lastFallbackSweepAt >= sweepInterval;
+    var sweepInterval = 96;
+    var sweepDue = layoutDirty || context.input.resized || (!lite && context.now - lastFallbackSweepAt >= sweepInterval);
     motionZoneMeasurements = [];
     visiblePendingReveals = [];
     visiblePendingSections = [];
@@ -650,6 +666,9 @@
   }
 
   function onPolicyChange(tier, state) {
+    // Reduced-motion publishes every final pose immediately. Low tier keeps
+    // observer-driven chapter entry (one cheap fade), but the layout pass below
+    // never performs fallback document sweeps during active scrolling.
     if (state.reducedMotion) revealEverything();
     if (shouldUseCursor()) buildCursor();
     else removeCursor();

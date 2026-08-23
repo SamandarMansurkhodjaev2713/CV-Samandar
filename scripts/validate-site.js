@@ -420,9 +420,9 @@ function validateRuntimeShell(generated) {
   assert(html.includes('src/styles/app.bundle.min.css'), "index.html must load the generated production style bundle");
   assert(html.includes('id="sm-hero-media"'), "index.html must ship the frame-zero Hero scene outside React root");
   assert(html.indexOf('id="sm-hero-media"') < html.indexOf('id="root"'), "frame-zero Hero scene must precede the React root");
-  assert(html.includes("hero-compiler--static"), "frame-zero Hero must ship the static Proof Compiler");
-  assert(heroSource.includes('className="hero-compiler"'), "authored Hero must ship the live Proof Compiler");
-  assert(introSource.includes("sm-boot-compiler"), "Intro must preview the Proof Compiler system");
+  assert(html.includes("release-specimen--static"), "frame-zero Hero must ship the static release specimen");
+  assert(heroSource.includes('className="release-specimen"'), "authored Hero must ship the live release specimen");
+  assert(introSource.includes("sm-boot-specimen"), "Intro must preview the release specimen system");
   assert(!/release-gate(?:-\d+)?\.webp/.test(html + appSource + heroSource + introSource), "retired Release Gate raster must not remain on the critical path");
   assert(!html.includes("proof-instrument") && !appSource.includes("proof-instrument") && !introSource.includes("proof-instrument"), "retired Proof Instrument must not return to the critical path");
   assert(!html.includes('rel="stylesheet" href="src/styles/sections.css'), "index.html must not bypass the generated style bundle");
