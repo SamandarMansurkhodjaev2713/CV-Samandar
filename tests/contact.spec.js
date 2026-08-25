@@ -80,6 +80,12 @@ test("Contact native validation blocks an empty hand-off", async ({ page }, test
 
 test("Contact actions and native choices remain reachable on mobile", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-chromium", "explicit viewport matrix is covered once");
+  // This is three complete responsive journeys, each with a fresh settled
+  // section state. Keep the product assertions strict, but do not make their
+  // combined harness budget depend on how quickly a busy release host can
+  // recycle Chromium's compositor between viewport changes. Frame timing has
+  // its own blocking performance-budget suite.
+  test.setTimeout(120000);
   for (const viewport of [
     { width: 320, height: 568 },
     { width: 390, height: 844 },

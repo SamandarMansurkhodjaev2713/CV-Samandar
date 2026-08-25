@@ -2,12 +2,12 @@
 
 Интерактивное трёхъязычное портфолио Product Engineer / AI Automation / QA. Это статический продуктовый сайт с кинематографичной навигацией, адаптивной motion-системой и отдельными доказательными страницами проектов — без runtime-бэкенда и клиентской JSX-компиляции.
 
-Текущий каталог содержит **25 канонических продуктов**:
+Текущий каталог содержит **29 канонических продуктов**:
 
-- **9 live-проектов** ведут на доступные внешние сайты;
-- **16 case-проектов** раскрываются на безопасных страницах внутри портфолио;
+- **10 live-проектов** ведут на доступные внешние сайты;
+- **19 case-проектов** раскрываются на безопасных страницах внутри портфолио;
 - главная и все case-страницы поддерживают **RU / EN / UZ**;
-- 16 кейсов × 3 языка генерируются как **48 самостоятельных HTML-страниц**.
+- 19 кейсов × 3 языка генерируются как **57 самостоятельных HTML-страниц**.
 
 > Runtime `v2.14.1 / v237` опубликован на GitHub Pages из merge SHA `adc3e861`.
 > Pages workflow `32084173961` завершил build/deploy/verify-production;
@@ -47,18 +47,18 @@ node scripts/static-server.js 4173
 
 | Команда | Назначение |
 |---|---|
-| `npm run build` | Проверяет source-контракт, компилирует JSX, обновляет CSP, генерирует 48 case-страниц и sitemap, затем валидирует результат. |
-| `npm run check:build` | Дважды выполняет сборку и требует байтовой идентичности 55 generated artifacts. |
-| `npm run validate` | Проверяет уже сгенерированный сайт: 25 продуктов, маршруты, локали, тексты, изображения, discovery-артефакты и runtime-контракты. |
+| `npm run build` | Проверяет source-контракт, компилирует JSX, обновляет CSP, генерирует 57 case-страниц и sitemap, затем валидирует результат. |
+| `npm run check:build` | Дважды выполняет сборку и требует байтовой идентичности 64 generated artifacts. |
+| `npm run validate` | Проверяет уже сгенерированный сайт: 29 продуктов, маршруты, локали, тексты, изображения, discovery-артефакты и runtime-контракты. |
 | `npm run check:docs` | Проверяет обязательные документы, локальные ссылки, package scripts и количественные контракты. |
 | `npm test` | Запускает валидацию и полную Playwright-матрицу: Chromium desktop/mobile, WebKit mobile smoke, Firefox desktop smoke и reduced-motion. |
 | `npm run test:performance` | Отдельно проверяет desktop/mobile performance-бюджеты в Chromium одним worker. |
-| `npm run qa:visual` | Снимает главные сцены и все 16 кейсов на desktop/mobile, затем собирает контактные листы в `tmp/release-qa/`. |
+| `npm run qa:visual` | Снимает главные сцены и все 19 кейсов на desktop/mobile, затем собирает контактные листы в `tmp/release-qa/`. |
 | `npm run qa:submission` | Снимает с production 8 submission stills, 60–90-секундный desktop review-video, manifest и contact sheet в `tmp/submission-media/`. |
 | `npm run test:a11y` | Запускает accessibility-набор с axe и keyboard/focus-проверками. |
 | `npm run scan:secrets` | Проверяет кандидатов на коммит на признаки секретов и приватных данных. |
-| `npm run check:live` | С сетевыми retry проверяет, что 9 live-маршрутов возвращают пригодный HTML. |
-| `npm run test:production` | После deploy проверяет production-главную, 48 case URL и возврат к точной карточке. |
+| `npm run check:live` | С сетевыми retry проверяет, что 10 live-маршрутов возвращают пригодный HTML. |
+| `npm run test:production` | После deploy проверяет production-главную, 57 case URL и возврат к точной карточке. |
 | `npm run monitor:production` | Измеряет реальный Pages URL в desktop/mobile Chromium и сохраняет синтетический production-отчёт без пользовательского трекинга. |
 | `npm run bump:assets` | Перед релизной сборкой атомарно повышает единую версию cache-busting ссылок. |
 
@@ -84,11 +84,11 @@ npm run qa:visual
 |---|---|---|
 | Идентичность продукта, порядок, live/case-маршрут, evidence/confidentiality, изображение | `src/content/product-registry.js` | Порядок карточек, URL, sitemap и contract validation |
 | Тексты главной и карточек на RU / EN / UZ | `src/content/content.js` | Данные, которые получает React-приложение |
-| Полный контент 16 case-страниц | `src/projects/landings-data.js` | Локализованные страницы в `projects/<slug>/` |
+| Полный контент 19 case-страниц | `src/projects/landings-data.js` | Локализованные страницы в `projects/<slug>/` |
 | Разметка case-страниц | `src/projects/render.js` | Одинаковый SSR-like HTML на build-time и client-side при смене языка |
 | UI-компоненты | `src/components/*.jsx` | `src/components/*.js`, сгенерированные `build.js` |
 | Дизайн и runtime-эффекты | `src/styles/`, `src/projects/landing.css`, `src/engine/` | Progressive motion/WebGL с читаемым fallback |
-| Сборка и генерация | `build.js` | CSP, compiled JS, 48 HTML-страниц и `sitemap.xml` |
+| Сборка и генерация | `build.js` | CSP, compiled JS, 57 HTML-страниц и `sitemap.xml` |
 
 Ключевой поток данных:
 
@@ -97,7 +97,7 @@ product-registry + content + landing data + JSX
                        ↓
                     build.js
                        ↓
-compiled components + 48 case pages + CSP + sitemap
+compiled components + 57 case pages + CSP + sitemap
                        ↓
                validate + Playwright
 ```
@@ -119,7 +119,7 @@ compiled components + 48 case pages + CSP + sitemap
 Playwright покрывает:
 
 - критический путь главной, intro, навигацию, каталог, builder, CV, FAQ и contact;
-- все 16 case-маршрутов и переключение RU / EN / UZ;
+- все 19 case-маршрутов и переключение RU / EN / UZ;
 - клавиатуру, focus visibility, семантику, axe и reduced motion;
 - desktop/mobile responsive-состояния и смену ориентации;
 - Chromium, Firefox smoke и WebKit smoke;
@@ -131,7 +131,7 @@ Playwright покрывает:
 ## GitHub Pages
 
 - `.github/workflows/quality.yml` запускается для pull request и вручную: locked install, dependency audit, secret scan, deterministic build, документационные контракты, generated drift и полный test suite.
-- `.github/workflows/deploy-pages.yml` настроен на push в `main` и ручной запуск. Он повторяет quality gate, формирует минимальный статический `_site`, публикует Pages, а затем отдельным job запускает production smoke и проверку 9 live URL.
+- `.github/workflows/deploy-pages.yml` настроен на push в `main` и ручной запуск. Он повторяет quality gate, формирует минимальный статический `_site`, публикует Pages, а затем отдельным job запускает production smoke и проверку 10 live URL.
 - `.github/workflows/production-monitor.yml` каждые шесть часов и вручную повторяет production smoke, снимает синтетические desktop/mobile vitals и сохраняет JSON evidence на 14 дней.
 - Deploy job получает только `pages: write` и `id-token: write`; build job работает с `contents: read`.
 

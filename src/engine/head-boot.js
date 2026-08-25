@@ -40,12 +40,13 @@
         '<i style="position:absolute;left:15%;right:9%;top:41%;height:18%;border:1px solid rgba(200,155,94,.26);background:linear-gradient(90deg,rgba(200,155,94,.045),transparent)"></i>' +
         '<i style="position:absolute;left:21%;right:3%;top:65%;height:18%;border:1px solid rgba(245,240,230,.12);background:linear-gradient(90deg,rgba(245,240,230,.035),transparent);transform:translateX(4%)"></i>' +
       '</div>' +
-      '<div class="sm-boot sm-boot--head" style="position:absolute;left:50%;top:42%;width:min(520px,82vw);transform:translate(-50%,-50%);display:flex;flex-direction:column;gap:16px">' +
-        '<div class="sm-boot-label" style="font:600 10px/1.4 monospace;letter-spacing:.22em;color:#B8AC97">SAMANDAR / PRODUCT LAB <span class="sm-boot-state" style="color:#D97757">BUILD</span></div>' +
-        '<div class="sm-boot-proof" aria-hidden="true" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font:500 10px/1.4 monospace;letter-spacing:.14em;color:#6B6353"><span style="color:#F5F0E6">BUILD</span><span>VERIFY</span><span>SHIP</span></div>' +
-        '<div class="sm-boot-pct" aria-hidden="true" style="display:flex;align-items:flex-start;font-weight:600;line-height:.8;letter-spacing:-.06em"><span class="sm-boot-pct-n" style="font-size:clamp(64px,12vw,112px)">00</span><span class="sm-boot-pct-sign" style="margin:.08em 0 0 .12em;font:500 clamp(18px,3vw,28px)/1 monospace;color:#D97757">%</span></div>' +
+      '<div class="sm-boot sm-boot--head" style="position:absolute;left:50%;top:42%;width:min(520px,82vw);transform:translate(-50%,-50%);display:flex;flex-direction:column;gap:14px">' +
+        '<div class="sm-boot-label mono" style="font:600 10px/1.4 monospace;letter-spacing:.22em;color:#B8AC97">SAMANDAR / RELEASE PROOF <span class="sm-boot-state" style="display:inline-block;min-width:7ch;text-align:right;color:#D97757">BUILD</span></div>' +
+        '<div class="sm-boot-route mono" aria-hidden="true" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font:500 10px/1.4 monospace;letter-spacing:.14em;color:#6B6353"><span style="color:#F5F0E6">BUILD</span><span>VERIFY</span><span>SHIP</span></div>' +
+        '<div class="sm-boot-pct" aria-hidden="true" style="display:flex;align-items:baseline;font-weight:600;line-height:.8;letter-spacing:-.06em"><span class="sm-boot-pct-n" style="display:inline-block;flex:0 0 1.75em;text-align:right;font-size:clamp(64px,12vw,112px)">00</span><span class="sm-boot-pct-sign" style="margin:.08em 0 0 .12em;font:500 clamp(18px,3vw,28px)/1 monospace;color:#D97757">%</span></div>' +
         '<div class="sm-boot-line" aria-hidden="true" style="height:1px;background:rgba(217,119,87,.18);overflow:hidden"><i style="display:block;width:0;height:100%;background:#D97757"></i></div>' +
-        '<div class="sm-boot-status" role="status" aria-live="polite" style="font:500 10px/1.4 monospace;letter-spacing:.16em;color:#6B6353">INITIALIZING</div>' +
+        '<div class="sm-boot-status mono" role="status" aria-live="polite" style="font:500 10px/1.4 monospace;letter-spacing:.16em;color:#6B6353">INITIALIZING</div>' +
+        '<div class="sm-boot-log mono" aria-hidden="true" style="width:100%;height:54px;overflow:hidden"></div>' +
       "</div>";
 
     window.__SM_INTRO = {
@@ -58,6 +59,16 @@
       doneFired: false,
     };
 
+    window.__SM_INTRO.unveilRoot = function () {
+      var mountedRoot = document.getElementById("root");
+      if (!mountedRoot) return;
+      if (mountedRoot.getAttribute("data-sm-intro-lock") === "head") {
+        mountedRoot.inert = false;
+        mountedRoot.removeAttribute("aria-hidden");
+        mountedRoot.removeAttribute("data-sm-intro-lock");
+      }
+    };
+
     window.__SM_INTRO.notify = function () {
       try {
         window.dispatchEvent(new CustomEvent("sm:intro-readiness", {
@@ -66,21 +77,20 @@
       } catch (e) { /* Optional readiness channel. */ }
     };
 
-    window.__SM_INTRO.release = function (reason) {
+    window.__SM_INTRO.release = function (reason, preservePanel) {
       if (doneFired) return;
       doneFired = true;
       window.__SM_INTRO.doneFired = true;
       window.__SM_INTRO.reason = reason || "complete";
+      // Completion is also an ownership transfer: once the application is
+      // readable, the opening layer must no longer remain in either the DOM or
+      // the hit-test tree. Recovery is the only intentional exception.
+      if (!preservePanel && panel.parentNode) panel.remove();
       document.documentElement.classList.remove("intro-lock");
       document.documentElement.style.overflow = previousOverflow;
       document.documentElement.removeAttribute("aria-busy");
       panel.setAttribute("aria-busy", "false");
-      var mountedRoot = document.getElementById("root");
-      if (mountedRoot && mountedRoot.getAttribute("data-sm-intro-lock") === "head") {
-        mountedRoot.inert = false;
-        mountedRoot.removeAttribute("aria-hidden");
-        mountedRoot.removeAttribute("data-sm-intro-lock");
-      }
+      window.__SM_INTRO.unveilRoot();
       try {
         window.dispatchEvent(new CustomEvent("sm:intro-done", {
           detail: { reason: window.__SM_INTRO.reason },
@@ -90,6 +100,11 @@
 
     window.__SM_INTRO.recover = function (code) {
       window.__SM_INTRO.prepared = true;
+      var mountedRoot = document.getElementById("root");
+      if (mountedRoot && mountedRoot.childElementCount) {
+        window.__SM_INTRO.release("recovery-late-shell");
+        return;
+      }
       if (!panel.parentNode) document.documentElement.appendChild(panel);
       panel.setAttribute("role", "alert");
       panel.setAttribute("aria-busy", "false");
@@ -108,7 +123,7 @@
         "</div>";
       var reload = panel.querySelector("[data-sm-reload]");
       if (reload) reload.addEventListener("click", function () { window.location.reload(); });
-      window.__SM_INTRO.release("recovery");
+      window.__SM_INTRO.release("recovery", true);
     };
 
     document.documentElement.classList.add("intro-lock");
@@ -119,7 +134,10 @@
     // The parser creates #root after this head script. Lock it at the exact
     // moment it appears instead of waiting for a passive React effect: the
     // Intro then owns both pointer input and the accessibility tree from the
-    // first semantic frame, even on a saturated browser.
+    // first semantic frame, even on a saturated browser. The shell still
+    // renders behind the fully opaque panel: this reserves its final geometry
+    // and lets the browser discover the real Hero LCP without exposing or
+    // activating unfinished UI.
     function lockMountedRoot() {
       var mountedRoot = document.getElementById("root");
       if (!mountedRoot) return false;
@@ -153,7 +171,6 @@
       // Remove synchronously instead of depending on another delayed timer.
       // If React is still absent, app-watchdog owns the honest fatal shell at
       // 5.5s; keeping this dialog above a late successful mount is worse.
-      panel.remove();
       window.__SM_INTRO.release(root && root.childElementCount ?
         "head-safety-shell" : "head-safety-empty");
     }

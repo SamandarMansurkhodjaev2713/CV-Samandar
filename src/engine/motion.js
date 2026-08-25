@@ -264,7 +264,10 @@
   }
 
   function readableText(element) {
-    var value = (element && element.textContent || "").replace(/\s+/g, " ").trim();
+    // innerText excludes responsive/a11y copies hidden by CSS. textContent
+    // concatenated desktop + mobile labels and produced broken cursor text.
+    var source = element ? (element.innerText || element.textContent || "") : "";
+    var value = source.replace(/\s+/g, " ").trim();
     return value.length > 20 ? value.slice(0, 19) + "…" : value;
   }
 
@@ -272,10 +275,13 @@
     if (!target || !target.closest) return null;
     var explicit = target.closest("[data-cursor]");
     if (explicit) {
+      var visibleLabel = readableText(explicit);
       return {
         element: explicit,
         mode: explicit.getAttribute("data-cursor") || "link",
-        label: explicit.getAttribute("data-cursor-label") || "",
+        // Visible UI copy is already localized and is the truthful action
+        // name. Legacy data labels may be English even inside RU/UZ pages.
+        label: visibleLabel || explicit.getAttribute("data-cursor-label") || "",
       };
     }
     var interactive = target.closest("a, button, [role='button'], [role='tab'], input, textarea, select");
@@ -298,16 +304,13 @@
     var value = cursorLabel && cursorLabel.querySelector(".sc-label-val");
     if (key && value) {
       var parts = cursorText.split(":");
-      var actionNames = {
-        link: "OPEN",
-        drag: "MOVE",
-        file: "FILE",
-        copy: "COPY",
-        send: "SHIP",
-        input: "INPUT",
-        tab: "SELECT",
-        target: "INSPECT",
+      var language = (document.documentElement.lang || "ru").slice(0, 2);
+      var actionSets = {
+        ru: { link: "ОТКРЫТЬ", drag: "ДВИГАТЬ", file: "ФАЙЛ", copy: "КОПИРОВАТЬ", send: "ОТПРАВИТЬ", input: "ВВОД", tab: "ВЫБРАТЬ", target: "ПРОВЕРИТЬ" },
+        en: { link: "OPEN", drag: "MOVE", file: "FILE", copy: "COPY", send: "SEND", input: "INPUT", tab: "SELECT", target: "INSPECT" },
+        uz: { link: "OCHISH", drag: "SURISH", file: "FAYL", copy: "NUSXA", send: "YUBORISH", input: "KIRITISH", tab: "TANLASH", target: "TEKSHIRISH" },
       };
+      var actionNames = actionSets[language] || actionSets.ru;
       key.textContent = (parts.length > 1
         ? parts.shift().toUpperCase()
         : (actionNames[cursorMode] || "VERIFY")) + " //";
@@ -524,6 +527,14 @@
   function mutateCursor(context) {
     if (!cursor) return;
     cursor.style.transform = "translate3d(" + cursorPosition.x.toFixed(2) + "px," + cursorPosition.y.toFixed(2) + "px,0)";
+    // Keep the contextual proof label inside the viewport without measuring
+    // it on every frame. The fixed maximum width is part of the CSS contract.
+    var viewportWidth = context.input.viewportWidth || window.innerWidth || 1;
+    var viewportHeight = context.input.viewportHeight || window.innerHeight || 1;
+    cursor.classList.toggle("label-left", cursorTarget.x > viewportWidth - 270);
+    // Reserve the bottom proof rail and mobile browser chrome instead of
+    // waiting until the label is technically outside the viewport.
+    cursor.classList.toggle("label-up", cursorTarget.y > viewportHeight - 150);
     if (cursorCoords) {
       cursorCoords.textContent = morphRect
         ? (cursorSection ? "#" + cursorSection.toUpperCase() + " · " : "") +

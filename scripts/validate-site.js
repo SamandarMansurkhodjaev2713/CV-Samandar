@@ -117,7 +117,7 @@ function loadMainContent(registry) {
 
 function validateRegistry(registry) {
   assert(Array.isArray(registry), "PRODUCT_REGISTRY must export an array");
-  assert(registry.length === 25, "expected 25 canonical products, received " + registry.length);
+  assert(registry.length === 29, "expected 29 canonical products, received " + registry.length);
   assertUnique(registry, (p) => p.id, "product id");
   assertUnique(registry, (p) => p.slug, "product slug");
   assertUnique(registry, (p) => p.i18n && p.i18n.ru && p.i18n.ru.name, "display name");
@@ -227,8 +227,8 @@ function validateRegistry(registry) {
 
   const liveCount = registry.filter((p) => p.presentation === "live").length;
   const caseCount = registry.filter((p) => p.presentation === "case").length;
-  assert(liveCount === 9, "expected 9 live products, received " + liveCount);
-  assert(caseCount === 16, "expected 16 case products, received " + caseCount);
+  assert(liveCount === 10, "expected 10 live products, received " + liveCount);
+  assert(caseCount === 19, "expected 19 case products, received " + caseCount);
 }
 
 function validateMainContent(registry, content) {
@@ -420,9 +420,9 @@ function validateRuntimeShell(generated) {
   assert(html.includes('src/styles/app.bundle.min.css'), "index.html must load the generated production style bundle");
   assert(html.includes('id="sm-hero-media"'), "index.html must ship the frame-zero Hero scene outside React root");
   assert(html.indexOf('id="sm-hero-media"') < html.indexOf('id="root"'), "frame-zero Hero scene must precede the React root");
-  assert(html.includes("release-specimen--static"), "frame-zero Hero must ship the static release specimen");
-  assert(heroSource.includes('className="release-specimen"'), "authored Hero must ship the live release specimen");
-  assert(introSource.includes("sm-boot-specimen"), "Intro must preview the release specimen system");
+  assert(html.includes("release-proof--static"), "frame-zero Hero must ship the static release proof");
+  assert(heroSource.includes('className="release-proof"'), "authored Hero must ship the live release proof");
+  assert(introSource.includes("sm-boot-instrument sm-boot-proof"), "Intro must preview the release proof system");
   assert(!/release-gate(?:-\d+)?\.webp/.test(html + appSource + heroSource + introSource), "retired Release Gate raster must not remain on the critical path");
   assert(!html.includes("proof-instrument") && !appSource.includes("proof-instrument") && !introSource.includes("proof-instrument"), "retired Proof Instrument must not return to the critical path");
   assert(!html.includes('rel="stylesheet" href="src/styles/sections.css'), "index.html must not bypass the generated style bundle");

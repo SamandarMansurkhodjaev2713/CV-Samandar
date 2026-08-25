@@ -1,6 +1,6 @@
 # Канонический реестр продуктов
 
-Актуально на: 2026-08-11
+Актуально на: 2026-08-24
 
 Машинный источник истины: `src/content/product-registry.js`
 
@@ -8,13 +8,13 @@
 
 ## 1. Зафиксированная модель
 
-Портфолио содержит ровно **25 уникальных продуктов**:
+Портфолио содержит ровно **29 уникальных продуктов**:
 
-- **9 live-продуктов**: primary CTA ведёт на работающий внешний сайт;
-- **16 case-продуктов**: primary CTA ведёт на безопасную внутреннюю визитку;
+- **10 live-продуктов**: primary CTA ведёт на работающий внешний сайт;
+- **19 case-продуктов**: primary CTA ведёт на безопасную внутреннюю визитку;
 - **3 полные локали**: `ru`, `en`, `uz`;
-- **48 generated landing HTML**: 16 case-продуктов × 3 локали;
-- **49 URL в sitemap**: главная + 48 локализованных case-маршрутов.
+- **57 generated landing HTML**: 19 case-продуктов × 3 локали;
+- **58 URL в sitemap**: главная + 57 локализованных case-маршрутов.
 
 Единица учёта — продукт, а не репозиторий. Публичная витрина, приватный source,
 предыдущая реализация, дочерний модуль и evidence-репозиторий могут принадлежать
@@ -28,37 +28,42 @@
 | Rank | ID / slug | Публичное имя | Portfolio / lifecycle / confidentiality | Primary route | Secondary GitHub |
 |---:|---|---|---|---|---|
 | 1 | `klawis` / `klawis` | Klawis — Legal AI Assistant | featured / live / private_source | `https://klawis.uz` | `https://github.com/SamandarMansurkhodjaev2713/Klawis-PAA` |
-| 2 | `growthops-ai` / `growthops-ai` | GrowthOps AI | featured / build / private_source | `projects/growthops-ai/` | `https://github.com/SamandarMansurkhodjaev2713/growthops-ai` |
-| 3 | `ttyl` / `ttyl` | TTYL Platform | featured / build / nda | `projects/ttyl/` | `https://github.com/SamandarMansurkhodjaev2713/ttyl.uz` |
-| 4 | `dostupnoe-pravo` / `dostupnoe-pravo` | Доступное Право | featured / live / public | `https://dostupnoe-pravo-alpha.vercel.app/` | `https://github.com/SamandarMansurkhodjaev2713/dostupnoe-pravo` |
-| 5 | `birthday-agent` / `birthday-agent` | Birthday Agent | featured / build / sensitive | `projects/birthday-agent/` | — |
-| 6 | `softly` / `softly` | CoupleOS / Softly | featured / live / sensitive | `https://softlylove.uz` | — |
-| 7 | `ai-classroom` / `ai-classroom` | AI Classroom Intelligence | catalog / build / sensitive | `projects/ai-classroom/` | — |
-| 8 | `car-superapp` / `car-superapp` | CAR Superapp | catalog / discovery / private_source | `projects/car-superapp/` | — |
-| 9 | `helion` / `helion` | Helion | catalog / demo / public | `https://samandarmansurkhodjaev2713.github.io/helion/` | `https://github.com/SamandarMansurkhodjaev2713/helion` |
-| 10 | `stones` / `stones` | Stones | catalog / demo / public | `https://samandarmansurkhodjaev2713.github.io/stones/` | `https://github.com/SamandarMansurkhodjaev2713/stones` |
-| 11 | `sentinel-edge` / `sentinel-edge` | Sentinel Edge | catalog / demo / public | `https://samandarmansurkhodjaev2713.github.io/sentinel-edge-smart-system/` | `https://github.com/SamandarMansurkhodjaev2713/sentinel-edge-smart-system` |
-| 12 | `cardioguard` / `cardioguard` | CardioGuard | catalog / demo / public | `https://samandarmansurkhodjaev2713.github.io/cardioguard/` | `https://github.com/SamandarMansurkhodjaev2713/cardioguard` |
-| 13 | `task-automation` / `task-manager` | Task-manager / Task Manage Bot | catalog / demo / private_source | `projects/task-manager/` | `https://github.com/SamandarMansurkhodjaev2713/Task-manager` |
-| 14 | `marketbot` / `marketbot` | Marketbot | catalog / build / nda | `projects/marketbot/` | — |
-| 15 | `izatullo-bel-alma` / `izatullo` | IZATULO / BEL ALMA | catalog / live / private_source | `https://izzatullo.uz/` | — |
-| 16 | `forge-learning-os` / `forge` | Forge / Learning OS | catalog / build / nda | `projects/forge/` | — |
-| 17 | `belfproctor` / `belfproctor` | BelfProctor | catalog / prototype / sensitive | `projects/belfproctor/` | — |
-| 18 | `laplacefx` / `laplacefx` | LaplaceFX | catalog / demo / private_source | `projects/laplacefx/` | — |
-| 19 | `bioflux-observer` / `bioflux` | BioFlux Observer | catalog / prototype / public | `projects/bioflux/` | `https://github.com/SamandarMansurkhodjaev2713/bioflux-observer` |
-| 20 | `vfs-killer` / `vfs-killer` | VFS Killer | hold / source_incomplete / private_source | `projects/vfs-killer/` | — |
-| 21 | `med-exe` / `med-exe` | med-exe | catalog / prototype / sensitive | `projects/med-exe/` | — |
-| 22 | `3d-landing` / `3d-landing` | 3D Landing | catalog / demo / public | `https://samandarmansurkhodjaev2713.github.io/3d-landing/` | `https://github.com/SamandarMansurkhodjaev2713/3d-landing` |
-| 23 | `vacation-control` / `vacation-control` | Vacation Control Agent | catalog / build / sensitive | `projects/vacation-control/` | — |
-| 24 | `b24-sales-analyst` / `b24-sales-analyst` | B24 Sales Analyst | catalog / build / nda | `projects/b24-sales-analyst/` | — |
-| 25 | `chat-messenger` / `chat-app` | ChAT — Offline-first Messenger | catalog / prototype / public | `projects/chat-app/` | `https://github.com/SamandarMansurkhodjaev2713/ChAT-app` |
+| 2 | `dentforma` / `dentforma` | DentForma — Browser 3D Review | featured / prototype / sensitive | `projects/dentforma/` | — |
+| 3 | `echelon-desktop` / `echelon-desktop` | Echelon Desktop | featured / live / public | `https://samandarmansurkhodjaev2713.github.io/echelon-site-main/` | `https://github.com/SamandarMansurkhodjaev2713/echelon-site-main` |
+| 4 | `ttyl` / `ttyl` | TTYL Platform | featured / build / nda | `projects/ttyl/` | `https://github.com/SamandarMansurkhodjaev2713/ttyl.uz` |
+| 5 | `growthops-ai` / `growthops-ai` | GrowthOps AI | featured / build / private_source | `projects/growthops-ai/` | `https://github.com/SamandarMansurkhodjaev2713/growthops-ai` |
+| 6 | `meetingflow-ru-uz` / `meetingflow-ru-uz` | MeetingFlow RU/UZ | featured / live / sensitive | `projects/meetingflow-ru-uz/` | — |
+| 7 | `birthday-agent` / `birthday-agent` | Birthday Agent | featured / build / sensitive | `projects/birthday-agent/` | — |
+| 8 | `dostupnoe-pravo` / `dostupnoe-pravo` | Доступное Право | featured / live / public | `https://dostupnoe-pravo-alpha.vercel.app/` | `https://github.com/SamandarMansurkhodjaev2713/dostupnoe-pravo` |
+| 9 | `softly` / `softly` | CoupleOS / Softly | featured / live / sensitive | `https://softlylove.uz` | — |
+| 10 | `telegram-sheets-task-bot` / `telegram-sheets-task-bot` | Telegram Sheets Task Bot | catalog / build / sensitive | `projects/telegram-sheets-task-bot/` | — |
+| 11 | `ai-classroom` / `ai-classroom` | AI Classroom Intelligence | catalog / build / sensitive | `projects/ai-classroom/` | — |
+| 12 | `car-superapp` / `car-superapp` | CAR Superapp | catalog / discovery / private_source | `projects/car-superapp/` | — |
+| 13 | `helion` / `helion` | Helion | catalog / demo / public | `https://samandarmansurkhodjaev2713.github.io/helion/` | `https://github.com/SamandarMansurkhodjaev2713/helion` |
+| 14 | `stones` / `stones` | Stones | catalog / demo / public | `https://samandarmansurkhodjaev2713.github.io/stones/` | `https://github.com/SamandarMansurkhodjaev2713/stones` |
+| 15 | `sentinel-edge` / `sentinel-edge` | Sentinel Edge | catalog / demo / public | `https://samandarmansurkhodjaev2713.github.io/sentinel-edge-smart-system/` | `https://github.com/SamandarMansurkhodjaev2713/sentinel-edge-smart-system` |
+| 16 | `cardioguard` / `cardioguard` | CardioGuard | catalog / demo / public | `https://samandarmansurkhodjaev2713.github.io/cardioguard/` | `https://github.com/SamandarMansurkhodjaev2713/cardioguard` |
+| 17 | `task-automation` / `task-manager` | Task-manager / Task Manage Bot | catalog / demo / private_source | `projects/task-manager/` | `https://github.com/SamandarMansurkhodjaev2713/Task-manager` |
+| 18 | `marketbot` / `marketbot` | Marketbot | catalog / build / nda | `projects/marketbot/` | — |
+| 19 | `izatullo-bel-alma` / `izatullo` | IZATULO / BEL ALMA | catalog / live / private_source | `https://izzatullo.uz/` | — |
+| 20 | `forge-learning-os` / `forge` | Forge / Learning OS | catalog / build / nda | `projects/forge/` | — |
+| 21 | `belfproctor` / `belfproctor` | BelfProctor | catalog / prototype / sensitive | `projects/belfproctor/` | — |
+| 22 | `laplacefx` / `laplacefx` | LaplaceFX | catalog / demo / private_source | `projects/laplacefx/` | — |
+| 23 | `bioflux-observer` / `bioflux` | BioFlux Observer | catalog / prototype / public | `projects/bioflux/` | `https://github.com/SamandarMansurkhodjaev2713/bioflux-observer` |
+| 24 | `vfs-killer` / `vfs-killer` | VFS Killer | hold / source_incomplete / private_source | `projects/vfs-killer/` | — |
+| 25 | `med-exe` / `med-exe` | med-exe | catalog / prototype / sensitive | `projects/med-exe/` | — |
+| 26 | `3d-landing` / `3d-landing` | 3D Landing | catalog / demo / public | `https://samandarmansurkhodjaev2713.github.io/3d-landing/` | `https://github.com/SamandarMansurkhodjaev2713/3d-landing` |
+| 27 | `vacation-control` / `vacation-control` | Vacation Control Agent | catalog / build / sensitive | `projects/vacation-control/` | — |
+| 28 | `b24-sales-analyst` / `b24-sales-analyst` | B24 Sales Analyst | catalog / build / nda | `projects/b24-sales-analyst/` | — |
+| 29 | `chat-messenger` / `chat-app` | ChAT — Offline-first Messenger | catalog / prototype / public | `projects/chat-app/` | `https://github.com/SamandarMansurkhodjaev2713/ChAT-app` |
 
 `portfolioState` и `featuredRank` решают разные задачи:
 
-- `featuredRank` задаёт полный порядок 1–25 и обязан быть уникальным;
+- `featuredRank` задаёт полный порядок 1–29 и обязан быть уникальным;
 - `portfolioState=featured` отмечает верхний кураторский набор;
 - первый экран раздела намеренно показывает **первые 4 карточки**, а кнопка
-  «Показать ещё 21» раскрывает весь каталог без изменения порядка;
+  «Показать ещё 25» раскрывает весь каталог без изменения порядка; архивные
+  карточки создаются только после этого действия или deep-link возврата;
 - `hold` не означает удаление: VFS Killer остаётся честно раскрытым архивным
   case, но не получает claim о готовности.
 
@@ -142,6 +147,9 @@ prototype и source-incomplete формулировки описывают по�
   `task-manage-bot` — две явно разделённые реализации одной product family.
 - LaplaceFX: `tg-bot-trading` — source alias, не отдельная карточка.
 - ChAT: `ChAT-app` — канонический public source; `alif-chat` — legacy/duplicate.
+- Echelon Desktop: `echelon-site-main` — канонический public presentation
+  repository и live Pages route; `echelon-site` — duplicate/legacy alias, а не
+  второй продукт. Публичная презентация не заявляет private production source.
 - Доступное Право: private `delo` — predecessor, не отдельный текущий продукт.
 - VFS Killer: private placeholder фиксирует provenance, но не доказывает
   восстановленный source или readiness.
@@ -149,6 +157,15 @@ prototype и source-incomplete формулировки описывают по�
   безопасным evidence-репозиторием и отдельной secondary CTA.
 - Birthday Agent: private `birthday-agent` — один самостоятельный HR-продукт;
   его Excel-, scheduler-, audit- и QA-модули не превращаются в отдельные карточки.
+- DentForma: private `TitanPro3D` — source browser-based 3D review workflow;
+  публичная визитка намеренно не раскрывает клинические файлы, пользователей,
+  private infrastructure или медицинские claims.
+- MeetingFlow RU/UZ: private `meetingflow-ru-uz` — один meeting-automation
+  продукт; calendar, recorder, speech, document и delivery adapters не являются
+  отдельными карточками.
+- Telegram Sheets Task Bot: private `telegram-google-sheets-task-bot` — один
+  serverless task-workflow; bot, Apps Script и Sheets transaction layer не
+  дробятся на отдельные продукты.
 
 Служебные `CV-Samandar`, `private-projects-showcase`, `selected-work`,
 `frontend-work-index`, `qa-engineering-portfolio`, `System-sales-automation`
@@ -161,7 +178,7 @@ evidence/index-инфраструктурой и карточек не полу�
 `evidenceRef` и датой ревью. Эти значения не суммируются между продуктами и не
 используются как общий счётчик портфолио.
 
-### 5. Birthday Agent
+### 7. Birthday Agent
 
 - `automated-tests`: **718 tests**;
 - `authored-templates`: **260 templates**;
@@ -170,19 +187,19 @@ evidence/index-инфраструктурой и карточек не полу�
 - scope: проверенный private repository и его документированный test suite;
   значения не являются production SLA или общим счётчиком портфолио.
 
-### 23. Vacation Control Agent
+### 27. Vacation Control Agent
 
 - `automated-tests`: **72 tests**;
 - reviewed at: `2026-08-08`;
 - scope: test suite самого Vacation Control Agent, не portfolio test count.
 
-### 24. B24 Sales Analyst
+### 28. B24 Sales Analyst
 
 - `automated-tests`: **80 tests**;
 - reviewed at: `2026-08-08`;
 - scope: test suite самого B24 Sales Analyst.
 
-### 25. ChAT — Offline-first Messenger
+### 29. ChAT — Offline-first Messenger
 
 - `client-tests`: **171 tests**;
 - `functions-tests`: **28 tests**;
@@ -198,7 +215,7 @@ evidence/index-инфраструктурой и карточек не полу�
 
 Сборка останавливается, если нарушен хотя бы один контракт:
 
-- количество отличается от 25, а split — от 9 live / 16 case;
+- количество отличается от 29, а split — от 10 live / 19 case;
 - повторяются `id`, `slug`, display name, rank, live/GitHub/case URL;
 - route не соответствует `presentation` и `slug`;
 - публичный GitHub CTA не подтверждён public alias;

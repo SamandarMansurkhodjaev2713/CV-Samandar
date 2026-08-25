@@ -373,6 +373,45 @@
         edges: [e("message","outbox","durable"),e("outbox","worker","pending"),e("worker","firebase","bounded retry"),e("worker","rules","authorize"),e("rules","firebase","allow"),e("firebase","delivery","ack"),e("firebase","outbox",tr(lang,"сбой → retry","failure → retry","xato → retry"),[726,364,306,364])],
         zones: [{ x: 8, y: 92, w: 404, h: 174, label: tr(lang,"OFFLINE-FIRST КОНТУР","OFFLINE-FIRST BOUNDARY","OFFLINE-FIRST KONTUR") }]
       };
+      case "dentforma": return {
+        kind: "revision",
+        nodes: [
+          n("upload", "Приватный STL-кейс", "Private STL case", "Private STL keys", 22, 144, 166),
+          n("preflight", "File preflight", "File preflight", "File preflight", 226, 144, 150),
+          n("reference", "Reference · неизменно", "Immutable reference", "O‘zgarmas reference", 420, 54, 184),
+          n("editor", "Deterministic editor", "Deterministic editor", "Deterministic editor", 420, 250, 184),
+          n("draft", "Private draft", "Private draft", "Private draft", 652, 250, 150),
+          n("revision", "Immutable revision", "Immutable revision", "Immutable revision", 842, 144, 146)
+        ],
+        edges: [e("upload","preflight","bounded"),e("preflight","reference","checksum"),e("preflight","editor","editable slot"),e("reference","revision","compare"),e("editor","draft","save"),e("draft","revision","confirm")],
+        zones: [{ x: 398, y: 18, w: 408, h: 344, label: tr(lang,"КОНТУР КОНТРОЛИРУЕМОЙ ПРАВКИ","BOUNDED EDIT BOUNDARY","CHEGARALANGAN TAHRIR KONTURI") }]
+      };
+      case "meetingflow-ru-uz": return {
+        kind: "relay",
+        nodes: [
+          n("request", "Разрешённый запрос", "Authorised request", "Ruxsatli so‘rov", 18, 144, 164),
+          n("relay", "Signed relay", "Signed relay", "Signed relay", 220, 144, 144),
+          n("state", "Meeting state", "Meeting state", "Meeting state", 404, 144, 154),
+          n("record", "Recorder ready", "Recorder ready", "Recorder ready", 604, 52, 158),
+          n("speech", "RU/UZ transcript", "RU/UZ transcript", "RU/UZ transcript", 604, 254, 158),
+          n("delivery", "Doc + delivery receipt", "Doc + delivery receipt", "Doc + delivery receipt", 816, 144, 168)
+        ],
+        edges: [e("request","relay","signature"),e("relay","state","idempotent"),e("state","record","webhook + poll"),e("record","speech","audio ready"),e("speech","delivery","persist"),e("delivery","state",tr(lang,"статус доставки","delivery state","delivery holati"),[902,362,478,362])],
+        zones: [{ x: 198, y: 94, w: 392, h: 168, label: tr(lang,"УПРАВЛЯЕМЫЙ GOOGLE-КОНТУР","MANAGED GOOGLE BOUNDARY","BOSHQARILADIGAN GOOGLE KONTURI") }]
+      };
+      case "telegram-sheets-task-bot": return {
+        kind: "transaction",
+        nodes: [
+          n("update", "Telegram update", "Telegram update", "Telegram update", 18, 144, 150),
+          n("auth", "Auth + signed action", "Auth + signed action", "Auth + signed action", 210, 144, 176),
+          n("domain", "Domain transition", "Domain transition", "Domain transition", 428, 144, 164),
+          n("batch", "Atomic batchUpdate", "Atomic batchUpdate", "Atomic batchUpdate", 634, 144, 174),
+          n("state", "Task + audit + offset", "Task + audit + offset", "Task + audit + offset", 850, 52, 136),
+          n("outbox", "Outbox + retry", "Outbox + retry", "Outbox + retry", 850, 254, 136)
+        ],
+        edges: [e("update","auth","telegram_id"),e("auth","domain","version"),e("domain","batch","transaction plan"),e("batch","state","one commit"),e("batch","outbox","one commit"),e("outbox","update",tr(lang,"ошибка → повтор","failure → retry","xato → retry"),[910,366,96,366])],
+        zones: [{ x: 612, y: 18, w: 376, h: 344, label: tr(lang,"ОДНА АТОМАРНАЯ ЗАПИСЬ","ONE ATOMIC COMMIT","BITTA ATOMAR COMMIT") }]
+      };
       default:
         return {
           kind: "pipeline",
@@ -437,7 +476,10 @@
       "vacation-control": ["#A59755", "165 151 85"],
       "birthday-agent": ["#C77B30", "199 123 48"],
       "b24-sales-analyst": ["#4E7A5C", "78 122 92"],
-      "chat-app": ["#A4423F", "164 66 63"]
+      "chat-app": ["#A4423F", "164 66 63"],
+      dentforma: ["#4F7F7A", "79 127 122"],
+      "meetingflow-ru-uz": ["#B8783D", "184 120 61"],
+      "telegram-sheets-task-bot": ["#4F765B", "79 118 91"]
     };
     return themes[slug] || ["#D97757", "217 119 87"];
   }
@@ -459,7 +501,10 @@
       "vacation-control": "timetable",
       "birthday-agent": "calendar",
       "b24-sales-analyst": "reconcile",
-      "chat-app": "outbox"
+      "chat-app": "outbox",
+      dentforma: "calibration",
+      "meetingflow-ru-uz": "relay",
+      "telegram-sheets-task-bot": "ledger"
     };
     return profiles[slug] || "split";
   }

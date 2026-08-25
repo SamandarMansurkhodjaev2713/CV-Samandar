@@ -14,7 +14,7 @@
        LCP text (h1/CTA) still renders underneath (occluded, not delayed: the
        element IS painted, the LCP timestamp is unaffected by being visually
        covered while loading). -->
-  <script src="src/engine/head-boot.js?v=240"></script>
+  <script src="src/engine/head-boot.js?v=242"></script>
 
   <title>Samandar — Product Engineer · AI Automation · QA</title>
   <meta name="description" content="Samandar Mansurkhodjaev — product engineer и QA-инженер из Ташкента. Создаю web-продукты, AI-автоматизации и внутренние системы: UX, код, тесты и deploy." />
@@ -117,46 +117,68 @@
   <!-- The seven authored CSS sources are compiled in their original cascade
        order into one deterministic blocking bundle. Source files stay readable;
        visitors avoid six requests and repeated parser setup. -->
-  <link rel="stylesheet" href="src/styles/app.bundle.min.css?v=240" />
+  <link rel="stylesheet" href="src/styles/app.bundle.min.css?v=242" />
+
+  <!-- The parser-painted proof and the semantic Hero use this face. Warming
+       the two ranges prevents the main statement from becoming a late LCP
+       candidate after the intro has already completed. -->
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="assets/fonts/oswald-cyrillic.woff2" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="assets/fonts/oswald-latin.woff2" />
 
   <!-- Fetch the application graph in parallel, but execute it in frame-sized
        stages through bootstrap.js. This keeps the intro responsive instead
        of turning parser work into one monolithic main-thread task. -->
-  <link rel="preload" as="script" href="vendor/react.production.min.js?v=240" />
-  <link rel="preload" as="script" href="vendor/react-dom.production.min.js?v=240" />
-  <link rel="preload" as="script" href="src/content/product-registry.js?v=240" />
-  <link rel="preload" as="script" href="src/content/content.js?v=240" />
-  <link rel="preload" as="script" href="src/engine/themes.js?v=240" />
-  <link rel="preload" as="script" href="src/engine/perf.js?v=240" />
-  <link rel="preload" as="script" href="src/engine/motion-runtime.js?v=240" />
-  <link rel="preload" as="script" href="src/engine/builder-estimator.js?v=240" />
-  <link rel="preload" as="script" href="src/engine/acts.js?v=240" />
-  <link rel="preload" as="script" href="src/engine/sound.js?v=240" />
-  <link rel="preload" as="script" href="src/engine/gh.js?v=240" />
-  <link rel="preload" as="script" href="src/engine/motion.js?v=240" />
-  <link rel="preload" as="script" href="src/engine/scene-cinema.js?v=240" />
-  <link rel="preload" as="script" href="src/engine/lazy-effects.js?v=240" />
-  <link rel="preload" as="script" href="src/components/tweaks-panel.js?v=240" />
-  <link rel="preload" as="script" href="src/components/components-1.js?v=240" />
-  <link rel="preload" as="script" href="src/components/components-2.js?v=240" />
-  <link rel="preload" as="script" href="src/components/app.js?v=240" />
+  <link rel="preload" as="script" href="vendor/react.production.min.js?v=242" />
+  <link rel="preload" as="script" href="vendor/react-dom.production.min.js?v=242" />
+  <link rel="preload" as="script" href="src/content/product-registry.js?v=242" />
+  <link rel="preload" as="script" href="src/content/content.js?v=242" />
+  <link rel="preload" as="script" href="src/engine/themes.js?v=242" />
+  <link rel="preload" as="script" href="src/engine/perf.js?v=242" />
+  <link rel="preload" as="script" href="src/engine/motion-runtime.js?v=242" />
+  <link rel="preload" as="script" href="src/engine/builder-estimator.js?v=242" />
+  <link rel="preload" as="script" href="src/engine/acts.js?v=242" />
+  <link rel="preload" as="script" href="src/engine/sound.js?v=242" />
+  <link rel="preload" as="script" href="src/engine/gh.js?v=242" />
+  <link rel="preload" as="script" href="src/engine/motion.js?v=242" />
+  <link rel="preload" as="script" href="src/engine/scene-cinema.js?v=242" />
+  <link rel="preload" as="script" href="src/engine/lazy-effects.js?v=242" />
+  <link rel="preload" as="script" href="src/components/tweaks-panel.js?v=242" />
+  <link rel="preload" as="script" href="src/components/components-1.js?v=242" />
+  <link rel="preload" as="script" href="src/components/components-2.js?v=242" />
+  <link rel="preload" as="script" href="src/components/app.js?v=242" />
 </head>
 <body>
-  <!-- Frame-zero release specimen. It is intentionally outside #root so the
+  <!-- Frame-zero release proof. It is intentionally outside #root so the
        first paint already contains the Hero's authored material while React is
        mounting. The interactive copy and calibrated motion arrive above it. -->
   <div id="sm-hero-media" aria-hidden="true">
-    <figure class="release-specimen release-specimen--static">
-      <span class="release-specimen-shadow"></span>
-      <div class="release-specimen-object">
-        <span class="release-specimen-layer release-specimen-layer--01"><i></i><b></b></span>
-        <span class="release-specimen-layer release-specimen-layer--02"><i></i><b></b></span>
-        <span class="release-specimen-layer release-specimen-layer--03"><i></i><b></b></span>
-        <span class="release-specimen-spine"></span>
+    <!-- A truthful frame-zero copy, not a skeleton. It remains behind the
+         opaque Intro and covers a delayed React mount; the live semantic h1
+         takes ownership as soon as its final pose is ready. Keeping both
+         authored layers geometrically equivalent also removes the late-LCP
+         penalty that a hidden application shell used to create. -->
+    <div class="release-proof-copy-static">Из задачи —
+в продукт.</div>
+    <figure class="release-proof release-proof--static">
+      <span class="release-proof-shadow"></span>
+      <div class="release-proof-sheet">
+        <span class="release-proof-crop release-proof-crop--tl"></span>
+        <span class="release-proof-crop release-proof-crop--tr"></span>
+        <span class="release-proof-crop release-proof-crop--bl"></span>
+        <span class="release-proof-crop release-proof-crop--br"></span>
+        <span class="release-proof-folio mono">RP–001 / 2026</span>
+        <span class="release-proof-owner mono">SAMANDAR · PRODUCT ENGINEERING</span>
+        <div class="release-proof-impression">
+          <span class="release-proof-ink release-proof-ink--a">RELEASE</span>
+          <span class="release-proof-ink release-proof-ink--b">RELEASE</span>
+          <span class="release-proof-ink release-proof-ink--key">RELEASE</span>
+        </div>
+        <span class="release-proof-register release-proof-register--a"></span>
+        <span class="release-proof-register release-proof-register--b"></span>
+        <div class="release-proof-verdict"><span class="mono">QA / FINAL PROOF</span><strong>READY</strong></div>
+        <ol class="release-proof-map"><li><span>01</span><strong>BUILD</strong></li><li><span>02</span><strong>VERIFY</strong></li><li><span>03</span><strong>SHIP</strong></li></ol>
+        <span class="release-proof-inspection"></span>
       </div>
-      <span class="release-specimen-light"></span>
-      <span class="release-specimen-measure release-specimen-measure--x"></span>
-      <span class="release-specimen-measure release-specimen-measure--y"></span>
     </figure>
   </div>
   <div id="root"></div>
@@ -171,11 +193,11 @@
       </div>
     </main>
   </noscript>
-  <script src="src/engine/app-watchdog.js?v=240"></script>
+  <script src="src/engine/app-watchdog.js?v=242"></script>
 
   <!-- Intro starts before the application graph. Bootstrap yields between
        scripts, so the sequence remains responsive while the app mounts. -->
-  <script src="src/engine/intro.js?v=240"></script>
-  <script src="src/engine/bootstrap.js?v=240"></script>
+  <script src="src/engine/intro.js?v=242"></script>
+  <script src="src/engine/bootstrap.js?v=242"></script>
 </body>
 </html>

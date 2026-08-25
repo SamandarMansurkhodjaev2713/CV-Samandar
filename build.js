@@ -59,6 +59,7 @@ const STYLE_SOURCES = [
   "features.css",
   "art-direction.css",
   "release-polish.css",
+  "release-proof.css",
 ];
 const STYLES_DIR = path.join(__dirname, "src", "styles");
 const STYLE_BUNDLE = "app.bundle.min.css";

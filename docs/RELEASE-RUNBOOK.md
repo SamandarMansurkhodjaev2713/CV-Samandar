@@ -3,9 +3,9 @@
 ## 1. Назначение
 
 Порядок выпуска статического портфолио на GitHub Pages без ручного расхождения
-между source, generated HTML и production. Текущий контракт: 25 продуктов,
-9 live-маршрутов, 16 case-маршрутов, RU/EN/UZ, 48 generated case pages и
-49 URL в sitemap.
+между source, generated HTML и production. Текущий контракт: 29 продуктов,
+10 live-маршрутов, 19 case-маршрутов, RU/EN/UZ, 57 generated case pages и
+58 URL в sitemap.
 
 Production:
 https://samandarmansurkhodjaev2713.github.io/CV-Samandar/
@@ -99,7 +99,7 @@ Workflow обязан:
 5. выполнить полную Playwright-матрицу;
 6. сформировать Pages artifact только из allowlist;
 7. развернуть artifact;
-8. после deploy выполнить production smoke и проверить 9 live URL.
+8. после deploy выполнить production smoke и проверить 10 live URL.
 
 Не считать GitHub Pages зелёным только по завершению job deploy: обязательна
 зелёная verify-production.
@@ -113,7 +113,7 @@ Workflow обязан:
 
 test:production проверяет:
 
-- реальную главную и 25 карточек;
+- реальную главную и 26 карточек;
 - отсутствие first-party HTTP errors/runtime page errors;
 - 48 статических case URL и правильный lang;
 - возврат TTYL к #proj-ttyl без повторного intro.

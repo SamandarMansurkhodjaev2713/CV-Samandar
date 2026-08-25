@@ -164,17 +164,17 @@ mobile performance. Он используется только как допол
 
 | Контракт | Фактическое состояние |
 |---|---|
-| Каталог | 25 canonical products, без repository-дублей |
-| Маршруты | 9 live + 16 privacy-safe case |
-| Локализация | RU / EN / UZ; 48 generated case HTML |
+| Каталог | 29 canonical products, без repository-дублей |
+| Маршруты | 10 live + 16 privacy-safe case |
+| Локализация | RU / EN / UZ; 57 generated case HTML |
 | Главная | 12 смысловых сцен |
-| Обложки | 25 предметных WebP-наборов 1536/1152/768, 3:1 |
+| Обложки | 26 предметных WebP-наборов 1536/1152/768, 3:1 |
 | Current Release Gate | `v2.14.1 / v237` |
 | Current production | merge SHA `adc3e861`; Pages workflow `32084173961` |
-| Build | 55 generated artifacts, byte-identical double build |
+| Build | 64 generated artifacts, byte-identical double build |
 | Automated suite | 268 scenarios; 156 pass, 112 profile skips, 0 fail/flaky |
-| Visual release review | 13 main states + 16 cases в desktop/mobile; 58 PNG + 4 contact sheets |
-| Production routes | main + 48 case URL + 9 live routes; independent smoke 3/3 и live check 9/9 |
+| Visual release review | 13 main states + 19 cases в desktop/mobile; 64 PNG + 4 contact sheets |
+| Production routes | после выпуска кандидата: main + 57 case URL + 10 live routes; post-deploy smoke и live check обязательны |
 
 Независимый monitor опубликованного `v2.14.1 / v237`, success:
 
@@ -258,7 +258,7 @@ case и exact-card return, portrait→landscape. Пальцы/касания н�
 ## 10. Pre-submission gate
 
 - [x] 25 / 9 / 16 product contract подтверждён canonical registry.
-- [x] 48 case routes и RU / EN / UZ parity подтверждены build/validation.
+- [x] 57 case routes и RU / EN / UZ parity подтверждены build/validation.
 - [x] `v2.14.1 / v237` final local candidate: deterministic build, audit,
   secret scan, browser, axe, performance, live-route и visual gates зелёные.
 - [x] `v2.14.1 / v237` опубликован из `adc3e861`; Pages workflow `32084173961`

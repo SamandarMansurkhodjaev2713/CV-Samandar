@@ -1035,7 +1035,8 @@ main section[data-section="hero"].hero--proof-chamber {
   opacity: .7;
   background: linear-gradient(90deg, transparent, rgba(241,238,230,.16), transparent);
   filter: blur(4px);
-  transform: skewX(-10deg);
+  transform: translate3d(0, 0, 0) skewX(-10deg);
+  will-change: transform, opacity;
   animation: releaseInspection 6.8s cubic-bezier(.4,0,.2,1) infinite;
 }
 
@@ -1087,10 +1088,10 @@ main section[data-section="hero"].hero--proof-chamber {
 .release-specimen-caption { position: absolute; top: 6%; right: 7%; color: rgba(241,238,230,.38); font-size: 7px; letter-spacing: .16em; }
 
 @keyframes releaseInspection {
-  0%, 18% { left: 20%; opacity: 0; }
+  0%, 18% { transform: translate3d(0, 0, 0) skewX(-10deg); opacity: 0; }
   28% { opacity: .65; }
   70% { opacity: .5; }
-  82%, 100% { left: 82%; opacity: 0; }
+  82%, 100% { transform: translate3d(620%, 0, 0) skewX(-10deg); opacity: 0; }
 }
 
 .hero--proof-chamber .hero-copy-stage {
@@ -1259,6 +1260,20 @@ section.sec-in .sec-head::after { transition-duration: 1.15s; }
   animation: rfIntroReadoutIn .56s var(--rf-ease) both;
 }
 
+#sm-intro .sm-boot-pct-n {
+  display: inline-block;
+  flex: 0 0 1.75em;
+  width: 1.75em;
+  text-align: right;
+}
+
+#sm-intro .sm-boot-state {
+  display: inline-block;
+  flex: 0 0 7ch;
+  min-width: 7ch;
+  text-align: right;
+}
+
 @keyframes rfIntroReadoutIn {
   from { opacity: 1; transform: translateY(calc(-50% + 18px)); }
   to { opacity: 1; transform: translateY(-50%); }
@@ -1358,7 +1373,7 @@ section.sec-in .sec-head::after { transition-duration: 1.15s; }
 @media (prefers-reduced-motion: reduce) {
   .release-specimen-object,
   .release-specimen-light { animation: none !important; }
-  .release-specimen-light { opacity: .22; left: 54%; }
+  .release-specimen-light { opacity: .22; left: 54%; will-change: auto; }
   .system-frame-depth > b { transition: none; }
   section[data-enter].sec-in,
   .pin-host > section[data-enter].sec-in > .shell { animation: none !important; clip-path: none !important; filter: none !important; transform: none !important; }
@@ -1367,7 +1382,7 @@ section.sec-in .sec-head::after { transition-duration: 1.15s; }
 html[data-motion-lite] .release-specimen-object,
 html[data-perf="low"] .release-specimen-object,
 html[data-motion-lite] .release-specimen-light,
-html[data-perf="low"] .release-specimen-light { animation: none !important; }
+html[data-perf="low"] .release-specimen-light { animation: none !important; will-change: auto; }
 
 /* Low tier preserves the complete Release Field composition, but removes
    full-viewport sampling work that competes with native scroll on a genuinely

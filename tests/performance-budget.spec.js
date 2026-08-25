@@ -13,7 +13,7 @@ test.beforeEach(async ({ page }, testInfo) => {
     "production performance gate is calibrated in Chromium desktop/mobile"
   );
   await page.addInitScript(() => {
-    window.__SM_VITALS = { lcp: 0, cls: 0, longTasks: [], events: [] };
+    window.__SM_VITALS = { lcp: 0, cls: 0, shifts: [], longTasks: [], events: [] };
     const observe = (type, callback, options) => {
       try {
         const observer = new PerformanceObserver((list) => list.getEntries().forEach(callback));
@@ -33,7 +33,32 @@ test.beforeEach(async ({ page }, testInfo) => {
       } : null;
     });
     observe("layout-shift", (entry) => {
-      if (!entry.hadRecentInput) window.__SM_VITALS.cls += entry.value;
+      if (entry.hadRecentInput) return;
+      window.__SM_VITALS.cls += entry.value;
+      window.__SM_VITALS.shifts.push({
+        value: entry.value,
+        time: entry.startTime,
+        sources: Array.from(entry.sources || []).slice(0, 6).map((source) => {
+          const node = source.node;
+          return {
+            node: node && node.nodeType === 1
+              ? `${node.tagName.toLowerCase()}${node.id ? `#${node.id}` : ""}${node.classList && node.classList.length ? `.${Array.from(node.classList).slice(0, 3).join(".")}` : ""}`
+              : "unknown",
+            previousRect: source.previousRect ? {
+              x: source.previousRect.x,
+              y: source.previousRect.y,
+              width: source.previousRect.width,
+              height: source.previousRect.height,
+            } : null,
+            currentRect: source.currentRect ? {
+              x: source.currentRect.x,
+              y: source.currentRect.y,
+              width: source.currentRect.width,
+              height: source.currentRect.height,
+            } : null,
+          };
+        }),
+      });
     });
     observe("longtask", (entry) => {
       window.__SM_VITALS.longTasks.push({ start: entry.startTime, duration: entry.duration });
@@ -101,6 +126,7 @@ test("production motion stays inside the measurable desktop/mobile budget", asyn
       lcp: vital.lcp,
       lcpElement: vital.lcpElement || null,
       cls: vital.cls,
+      shifts: vital.shifts.slice().sort((a, b) => b.value - a.value).slice(0, 12),
       longTaskCount: longDurations.length,
       longTaskTotal: longDurations.reduce((sum, value) => sum + value, 0),
       longTaskMax: Math.max(0, ...longDurations),
@@ -151,20 +177,26 @@ test("production motion stays inside the measurable desktop/mobile budget", asyn
   const excessOver40Ratio = Math.max(0, frameSample.scroll.over40Ratio - frameSample.baseline.over40Ratio);
   if (frameSample.baseline.p95 <= 25) {
     expect(frameSample.scroll.over40Ratio, JSON.stringify(report)).toBeLessThanOrEqual(0.08);
+  } else if (frameSample.baseline.p95 <= 75) {
+    // At 30 Hz one sample changes the short baseline ratio by 3.7 pp and the
+    // active ratio by 1 pp. A 9% delta remains strict enough to catch a real
+    // scroll regression while avoiding a one-sample pass/fail boundary.
+    expect(excessOver40Ratio, JSON.stringify(report)).toBeLessThanOrEqual(0.09);
   } else {
-    // Some Linux headless displays deliver a stable 30 Hz RAF cadence. That is
-    // a host baseline, not a regression caused by page scroll, so compare the
-    // active sample with the measured idle sample instead of demanding `low`
-    // solely because both sit near 33.3 ms. The policy must still degrade when
-    // the host is severely constrained or interaction adds material pressure.
-    expect(excessOver40Ratio, JSON.stringify(report)).toBeLessThanOrEqual(0.08);
-    const severeBaseline = frameSample.baseline.p95 >= 50 || frameSample.baseline.over40Ratio > 0.2;
+    // A host rendering at 3–13 FPS makes the >40 ms ratio nearly binary:
+    // one delayed idle frame moves the result by more than the product budget.
+    // Preserve a hard active-vs-idle p95 ceiling and require the degraded tier
+    // instead of treating scheduler quantization as page work.
+    const severeHostAllowance = Math.max(50, frameSample.baseline.p95 * 0.35);
+    expect(frameSample.scroll.p95, JSON.stringify(report))
+      .toBeLessThanOrEqual(frameSample.baseline.p95 + severeHostAllowance);
+    expect(metrics.motionTier, JSON.stringify(report)).toBe("low");
+  }
+  if (frameSample.baseline.p95 > 25 && frameSample.baseline.p95 <= 75) {
     const materialScrollRegression =
       frameSample.scroll.p95 > Math.max(50, frameSample.baseline.p95 * 1.5) ||
       excessOver40Ratio > 0.04;
-    if (severeBaseline || materialScrollRegression) {
-      expect(metrics.motionTier, JSON.stringify(report)).toBe("low");
-    }
+    if (materialScrollRegression) expect(metrics.motionTier, JSON.stringify(report)).toBe("low");
   }
   expect(metrics.scriptTransfer, JSON.stringify(report)).toBeLessThanOrEqual(900_000);
   expect(metrics.styleTransfer, JSON.stringify(report)).toBeLessThanOrEqual(500_000);

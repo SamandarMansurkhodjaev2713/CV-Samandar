@@ -63,13 +63,14 @@ test("iPhone WebKit keeps the critical portfolio journey usable", async ({ page 
 
   await page.goto("/?e2e=1#projects", { waitUntil: "domcontentloaded" });
   await page.locator(".proj-card").first().waitFor({ state: "attached" });
-  await expect(page.locator(".proj-card")).toHaveCount(orderedProducts.length);
+  await expect(page.locator(".proj-card")).toHaveCount(4);
   await expect(page.locator(".proj-card:visible")).toHaveCount(4);
   await expectNoHorizontalOverflow(expect, page, "webkit-main");
 
   const expand = page.locator(".proj-expand");
   await expect(expand).toBeVisible();
   await expand.evaluate((button) => button.click());
+  await expect(page.locator(".proj-card")).toHaveCount(orderedProducts.length);
   await expect(page.locator(".proj-card:visible")).toHaveCount(orderedProducts.length);
 
   await page.locator(".nav-burger").click();

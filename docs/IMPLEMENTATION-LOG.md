@@ -5,6 +5,82 @@ Awwwards-переработки. План и критерии готовност
 `MASTER-IMPLEMENTATION-PLAN.md`; архитектурные контракты — в
 `ARCHITECTURE.md`.
 
+## Release Proof catalog candidate — v242
+
+GitHub-аудит сначала добавил `Echelon Desktop`, а повторный authenticated-аудит
+обнаружил ещё три зрелых самостоятельных private продукта: `DentForma —
+Browser 3D Review`, `MeetingFlow RU/UZ` и `Telegram Sheets Task Bot`.
+`echelon-site-main` признан публичным source repository и live Pages route,
+`echelon-site` — duplicate/legacy alias того же продукта, поэтому в интерфейсе
+нет повторной карточки. Каталог теперь содержит 29 продуктов: 10 live и 19
+case. Echelon ведёт главным действием на live-продукт и отдельным вторичным
+действием на GitHub; три private продукта ведут на безопасные внутренние кейсы.
+Authenticated GitHub API re-audit 2026-08-25 подтвердил тот же канонический
+набор: более свежий commit в `CoupleOS` относится к уже существующему Softly,
+а новых самостоятельных product repositories после отбора не появилось.
+
+Для Echelon создан собственный предметный 3:1 artwork: physical desktop
+assistant control puck с brushed aluminium, smoked glass, warm amber state line
+и холодным work-plane reflection. Подготовлены 1536×512, 1152×384 и 768×256
+WebP; изображение не содержит текста, UI, логотипов или закрытых данных.
+Validator закрепляет новый asset contract и duplicate-repository decision.
+
+Для трёх private продуктов созданы самостоятельные предметные 3:1 artwork:
+DentForma использует dental revision jig из тёмного металла и матовой керамики;
+MeetingFlow — физическую relay-ленту между записью и доставкой; Task Bot —
+механическую transaction board с одним выделенным commit-slot. Для каждого
+подготовлены 1536×512, 1152×384 и 768×256 WebP в центральной safe zone без
+текста, интерфейсов, логотипов или закрытых данных. Визитки используют полные
+RU/EN/UZ тексты и разные system diagrams: revision, relay и transaction.
+
+Первый экран получил parser-painted статический proposition shell, поэтому
+truthful Hero copy доступен браузеру до React и измеряется как ранний LCP, но
+остаётся визуально под полностью непрозрачным Intro. После готовности
+семантического React heading shell заменяется без дублирования доступного
+контента. Hero action band переведён в устойчивую одноколоночную композицию:
+tagline больше не сжимается CTA-блоком, roles rail не пересекает headline, а
+desktop, portrait и 844×390 landscape сохраняют читаемую финальную позу.
+
+Проектный архив теперь прогрессивный не только визуально: до явного действия
+монтируются четыре curated cards, а остальные 25 появляются после «Все
+проекты» либо deep-link возврата к конкретной карточке. Это сохранило museum
+grid/filmstrip и exact-card return, одновременно убрав лишний initial DOM,
+decode и layout work. Performance budget прошёл desktop/mobile 2/2 без
+изменения порогов.
+
+Локальная ручная browser-проверка выполнена в Chromium на 1440×900,
+1280×720, 390×844 и 844×390: Intro/Hero, Release Index, Projects grid/filmstrip,
+кнопки и case rhythm просмотрены визуально и через DOM geometry. Это не
+physical-device или assistive-technology proof. Полный функциональный,
+security/live и visual release gate фиксируется отдельным финальным абзацем
+только после фактического завершения команд и единственного asset bump.
+
+После единственного bump до `v242` validator подтвердил 29 продуктов, 10 live
+и 19 case routes, 57 локализованных case pages и 58 sitemap URL; две сборки
+дали 64/64 byte-identical generated artifacts. Audit, secret scan,
+documentation contract и 10/10 external live routes зелёные. Изолированный
+performance gate прошёл desktop/mobile 2/2. Финальная visual matrix завершилась
+4/4: вручную просмотрены 26 кадров главной, 38 full-page кадров кейсов и четыре
+contact sheet на desktop/mobile; видимых обрезок, пустых reveal-поз,
+незагруженных artwork или горизонтального overflow не обнаружено. Physical
+iOS/Android и NVDA/VoiceOver/TalkBack этой проверкой не заявляются.
+
+Окончательный multi-engine процесс после исправления Intro release-state
+завершился 171 passed / 119 profile-specific skipped / 0 failed за 18.9 минуты
+без retry: Firefox, iPhone WebKit, desktop/mobile Chromium и reduced motion.
+Намеренно stalled Intro отдельно выдержал 7/7 WebKit-повторов. Head safety,
+React fallback и authored teardown теперь сначала публикуют единственный
+`doneFired/reason`, затем снимают overlay; здоровая оболочка больше не может
+оказаться видимой с неопределённым release-state.
+
+Первый повтор visual gate честно остановился на `ENOSPC`: два параллельных
+долгих case-контекста одновременно упаковывали дублирующие trace/video данные.
+Evidence runner переведён на один worker и отключает trace/video только при
+`VISUAL_QA=1`; все 68 authored PNG, image decode, reveal и full-page проверки
+сохранены. Чистый повтор завершился 4/4 за 6.3 минуты, после чего четыре свежих
+contact sheet просмотрены вручную. Это исправление инфраструктуры доказательства,
+а не ослабление визуального product contract.
+
 ## Release Field V8.1 candidate — v240
 
 После сравнения с авторским Stones art direction переведён из набора

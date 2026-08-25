@@ -41,7 +41,7 @@
 | --- | --- | --- |
 | 0. Baseline и rollback | выполнен | `pre-awwwards-v210`, baseline и рабочая ветка |
 | 1–4. Реестр, архитектура и оболочка | выполнен | 25 продуктов, единый registry, recovery, intro и 12-главная навигация |
-| 5–8. Главная, изображения, кейсы и контент | выполнен | 12 сцен, 25 обложек, 16 case × 3 локали, truth audit и Awwwards-полировка |
+| 5–8. Главная, изображения, кейсы и контент | выполнен | 12 секций + fullscreen-меню, 29 обложек, 19 case × 3 локали, truth audit и Awwwards-полировка |
 | 9–12. Responsive, motion, WCAG и QA | выполнен | viewport/browser-матрица, performance budgets и regression gates |
 | 13. Документация | выполнен | 17 обязательных документов, ADR, QA-матрица, physical/AT protocol, runbook и автоматический docs-contract |
 | 14. Предрелиз и выпуск | выполнен | `v2.14.1 / v237` опубликован из merge SHA `adc3e861`; Actions `32084173961`, deploy, verify-production, независимый smoke 3/3, live 9/9 и cache graph 30/30 зелёные |

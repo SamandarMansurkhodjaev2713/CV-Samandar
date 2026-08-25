@@ -265,7 +265,7 @@ Renderer не имеет собственного RAF. Latest host token wins: �
 - intro не создаёт canvas;
 - lazy effects не загружают Three.js;
 - ImgFx не активируется;
-- все 25 карточек, CTA, Proof Rail, menu и disclosure semantics остаются.
+- все 26 карточек, CTA, Proof Rail, menu и disclosure semantics остаются.
 
 Reduced motion не имеет права самостоятельно менять `aria-expanded`, выбирать ответ за пользователя или удалять semantic DOM.
 

@@ -125,6 +125,12 @@ function Hero({ t, links }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!lit) return undefined;
+    document.documentElement.classList.add("sm-hero-shell-live");
+    return () => document.documentElement.classList.remove("sm-hero-shell-live");
+  }, [lit]);
+
   // Hero depth consumes the shared motion runtime. It never owns scroll,
   // pointer or resize listeners and never creates a private animation loop.
   // The semantic frame remains fully readable when the runtime is absent,
@@ -210,33 +216,43 @@ function Hero({ t, links }) {
 
   return (
     <section
-      data-section="hero" id="hero" className={`hero hero--proof-chamber${lit ? " is-lit" : ""}`} ref={ref}
+      data-section="hero" id="hero" className={`hero hero--release-proof${lit ? " is-lit" : ""}`} ref={ref}
     >
-      {/* Release specimen — one physical system, not a dashboard of unrelated
-          HUD widgets. Three machined layers represent product engineering,
-          implementation and QA; the restrained inspection light is the only
-          continuous motion. The final object remains meaningful when every
-          enhancement is disabled. */}
-      <figure className="release-specimen" aria-hidden="true">
-        <span className="release-specimen-shadow" />
-        <div className="release-specimen-object">
-          <span className="release-specimen-layer release-specimen-layer--01"><i /><b /></span>
-          <span className="release-specimen-layer release-specimen-layer--02"><i /><b /></span>
-          <span className="release-specimen-layer release-specimen-layer--03"><i /><b /></span>
-          <span className="release-specimen-spine" />
-        </div>
-        <span className="release-specimen-light" />
-        <span className="release-specimen-measure release-specimen-measure--x" />
-        <span className="release-specimen-measure release-specimen-measure--y" />
-        <ol className="release-specimen-map">
+      {/* A physical release proof, not a generated image or a pseudo-product
+          dashboard. Ink impressions begin deliberately misregistered, settle
+          into one word, pass the inspection rule and remain a complete static
+          composition when motion is unavailable. */}
+      <figure className="release-proof" aria-hidden="true">
+        <span className="release-proof-shadow" />
+        <div className="release-proof-sheet">
+          <span className="release-proof-crop release-proof-crop--tl" />
+          <span className="release-proof-crop release-proof-crop--tr" />
+          <span className="release-proof-crop release-proof-crop--bl" />
+          <span className="release-proof-crop release-proof-crop--br" />
+          <span className="release-proof-folio mono">RP–001 / 2026</span>
+          <span className="release-proof-owner mono">SAMANDAR · PRODUCT ENGINEERING</span>
+          <div className="release-proof-impression">
+            <span className="release-proof-ink release-proof-ink--a">RELEASE</span>
+            <span className="release-proof-ink release-proof-ink--b">RELEASE</span>
+            <span className="release-proof-ink release-proof-ink--key">RELEASE</span>
+          </div>
+          <span className="release-proof-register release-proof-register--a" />
+          <span className="release-proof-register release-proof-register--b" />
+          <div className="release-proof-verdict">
+            <span className="mono">QA / FINAL PROOF</span>
+            <strong>READY</strong>
+          </div>
+          <ol className="release-proof-map">
           {proofSteps.map((step, index) => (
-            <li key={`specimen-${step.code}`} style={{ "--specimen-i": index }}>
+            <li key={`proof-${step.code}`} style={{ "--proof-i": index }}>
               <span className="mono">{step.code}</span>
               <strong>{step.k}</strong>
             </li>
           ))}
-        </ol>
-        <figcaption className="release-specimen-caption mono">ONE SYSTEM / THREE GATES / ONE OWNER</figcaption>
+          </ol>
+          <span className="release-proof-inspection" />
+        </div>
+        <figcaption className="release-proof-caption mono">FINAL CHECK BEFORE PRODUCTION</figcaption>
       </figure>
 
       {/* Four horizontal bands, top to bottom: identification, the masthead,
@@ -841,7 +857,13 @@ function ProjectCard({ p, i, labels }) {
               width="1536"
               height="512"
               alt=""
-              loading="lazy"
+              // The four curated cards are already mounted while the authored
+              // Intro is doing useful readiness work. Load their small mobile
+              // sources now so a fast first scroll does not trigger four image
+              // fetch/decode jobs inside the animation frame that reveals
+              // Projects. Archive artwork stays native-lazy after expansion.
+              loading={i < 4 ? "eager" : "lazy"}
+              fetchPriority={i < 4 ? "low" : undefined}
               decoding="async"
               onError={(event) => {
                 const image = event.currentTarget;
@@ -1020,8 +1042,8 @@ function ProjectChapterDots({ items, gridRef, labels }) {
 // work. So the section splits: a few hero projects get poster treatment, and
 // everything else becomes a dense typographic index — the way a studio's work
 // page or a book's contents actually behaves. Nothing is hidden behind a
-// "show more" button any more: every project is in the DOM, indexable and
-// reachable by deep link, which also makes the return-to-card flow trivial.
+// archive is mounted only after explicit intent (or a deep-link return), so
+// the first viewport does not pay to build twenty-two hidden records.
 // The typographic index that briefly lived here — 4 poster cards followed by a
 // list of 17 name/tag/status rows with a floating hover preview — is gone. It
 // read as a spreadsheet: seventeen identical rows in a portfolio whose entire
@@ -1109,7 +1131,7 @@ function Projects({ t }) {
         <ProjectChapterDots items={chapterItems} gridRef={gridRef} labels={t.projects} />
 
         <div className={`proj-grid ${expanded ? "is-expanded" : "is-collapsed"}`} ref={gridRef}>
-          {items.map((p, i) => <ProjectCard key={p.slug || i} p={p} i={i} labels={t.projects} />)}
+          {chapterItems.map((p, i) => <ProjectCard key={p.slug || i} p={p} i={i} labels={t.projects} />)}
         </div>
 
         {hiddenCount > 0 ? (

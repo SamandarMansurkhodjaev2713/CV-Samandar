@@ -15,6 +15,7 @@ test.describe("project catalog", () => {
   test("@smoke registry renders all canonical cards without duplicate routes", async ({ page }) => {
     await settleMain(page, "#projects");
 
+    await page.locator(".proj-expand").evaluate((button) => button.click());
     const cards = page.locator(".proj-card");
     await expect(cards).toHaveCount(orderedProducts.length);
 
@@ -29,27 +30,30 @@ test.describe("project catalog", () => {
       orderedProducts.map((p) => p.presentation === "live" ? p.liveUrl : p.casePage)
     );
     expect(new Set(state.map((item) => item.href)).size).toBe(orderedProducts.length);
-    expect(liveProducts).toHaveLength(9);
-    expect(caseProducts).toHaveLength(16);
+    expect(liveProducts).toHaveLength(10);
+    expect(caseProducts).toHaveLength(19);
     await expectNoHorizontalOverflow(expect, page, "catalog");
   });
 
   test("featured set expands to the complete catalog with explicit control", async ({ page }) => {
     await settleMain(page, "#projects");
 
+    await expect(page.locator(".proj-card")).toHaveCount(4);
     await expect(page.locator(".proj-card:visible")).toHaveCount(4);
-    const expand = page.getByRole("button", { name: "Показать ещё 21" });
+    const expand = page.getByRole("button", { name: "Показать ещё 25" });
     await expect(expand).toBeVisible();
     // The page deliberately uses scroll-linked transforms. Trigger the already
     // verified visible control directly so this state contract cannot race a
     // compositor frame while the mobile carousel settles.
     await expand.evaluate((button) => button.click());
+    await expect(page.locator(".proj-card")).toHaveCount(orderedProducts.length);
     await expect(page.locator(".proj-card:visible")).toHaveCount(orderedProducts.length);
     await expect(page.getByRole("button", { name: "Свернуть" })).toBeVisible();
   });
 
   test("RU, EN and UZ keep all cards and canonical routes", async ({ page }) => {
     await settleMain(page, "#projects");
+    await page.locator(".proj-expand").evaluate((button) => button.click());
 
     for (const language of ["EN", "UZ", "RU"]) {
       await switchMainLanguage(page, language);

@@ -6,6 +6,16 @@
 
 ### Added
 
+- Каталог синхронизирован с новым GitHub-аудитом: `Echelon Desktop` добавлен как
+  отдельный сильный live-продукт с каноническим Pages-маршрутом, публичным
+  secondary GitHub CTA и собственным 1536/1152/768 WebP-artwork. Репозиторий
+  `echelon-site` зафиксирован как duplicate/legacy alias и не создаёт вторую
+  карточку.
+- Последующий authenticated GitHub-аудит добавил ещё три самостоятельных
+  private продукта без repository-дублей: `DentForma — Browser 3D Review`,
+  `MeetingFlow RU/UZ` и `Telegram Sheets Task Bot`. Для каждого создана
+  privacy-safe RU/EN/UZ case page, собственная system-схема и отдельный
+  1536/1152/768 WebP still-life artwork без UI, логотипов и закрытых данных.
 - Финальный `release-polish.css` стал явным последним authored owner для Hero
   и navigation shell. Он собирается через `build.js`, а не маскирует source
   ручной правкой generated bundle.
@@ -18,7 +28,7 @@
   menu controls не получают второй click-ripple поверх своей close/open
   анимации.
 - SEO graph главной теперь описывает `Person`, `WebSite` и `ProfilePage`, а
-  каждая из 48 локализованных case-страниц — `CreativeWork`, `WebPage`, автора
+  каждая из 57 локализованных case-страниц — `CreativeWork`, `WebPage`, автора
   и `BreadcrumbList`; validator не пропускает неполную structured-data схему.
 - Layout-regression gate для 320 px project gallery, светлого CV/Quality shell
   и явных межсекционных переходов; базовые ценовые диапазоны Builder 2026.2
@@ -48,19 +58,29 @@
   световую позицию и crop каждой карточки, асимметричную desktop-сетку `7/5`,
   компактный mobile pager и приоритет задачи/результата вместо повторяющейся
   служебной подписи.
-- Все 16 case routes приведены к общему Release Field: Inter body, Oswald
+- Все 19 case routes приведены к общему Release Field: Inter body, Oswald
   display, единая сетка, прямоугольные controls и chapter rhythm. Устаревшие
   wave/gauge/lens pseudo-HUD cues отключены; уникальность сохраняют предметное
   изображение, accent, схема, QA-блок и аргументация.
 - Длинные описания в карточках сокращены до тезисов без потери фактов; полный
   контекст остаётся на case-странице. Метаданные каталога теперь честно говорят
-  `25 продуктов`, а не называют все позиции кейсами.
+  `29 продуктов`, а не называют все позиции кейсами; сначала монтируются четыре
+  сильнейшие карточки, остальные 25 появляются только после явного раскрытия
+  или возврата из case route.
 - Стартовые диапазоны оценки снижены до `$150–450` для прототипа,
   `$450–1,400` для MVP и `$1,500–4,200` для production; форма контакта использует
   согласованные более низкие budget buckets. Это ориентир, не публичная оферта.
 
 ### Fixed
 
+- Intro release теперь атомарно публикует `doneFired` и причину завершения до
+  удаления overlay во всех safety/teardown путях. Это закрывает реальную гонку
+  WebKit, при которой здоровая страница уже была видна, но состояние загрузки
+  оставалось неопределённым; намеренно stalled WebKit-сценарий прошёл 7/7.
+- Visual-release runner больше не создаёт параллельно многогигабайтные копии
+  68 authored PNG в Playwright trace/video. Только этот evidence job работает
+  последовательно и без дублирующей диагностики; screenshot, decode, reveal,
+  full-page и contact-sheet проверки сохранены и прошли 4/4.
 - Hero headline и role rail больше не дробятся на независимо трансформируемые
   glyph-элементы. Строка является единым типографическим объектом, поэтому
   baseline не «гуляет» при загрузке шрифта, motion settling и смене движка.
@@ -74,7 +94,7 @@
   8 px воздуха до нижнего proof rail.
 - Contact-sheet visual gate ждёт фактический `HTMLImageElement.decode()` для
   каждой страницы вместо фиксированных семи секунд, устраняя гонку на тяжёлой
-  матрице 16 desktop-кейсов без ослабления визуальной проверки.
+  матрице 19 desktop-кейсов без ослабления визуальной проверки.
 - Low-tier scroll больше не перечитывает геометрию всех 12 глав и не вычисляет
   уже отключённые pin/parallax/magnetic transforms на каждом кадре. Авторский
   desktop-cursor и нативный Hero→Signal handoff сохраняются, а observer fallback

@@ -4803,7 +4803,7 @@ html[data-motion-lite] .builder-chip { animation: none; }
   color: rgba(var(--accent-rgb) / 0.9);
   transition: color .35s ease;
 }
-.sm-boot-proof {
+.sm-boot-route {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
@@ -4813,12 +4813,12 @@ html[data-motion-lite] .builder-chip { animation: none; }
   letter-spacing: .16em;
   color: var(--text-mute);
 }
-.sm-boot-proof span {
+.sm-boot-route span {
   position: relative;
   padding-top: 8px;
   transition: color .22s ease;
 }
-.sm-boot-proof span::before {
+.sm-boot-route span::before {
   content: "";
   position: absolute;
   inset: 0 0 auto;
@@ -4827,13 +4827,13 @@ html[data-motion-lite] .builder-chip { animation: none; }
   transform-origin: left;
   transition: background-color .22s ease, transform .22s ease;
 }
-.sm-boot-proof span.is-active { color: var(--text); }
-.sm-boot-proof span.is-active::before {
+.sm-boot-route span.is-active { color: var(--text); }
+.sm-boot-route span.is-active::before {
   background: var(--accent);
   transform: scaleX(.68);
 }
-.sm-boot-proof span.is-done { color: var(--text-dim); }
-.sm-boot-proof span.is-done::before {
+.sm-boot-route span.is-done { color: var(--text-dim); }
+.sm-boot-route span.is-done::before {
   background: rgba(var(--accent-rgb) / .58);
   transform: scaleX(1);
 }
@@ -4995,7 +4995,7 @@ html[data-motion-lite] .builder-chip { animation: none; }
 @media (max-width: 480px) {
   .sm-boot { width: calc(100vw - 48px); gap: 13px; }
   .sm-boot-label { font-size: 10px; letter-spacing: 0.18em; }
-  .sm-boot-proof { font-size: 9px; letter-spacing: .1em; gap: 8px; }
+  .sm-boot-route { font-size: 9px; letter-spacing: .1em; gap: 8px; }
   .sm-boot-log { height: 50px; font-size: 10px; }
   .sm-boot-tele { font-size: 9px; letter-spacing: 0.08em; line-height: 1.65; }
   .sm-boot-tele--l div:last-child { max-width: 17ch; }
@@ -5012,8 +5012,8 @@ html[data-motion-lite] .builder-chip { animation: none; }
   .sm-boot-core { display: none; }
   .sm-boot-log > div { animation: none; }
   .sm-boot-tele { animation: none; opacity: 0.85; }
-  .sm-boot-proof span,
-  .sm-boot-proof span::before,
+  .sm-boot-route span,
+  .sm-boot-route span::before,
   .sm-boot-line > i,
   .sm-boot-skip { transition: none; }
 }

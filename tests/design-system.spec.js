@@ -17,10 +17,10 @@ test("Builder + QA proof rail and authored type hierarchy survive every viewport
   });
 
   await settleMain(page, "#hero");
-  await expect(page.locator("#sm-hero-media .release-specimen--static")).toBeVisible();
-  await expect(page.locator("#hero .release-specimen")).toBeVisible();
-  await expect(page.locator("#hero .release-specimen-map li")).toHaveCount(3);
-  await expect(page.locator("#hero .release-specimen-layer")).toHaveCount(3);
+  await expect(page.locator("#sm-hero-media .release-proof--static")).toBeVisible();
+  await expect(page.locator("#hero .release-proof")).toBeVisible();
+  await expect(page.locator("#hero .release-proof-map li")).toHaveCount(3);
+  await expect(page.locator("#hero .release-proof-ink")).toHaveCount(3);
   await expect(page.locator("#hero .hero-input-cluster")).toHaveCount(0);
   await expect(page.locator(".hero-instrument-orbit")).toHaveCount(0);
   await expect(page.locator(".hero-proof-step")).toHaveCount(3);
@@ -88,7 +88,8 @@ test("fullscreen menu owns the interaction layer and its language controls recei
   await page.locator(".nav-burger").click();
   await expect(page.locator(".nav-menu")).toHaveClass(/is-open/);
   await expect(page.locator(".sc-ripple")).toHaveCount(0);
-  await expect(page.locator(".nav-menu .nav-peek")).toBeHidden();
+  await expect(page.locator(".nav-menu .nav-peek")).toBeVisible();
+  await expect(page.locator(".nav-menu .nav-peek")).toHaveCSS("pointer-events", "none");
 
   const layers = await page.evaluate(() => ({
     menu: Number.parseInt(getComputedStyle(document.querySelector(".nav-menu")).zIndex, 10),
@@ -414,12 +415,34 @@ test("intro owns the scroll lock and always releases into a readable hero", asyn
   test.skip(testInfo.project.name !== "desktop-chromium", "timing contract is engine-independent");
 
   await page.addInitScript(() => {
-    window.__INTRO_CONTRACT = { frames: [], readiness: [], shellBlocked: false, done: 0 };
+    window.__INTRO_CONTRACT = {
+      frames: [],
+      readiness: [],
+      shellBlocked: false,
+      overlayVisuallyOwnsViewport: false,
+      done: 0,
+    };
     const observer = new MutationObserver(() => {
       const panel = document.getElementById("sm-intro");
       const root = document.getElementById("root");
       if (panel && root && root.getAttribute("aria-hidden") === "true" && root.inert) {
         window.__INTRO_CONTRACT.shellBlocked = true;
+      }
+      if (panel && root) {
+        const style = getComputedStyle(panel);
+        const rect = panel.getBoundingClientRect();
+        const colour = style.backgroundColor.match(/[\d.]+/g) || [];
+        const alpha = colour.length > 3 ? Number(colour[3]) : 1;
+        if (
+          style.position === "fixed" &&
+          style.visibility === "visible" &&
+          Number(style.opacity) > 0.99 &&
+          alpha > 0.99 &&
+          rect.left <= 0 && rect.top <= 0 &&
+          rect.right >= innerWidth && rect.bottom >= innerHeight
+        ) {
+          window.__INTRO_CONTRACT.overlayVisuallyOwnsViewport = true;
+        }
       }
       if (panel && !window.__INTRO_CONTRACT.frames.length) {
         window.__INTRO_CONTRACT.frames.push({
@@ -450,12 +473,13 @@ test("intro owns the scroll lock and always releases into a readable hero", asyn
   await expect(page.locator("#sm-intro")).toHaveCount(0, { timeout: 5000 });
   await expect(page.locator("html")).not.toHaveClass(/intro-lock/);
   await expect(page.locator("#root")).not.toHaveAttribute("aria-hidden", "true");
+  await expect(page.locator("#root")).toHaveCSS("visibility", "visible");
   await expect(page.locator("#hero")).toHaveClass(/is-lit/);
   await expect(page.locator(".hero-proof")).toBeVisible();
 
   const contract = await page.evaluate(() => window.__INTRO_CONTRACT);
   expect(contract.frames).toHaveLength(1);
-  expect(contract.frames[0].text).toContain("SAMANDAR / PRODUCT LAB");
+  expect(contract.frames[0].text).toContain("SAMANDAR / RELEASE PROOF");
   expect(contract.frames[0].text).toContain("BUILD");
   expect(contract.frames[0].role).toBe("dialog");
   expect(contract.frames[0].busy).toBe("true");
@@ -465,5 +489,6 @@ test("intro owns the scroll lock and always releases into a readable hero", asyn
     entry.rootAriaHidden === "true" &&
     entry.rootInert === true
   )).toBe(true);
+  expect(contract.overlayVisuallyOwnsViewport).toBe(true);
   expect(contract.done).toBe(1);
 });

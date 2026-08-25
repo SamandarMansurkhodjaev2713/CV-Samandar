@@ -282,6 +282,8 @@
     }
 
     function buildDom() {
+      var frameBoot = panel.querySelector(".sm-boot");
+      if (frameBoot && frameBoot.parentNode) frameBoot.parentNode.removeChild(frameBoot);
       panel.removeAttribute("style");
       panel.setAttribute("role", "dialog");
       panel.setAttribute("aria-modal", "true");
@@ -293,18 +295,26 @@
         "radial-gradient(circle at 68% 42%, rgba(" + accent.join(",") + ",.12), transparent 42%)";
 
       var instrument = document.createElement("div");
-      instrument.className = "sm-boot-instrument sm-boot-specimen";
+      instrument.className = "sm-boot-instrument sm-boot-proof";
       instrument.setAttribute("aria-hidden", "true");
       instrument.innerHTML =
-        '<span class="release-specimen-shadow"></span>' +
-        '<div class="release-specimen-object">' +
-        '<span class="release-specimen-layer release-specimen-layer--01"><i></i><b></b></span>' +
-        '<span class="release-specimen-layer release-specimen-layer--02"><i></i><b></b></span>' +
-        '<span class="release-specimen-layer release-specimen-layer--03"><i></i><b></b></span>' +
-        '<span class="release-specimen-spine"></span></div>' +
-        '<span class="release-specimen-light"></span>' +
-        '<span class="release-specimen-measure release-specimen-measure--x"></span>' +
-        '<span class="release-specimen-measure release-specimen-measure--y"></span>';
+        '<span class="release-proof-shadow"></span>' +
+        '<div class="release-proof-sheet">' +
+        '<span class="release-proof-crop release-proof-crop--tl"></span>' +
+        '<span class="release-proof-crop release-proof-crop--tr"></span>' +
+        '<span class="release-proof-crop release-proof-crop--bl"></span>' +
+        '<span class="release-proof-crop release-proof-crop--br"></span>' +
+        '<span class="release-proof-folio mono">RP–001 / 2026</span>' +
+        '<span class="release-proof-owner mono">SAMANDAR · PRODUCT ENGINEERING</span>' +
+        '<div class="release-proof-impression">' +
+        '<span class="release-proof-ink release-proof-ink--a">RELEASE</span>' +
+        '<span class="release-proof-ink release-proof-ink--b">RELEASE</span>' +
+        '<span class="release-proof-ink release-proof-ink--key">RELEASE</span></div>' +
+        '<span class="release-proof-register release-proof-register--a"></span>' +
+        '<span class="release-proof-register release-proof-register--b"></span>' +
+        '<div class="release-proof-verdict"><span class="mono">QA / FINAL PROOF</span><strong>READY</strong></div>' +
+        '<ol class="release-proof-map"><li><span>01</span><strong>BUILD</strong></li><li><span>02</span><strong>VERIFY</strong></li><li><span>03</span><strong>SHIP</strong></li></ol>' +
+        '<span class="release-proof-inspection"></span></div>';
       panel.appendChild(instrument);
 
       /* Reduced motion keeps the physical core as a static orientation mark;
@@ -316,23 +326,31 @@
       core.innerHTML = "<b></b><i></i>";
       panel.appendChild(core);
 
-      boot = document.createElement("div");
+      boot = frameBoot || document.createElement("div");
       boot.className = "sm-boot";
+      boot.removeAttribute("style");
       boot.style.top = (CORE_Y * 100).toFixed(1) + "%";
-      boot.innerHTML =
-        '<div class="sm-boot-label mono">SAMANDAR / PRODUCT LAB <span class="sm-boot-state">BUILD</span></div>' +
-        '<div class="sm-boot-proof mono" aria-hidden="true"><span>BUILD</span><span>VERIFY</span><span>SHIP</span></div>' +
-        '<div class="sm-boot-pct" aria-hidden="true"><span class="sm-boot-pct-n">00</span><span class="sm-boot-pct-sign">%</span></div>' +
-        '<div class="sm-boot-line" aria-hidden="true"><i></i></div>' +
-        '<div class="sm-boot-status mono" role="status" aria-live="polite">INITIALIZING</div>' +
-        '<div class="sm-boot-log mono" aria-hidden="true"></div>';
+      if (!frameBoot) {
+        boot.innerHTML =
+          '<div class="sm-boot-label mono">SAMANDAR / RELEASE PROOF <span class="sm-boot-state">BUILD</span></div>' +
+          '<div class="sm-boot-route mono" aria-hidden="true"><span>BUILD</span><span>VERIFY</span><span>SHIP</span></div>' +
+          '<div class="sm-boot-pct" aria-hidden="true"><span class="sm-boot-pct-n">00</span><span class="sm-boot-pct-sign">%</span></div>' +
+          '<div class="sm-boot-line" aria-hidden="true"><i></i></div>' +
+          '<div class="sm-boot-status mono" role="status" aria-live="polite">INITIALIZING</div>' +
+          '<div class="sm-boot-log mono" aria-hidden="true"></div>';
+      } else if (!boot.querySelector(".sm-boot-log")) {
+        var frameLog = document.createElement("div");
+        frameLog.className = "sm-boot-log mono";
+        frameLog.setAttribute("aria-hidden", "true");
+        boot.appendChild(frameLog);
+      }
       panel.appendChild(boot);
 
       percent = boot.querySelector(".sm-boot-pct-n");
       progress = boot.querySelector(".sm-boot-line > i");
       state = boot.querySelector(".sm-boot-state");
       status = boot.querySelector(".sm-boot-status");
-      proofSteps = Array.prototype.slice.call(boot.querySelectorAll(".sm-boot-proof span"));
+      proofSteps = Array.prototype.slice.call(boot.querySelectorAll(".sm-boot-route span"));
       log = boot.querySelector(".sm-boot-log");
 
       var telemetryLeft = document.createElement("div");
@@ -430,11 +448,11 @@
       intent.durationMs = Math.round(performance.now() - createdAt);
       stopDrivers();
       detachListeners();
-      if (panel.parentNode) panel.remove();
       var inlineStyle = document.getElementById("sm-intro-frame-style");
       if (inlineStyle) inlineStyle.remove();
       if (typeof intent.release === "function") intent.release(reason || "complete");
       else {
+        if (panel.parentNode) panel.remove();
         document.documentElement.classList.remove("intro-lock");
         document.documentElement.style.overflow = intent.previousOverflow || "";
         document.documentElement.removeAttribute("aria-busy");
@@ -468,6 +486,7 @@
       setStatus("ONLINE");
       if (boot) boot.classList.add("is-online");
       updateProof(100);
+      if (typeof intent.unveilRoot === "function") intent.unveilRoot();
 
       // A saturated host may deliver the readiness/deadline callback long
       // after its intended wall-clock moment. In that case another hold plus

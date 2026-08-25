@@ -12,7 +12,7 @@
 
 - React и Three.js поставляются как локальные production bundles;
 - `src/components/*.jsx` — source, а соседние `.js` — generated artifacts;
-- `build.js` компилирует JSX, обновляет CSP, генерирует 48 case HTML-страниц и sitemap;
+- `build.js` компилирует JSX, обновляет CSP, генерирует 57 case HTML-страниц и sitemap;
 - один `src/projects/render.js` формирует case-разметку и в Node во время build, и в браузере при переключении языка;
 - generated artifacts коммитятся и повторно проверяются в CI перед публикацией на GitHub Pages.
 

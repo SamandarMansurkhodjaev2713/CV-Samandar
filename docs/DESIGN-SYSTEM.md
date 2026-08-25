@@ -2,7 +2,7 @@
 
 Статус: описание текущей реализации.
 
-Область: главная страница, 25 карточек продуктов и 16 проектных case routes.
+Область: главная страница, 26 карточек продуктов и 16 проектных case routes.
 
 Локали: RU, EN, UZ.
 
@@ -22,7 +22,7 @@
 | компоненты главной | `src/components/*.jsx`; одноимённые `.js` — generated artifacts |
 | тексты главной и карточек RU/EN/UZ | `src/content/content.js` |
 | идентичность, порядок, маршруты и публичные границы 25 продуктов | `src/content/product-registry.js` |
-| содержимое 16 кейсов | `src/projects/landings-data.js` |
+| содержимое 19 кейсов | `src/projects/landings-data.js` |
 | разметка кейсов и общий UI-копирайт | `src/projects/render.js` |
 | базовые токены и shell | `src/styles/styles.css` |
 | композиции сцен и адаптивность главной | `src/styles/sections.css`, `src/styles/features.css`, `src/styles/cv-doc.css`, V3 layer `src/styles/art-direction.css` и финальный release owner `src/styles/release-polish.css` |
@@ -202,7 +202,7 @@ scroll snap, видимым краем следующей карточки и я
 
 ### 8.3 Case pages
 
-Каждый из 16 кейсов имеет три физически сгенерированные страницы: RU в `/projects/<slug>/`, EN в `/projects/<slug>/en/`, UZ в `/projects/<slug>/uz/`. Итого — 48 статических HTML-файлов.
+Каждый из 19 кейсов имеет три физически сгенерированные страницы: RU в `/projects/<slug>/`, EN в `/projects/<slug>/en/`, UZ в `/projects/<slug>/uz/`. Итого — 57 статических HTML-файлов.
 
 Единая структура содержит:
 
@@ -251,7 +251,7 @@ scroll snap, видимым краем следующей карточки и я
 - fullscreen menu управляет `aria-hidden`, `inert`, focus containment и Escape;
 - active navigation использует `aria-current`;
 - изображения имеют текстовый fallback, а декоративные слои скрыты от accessibility tree;
-- `prefers-reduced-motion: reduce` сохраняет все 25 карточек, тексты, CTA и нативную навигацию;
+- `prefers-reduced-motion: reduce` сохраняет все 26 карточек, тексты, CTA и нативную навигацию;
 - reduced mode отключает continuous scheduler и optional Three.js, но не раскрывает скрытые пользователем данные и не меняет семантическое состояние disclosure;
 - автоматический axe gate покрывает WCAG 2.2 A/AA ruleset, однако он не заменяет NVDA, VoiceOver и проверку на физических устройствах.
 

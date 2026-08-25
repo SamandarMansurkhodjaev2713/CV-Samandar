@@ -1615,7 +1615,7 @@ function Footer({ t, links }) {
         <div className="footer-brand">
           <a href="#hero" className="brand" data-cursor="link" data-cursor-label="↑ top">
             <span className="brand-mark" />
-            <span>SAMANDAR<span className="brand-sub"> · EXEC.AI.LAB</span></span>
+            <span>SAMANDAR<span className="brand-sub"> · RELEASE PROOF</span></span>
           </a>
           {f.tagline ? <p className="footer-tagline">{f.tagline}</p> : null}
           <a href="#contact" className="footer-cta" data-cursor="send" data-cursor-label="send → contact">

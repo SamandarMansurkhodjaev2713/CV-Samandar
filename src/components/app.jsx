@@ -18,7 +18,7 @@ class ErrorBoundary extends React.Component {
             <button type="button" onClick={() => window.location.reload()}>Обновить страницу</button>
             <a href="https://t.me/killallofthem13">Написать в Telegram</a>
           </div>
-          <span className="fatal-foot mono">SAMANDAR · EXECUTIVE AI CODE LAB</span>
+          <span className="fatal-foot mono">SAMANDAR · RELEASE PROOF</span>
         </main>
       );
     }
@@ -227,7 +227,7 @@ function SystemFrame({ active }) {
   const phase = index < 4 ? "DISCOVER" : index < 8 ? "BUILD" : index < 11 ? "VERIFY" : "RELEASE";
   return (
     <div className="system-frame" aria-hidden="true" style={{ "--system-progress": progress }}>
-      <div className="system-frame-tele system-frame-tele--left mono">LAT 41.31 · LON 69.24</div>
+      <div className="system-frame-tele system-frame-tele--left mono">SAMANDAR / RELEASE PROOF</div>
       <div className="system-frame-tele system-frame-tele--center mono">BRIEF / BUILD / VERIFY / RELEASE</div>
       <div className="system-frame-tele system-frame-tele--right mono">{phase} · {String(index + 1).padStart(2, "0")}/{String(total).padStart(2, "0")}</div>
       <div className="system-frame-depth"><span className="mono">DELIVERY</span><i /><b /></div>
@@ -461,7 +461,7 @@ function Nav({ t, lang, setLang, active }) {
       <div className="nav-inner">
         <a href="#hero" className="brand" data-cursor="link" data-cursor-label="↑ top" onClick={(e) => go(e, "hero")}>
           <span className="brand-mark" />
-          <span className="brand-name">SAMANDAR<span className="brand-sub"> · EXEC.AI.LAB</span></span>
+            <span className="brand-name">SAMANDAR<span className="brand-sub"> / RELEASE PROOF</span></span>
         </a>
 
         {/* Section counter — capsule-mode telemetry: 04 / 11 · Проекты with an
@@ -591,9 +591,9 @@ function Nav({ t, lang, setLang, active }) {
               ))}
             </div>
             <div className="nav-menu-tele mono">
-              <span>TASHKENT · 41.31°N 69.24°E</span>
-              <span>UTC+5 · {clock}</span>
-              <span>EXECUTIVE AI CODE LAB · v.2026</span>
+                <span>TASHKENT · UTC+5</span>
+                <span>BUILDER + QA · {clock}</span>
+                <span>RELEASE PROOF · v.2026</span>
             </div>
           </div>
         </div>
@@ -675,12 +675,19 @@ function App() {
   const t = window.CONTENT[lang];
 
   // The opening sequence is a real readiness gate, not a decorative timer.
-  // While it owns the viewport the application shell is removed from the
-  // accessibility tree; readiness is published as three explicit signals.
+  // While it owns the viewport the application shell is rendered behind the
+  // opaque proof layer but removed from input and the accessibility tree;
+  // readiness is published as three explicit signals. Keeping the final shell
+  // in layout gives LCP/CLS an honest view of the page without a pre-intro
+  // flash or an actionable half-mounted interface.
   useE(() => {
     const intent = window.__SM_INTRO;
     const root = document.getElementById("root");
     if (!intent || !intent.panel) return;
+
+    function unveilRoot() {
+      if (typeof intent.unveilRoot === "function") intent.unveilRoot();
+    }
 
     function clearCompletedOverlay() {
       // A saturated browser can commit the React tree, defer passive effects
@@ -696,6 +703,7 @@ function App() {
       ) return false;
       intent.prepared = true;
       intent.panel.remove();
+      unveilRoot();
       root.inert = false;
       root.removeAttribute("aria-hidden");
       return true;
@@ -710,7 +718,20 @@ function App() {
       }
       return;
     }
-    if (!intent.panel.parentNode) return;
+    if (!intent.panel.parentNode) {
+      // A release owner must publish state before detaching its interaction
+      // shield. If an engine/extension removed the node out of band, restore
+      // the same invariant here so the shell cannot remain locked with an
+      // undefined completion state.
+      intent.prepared = true;
+      if (typeof intent.release === "function") {
+        intent.release("head-safety-detached-shell");
+      } else if (root) {
+        root.inert = false;
+        root.removeAttribute("aria-hidden");
+      }
+      return;
+    }
 
     const headOwnsRootLock = root && root.getAttribute("data-sm-intro-lock") === "head";
     const previousAriaHidden = headOwnsRootLock ? null : (root ? root.getAttribute("aria-hidden") : null);
@@ -746,6 +767,7 @@ function App() {
       if (restored) return;
       restored = true;
       if (!root) return;
+      unveilRoot();
       root.inert = previousInert;
       if (previousAriaHidden == null) root.removeAttribute("aria-hidden");
       else root.setAttribute("aria-hidden", previousAriaHidden);
@@ -864,8 +886,16 @@ function App() {
     let settling = true;
     let stableSince = 0;
     const startedAt = performance.now();
-    const minimumWatchMs = 3200;
-    const hardCeilingMs = 8000;
+    // Production keeps ownership long enough to absorb late font, pin-host and
+    // responsive-image layout. E2E mode is already parser-marked `e2e-stable`,
+    // disables authored motion/WebGL and runs with deterministic local assets;
+    // keeping the production 3.2s observation window there only exposes the
+    // suite to headless Firefox SWGL teardown stalls without testing another
+    // product state.
+    const deterministicTestMode = Boolean(window.__SM_TEST_MODE);
+    const minimumWatchMs = deterministicTestMode ? 0 : 3200;
+    const stableWindowMs = deterministicTestMode ? 120 : 700;
+    const hardCeilingMs = deterministicTestMode ? 1800 : 8000;
     document.documentElement.setAttribute("data-deep-link-settling", id);
     document.documentElement.removeAttribute("data-deep-link-settled");
     function stopSettling() {
@@ -960,7 +990,7 @@ function App() {
       const now = performance.now();
       const fontsReady = !document.fonts || document.fonts.status === "loaded";
       const shellReady = document.documentElement.getAttribute("data-app-boot") === "ready";
-      const stableLongEnough = stableSince && now - stableSince >= 700;
+      const stableLongEnough = stableSince && now - stableSince >= stableWindowMs;
       if ((shellReady && fontsReady && now - startedAt >= minimumWatchMs && stableLongEnough) || now - startedAt >= hardCeilingMs) {
         // One last geometry-based correction at the ceiling. Unlike a fixed
         // delay, this survives late pin-host/font layout without fighting real

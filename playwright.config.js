@@ -31,9 +31,12 @@ module.exports = defineConfig({
     locale: "ru-RU",
     timezoneId: "Asia/Tashkent",
     colorScheme: "dark",
-    trace: "retain-on-failure",
+    // The explicit visual-release job writes 68 PNG evidence files itself.
+    // Retaining a second frame-by-frame trace/video copy can exhaust a small
+    // Windows system drive while two long full-page case sweeps close.
+    trace: process.env.VISUAL_QA === "1" ? "off" : "retain-on-failure",
     screenshot: "only-on-failure",
-    video: "retain-on-failure",
+    video: process.env.VISUAL_QA === "1" ? "off" : "retain-on-failure",
     serviceWorkers: "block",
   },
   webServer: process.env.PLAYWRIGHT_SKIP_WEBSERVER ? undefined : {
@@ -48,14 +51,28 @@ module.exports = defineConfig({
     {
       name: "desktop-firefox",
       testMatch: /firefox-smoke\.spec\.js/,
-      // Headless Firefox uses SWGL on Windows. Run the cross-engine smoke
-      // before the long Chromium/WebGL matrix so it receives a clean graphics
-      // process instead of inheriting system pressure from earlier projects.
-      // The project remains serial: both tests still run, with no retry locally.
+      // Run the cross-engine smoke before the long Chromium/WebGL matrix so it
+      // receives a clean process. The project remains serial: both tests still
+      // run, with no retry locally.
       fullyParallel: false,
       use: {
         ...devices["Desktop Firefox"],
         viewport: { width: 1440, height: 1000 },
+        // A real Windows window depends on the interactive desktop and can
+        // stall before the page fixture exists. Headless Firefox is the stable
+        // release profile; on Windows it deliberately uses the basic
+        // compositor and the site's production WebGL fallback. Chromium owns
+        // the separate visual/performance WebGL gates.
+        headless: true,
+        launchOptions: process.platform === "win32" ? {
+          firefoxUserPrefs: {
+            "gfx.webrender.all": false,
+            "gfx.webrender.force-disabled": true,
+            "gfx.webrender.software": false,
+            "layers.acceleration.disabled": true,
+            "webgl.disabled": true,
+          },
+        } : undefined,
       },
     },
     {
