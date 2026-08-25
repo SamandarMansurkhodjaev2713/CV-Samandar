@@ -38,16 +38,16 @@
 | Build determinism | **GREEN** | local candidate `v2.14.1 / v242`: `npm run check:build` → 64 generated artifacts byte-identical в двух последовательных сборках (2026-08-24) |
 | Dependency/secret gates | **GREEN** | local candidate `v2.14.1 / v242`: `npm audit --audit-level=high` → 0 vulnerabilities; `npm run scan:secrets` → no credential signatures (2026-08-24) |
 | External live routes | **GREEN** | `npm run check:live` → 10/10 approved HTTPS live routes вернули usable HTML, включая новый Echelon Pages route (2026-08-24) |
-| Deployed production smoke | **GREEN (v2.14.1)** | merge SHA `adc3e861`, GitHub Actions `32084173961`: build/deploy/verify-production success; независимый `npm run test:production` → 3/3; production HTML HTTP 200, содержит 30 refs `v237` и 0 refs `v236`; 48 case routes и exact-card return подтверждены (2026-08-18) |
-| Post-deploy synthetic monitor | **GREEN (v2.14.1)** | независимый local runner на опубликованном `v237`: desktop LCP 1656 ms / CLS 0.0928 / frame p95 83.4 ms; mobile LCP 1680 ms / CLS 0.0075 / frame p95 33.3 ms; 0 first-party failures / 0 budget violations. Это synthetic Chromium evidence, не field RUM и не physical-device proof (2026-08-18) |
+| Deployed production smoke | **GREEN (v242)** | merge SHA `68f0ead`, GitHub Actions `32834472208`: build 7m35s, Pages deploy 11s, verify-production 58s — success; независимый `npm run test:production` → 3/3; production HTML HTTP 200, содержит 23 refs `v242` и 0 refs иных версий; 57 case routes, exact-card return и 10/10 live routes подтверждены (2026-08-25) |
+| Post-deploy synthetic monitor | **GREEN (v242)** | независимый `npm run monitor:production`: desktop ready 3595 ms / LCP 1640 ms / CLS 0.0003 / frame p95 66.8 ms; mobile ready 3915 ms / LCP 900 ms / CLS 0.0000 / frame p95 33.3 ms; 0 budget violations. Это synthetic Chromium evidence, не field RUM и не physical-device proof (2026-08-25) |
 | Visual capture + human review | **GREEN** | local candidate `v2.14.1 / v242`: финальный `npm run qa:visual` → 4/4; заново созданы и вручную просмотрены 26 main captures, 38 full-page case captures и 4 contact sheets для desktop/mobile. Видимых обрезок headline, пустых reveal-поз, незагруженных artwork или непредусмотренного horizontal overflow не обнаружено (2026-08-25) |
 | Manual local browser review | **GREEN (local candidate only)** | реальный in-app Chromium: ранее проверены 1440×900, 1280×720, 390×844 и 844×390 для Intro/Hero/Index/buttons/Projects; дополнительно DentForma, MeetingFlow RU/UZ и Telegram Sheets Task Bot проверены на 1280×720 и 390×844, включая hero, CTA, artwork, схемы и RU/EN/UZ overflow. Это не production/physical-device proof (2026-08-24) |
 | Manual production browser journey | **GREEN (v2.13.0 only)** | опубликованный `v232` ранее проверен вручную в Chromium; для `v2.13.2` отдельный physical/manual PASS не заявляется. Production Chromium smoke 3/3 и synthetic desktop/mobile monitor вынесены в отдельные строки |
 | NVDA / VoiceOver / physical devices | **NOT RUN** | локальная headless-среда не может честно подтвердить эти проверки |
 
-Production сейчас `v2.14.1 / v237`, опубликованный из merge SHA `adc3e861` и
-проверенный workflow `32084173961`, независимым smoke 3/3, live check 9/9 и
-synthetic production monitor без violations. `v2.14.0 / v236` остаётся
+Production сейчас `v2.14.1 / v242`, опубликованный из SHA `68f0ead` и
+проверенный workflow `32834472208`, независимым smoke 3/3, live check 10/10 и
+synthetic production monitor без violations. `v2.14.1 / v240` остаётся
 предыдущим rollback baseline. Physical device и assistive-technology проверки
 остаются отдельным внешним доказательством и не объявляются выполненными.
 

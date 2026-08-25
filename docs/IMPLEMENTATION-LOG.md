@@ -81,6 +81,17 @@ Evidence runner переведён на один worker и отключает tr
 contact sheet просмотрены вручную. Это исправление инфраструктуры доказательства,
 а не ослабление визуального product contract.
 
+Release SHA `68f0ead` опубликован из `main` workflow `32834472208`. Clean cloud
+build за 7m35s повторил locked install, audit, secret scan, deterministic build,
+generated drift, documentation, browser/accessibility и isolated performance
+gates; Pages deploy занял 11 секунд, production verify — 58 секунд. Независимый
+post-deploy smoke прошёл 3/3, live routes — 10/10. Production HTML вернул HTTP
+200, 23 asset refs `v242` и ни одной ссылки на другую cache version. Synthetic
+production monitor завершился без violations: desktop ready 3595 ms, LCP
+1640 ms, CLS 0.0003, frame p95 66.8 ms; mobile ready 3915 ms, LCP 900 ms,
+CLS 0.0000, frame p95 33.3 ms. Это Chromium synthetic evidence, а не field RUM
+или подтверждение физического устройства.
+
 ## Release Field V8.1 candidate — v240
 
 После сравнения с авторским Stones art direction переведён из набора
