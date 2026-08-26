@@ -31,7 +31,7 @@ const SERVICE_RELATED = [
   "3D Landing",                       // 1 Landing & Sites → premium Three.js landing
   "Task-manager / Task Manage Bot",   // 2 Telegram Bots   → team/task bot
   "Klawis — Legal AI Assistant",      // 3 AI Automation   → live AI product (RAG)
-  "Sentinel Edge",                    // 4 Dashboards      → realtime ops dashboard
+  "BioFlux Observer",                 // 4 Dashboards      → realtime telemetry case
   "CoupleOS / Softly",                // 5 MVP / Prototype → live product MVP
   "BelfProctor",                      // 6 Internal Tools  → internal monitoring system
   null,                               // 7 Tech Consulting → advisory, no single shippable case
@@ -1499,7 +1499,7 @@ function Contact({ t, links }) {
               <textarea ref={msgRef} name="message" required rows="4" className="ff-input ff-textarea" placeholder={t.contact.form.msg_placeholder || ""} />
             </label>
             <div className="contact-actions">
-              <button type="submit" className="btn btn-primary contact-submit" data-magnetic>
+              <button type="submit" className="btn btn-primary contact-submit">
                 <span>{t.contact.form.submit}</span>
                 <span className="arrow">→</span>
               </button>

@@ -47,11 +47,17 @@ async function waitForVisualReadiness(page) {
     });
     await Promise.race([
       Promise.all(images.map((image) => {
-        if (image.complete) return Promise.resolve();
-        return new Promise((resolve) => {
+        const loaded = image.complete ? Promise.resolve() : new Promise((resolve) => {
           image.addEventListener("load", resolve, { once: true });
           image.addEventListener("error", resolve, { once: true });
         });
+        // `complete` only means that bytes arrived. Chromium can still defer
+        // decoding/painting a large offscreen image after the case sweep has
+        // returned to the Hero. Await the real decode contract so the visual
+        // evidence cannot record a black placeholder for a healthy asset.
+        return loaded.then(() => (
+          typeof image.decode === "function" ? image.decode().catch(() => undefined) : undefined
+        ));
       })),
       new Promise((resolve) => setTimeout(resolve, 3000)),
     ]);

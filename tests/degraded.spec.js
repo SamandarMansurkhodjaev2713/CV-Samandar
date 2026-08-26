@@ -73,23 +73,25 @@ test.describe("honest degraded states", () => {
     await expectNoHorizontalOverflow(expect, page, "case artwork fallback");
   });
 
-  test("GitHub API failure shows static truthful copy without synthetic telemetry", async ({ page }) => {
-    let blocked = 0;
+  test("About proof is complete without runtime GitHub telemetry", async ({ page }) => {
+    let requests = 0;
     await page.route("https://api.github.com/**", (route) => {
-      blocked += 1;
+      requests += 1;
       return route.abort("failed");
     });
 
-    // A direct hash intentionally skips the intro but does not enable E2E mode,
-    // so the real API integration still runs and its failure path is exercised.
+    // Profile facts are authored content. The section must not depend on a
+    // rate-limited third-party API or change shape after it becomes visible.
     await page.goto("/#about", { waitUntil: "domcontentloaded" });
     await page.locator("#main").waitFor({ state: "attached" });
-    await expect(page.locator(".about-readme")).toBeVisible();
-    await expect.poll(() => blocked).toBe(2);
+    await expect(page.locator(".about-proof")).toBeVisible();
+    await expect(page.locator(".about-proof-route li")).toHaveCount(4);
+    await expect(page.locator(".about-stat")).toHaveCount(4);
+    await expect.poll(() => requests).toBe(0);
     await expect(page.locator(".about-contrib")).toHaveCount(0);
     await expect(page.locator(".about-gh-live")).toHaveCount(0);
-    await expect(page.locator(".about-gh-stats")).toContainText("Публичный GitHub");
-    await expectNoHorizontalOverflow(expect, page, "GitHub fallback");
+    await expect(page.locator(".about-gh-stats")).toHaveCount(0);
+    await expectNoHorizontalOverflow(expect, page, "About proof");
   });
 
   test("optional Three.js failure preserves the real project image", async ({ page }) => {

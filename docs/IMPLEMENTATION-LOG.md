@@ -5,6 +5,116 @@ Awwwards-переработки. План и критерии готовност
 `MASTER-IMPLEMENTATION-PLAN.md`; архитектурные контракты — в
 `ARCHITECTURE.md`.
 
+## Release Proof catalog and responsive candidate — v245
+
+Повторный GitHub-аудит сохранил правило «один продукт — одна каноническая
+карточка» и добавил `Gorilla — Five Signals Concept` как самостоятельный
+public live-продукт. Primary CTA ведёт на локализованный GitHub Pages сайт,
+secondary CTA — на публичный репозиторий. `Sentinel Edge` по прямому решению
+владельца удалён из registry, контента, artwork и фильтров. Итоговый каталог
+по-прежнему содержит 29 продуктов: 10 live и 19 privacy-safe case routes.
+
+Для Gorilla создан отдельный предметный artwork: blackened-steel монолит из
+пяти связанных пластин с тёплой оранжевой кромкой. Подготовлены WebP
+1536×512, 1152×384 и 768×256 без текста, UI, логотипов и закрытых данных.
+Мобильный каталог теперь сразу показывает все 29 карточек и фильтрует их по
+пяти честным категориям без повторного монтирования дублей; desktop сохраняет
+четыре курируемые записи до явного раскрытия. Каждая из 29 mobile-картинок
+отдельно проверена на responsive `currentSrc`, decode, размеры 3:1, opacity и
+видимость. Карточки больше не делят `transform` между layout и parallax, а
+геометрический тест подтверждает отсутствие пересечений после раскрытия.
+
+About заменён на maker's proof с управляемым заголовком «От задачи / до
+релиза — / один ответственный», маршрутом `BRIEF → BUILD → VERIFY → RELEASE`
+и фактическими доказательствами без live-clock или GitHub API. Navbar собран
+как одна inset instrument-rail с реальной главой и прогрессом; fullscreen
+Index владеет фокусом и взаимодействием. Кнопки получили устойчивую финальную
+позу без конкурирующих magnetic-transform, а desktop cursor работает как
+конечный verification instrument и полностью отсутствует на touch. Intro
+показывает реальную готовность `SHELL / TYPE / MEDIA`. Mobile Hero→Signal
+использует нативный sticky handoff без перехвата скролла и прошёл RU/EN/UZ
+геометрию на 27 комбинациях viewport/locale.
+
+Все 19 case routes используют одну Release Field систему, но сохраняют
+уникальные hero, artwork, схему, QA-аргументацию и privacy boundary. Fixed
+topbar, sticky chapters, deep-link, locale switch и reload сохраняют точную
+главу; возврат ведёт к исходной карточке без повторного Intro. Visual runner
+теперь ждёт реальный `HTMLImageElement.decode()`, а не фиксированную задержку,
+поэтому contact sheets не фиксируют ложные пустые изображения.
+
+Первичный React mount разделён на пять смысловых стадий: Hero/Signal,
+About, Projects, Builder/Skills и оставшиеся главы. Deep links монтируют
+полную оболочку сразу. Стадии запускаются через `requestAnimationFrame` и
+`React.startTransition`, а общий scroll/motion runtime обновляет измерения
+после каждой стадии. Это убрало initial long task около 2,8 секунды; отдельный
+performance gate прошёл desktop/mobile 2/2 без изменения budget.
+
+Локальные automated evidence текущего кандидата: `validate` — 29/10/19 и три
+локали; `check:build` — 64 byte-identical generated artifacts; visual gate —
+4/4 плюс повторный case capture 2/2; performance — 2/2; desktop Chromium и
+Firefox — 135 passed / 12 profile-specific skipped; mobile Chromium и reduced
+motion — 37 passed / 109 profile-specific skipped. Совокупно это 172 passed,
+121 целевой skip и 0 failed в выполненных проектах. Secret scan, high-level
+dependency audit, documentation contract, 10/10 live routes и
+`git diff --check` зелёные.
+
+Локальный WebKit на этом Windows host не создаёт browser process: запуск
+завершается кодом `0xC0E90002` до открытия страницы при включённой политике
+Verified and Reputable Apps; принудительная переустановка Playwright WebKit
+ситуацию не изменила. Политика безопасности не ослаблялась, поэтому это
+честно зафиксировано как external host-runtime blocker, а не product failure
+или WebKit PASS. Production smoke, physical iOS/Android и NVDA/VoiceOver для
+`v245` не заявляются: кандидат ещё не опубликован.
+
+## About maker's proof candidate — v243
+
+Подтверждённый визуальный дефект заголовка About был не отдельным смещением
+буквы: плотный `.88` line-height, узкий `max-width` и отрицательный отступ
+reveal-маски обрезали верх кириллических диакритик. Заголовок заменён на
+управляемые смысловые строки «От задачи / до релиза — / один ответственный», а
+общая mask geometry получила безопасный верхний запас. RU, EN и UZ имеют
+собственные полные строки, поэтому браузер больше не принимает случайные
+композиционные решения в критическом display-тексте.
+
+Старый README/dashboard About удалён из runtime-композиции. Live-clock,
+IntersectionObserver для clock, `setInterval`, GitHub API enhancement,
+activity strip, stack chips и повторяющая project feed больше не загружаются.
+Их заменяет одна annotated maker's proof: тезис об ответственности, маршрут
+`BRIEF → BUILD → VERIFY → RELEASE`, четыре проверяемых факта, три текущих
+направления работы и подпись Builder + QA. Раздел не дублирует Stack/Projects и
+не меняет высоту после внешнего ответа. `gh.js` удалён из preload/bootstrap и
+из source; fault contract теперь явно запрещает runtime GitHub-зависимость
+About.
+
+Локальная Chromium-проверка заголовка и proof выполнена на 320×568, 390×844,
+762×900 и 1440×1000; DOM geometry подтверждает равенство document/client width
+и отсутствие выхода каждой title line за shell. Автоматизированная responsive
+matrix прошла 11 canonical viewport от 320×568 до 1920×1080, включая 844×390,
+а отдельный сценарий подтвердил 200% text zoom, открытое menu state и смену
+ориентации. Это browser/automation evidence, а не physical-device или
+assistive-technology proof.
+
+Полный visual release gate завершился 4/4 за 7.2 минуты. Свежие contact sheets
+главной и всех 19 case pages на desktop/mobile просмотрены вручную: About
+сохраняет новый reading order в общей драматургии, соседние Signal/Projects не
+получили переходных артефактов, а case hero не имеют пустых reveal-поз,
+обрезанных CTA или горизонтального overflow. Evidence содержит 26 main scenes,
+38 full-page case captures и четыре contact sheet; это не заменяет проверку на
+физических iOS/Android устройствах.
+
+Финальный изолированный multi-engine gate завершился 172 passed / 120
+profile-specific skipped / 0 failed за 9.3 минуты: Firefox, iPhone WebKit,
+desktop/mobile Chromium и reduced motion. Transient reduced-motion assertion
+переведён с требования поймать уже исчезающий DOM-кадр на устойчивый head-boot
+contract; сценарий после этого прошёл 10/10 повторов. Navbar geometry на
+920/1024/1160/1280/1440 px отдельно выдержала 10/10 повторов, а затем прошла
+внутри полного suite. Официальный performance gate завершился desktop/mobile
+2/2 за 19.8 секунды без расширения бюджета; desktop-профиль дополнительно
+прошёл 5/5 повторов после обязательного cooldown от полного browser suite.
+Validator фиксирует 29 продуктов, 10 live и 19 case routes; две сборки дали
+64 byte-identical generated artifacts. Secret scan, dependency audit (0
+уязвимостей), documentation contract и `git diff --check` зелёные.
+
 ## Release Proof catalog candidate — v242
 
 GitHub-аудит сначала добавил `Echelon Desktop`, а повторный authenticated-аудит

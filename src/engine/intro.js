@@ -87,6 +87,7 @@
     var state;
     var status;
     var proofSteps;
+    var auditNodes;
     var log;
     var clock;
     var skipButton;
@@ -208,6 +209,16 @@
         if (index === 1 && ready.shell && ready.fonts && ready.hero) done = true;
         if (revealing) done = true;
         proofSteps[index].classList.toggle("is-done", done);
+      }
+
+      if (auditNodes && auditNodes.length) {
+        var readinessState = readiness();
+        var auditState = [readinessState.shell, readinessState.fonts, readinessState.hero];
+        for (var auditIndex = 0; auditIndex < auditNodes.length; auditIndex += 1) {
+          var verified = auditState[auditIndex] === true || revealing;
+          auditNodes[auditIndex].classList.toggle("is-verified", verified);
+          auditNodes[auditIndex].setAttribute("data-state", verified ? "verified" : "checking");
+        }
       }
     }
 
@@ -352,6 +363,20 @@
       status = boot.querySelector(".sm-boot-status");
       proofSteps = Array.prototype.slice.call(boot.querySelectorAll(".sm-boot-route span"));
       log = boot.querySelector(".sm-boot-log");
+
+      /* This strip is not decorative telemetry: every mark is wired to the
+         same readiness contract that owns the curtain. It lets the opening
+         scene communicate the portfolio's actual promise — shell, type and
+         media are checked before release — without inventing production logs. */
+      var audit = document.createElement("ol");
+      audit.className = "sm-boot-audit mono";
+      audit.setAttribute("aria-hidden", "true");
+      audit.innerHTML =
+        '<li data-state="checking"><span>01</span><strong>SHELL</strong><i></i></li>' +
+        '<li data-state="checking"><span>02</span><strong>TYPE</strong><i></i></li>' +
+        '<li data-state="checking"><span>03</span><strong>MEDIA</strong><i></i></li>';
+      panel.appendChild(audit);
+      auditNodes = Array.prototype.slice.call(audit.querySelectorAll("li"));
 
       var telemetryLeft = document.createElement("div");
       telemetryLeft.className = "sm-boot-tele sm-boot-tele--l mono";

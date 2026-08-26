@@ -48,7 +48,7 @@ vector illustration.
 | `car-superapp.webp` | CAR Superapp | A precision brake disc as service mechanics made tangible |
 | `helion.webp` | Helion | A planetary limb defined by a thin, scalable atmospheric edge |
 | `stones.webp` | Stones | A split geological sample exposing layers of time |
-| `sentinel.webp` | Sentinel Edge | A quiet ceramic sensor with one live lime signal at its base |
+| `gorilla-five-signals.webp` | Gorilla — Five Signals Concept | Five connected blackened-steel fins with one controlled burnt-orange edge signal |
 | `cardioguard.webp` | CardioGuard | A heartbeat formed as physical relief rather than a drawn chart |
 | `task-manager.webp` | Task Manager | A spoken rhythm frozen into solid brass bars |
 | `marketbot.webp` | Marketbot | Many offer tiles converging into one selected result |

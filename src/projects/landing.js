@@ -28,6 +28,11 @@
   var product = (window.LANDINGS || {})[slug];
   if (!root || !product || typeof window.LP_render !== "function") return;
 
+  // Locale switches preserve a semantic chapter, not an old pixel offset.
+  // Browser scroll restoration can otherwise overwrite the explicit fragment
+  // after load when RU/EN/UZ pages have slightly different line wrapping.
+  try { history.scrollRestoration = "manual"; } catch (e) { /* progressive enhancement */ }
+
   var KEY = "sm-lp-lang";
   var revealObserver = null;
   var pendingReveals = [];
@@ -94,8 +99,24 @@
     return best;
   }
 
+  function hashChapterId() {
+    var value = (window.location.hash || "").replace(/^#/, "");
+    return ["thesis", "context", "system", "evidence", "boundary"].indexOf(value) !== -1 ? value : null;
+  }
+
+  function chapterTopOffset() {
+    var bar = root.querySelector(".lp-bar");
+    var chapters = root.querySelector(".lp-chapters");
+    var barHeight = bar ? bar.getBoundingClientRect().height : 0;
+    var chapterHeight = chapters ? chapters.getBoundingClientRect().height : 0;
+    return Math.round(barHeight + chapterHeight + 18);
+  }
+
   function chapterAtViewport(sections) {
-    var activationLine = Math.max(150, Math.min(window.innerHeight * .3, 260));
+    // The active chapter is the one that has crossed the actual two sticky
+    // navigation rails. A viewport-percentage line made long mobile chapters
+    // report the preceding section even after an exact hash jump.
+    var activationLine = Math.min(window.innerHeight * .42, chapterTopOffset() + 28);
     var passed = null; var passedTop = -Infinity;
     var nearest = null; var nearestDistance = Infinity;
     Array.prototype.forEach.call(sections, function (section) {
@@ -118,15 +139,24 @@
     var target = root.querySelector('[data-lp-chapter="' + id + '"]');
     if (!target) return;
     var html = document.documentElement;
-    var previous = html.style.scrollBehavior;
-    html.style.scrollBehavior = "auto";
-    try {
-      target.scrollIntoView({ behavior: "instant", block: "start" });
-    } catch (e) {
-      target.scrollIntoView({ behavior: "auto", block: "start" });
-    } finally {
-      html.style.scrollBehavior = previous;
-    }
+    var body = document.body;
+    var previousHtml = html.style.getPropertyValue("scroll-behavior");
+    var previousHtmlPriority = html.style.getPropertyPriority("scroll-behavior");
+    var previousBody = body.style.getPropertyValue("scroll-behavior");
+    var previousBodyPriority = body.style.getPropertyPriority("scroll-behavior");
+    html.style.setProperty("scroll-behavior", "auto", "important");
+    body.style.setProperty("scroll-behavior", "auto", "important");
+    var destination = Math.max(0, window.scrollY + target.getBoundingClientRect().top - chapterTopOffset());
+    window.scrollTo(0, destination);
+    // Keep the override through the next paint. Restoring it in the same task
+    // can make Chromium continue a CSS-smooth hash transaction and expire the
+    // chapter intent while it is still crossing intermediate sections.
+    window.setTimeout(function () {
+      if (previousHtml) html.style.setProperty("scroll-behavior", previousHtml, previousHtmlPriority);
+      else html.style.removeProperty("scroll-behavior");
+      if (previousBody) body.style.setProperty("scroll-behavior", previousBody, previousBodyPriority);
+      else body.style.removeProperty("scroll-behavior");
+    }, 0);
   }
 
   function setActiveChapter(id) {
@@ -261,7 +291,10 @@
         var next = validLang(button.getAttribute("data-lang"));
         if (!next) return;
         if (next === lang) { event.preventDefault(); return; }
-        var chapter = currentChapterId();
+        // setActiveChapter keeps the visible chapter reflected in the URL.
+        // Prefer that semantic state over a short-lived scroll intent which
+        // can still reference the previous chapter on touch browsers.
+        var chapter = hashChapterId() || currentChapterId();
         setStored(next);
         // Keep the anchor's native default action authoritative. Updating href
         // before it runs preserves the chapter without making a timer capable
@@ -324,10 +357,19 @@
   wireChapters();
   wirePointer();
   if (chapterIntent) {
-    requestAnimationFrame(function () {
-      instantToChapter(chapterIntent);
-      setActiveChapter(chapterIntent);
-    });
+    // Fragment scrolling is a correctness contract, not decorative motion.
+    // Settle synchronously and once more after native load/hash restoration so
+    // a browser cannot leave the reader in the preceding sticky chapter.
+    var initialChapter = chapterIntent;
+    var settleInitialChapter = function () {
+      instantToChapter(initialChapter);
+      setActiveChapter(initialChapter);
+    };
+    settleInitialChapter();
+    window.setTimeout(settleInitialChapter, 0);
+    if (document.readyState !== "complete") {
+      window.addEventListener("load", settleInitialChapter, { once: true });
+    }
   }
   window.addEventListener("pageshow", resetExitState);
 })();

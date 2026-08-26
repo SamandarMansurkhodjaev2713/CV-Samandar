@@ -1,6 +1,6 @@
 # Awwwards submission package
 
-Актуально для локального кандидата: `v2.14.1 / v237`, 2026-08-18
+Актуально для локального кандидата: `v245`, 2026-08-27
 
 Production: <https://samandarmansurkhodjaev2713.github.io/CV-Samandar/>
 
@@ -46,7 +46,7 @@ Typography. Финальные category/tag значения нужно выбр
 ### Short description
 
 An interactive portfolio for a product builder and QA engineer, structured as
-twelve distinct acts. Twenty-five products lead either to working live
+twelve distinct acts. Twenty-nine products lead either to working live
 destinations or privacy-safe case studies, framing discovery, engineering,
 verification and delivery as one continuous responsibility loop.
 
@@ -56,8 +56,8 @@ Samandar — Product Systems in Motion turns a technical portfolio into a
 twelve-act editorial journey. Each chapter has its own material, rhythm and
 transition, while the experience remains one coherent world of warm graphite,
 mineral surfaces, restrained metal and evidence-led light. The catalogue
-contains twenty-five canonical products without duplicate repository entries:
-nine open as live products and sixteen as complete privacy-safe case studies in
+contains twenty-nine canonical products without duplicate repository entries:
+ten open as live products and nineteen as complete privacy-safe case studies in
 Russian, English and Uzbek. Motion communicates hierarchy, state and causality
 rather than sitting above the content. Native scrolling, interruptible
 transitions, readable final poses, reduced-motion behavior and progressive
@@ -67,7 +67,7 @@ degradation keep the work usable beyond the ideal device.
 
 A static, progressively enhanced GitHub Pages experience built with vanilla
 JavaScript and ahead-of-time compiled React. A canonical product registry
-generates twenty-five cards, forty-eight localized case pages, sitemap,
+generates twenty-nine cards, fifty-seven localized case pages, sitemap,
 canonical and hreflang metadata. One shared motion runtime owns performance
 tiering, visibility, reduced motion and lifecycle; WebGL remains optional while
 the underlying image stays readable. Deterministic builds, strict CSP,
@@ -118,10 +118,11 @@ Credits нельзя сокращать до формулировки, кото�
    finished module; desktop/mobile используют самостоятельные камеры, а тезис,
    CTA и proof rail читаются без дополнительного свайпа.
 3. **Why me** — Builder + QA раскрывается как один контур ответственности.
-4. **About** — профиль становится живым README с честным GitHub fallback.
+4. **About** — профиль становится annotated maker's proof: один ownership-маршрут,
+   проверяемые факты и текущий фокус без dashboard-имитации и runtime API.
 5. **Projects** — четыре editorial featured-записи переходят в полный каталог;
-   desktop использует сетку, mobile — горизонтальную scroll-snap галерею с
-   видимым продолжением.
+   desktop использует асимметричную сетку, mobile сразу показывает все 29
+   карточек и даёт touch-native category-фильтры.
 6. **Project builder** — выбор параметров собирает scope preview и пригодный
    brief, не выдумывая фиксированную цену или срок.
 7. **Stack** — capability matrix связывает product engineering, AI и QA.
@@ -145,8 +146,8 @@ Mobile не является сжатым desktop. Проверяемая пос
 
 - Hero имеет отдельные portrait, short portrait и compact landscape
   композиции;
-- проектная галерея остаётся горизонтальной, touch-native и не перехватывает
-  вертикальный scroll;
+- все 29 карточек доступны без скрытого раскрытия; category-фильтры имеют
+  native touch targets и не перехватывают вертикальный scroll;
 - fullscreen menu, locale control и command dock не перекрывают focus или
   browser chrome;
 - cursor imitation и hover-only meaning отсутствуют;
@@ -165,23 +166,23 @@ mobile performance. Он используется только как допол
 | Контракт | Фактическое состояние |
 |---|---|
 | Каталог | 29 canonical products, без repository-дублей |
-| Маршруты | 10 live + 16 privacy-safe case |
+| Маршруты | 10 live + 19 privacy-safe case |
 | Локализация | RU / EN / UZ; 57 generated case HTML |
 | Главная | 12 смысловых сцен |
-| Обложки | 26 предметных WebP-наборов 1536/1152/768, 3:1 |
-| Current Release Gate | `v2.14.1 / v237` |
-| Current production | merge SHA `adc3e861`; Pages workflow `32084173961` |
+| Обложки | 29 предметных WebP-наборов 1536/1152/768, 3:1 |
+| Current Release Gate | local candidate `v245`; production smoke ещё не выполнялся |
+| Current production | последний подтверждённый production gate описан в `QA-MATRIX.md` |
 | Build | 64 generated artifacts, byte-identical double build |
-| Automated suite | 268 scenarios; 156 pass, 112 profile skips, 0 fail/flaky |
+| Automated suite | Chromium/Firefox/reduced: 172 pass, 121 profile skips, 0 fail; local WebKit launch blocked before page creation |
 | Visual release review | 13 main states + 19 cases в desktop/mobile; 64 PNG + 4 contact sheets |
 | Production routes | после выпуска кандидата: main + 57 case URL + 10 live routes; post-deploy smoke и live check обязательны |
 
-Независимый monitor опубликованного `v2.14.1 / v237`, success:
+Независимый monitor опубликованного `v2.14.1 / v242`, success:
 
-- desktop 1440×1000: main ready 4090 ms, FCP/LCP 1656 ms, CLS 0.0928,
-  frame p95 83.4 ms, long-task max 266 ms;
-- mobile 412×839: main ready 4018 ms, FCP 1296 ms, LCP 1680 ms,
-  CLS 0.0075, frame p95 33.3 ms, long-task max 329 ms;
+- desktop 1440×1000: main ready 3595 ms, LCP 1640 ms, CLS 0.0003,
+  frame p95 66.8 ms;
+- mobile 412×839: main ready 3915 ms, LCP 900 ms, CLS 0.0000,
+  frame p95 33.3 ms;
 - first-party failures и budget violations — 0.
 
 Это synthetic Chromium evidence конкретного runner, не field RUM и не
@@ -206,7 +207,7 @@ physical-device Core Web Vitals. В обоих профилях адаптивн
 | `quality-desktop` | 1440×900 PNG/WebP | светлая Quality-сцена | body/metadata проходят визуальный contrast review |
 | `case-desktop` | 1440×900 PNG/WebP | TTYL или BelfProctor | видны thesis и system identity |
 | `hero-mobile` | 390×844 PNG/WebP | mobile Hero | CTA и proof rail внутри первой сцены |
-| `projects-mobile` | 390×844 PNG/WebP | горизонтальная gallery | виден next-card peek и pager |
+| `projects-mobile` | 390×844 PNG/WebP | полный каталог и filters | видны artwork, категория и несколько filter states |
 | `case-mobile` | 390×844 PNG/WebP | один локализованный case | menu/CTA не закрывают текст |
 | `site-tour-review` | 1440×900, 25 fps WebM | автоматизированный честный 60–90 s walkthrough | review/evidence, не финальный submission master |
 | `site-tour-master` | 2560×1440, 60 fps | финальный 75–90 s walkthrough | без speed ramp, fake cursor и скрытия ожидания |
@@ -236,7 +237,7 @@ physical-device Core Web Vitals. В обоих профилях адаптивн
 | 66–74 | FAQ → Quality | keyboard focus/disclosure и proof protocol | usability + QA |
 | 74–82 | Contact | brief-first финал и direct channel | завершённый пользовательский путь |
 
-Отдельная mobile-вставка 20–30 секунд: Intro/Hero, menu, RU→UZ, gallery swipe,
+Отдельная mobile-вставка 20–30 секунд: Intro/Hero, menu, RU→UZ, category filter,
 case и exact-card return, portrait→landscape. Пальцы/касания не маскируются
 графическим fake cursor.
 
@@ -257,13 +258,15 @@ case и exact-card return, portrait→landscape. Пальцы/касания н�
 
 ## 10. Pre-submission gate
 
-- [x] 25 / 9 / 16 product contract подтверждён canonical registry.
+- [x] 29 / 10 / 19 product contract подтверждён canonical registry.
 - [x] 57 case routes и RU / EN / UZ parity подтверждены build/validation.
-- [x] `v2.14.1 / v237` final local candidate: deterministic build, audit,
-  secret scan, browser, axe, performance, live-route и visual gates зелёные.
-- [x] `v2.14.1 / v237` опубликован из `adc3e861`; Pages workflow `32084173961`
+- [ ] `v245` final local candidate: deterministic build, audit, secret scan,
+  Chromium/Firefox/reduced, axe, performance, live-route и visual gates
+  зелёные; WebKit остаётся непроверенным из-за блокировки host runtime до
+  создания страницы.
+- [x] `v2.14.1 / v242` опубликован из `68f0ead`; Pages workflow `32834472208`
   завершил build/deploy/verify-production, независимый smoke 3/3, live check
-  9/9 и synthetic monitor без violations зелёные.
+  10/10 и synthetic monitor без violations зелёные.
 - [x] Credits и public claims прошли truth-boundary review.
 - [x] Rollback tag и release runbook существуют.
 - [x] Automated submission review set: 8 stills + 74.8 s desktop WebM;

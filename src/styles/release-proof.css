@@ -1267,7 +1267,7 @@ html.e2e-stable .hero--release-proof .hero-name .hn-i {
   .hero--release-proof .hero-name .hero-statement-line { font-size: 34px; }
   .hero--release-proof .hero-name .hero-statement-line--2 { font-size: 40px; }
   .hero--release-proof .hero-band--rule { margin-top: 8px !important; }
-  .hero--release-proof .hero-band--act { gap: 7px; padding-top: 5px; }
+  .hero--release-proof .hero-band--act { gap: 2px; padding-top: 0; }
   .hero--release-proof .hero-tagline { font-size: 10.75px; line-height: 1.3; }
   .hero--release-proof .hero-ctas .btn { min-height: 44px; font-size: 10.5px; }
   #sm-intro .sm-boot-proof { height: 148px; }
@@ -1289,7 +1289,7 @@ html.e2e-stable .hero--release-proof .hero-name .hn-i {
   }
   .release-proof-ink { font-size: min(8.7vw,14vh); }
   .release-proof-map li { padding-top: 5px; }
-  .hero--release-proof .hero-stack { height: 100svh; min-height: 100svh; padding: calc(var(--nav-h) + 10px) 16px 48px; }
+  .hero--release-proof .hero-stack { height: 100svh; min-height: 100svh; padding: calc(var(--nav-h) + 10px) 16px 56px; }
   .hero--release-proof .hero-band--top { width: 47%; }
   .hero--release-proof .hero-copy-stage { width: 47%; margin: auto 0 0; }
   .hero--release-proof .hero-signature { margin-bottom: 6px; padding-bottom: 5px; }
@@ -1309,7 +1309,7 @@ html.e2e-stable .hero--release-proof .hero-name .hn-i {
   .hero--release-proof .hero-ctas { width: 100%; grid-template-columns: 1.12fr .88fr; gap: 5px; }
   .hero--release-proof .hero-ctas .btn { min-height: 44px; padding-inline: 8px; font-size: 9.5px; }
   .hero--release-proof .hero-proof,
-  .hero--release-proof .hero-proof-inner { min-height: 38px; }
+  .hero--release-proof .hero-proof-inner { min-height: 30px; height: 30px; }
   .hero--release-proof .hero-role { font-size: 6px; }
 
   /* The index is a complete landscape scene, not a portrait menu squeezed
@@ -1515,3 +1515,941 @@ html[data-perf="low"] .release-proof-inspection { left: 73%; opacity: .22; }
 
 html.sm-intro-skip .hero--release-proof .hero-name .hero-statement-line--2::after,
 html.e2e-stable .hero--release-proof .hero-name .hero-statement-line--2::after { transform: scaleX(1); transition: none; }
+
+/* ── V10 / ABOUT — ANNOTATED MAKER'S PROOF ─────────────────────────
+   The previous profile dashboard repeated Stack and simulated urgency with a
+   ticking clock. This is one physical proof-note instead: intent on the left,
+   an ownership route on the right, facts and current work in the margins. */
+
+/* Accented glyphs need breathing room inside the reveal mask. The old negative
+   lower margin plus an .88 line-height clipped Cyrillic breve/diacritics. */
+.sec-head .lm {
+  padding-block: .17em .10em;
+  margin-block: -.17em -.10em;
+}
+
+.sec-title-line {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+}
+
+#about {
+  --about-paper: #191713;
+  --about-paper-deep: #0e0f0d;
+  --about-rule: rgba(238, 232, 219, .15);
+  --about-faint: rgba(238, 232, 219, .53);
+}
+
+#about .sec-head h2 {
+  max-width: none;
+  line-height: .94;
+}
+
+#about .sec-head .sec-title-line:nth-child(3) {
+  font-size: .72em;
+  letter-spacing: -.045em;
+}
+
+#about .about-proof {
+  position: relative;
+  isolation: isolate;
+  margin-top: clamp(38px, 5vw, 72px);
+  overflow: hidden;
+  color: var(--rp-bone);
+  border: 1px solid rgba(200, 162, 96, .38);
+  border-top-color: rgba(214, 111, 79, .64);
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, rgba(238,232,219,.028) 1px, transparent 1px) 0 0 / 8.333% 100%,
+    linear-gradient(180deg, rgba(238,232,219,.022) 1px, transparent 1px) 0 0 / 100% 56px,
+    radial-gradient(ellipse 58% 85% at 12% 38%, rgba(214,111,79,.10), transparent 66%),
+    linear-gradient(118deg, var(--about-paper), var(--about-paper-deep) 68%);
+  box-shadow: 24px 50px 120px rgba(0,0,0,.34), inset 0 1px rgba(238,232,219,.035);
+}
+
+#about .about-proof::before,
+#about .about-proof::after {
+  content: "";
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+}
+
+#about .about-proof::before {
+  top: 0;
+  left: 0;
+  width: 7px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--rp-ember), var(--rp-brass));
+}
+
+#about .about-proof::after {
+  top: 0;
+  right: 0;
+  width: 72px;
+  height: 72px;
+  background: linear-gradient(45deg, transparent 49.5%, rgba(238,232,219,.055) 50%);
+}
+
+#about .about-proof-rail {
+  min-height: 70px;
+  padding: 0 clamp(24px, 3.3vw, 48px);
+  display: grid;
+  grid-template-columns: minmax(100px, .55fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  border-bottom: 1px solid rgba(214,111,79,.24);
+  color: rgba(238,232,219,.52);
+  font-size: 9px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+
+#about .about-proof-rail > span:nth-child(2) {
+  color: rgba(238,232,219,.72);
+}
+
+#about .about-proof-state {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+  color: var(--rp-brass);
+}
+
+#about .about-proof-state i {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--rp-ember);
+  box-shadow: 0 0 0 4px rgba(214,111,79,.10);
+}
+
+#about .about-proof-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(420px, .98fr);
+  gap: clamp(48px, 7vw, 104px);
+  padding: clamp(48px, 6.2vw, 92px) clamp(28px, 5vw, 76px) clamp(46px, 5.5vw, 78px);
+}
+
+#about .about-proof-copy {
+  max-width: 650px;
+}
+
+#about .about-proof-kicker,
+#about .about-proof-route-head,
+#about .about-proof-facts-label,
+#about .about-proof-focus-label {
+  color: var(--rp-brass);
+  font-size: 9px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+#about .about-proof-lead {
+  max-width: 25ch;
+  margin: 19px 0 30px;
+  color: var(--rp-bone);
+  font: 500 clamp(27px, 2.65vw, 43px)/1.16 var(--f-body);
+  letter-spacing: -.04em;
+  text-wrap: balance;
+}
+
+#about .about-proof-note {
+  position: relative;
+  max-width: 42ch;
+  margin: 0 0 22px;
+  padding: 0 0 0 22px;
+  border-left: 2px solid var(--rp-ember);
+  color: rgba(238,232,219,.72);
+  font: italic 500 clamp(17px, 1.42vw, 22px)/1.48 var(--f-serif);
+}
+
+#about .about-proof-paragraph {
+  max-width: 54ch;
+  margin: 0;
+  color: rgba(238,232,219,.64);
+  font-size: clamp(13px, 1vw, 15px);
+  line-height: 1.72;
+}
+
+#about .about-proof-route {
+  position: relative;
+  align-self: center;
+  border-top: 1px solid var(--about-rule);
+  border-bottom: 1px solid var(--about-rule);
+}
+
+#about .about-proof-route::after {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 43%;
+  height: 1px;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: linear-gradient(90deg, var(--rp-ember), var(--rp-brass));
+}
+
+#about .about-proof-route-head {
+  min-height: 49px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid var(--about-rule);
+}
+
+#about .about-proof-route-head span:last-child {
+  color: rgba(238,232,219,.33);
+}
+
+#about .about-proof-route ol,
+#about .about-proof-focus ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#about .about-proof-route li {
+  min-height: 82px;
+  display: grid;
+  grid-template-columns: 42px 108px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid rgba(238,232,219,.095);
+}
+
+#about .about-proof-route li:last-child { border-bottom: 0; }
+
+#about .about-proof-route-index {
+  color: rgba(238,232,219,.34);
+  font-size: 9px;
+  letter-spacing: .12em;
+}
+
+#about .about-proof-route li strong {
+  color: var(--rp-bone);
+  font: 500 clamp(20px, 1.8vw, 28px)/1 var(--rp-display);
+  letter-spacing: .015em;
+}
+
+#about .about-proof-route li > span:last-child {
+  color: rgba(238,232,219,.62);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+#about .about-proof-facts {
+  display: grid;
+  grid-template-columns: clamp(150px, 17vw, 230px) minmax(0, 1fr);
+  border-top: 1px solid var(--about-rule);
+  border-bottom: 1px solid var(--about-rule);
+}
+
+#about .about-proof-facts-label {
+  display: flex;
+  align-items: center;
+  padding: 20px clamp(24px, 3.3vw, 48px);
+  border-right: 1px solid var(--about-rule);
+}
+
+#about .about-stats {
+  border: 0;
+  background: transparent;
+}
+
+#about .about-stat {
+  min-width: 0;
+  padding: clamp(21px, 2.5vw, 34px) clamp(14px, 2.4vw, 34px);
+  border-color: var(--about-rule);
+  gap: 8px;
+}
+
+#about .about-stat-v {
+  color: var(--rp-ember);
+  font-size: clamp(27px, 3vw, 43px);
+  line-height: 1;
+}
+
+#about .about-stat-k {
+  color: rgba(238,232,219,.44);
+  font-size: 8px;
+  line-height: 1.4;
+  letter-spacing: .13em;
+}
+
+#about .about-proof-focus {
+  display: grid;
+  grid-template-columns: clamp(150px, 17vw, 230px) minmax(0, 1fr);
+  border-bottom: 1px solid var(--about-rule);
+}
+
+#about .about-proof-focus-label {
+  padding: 28px clamp(24px, 3.3vw, 48px);
+  border-right: 1px solid var(--about-rule);
+}
+
+#about .about-proof-focus ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+#about .about-proof-focus li {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-content: start;
+  gap: 12px;
+  padding: 27px clamp(15px, 2vw, 30px) 31px;
+  border-right: 1px solid var(--about-rule);
+  color: rgba(238,232,219,.72);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+#about .about-proof-focus li:last-child { border-right: 0; }
+#about .about-proof-focus li .mono { color: var(--rp-brass); font-size: 8px; letter-spacing: .1em; }
+
+#about .about-proof-signature {
+  min-height: 65px;
+  padding: 0 clamp(24px, 3.3vw, 48px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  color: rgba(238,232,219,.38);
+  font-size: 8px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+
+#about .about-proof-signature strong {
+  color: var(--rp-brass);
+  font: inherit;
+}
+
+#about.sec-in .about-proof-route::after {
+  animation: aboutRouteRule 1.05s var(--rp-snap) .28s both;
+}
+
+#about.sec-in .about-proof-route li {
+  animation: aboutRouteRegister .66s var(--rp-ease) both;
+  animation-delay: calc(.25s + var(--about-i) * 75ms);
+}
+
+@keyframes aboutRouteRule {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes aboutRouteRegister {
+  from { opacity: 0; clip-path: inset(0 100% 0 0); }
+  to { opacity: 1; clip-path: inset(0); }
+}
+
+@media (max-width: 900px) {
+  .sec-head .lm {
+    padding-block: .22em .12em;
+    margin-block: -.22em -.12em;
+  }
+
+  .sec-head h2 { line-height: .96; }
+
+  #about .sec-head h2 {
+    max-width: none;
+    font-size: clamp(43px, 12.8vw, 72px);
+    line-height: .96;
+  }
+
+  #about .sec-head .sec-title-line:nth-child(3) { font-size: .66em; }
+
+  #about .about-proof {
+    margin-top: 34px;
+    box-shadow: 12px 28px 72px rgba(0,0,0,.28);
+    background:
+      linear-gradient(90deg, rgba(238,232,219,.024) 1px, transparent 1px) 0 0 / 25% 100%,
+      linear-gradient(180deg, rgba(238,232,219,.018) 1px, transparent 1px) 0 0 / 100% 48px,
+      radial-gradient(ellipse 90% 40% at 0 12%, rgba(214,111,79,.10), transparent 70%),
+      linear-gradient(132deg, var(--about-paper), var(--about-paper-deep) 70%);
+  }
+
+  #about .about-proof::before { width: 4px; }
+  #about .about-proof::after { width: 44px; height: 44px; }
+
+  #about .about-proof-rail {
+    min-height: 60px;
+    padding: 0 18px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 10px;
+    font-size: 7px;
+    letter-spacing: .11em;
+  }
+
+  #about .about-proof-rail > span:nth-child(2) {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  #about .about-proof-state { gap: 6px; text-align: right; }
+  #about .about-proof-state i { width: 5px; height: 5px; }
+
+  #about .about-proof-main {
+    grid-template-columns: 1fr;
+    gap: 42px;
+    padding: 42px 20px 46px;
+  }
+
+  #about .about-proof-lead {
+    max-width: 30ch;
+    margin: 16px 0 26px;
+    font-size: clamp(24px, 7vw, 34px);
+    line-height: 1.18;
+  }
+
+  #about .about-proof-note {
+    padding-left: 17px;
+    font-size: clamp(17px, 4.5vw, 20px);
+  }
+
+  #about .about-proof-paragraph {
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  #about .about-proof-route-head { min-height: 46px; }
+
+  #about .about-proof-route li {
+    min-height: 75px;
+    grid-template-columns: 30px minmax(70px, .62fr) minmax(0, 1.38fr);
+    gap: 8px;
+  }
+
+  #about .about-proof-route li strong { font-size: 19px; }
+  #about .about-proof-route li > span:last-child { font-size: 11.5px; line-height: 1.4; }
+
+  #about .about-proof-facts,
+  #about .about-proof-focus {
+    grid-template-columns: 1fr;
+  }
+
+  #about .about-proof-facts-label,
+  #about .about-proof-focus-label {
+    min-height: 46px;
+    padding: 0 20px;
+    align-items: center;
+    border-right: 0;
+    border-bottom: 1px solid var(--about-rule);
+  }
+
+  #about .about-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #about .about-stat { min-height: 108px; padding: 22px 18px; }
+  #about .about-stat:nth-child(2) { border-right: 0; }
+  #about .about-stat:nth-child(-n+2) { border-bottom: 1px solid var(--about-rule); }
+  #about .about-stat-v { font-size: clamp(28px, 9vw, 38px); }
+  #about .about-stat-k { font-size: 7.5px; }
+
+  #about .about-proof-focus ol { grid-template-columns: 1fr; }
+
+  #about .about-proof-focus li {
+    min-height: 68px;
+    grid-template-columns: 25px minmax(0, 1fr);
+    align-content: center;
+    padding: 15px 20px;
+    border-right: 0;
+    border-bottom: 1px solid var(--about-rule);
+    font-size: 12.5px;
+  }
+
+  #about .about-proof-focus li:last-child { border-bottom: 0; }
+
+  #about .about-proof-signature {
+    min-height: 60px;
+    padding: 0 20px;
+    gap: 12px;
+    font-size: 7px;
+  }
+}
+
+@media (max-width: 360px) {
+  #about .sec-head h2 { font-size: clamp(40px, 12.5vw, 47px); }
+  #about .about-proof-rail > span:nth-child(2) { display: none; }
+  #about .about-proof-rail { grid-template-columns: auto 1fr auto; }
+  #about .about-proof-main { padding-inline: 17px; }
+  #about .about-proof-route li {
+    grid-template-columns: 25px 68px minmax(0, 1fr);
+    gap: 7px;
+  }
+  #about .about-proof-route li strong { font-size: 17px; }
+  #about .about-proof-route li > span:last-child { font-size: 10.75px; }
+  #about .about-proof-signature { align-items: flex-start; flex-direction: column; justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #about.sec-in .about-proof-route::after,
+  #about.sec-in .about-proof-route li { animation: none !important; }
+  #about .about-proof-route::after { transform: scaleX(1); }
+}
+
+html[data-motion-lite] #about.sec-in .about-proof-route::after,
+html[data-motion-lite] #about.sec-in .about-proof-route li,
+html[data-perf="low"] #about.sec-in .about-proof-route::after,
+html[data-perf="low"] #about.sec-in .about-proof-route li {
+  animation: none !important;
+}
+
+html[data-motion-lite] #about .about-proof-route::after,
+html[data-perf="low"] #about .about-proof-route::after { transform: scaleX(1); }
+
+/* ── Project catalogue / v244 ─────────────────────────────────────────────
+   The desktop contact sheet is layout-owned: no card receives an independent
+   scroll translate, so a visual flourish can never pull one record into the
+   next grid row. Mobile exposes the full catalogue and uses an explicit,
+   count-bearing discipline filter instead of an ambiguous “show more”. */
+.proj-filter { display: none; }
+
+@media (min-width: 901px) {
+  #projects .proj-grid {
+    align-items: start;
+    row-gap: clamp(34px, 4.4vw, 72px);
+  }
+  #projects .proj-grid > .proj-card {
+    translate: none !important;
+    isolation: isolate;
+  }
+}
+
+@media (max-width: 900px) {
+  #projects .proj-filter {
+    display: block;
+    width: calc(100% - 32px);
+    margin: 0 16px 18px;
+    border-block: 1px solid rgba(238,232,219,.13);
+    padding: 10px 0 12px;
+  }
+
+  #projects .proj-filter-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    color: rgba(238,232,219,.55);
+    font-size: 8px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+
+  #projects .proj-filter-list {
+    display: flex;
+    gap: 7px;
+    width: calc(100% + 16px);
+    margin-top: 10px;
+    padding-right: 16px;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+  }
+  #projects .proj-filter-list::-webkit-scrollbar { display: none; }
+
+  #projects .proj-filter-chip {
+    appearance: none;
+    flex: 0 0 auto;
+    min-height: 44px;
+    display: grid;
+    grid-template-columns: 15px auto auto;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    border: 1px solid rgba(238,232,219,.15);
+    border-radius: 0;
+    background: rgba(238,232,219,.025);
+    color: rgba(238,232,219,.68);
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+    font-size: 9px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    scroll-snap-align: start;
+  }
+
+  #projects .proj-filter-chip.is-active {
+    color: #11100e;
+    border-color: var(--rp-brass);
+    background: var(--rp-brass);
+  }
+  #projects .proj-filter-chip:focus-visible {
+    outline: 2px solid var(--rp-bone);
+    outline-offset: 3px;
+  }
+  #projects .proj-filter-check { color: var(--rp-ember); font-weight: 700; }
+  #projects .proj-filter-chip.is-active .proj-filter-check { color: #11100e; }
+  #projects .proj-filter-count {
+    color: currentColor;
+    opacity: .58;
+    padding-left: 2px;
+  }
+
+  /* Project imagery is a real responsive image on touch devices. The WebGL
+     treatment remains a desktop enhancement; this avoids a blank canvas when
+     a mobile GPU suspends or loses a context during horizontal scrolling. */
+  #projects .proj-screen-body.has-imgfx .proj-screen-img,
+  #projects .proj-screen-body--img .proj-screen-img {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  #projects .proj-screen-body .imgfx-canvas { display: none !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   V244 — RELEASE REGISTER
+   The final interaction layer is one authored instrument: inset navigation,
+   measurable controls, a truthful QA cursor and a visible mobile hand-off.
+   It intentionally avoids neon, glass pills and transform-heavy hover tricks.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Inset register: visibly a designed object, while remaining compact enough
+   to preserve the first viewport. `--nav-h` stays the layout contract; the
+   physical bar sits inside it instead of increasing every anchor offset. */
+@media (min-width: 901px) {
+  .nav,
+  .nav.is-capsule {
+    top: 10px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    height: 52px;
+    padding: 0;
+    border: 1px solid rgba(238,232,219,.16);
+    border-top-color: rgba(200,162,96,.42);
+    background:
+      linear-gradient(90deg, rgba(238,232,219,.024) 1px, transparent 1px) 0 0 / 8.333% 100%,
+      rgba(10,11,9,.94);
+    clip-path: polygon(0 0, calc(100% - 11px) 0, 100% 11px, 100% 100%, 0 100%);
+    box-shadow: 0 -12px 0 12px rgba(9,10,8,.985), 0 16px 44px rgba(0,0,0,.26);
+  }
+
+  .nav::before {
+    content: "";
+    position: absolute;
+    z-index: 2;
+    top: -1px;
+    left: 18px;
+    width: 76px;
+    height: 1px;
+    background: var(--rp-ember);
+  }
+
+  .nav::after { bottom: -1px; height: 1px; }
+
+  .nav .nav-inner,
+  .nav.is-capsule .nav-inner { padding: 0 0 0 18px; }
+
+  .nav .brand { min-width: 270px; }
+  .nav .brand-mark {
+    width: 7px;
+    height: 7px;
+    border-radius: 0;
+    box-shadow: 0 0 0 4px rgba(214,111,79,.08);
+    animation: none;
+  }
+
+  .nav-counter,
+  .nav.is-capsule .nav-counter { min-width: 262px; }
+  .nav-counter-track { bottom: -9px; }
+
+  .nav-cta {
+    min-width: 196px;
+    padding-inline: 24px;
+    border-left-color: rgba(238,232,219,.16);
+  }
+
+  .nav-burger {
+    width: 92px;
+    border-left-color: rgba(238,232,219,.16);
+  }
+  .nav-burger::before {
+    content: "INDEX";
+    left: 14px;
+    right: auto;
+  }
+  .nav-burger span {
+    left: auto;
+    right: 15px;
+    top: 50%;
+    width: 18px;
+  }
+  .nav-burger span:nth-child(1) { transform: translateY(calc(-50% - 4px)); }
+  .nav-burger span:nth-child(2) { display: block; transform: translateY(-50%); }
+  .nav-burger span:nth-child(3) { transform: translateY(calc(-50% + 4px)); }
+
+  /* The open menu is a working index: list on the left, chapter register on
+     the right. The three proof nodes reuse the real BUILD/VERIFY/RELEASE DNA. */
+  .nav-menu .nav-menu-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1.62fr) minmax(300px, .62fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    column-gap: clamp(36px, 5vw, 84px);
+    width: min(1440px, calc(100% - 8vw));
+  }
+  .nav-menu .nav-menu-links {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+  }
+  .nav-menu .nav-peek {
+    grid-column: 2;
+    grid-row: 1;
+    position: relative;
+    inset: auto;
+    display: block !important;
+    min-width: 0;
+    overflow: hidden;
+    opacity: 1;
+    border-left: 1px solid rgba(238,232,219,.12);
+    border-right: 1px solid rgba(238,232,219,.06);
+    background:
+      linear-gradient(rgba(238,232,219,.035) 1px, transparent 1px) 0 0 / 100% 16.667%,
+      rgba(238,232,219,.012);
+  }
+  .nav-menu .nav-peek-proof {
+    display: block !important;
+    inset: 18% 12% 20%;
+    transform: rotate(-4deg);
+    border-color: rgba(var(--menu-accent-rgb),.28);
+  }
+  .nav-menu .nav-peek-body {
+    inset: auto 18px 18px auto;
+    opacity: .2;
+  }
+  .nav-menu .nav-peek-num { font-size: min(18vw, 280px); }
+  .nav-menu .nav-menu-foot {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    position: static;
+    margin-top: 18px;
+  }
+}
+
+/* Touch nav is a compact authored register rather than a floating black slab.
+   The counter stays truthful and the menu trigger remains a 52px target. */
+@media (max-width: 900px) {
+  .nav,
+  .nav.is-capsule {
+    top: max(6px, env(safe-area-inset-top));
+    left: 6px;
+    right: 6px;
+    width: auto;
+    height: 52px;
+    padding: 0;
+    border: 1px solid rgba(238,232,219,.15);
+    border-top-color: rgba(200,162,96,.38);
+    background: rgba(9,10,8,.965);
+    clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 0 100%);
+    box-shadow: 0 -10px 0 10px rgba(9,10,8,.99), 0 14px 36px rgba(0,0,0,.3);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .nav::after { bottom: -1px; }
+  .nav .nav-inner,
+  .nav.is-capsule .nav-inner { padding: 0 0 0 13px; }
+  .nav .brand-name { letter-spacing: .12em; }
+  .nav-counter,
+  .nav.is-capsule .nav-counter { gap: 5px; }
+  .nav-counter .drum,
+  .nav-counter-sep { font-size: 7.5px; }
+  .nav-right { height: 100%; margin-left: 9px; }
+  .nav-burger {
+    width: 64px;
+    border-left-color: rgba(238,232,219,.15);
+  }
+  .nav-burger::before { content: ""; }
+  .nav-burger span { left: 23px; right: auto; width: 18px; }
+  .nav-burger span:nth-child(1) { transform: translateY(calc(-50% - 4px)); }
+  .nav-burger span:nth-child(2) { display: block; transform: translateY(-50%); }
+  .nav-burger span:nth-child(3) { transform: translateY(calc(-50% + 4px)); }
+
+  .hero--release-proof .hero-band--top {
+    min-height: 34px;
+    align-items: center;
+    overflow: visible;
+  }
+
+  #about .sec-head .sec-title-line:nth-child(3) {
+    margin-top: .14em;
+    font-size: .60em;
+    line-height: 1.04;
+    letter-spacing: -.025em;
+  }
+
+  .nav-menu {
+    background:
+      linear-gradient(90deg, rgba(238,232,219,.025) 1px, transparent 1px) 0 0 / 25% 100%,
+      linear-gradient(152deg, #12130f, #080907 72%);
+  }
+  .nav-menu .nav-menu-inner { padding-top: 72px; }
+  .nav-menu .nav-menu-links { column-gap: 10px; }
+  .nav-menu .nav-menu-links a { padding-inline: 7px 3px; }
+  .nav-menu .nav-menu-word { font-size: clamp(17px, 5.2vw, 23px); }
+  .nav-menu .nav-peek { opacity: .1; }
+}
+
+/* Stable manufactured controls. The surface changes state; the page layout
+   does not jump. A single 3px arrow registration is the interaction signature. */
+.btn,
+.nav-cta,
+.nav-menu-cta,
+.proj-cta,
+.proj-repo,
+.proj-expand,
+.builder-cta-alt,
+.builder-architecture-toggle,
+.cv-action,
+.cv-doc-tab,
+.contact-brief-copy,
+.contact-copy,
+.footer-cta,
+.mobile-dock-cta,
+.sound-toggle {
+  transform: none !important;
+  box-shadow: none !important;
+  transition-property: color, background-color, border-color, opacity !important;
+  transition-duration: .28s !important;
+  transition-timing-function: ease !important;
+}
+
+.btn::after { display: none !important; }
+.btn-ghost::before { animation: none !important; }
+.btn .arrow,
+.nav-menu-cta .arrow,
+.proj-cta .arrow,
+.proj-repo .arrow,
+.footer-cta .arrow,
+.mobile-dock-cta .arrow { transition: translate .28s var(--rp-ease); }
+.btn:hover .arrow,
+.btn:focus-visible .arrow,
+.nav-menu-cta:hover .arrow,
+.nav-menu-cta:focus-visible .arrow,
+.proj-cta:hover .arrow,
+.proj-cta:focus-visible .arrow,
+.proj-repo:hover .arrow,
+.proj-repo:focus-visible .arrow,
+.footer-cta:hover .arrow,
+.footer-cta:focus-visible .arrow,
+.mobile-dock-cta:hover .arrow,
+.mobile-dock-cta:focus-visible .arrow { transform: none !important; translate: 3px 0; }
+
+/* QA measurement probe: the contextual dimensions and section coordinate are
+   produced by motion.js from the actual target. They appear only when useful,
+   so the resting cursor stays quiet and the interaction remains readable. */
+@media (hover: hover) and (pointer: fine) {
+  .sc-cursor .sc-caliper,
+  .sc-cursor .sc-coords { display: block !important; }
+  .sc-cursor[data-mode="default"] .sc-caliper,
+  .sc-cursor[data-mode="default"] .sc-coords { opacity: 0; }
+  .sc-cursor:not([data-mode="default"]) .sc-caliper { opacity: .82; }
+  .sc-cursor:not([data-mode="default"]) .sc-coords { opacity: 1; }
+  .sc-caliper::before {
+    content: "VERIFY";
+    top: -15px;
+    color: var(--rp-brass);
+    background: rgba(9,10,8,.92);
+  }
+  .sc-caliper::after { opacity: .32; }
+  .sc-coords {
+    top: -34px;
+    left: 19px;
+    color: rgba(238,232,219,.55);
+  }
+}
+
+/* Intro audit: three marks are connected to real readiness flags rather than
+   a decorative fake console. The verified state lands with one finite stamp. */
+#sm-intro .sm-boot-audit {
+  position: absolute;
+  z-index: 3;
+  left: clamp(22px, 5vw, 76px);
+  right: clamp(22px, 5vw, 76px);
+  bottom: max(84px, calc(env(safe-area-inset-bottom) + 68px));
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid rgba(238,232,219,.13);
+}
+#sm-intro .sm-boot-audit li {
+  position: relative;
+  min-height: 44px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 0 13px;
+  border-right: 1px solid rgba(238,232,219,.1);
+  color: rgba(238,232,219,.37);
+  font-size: 8px;
+  letter-spacing: .13em;
+  transition: color .28s ease, background-color .28s ease;
+}
+#sm-intro .sm-boot-audit li:last-child { border-right: 0; }
+#sm-intro .sm-boot-audit li > span { color: rgba(238,232,219,.26); }
+#sm-intro .sm-boot-audit li > i {
+  width: 6px;
+  height: 6px;
+  border: 1px solid rgba(238,232,219,.28);
+  transform: rotate(45deg);
+}
+#sm-intro .sm-boot-audit li.is-verified {
+  color: var(--rp-bone);
+  background: rgba(200,162,96,.035);
+}
+#sm-intro .sm-boot-audit li.is-verified > i {
+  border-color: var(--rp-brass);
+  background: var(--rp-brass);
+  animation: introAuditStamp .42s var(--rp-snap) both;
+}
+@keyframes introAuditStamp {
+  from { opacity: 0; transform: rotate(45deg) scale(2.1); }
+  to { opacity: 1; transform: rotate(45deg) scale(1); }
+}
+
+/* The mobile curtain now has a visible leading edge. Native sticky still owns
+   the movement; this adds no scroll handler and turns the first gesture into
+   an unmistakable physical hand-off from proof to capabilities. */
+@media (max-width: 900px) {
+  .pin-host--hero > #signal {
+    box-shadow: 0 -34px 72px -30px rgba(0,0,0,.9);
+  }
+  .pin-host--hero > #signal::after {
+    height: 18px;
+    top: 0;
+    background:
+      linear-gradient(90deg, var(--rp-ember) 0 28%, transparent 28% 100%) top / 100% 1px no-repeat,
+      repeating-linear-gradient(90deg, transparent 0 31px, rgba(238,232,219,.12) 31px 32px);
+  }
+  #signal > .shell { padding-top: 20px; }
+  #sm-intro .sm-boot-audit {
+    left: 16px;
+    right: 16px;
+    bottom: max(66px, calc(env(safe-area-inset-bottom) + 58px));
+  }
+  #sm-intro .sm-boot-audit li {
+    grid-template-columns: auto 1fr;
+    gap: 7px;
+    padding-inline: 9px;
+    font-size: 7px;
+  }
+  #sm-intro .sm-boot-audit li > i { display: none; }
+}
+
+@media (max-height: 620px) {
+  #sm-intro .sm-boot-audit { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #sm-intro .sm-boot-audit li,
+  #sm-intro .sm-boot-audit li.is-verified > i { transition: none; animation: none; }
+}

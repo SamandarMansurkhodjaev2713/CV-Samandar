@@ -72,7 +72,7 @@ function resolveInitialTweaks() {
   return TWEAK_DEFAULTS;
 }
 
-function useScrollEngine(setActiveSection) {
+function useScrollEngine(setActiveSection, contentRevision) {
   useE(() => {
     const progressEl = document.querySelector(".scroll-progress");
     const sections = [...document.querySelectorAll("section[data-section]")];
@@ -167,7 +167,7 @@ function useScrollEngine(setActiveSection) {
       window.removeEventListener("resize", onScroll);
       if (raf) cancelAnimationFrame(raf);
     };
-  }, []);
+  }, [contentRevision]);
 }
 
 // Labels for the section COUNTER — sections that live outside t.nav (they are
@@ -243,7 +243,7 @@ function SystemFrame({ active }) {
 // correctly even if that engine failed to load.
 const MENU_ACCENT = Object.fromEntries(FULL_MENU_SECTIONS.map((id) => [id, "205, 165, 103"]));
 
-function Nav({ t, lang, setLang, active }) {
+function Nav({ t, lang, setLang, active, contentRevision }) {
   const [open, setOpen] = useS(false);
   const [menuPresent, setMenuPresent] = useS(false);
   const [peek, setPeek] = useS(null);
@@ -293,7 +293,7 @@ function Nav({ t, lang, setLang, active }) {
     window.addEventListener("scroll", onScroll, { passive: true });
     read();
     return () => { window.removeEventListener("scroll", onScroll); if (raf) cancelAnimationFrame(raf); };
-  }, []);
+  }, [contentRevision]);
 
   // Lock scroll while the fullscreen menu is open; Escape closes. The live
   // Tashkent clock only ticks while the menu is visible (zero idle cost).
@@ -486,7 +486,7 @@ function Nav({ t, lang, setLang, active }) {
             ))}
           </div>
           {/* Persistent primary CTA — always one click from a conversation. */}
-          <a href="#contact" className="nav-cta" data-magnetic data-cursor="send" data-cursor-label="send → contact" onClick={(e) => go(e, "contact")}>
+          <a href="#contact" className="nav-cta" data-cursor="send" data-cursor-label="send → contact" onClick={(e) => go(e, "contact")}>
             <span className="nav-cta-dot" aria-hidden="true" />
             {t.hero.cta_primary}
           </a>
@@ -576,7 +576,7 @@ function Nav({ t, lang, setLang, active }) {
             <span className="nav-peek-ring nav-peek-ring--b" />
           </div>
           <div className="nav-menu-foot">
-            <a href="#contact" className="nav-menu-cta" data-magnetic onClick={(e) => go(e, "contact")}>
+            <a href="#contact" className="nav-menu-cta" onClick={(e) => go(e, "contact")}>
               {t.hero.cta_primary} <span className="arrow">→</span>
             </a>
             {/* Sound layer opt-in — state lives on html.sm-sound (sound.js),
@@ -669,10 +669,41 @@ function PortfolioTweaks({ t, setTweak }) {
 function App() {
   const [tweaks, setTweak] = useTweaks(resolveInitialTweaks());
   const [activeSection, setActiveSection] = useS("hero");
-  const [coreReady, setCoreReady] = useS(false);
-  const canvasRef = useR(null);
+  const initialSection = (window.location.hash || "").replace(/^#/, "");
+  const [renderStage, setRenderStage] = useS(
+    initialSection && initialSection !== "hero" && initialSection !== "signal" ? 4 : 0
+  );
   const lang = tweaks.lang in window.CONTENT ? tweaks.lang : "ru";
   const t = window.CONTENT[lang];
+
+  // Keep the first commit deliberately small. A cold mobile browser otherwise
+  // has to reconcile twelve chapters and twenty-nine cards in one task, which
+  // can postpone both Intro release and the first interactive Hero. Staging is
+  // progressive rendering, not lazy content: every chapter is mounted within
+  // the authored Intro window, while a deep link starts with the complete DOM
+  // so its target can be restored synchronously.
+  useE(() => {
+    if (renderStage >= 4) return;
+    const timers = [];
+    const frames = [];
+    function promote(stage, delay) {
+      timers.push(window.setTimeout(() => {
+        frames.push(window.requestAnimationFrame(() => {
+          const update = () => setRenderStage((current) => Math.max(current, stage));
+          if (typeof React.startTransition === "function") React.startTransition(update);
+          else update();
+        }));
+      }, delay));
+    }
+    promote(1, 0);    // Profile proof
+    promote(2, 90);   // Project catalog
+    promote(3, 180);  // Builder + stack
+    promote(4, 270);  // Remaining proof chapters + footer
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+      frames.forEach((frame) => window.cancelAnimationFrame(frame));
+    };
+  }, []);
 
   // The opening sequence is a real readiness gate, not a decorative timer.
   // While it owns the viewport the application shell is rendered behind the
@@ -1071,10 +1102,9 @@ function App() {
   useE(() => {
     window.applyTheme(tweaks.theme);
     window.applyFontStack(tweaks.font);
-    setCoreReady(true);
   }, []);
 
-  useScrollEngine(setActiveSection);
+  useScrollEngine(setActiveSection, renderStage);
 
   // Motion: init smart cursor + reveal observers after first paint, refresh on lang change.
   // isInViewport check in motion.js handles the "no-flash" problem for visible elements.
@@ -1122,7 +1152,7 @@ function App() {
     if (!window.Motion) return;
     const id = requestAnimationFrame(() => window.Motion.refresh());
     return () => cancelAnimationFrame(id);
-  }, [lang, tweaks.density]);
+  }, [lang, tweaks.density, renderStage]);
 
   // Active section is the only source of truth for the mobile command dock.
   const midScrollVisible = activeSection !== "hero" && activeSection !== "signal" && activeSection !== "contact";
@@ -1150,6 +1180,7 @@ function App() {
         lang={lang}
         setLang={(v) => setTweak("lang", v)}
         active={activeSection}
+        contentRevision={renderStage}
       />
 
       <main id="main" tabIndex="-1">
@@ -1165,38 +1196,44 @@ function App() {
           <Hero t={t} links={LINKS} />
           <Signal t={t} />
         </div>
-        <Interlude data={(t.interludes||[])[0]} index={0} />
-        <About t={t} />
-        <Projects t={t} />
+        {renderStage >= 1 && <>
+          <Interlude data={(t.interludes||[])[0]} index={0} />
+          <About t={t} />
+        </>}
+        {renderStage >= 2 && <Projects t={t} />}
         {/* The constructor sits immediately after the work: you have just seen
             what gets built, so the natural next move is to price your own. It
             used to be the 9th of 12 sections — the single most distinctive
             thing on the site, buried where most readers never reached it. */}
-        <ProjectBuilder t={t} links={LINKS} />
-        <Skills t={t} />
+        {renderStage >= 3 && <>
+          <ProjectBuilder t={t} links={LINKS} />
+          <Skills t={t} />
+        </>}
         {/* Pinned-overlap #1 — Services recedes as CV (the centerpiece) rises.
             Depth handoff via --pin-p (motion.js bindPins); transform/opacity
             only, no sticky. The two sections are DOM-adjacent (required). */}
-        <div className="pin-host" data-pin>
-          <Services t={t} />
-          <CV t={t} links={LINKS} />
-        </div>
-        <Process t={t} />
-        <Faq t={t} />
-        {/* Pinned-overlap #2 — Trust recedes as Contact (the closing CTA) rises. */}
-        <div className="pin-host" data-pin>
-          <Trust t={t} />
-          <Interlude data={(t.interludes||[])[1]} index={1} />
-          <Contact t={t} links={LINKS} />
-        </div>
+        {renderStage >= 4 && <>
+          <div className="pin-host" data-pin>
+            <Services t={t} />
+            <CV t={t} links={LINKS} />
+          </div>
+          <Process t={t} />
+          <Faq t={t} />
+          {/* Pinned-overlap #2 — Trust recedes as Contact (the closing CTA) rises. */}
+          <div className="pin-host" data-pin>
+            <Trust t={t} />
+            <Interlude data={(t.interludes||[])[1]} index={1} />
+            <Contact t={t} links={LINKS} />
+          </div>
+        </>}
       </main>
 
-      <Footer t={t} links={LINKS} />
+      {renderStage >= 4 && <Footer t={t} links={LINKS} />}
 
       {/* Mobile-only overlays — sticky CTA stacks above dock. */}
-      <MobileScrollDock t={t} lang={lang} activeSection={activeSection} visible={midScrollVisible && activeSection !== "contact"} />
+      {renderStage >= 4 && <MobileScrollDock t={t} lang={lang} activeSection={activeSection} visible={midScrollVisible && activeSection !== "contact"} />}
 
-      <PortfolioTweaks t={tweaks} setTweak={setTweak} />
+      {renderStage >= 4 && <PortfolioTweaks t={tweaks} setTweak={setTweak} />}
     </>
   );
 }

@@ -12,18 +12,18 @@ Runtime: статический сайт для GitHub Pages, React без мо�
 
 Репозиторий содержит две связанные поверхности:
 
-1. Главная интерактивная страница с 12 сценами и 26 карточками продуктов.
-2. Статически сгенерированные case pages для 16 продуктов, которые нельзя или недостаточно честно показать прямым live-переходом.
+1. Главная интерактивная страница с 12 сценами и 29 карточками продуктов.
+2. Статически сгенерированные case pages для 19 продуктов, которые нельзя или недостаточно честно показать прямым live-переходом.
 
-Сайт не имеет application backend, SSR, runtime transpilation, service worker или клиентского роутера общего назначения. GitHub API используется только как необязательное progressive enhancement для публичного профиля. Главная требует JavaScript и предоставляет `<noscript>`-контакты; тело каждого кейса уже находится в generated HTML до выполнения JavaScript.
+Сайт не имеет application backend, SSR, runtime transpilation, service worker или клиентского роутера общего назначения. Главная не зависит от runtime API: профиль, каталог и доказательные факты являются authored/static content. Главная требует JavaScript и предоставляет `<noscript>`-контакты; тело каждого кейса уже находится в generated HTML до выполнения JavaScript.
 
 ```mermaid
 flowchart TD
   R["Canonical product registry\n29 products"] --> C["Main content\nRU / EN / UZ cards"]
-  R --> L["Case data\n16 products × 3 locales"]
+  R --> L["Case data\n19 products × 3 locales"]
   C --> A["React main shell\n12 scenes"]
   L --> G["build.js + shared renderer"]
-  G --> H["48 static case pages"]
+  G --> H["57 static case pages"]
   R --> S["sitemap.xml\n58 URLs"]
   P["Motion policy"] --> M["Shared frame runtime"]
   M --> A
@@ -39,7 +39,7 @@ flowchart TD
 | Данные / поведение | Источник истины | Производные артефакты |
 |---|---|---|
 | product id, slug, rank, lifecycle, confidentiality, presentation, live/GitHub/case route, image, accent, evidence boundary | `src/content/product-registry.js` | карточки, metadata, sitemap, route expectations |
-| тексты 12 сцен и 26 карточек на главной | `src/content/content.js` | runtime `window.CONTENT` |
+| тексты 12 сцен и 29 карточек на главной | `src/content/content.js` | runtime `window.CONTENT` |
 | React-компоненты | `src/components/*.jsx` | соседние `*.js`, создаваемые `build.js` |
 | полный набор 19 case definitions | `src/projects/landings-data.js` | baked body и runtime re-render |
 | единая HTML-разметка кейса и locale UI labels | `src/projects/render.js` | 48 `projects/**/index.html` и browser re-render |
@@ -64,16 +64,20 @@ Generated `.js`, `src/styles/app.bundle.min.css` и `projects/**/index.html` н�
 ### 3.1 Live presentation — 10 продуктов
 
 `klawis`, `echelon-desktop`, `softly`, `dostupnoe-pravo`, `helion`, `stones`,
-`sentinel-edge`, `cardioguard`, `izatullo`, `3d-landing`.
+`gorilla-five-signals`, `cardioguard`, `izatullo`, `3d-landing`.
 
 Primary CTA идёт на `liveUrl`. GitHub показывается вторично только если `githubUrl` разрешён реестром.
 
-### 3.2 Case presentation — 16 маршрутов
+### 3.2 Case presentation — 19 маршрутов
 
 | Slug | RU route | EN / UZ routes |
 |---|---|---|
+| `dentforma` | `/projects/dentforma/` | `/en/`, `/uz/` внутри route |
 | `growthops-ai` | `/projects/growthops-ai/` | `/en/`, `/uz/` внутри route |
 | `ttyl` | `/projects/ttyl/` | `/en/`, `/uz/` |
+| `meetingflow-ru-uz` | `/projects/meetingflow-ru-uz/` | `/en/`, `/uz/` |
+| `birthday-agent` | `/projects/birthday-agent/` | `/en/`, `/uz/` |
+| `telegram-sheets-task-bot` | `/projects/telegram-sheets-task-bot/` | `/en/`, `/uz/` |
 | `ai-classroom` | `/projects/ai-classroom/` | `/en/`, `/uz/` |
 | `car-superapp` | `/projects/car-superapp/` | `/en/`, `/uz/` |
 | `task-manager` | `/projects/task-manager/` | `/en/`, `/uz/` |
@@ -119,7 +123,7 @@ Deep link с hash пропускает intro, чтобы прямой перех
 1. vendored React и ReactDOM;
 2. product registry и main content;
 3. theme, performance policy и motion runtime;
-4. estimator, acts, sound, GitHub enhancement, authored motion, SceneCinema и lazy effects;
+4. estimator, acts, sound, authored motion, SceneCinema и lazy effects;
 5. compiled React components и app shell.
 
 Скрипты — обычные browser globals, не ES modules. Порядок является частью архитектурного контракта: поздние файлы используют globals ранних.
@@ -248,7 +252,7 @@ Meta CSP не содержит `upgrade-insecure-requests`: production уже о
 | intro dependency не готова к deadline | shell раскрывается с зафиксированным fallback; отсутствие shell приводит к recovery |
 | web-font не загрузился | системный fallback, intro разблокируется |
 | project WebP не загрузился | branded image fallback; название и CTA остаются |
-| GitHub API недоступен | статичный честный About без синтетической telemetry |
+| внешняя сеть недоступна | About и каталог сохраняют полную authored/static структуру; внешние CTA остаются обычными ссылками |
 | Three.js не загрузился | обычное `<img>` остаётся видимым |
 | WebGL context потерян | effect паркуется; после restore renderer создаётся заново по следующему intent |
 | tab скрыт / policy low | continuous scheduler останавливается, семантический DOM не меняется |

@@ -14,7 +14,7 @@
        LCP text (h1/CTA) still renders underneath (occluded, not delayed: the
        element IS painted, the LCP timestamp is unaffected by being visually
        covered while loading). -->
-  <script src="src/engine/head-boot.js?v=242"></script>
+  <script src="src/engine/head-boot.js?v=245"></script>
 
   <title>Samandar — Product Engineer · AI Automation · QA</title>
   <meta name="description" content="Samandar Mansurkhodjaev — product engineer и QA-инженер из Ташкента. Создаю web-продукты, AI-автоматизации и внутренние системы: UX, код, тесты и deploy." />
@@ -117,7 +117,7 @@
   <!-- The seven authored CSS sources are compiled in their original cascade
        order into one deterministic blocking bundle. Source files stay readable;
        visitors avoid six requests and repeated parser setup. -->
-  <link rel="stylesheet" href="src/styles/app.bundle.min.css?v=242" />
+  <link rel="stylesheet" href="src/styles/app.bundle.min.css?v=245" />
 
   <!-- The parser-painted proof and the semantic Hero use this face. Warming
        the two ranges prevents the main statement from becoming a late LCP
@@ -128,24 +128,23 @@
   <!-- Fetch the application graph in parallel, but execute it in frame-sized
        stages through bootstrap.js. This keeps the intro responsive instead
        of turning parser work into one monolithic main-thread task. -->
-  <link rel="preload" as="script" href="vendor/react.production.min.js?v=242" />
-  <link rel="preload" as="script" href="vendor/react-dom.production.min.js?v=242" />
-  <link rel="preload" as="script" href="src/content/product-registry.js?v=242" />
-  <link rel="preload" as="script" href="src/content/content.js?v=242" />
-  <link rel="preload" as="script" href="src/engine/themes.js?v=242" />
-  <link rel="preload" as="script" href="src/engine/perf.js?v=242" />
-  <link rel="preload" as="script" href="src/engine/motion-runtime.js?v=242" />
-  <link rel="preload" as="script" href="src/engine/builder-estimator.js?v=242" />
-  <link rel="preload" as="script" href="src/engine/acts.js?v=242" />
-  <link rel="preload" as="script" href="src/engine/sound.js?v=242" />
-  <link rel="preload" as="script" href="src/engine/gh.js?v=242" />
-  <link rel="preload" as="script" href="src/engine/motion.js?v=242" />
-  <link rel="preload" as="script" href="src/engine/scene-cinema.js?v=242" />
-  <link rel="preload" as="script" href="src/engine/lazy-effects.js?v=242" />
-  <link rel="preload" as="script" href="src/components/tweaks-panel.js?v=242" />
-  <link rel="preload" as="script" href="src/components/components-1.js?v=242" />
-  <link rel="preload" as="script" href="src/components/components-2.js?v=242" />
-  <link rel="preload" as="script" href="src/components/app.js?v=242" />
+  <link rel="preload" as="script" href="vendor/react.production.min.js?v=245" />
+  <link rel="preload" as="script" href="vendor/react-dom.production.min.js?v=245" />
+  <link rel="preload" as="script" href="src/content/product-registry.js?v=245" />
+  <link rel="preload" as="script" href="src/content/content.js?v=245" />
+  <link rel="preload" as="script" href="src/engine/themes.js?v=245" />
+  <link rel="preload" as="script" href="src/engine/perf.js?v=245" />
+  <link rel="preload" as="script" href="src/engine/motion-runtime.js?v=245" />
+  <link rel="preload" as="script" href="src/engine/builder-estimator.js?v=245" />
+  <link rel="preload" as="script" href="src/engine/acts.js?v=245" />
+  <link rel="preload" as="script" href="src/engine/sound.js?v=245" />
+  <link rel="preload" as="script" href="src/engine/motion.js?v=245" />
+  <link rel="preload" as="script" href="src/engine/scene-cinema.js?v=245" />
+  <link rel="preload" as="script" href="src/engine/lazy-effects.js?v=245" />
+  <link rel="preload" as="script" href="src/components/tweaks-panel.js?v=245" />
+  <link rel="preload" as="script" href="src/components/components-1.js?v=245" />
+  <link rel="preload" as="script" href="src/components/components-2.js?v=245" />
+  <link rel="preload" as="script" href="src/components/app.js?v=245" />
 </head>
 <body>
   <!-- Frame-zero release proof. It is intentionally outside #root so the
@@ -193,11 +192,11 @@
       </div>
     </main>
   </noscript>
-  <script src="src/engine/app-watchdog.js?v=242"></script>
+  <script src="src/engine/app-watchdog.js?v=245"></script>
 
   <!-- Intro starts before the application graph. Bootstrap yields between
        scripts, so the sequence remains responsive while the app mounts. -->
-  <script src="src/engine/intro.js?v=242"></script>
-  <script src="src/engine/bootstrap.js?v=242"></script>
+  <script src="src/engine/intro.js?v=245"></script>
+  <script src="src/engine/bootstrap.js?v=245"></script>
 </body>
 </html>

@@ -19,7 +19,6 @@
     "src/engine/builder-estimator.js",
     "src/engine/acts.js",
     "src/engine/sound.js",
-    "src/engine/gh.js",
     "src/engine/motion.js",
     "src/engine/scene-cinema.js",
     "src/engine/lazy-effects.js",

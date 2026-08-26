@@ -6197,7 +6197,7 @@ main section[data-section="hero"].hero--proof-chamber {
   .hero--proof-chamber .hero-name .hero-statement-line--1 { font-size: 35px; }
   .hero--proof-chamber .hero-name .hero-statement-line--2 { font-size: 47px; }
   .hero--proof-chamber .hero-band--rule { flex-basis: 32px; min-height: 32px; padding-block: 6px; }
-  .hero--proof-chamber .hero-band--act { gap: 6px; padding-top: 4px; }
+  .hero--proof-chamber .hero-band--act { gap: 2px; padding-top: 0; }
   .hero--proof-chamber .hero-tagline { max-width: none; font-size: 11.5px; line-height: 1.32; }
   .hero--proof-chamber .hero-ctas .btn { min-height: 44px; font-size: 9.5px; }
   .hero--proof-chamber .hero-proof,

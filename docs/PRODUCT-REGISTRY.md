@@ -1,6 +1,6 @@
 # Канонический реестр продуктов
 
-Актуально на: 2026-08-24
+Актуально на: 2026-08-26
 
 Машинный источник истины: `src/content/product-registry.js`
 
@@ -41,7 +41,7 @@
 | 12 | `car-superapp` / `car-superapp` | CAR Superapp | catalog / discovery / private_source | `projects/car-superapp/` | — |
 | 13 | `helion` / `helion` | Helion | catalog / demo / public | `https://samandarmansurkhodjaev2713.github.io/helion/` | `https://github.com/SamandarMansurkhodjaev2713/helion` |
 | 14 | `stones` / `stones` | Stones | catalog / demo / public | `https://samandarmansurkhodjaev2713.github.io/stones/` | `https://github.com/SamandarMansurkhodjaev2713/stones` |
-| 15 | `sentinel-edge` / `sentinel-edge` | Sentinel Edge | catalog / demo / public | `https://samandarmansurkhodjaev2713.github.io/sentinel-edge-smart-system/` | `https://github.com/SamandarMansurkhodjaev2713/sentinel-edge-smart-system` |
+| 15 | `gorilla-five-signals` / `gorilla-five-signals` | Gorilla — Five Signals Concept | catalog / demo / public | `https://samandarmansurkhodjaev2713.github.io/gorilla-five-signals-concept/uz/` | `https://github.com/SamandarMansurkhodjaev2713/gorilla-five-signals-concept` |
 | 16 | `cardioguard` / `cardioguard` | CardioGuard | catalog / demo / public | `https://samandarmansurkhodjaev2713.github.io/cardioguard/` | `https://github.com/SamandarMansurkhodjaev2713/cardioguard` |
 | 17 | `task-automation` / `task-manager` | Task-manager / Task Manage Bot | catalog / demo / private_source | `projects/task-manager/` | `https://github.com/SamandarMansurkhodjaev2713/Task-manager` |
 | 18 | `marketbot` / `marketbot` | Marketbot | catalog / build / nda | `projects/marketbot/` | — |
@@ -61,9 +61,10 @@
 
 - `featuredRank` задаёт полный порядок 1–29 и обязан быть уникальным;
 - `portfolioState=featured` отмечает верхний кураторский набор;
-- первый экран раздела намеренно показывает **первые 4 карточки**, а кнопка
-  «Показать ещё 25» раскрывает весь каталог без изменения порядка; архивные
-  карточки создаются только после этого действия или deep-link возврата;
+- desktop-вступление намеренно показывает **первые 4 карточки**, а кнопка
+  «Показать ещё 25» раскрывает весь каталог без изменения порядка;
+- mobile сразу монтирует все 29 карточек и фильтрует их по каноническим
+  категориям без кнопки раскрытия, дублей или изменения rank order;
 - `hold` не означает удаление: VFS Killer остаётся честно раскрытым архивным
   case, но не получает claim о готовности.
 

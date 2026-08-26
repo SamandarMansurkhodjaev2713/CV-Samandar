@@ -16,8 +16,8 @@ async function forceHighMotion(page) {
   await expect.poll(() => page.evaluate(() => window.__SM_MOTION_POLICY.tier)).toBe("high");
 }
 
-test("authored motion uses two shared runtime subscribers and individual magnetic translate", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== "desktop-chromium", "desktop fine pointer owns the magnetic interaction");
+test("authored motion uses two shared runtime subscribers and a stable verification cursor", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "desktop fine pointer owns the authored cursor");
   await settleMotion(page);
   await forceHighMotion(page);
 
@@ -25,22 +25,28 @@ test("authored motion uses two shared runtime subscribers and individual magneti
   expect(before.runtimeSubscribers.sort()).toEqual(["authored-cursor", "scroll-composition"]);
   expect(before.cursor).toBe(true);
 
-  const button = page.locator(".hero-ctas [data-magnetic]").first();
+  const button = page.locator(".hero-ctas .btn-primary").first();
+  await expect(page.locator(".hero-ctas [data-magnetic]")).toHaveCount(0);
   const box = await button.boundingBox();
   expect(box).not.toBeNull();
   await page.mouse.move(box.x + box.width / 2 + Math.min(12, box.width / 5), box.y + box.height / 2);
-  await expect.poll(() => button.evaluate((element) => element.style.getPropertyValue("--mag-x"))).not.toBe("0.00px");
+  await expect(page.locator(".sc-cursor")).toHaveAttribute("data-mode", "send");
 
-  const transformOwnership = await button.evaluate((element) => ({
+  const interaction = await button.evaluate((element) => ({
     inlineTransform: element.style.transform,
     magneticX: element.style.getPropertyValue("--mag-x"),
     magneticY: element.style.getPropertyValue("--mag-y"),
     computedTranslate: getComputedStyle(element).translate,
+    computedTransform: getComputedStyle(element).transform,
   }));
-  expect(transformOwnership.inlineTransform).toBe("");
-  expect(transformOwnership.magneticX).toMatch(/px$/);
-  expect(transformOwnership.magneticY).toMatch(/px$/);
-  expect(transformOwnership.computedTranslate).not.toBe("none");
+  expect(interaction.inlineTransform).toBe("");
+  expect(interaction.magneticX).toBe("");
+  expect(interaction.magneticY).toBe("");
+  expect(interaction.computedTranslate).toBe("none");
+  expect(interaction.computedTransform).toBe("none");
+  await expect(page.locator(".sc-label-val")).not.toHaveText("");
+  await expect.poll(() => page.locator(".sc-caliper").evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity))).toBeGreaterThan(0.75);
+  await expect.poll(() => page.locator(".sc-coords").evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity))).toBeGreaterThan(0.75);
 
   await expect.poll(() => page.evaluate(() => window.Motion.__debug().cursorMoving)).toBe(false);
   const settledCursor = await page.locator(".sc-ring").evaluate((element) => ({

@@ -2,7 +2,7 @@
 
 Статус: описание текущей реализации.
 
-Область: главная страница, 26 карточек продуктов и 16 проектных case routes.
+Область: главная страница, 29 карточек продуктов и 19 проектных case routes.
 
 Локали: RU, EN, UZ.
 
@@ -21,7 +21,7 @@
 | порядок и состав 12 сцен | `FULL_MENU_SECTIONS` и фактический DOM в `src/components/app.jsx` |
 | компоненты главной | `src/components/*.jsx`; одноимённые `.js` — generated artifacts |
 | тексты главной и карточек RU/EN/UZ | `src/content/content.js` |
-| идентичность, порядок, маршруты и публичные границы 25 продуктов | `src/content/product-registry.js` |
+| идентичность, порядок, маршруты и публичные границы 29 продуктов | `src/content/product-registry.js` |
 | содержимое 19 кейсов | `src/projects/landings-data.js` |
 | разметка кейсов и общий UI-копирайт | `src/projects/render.js` |
 | базовые токены и shell | `src/styles/styles.css` |
@@ -65,8 +65,8 @@ Signature motif — Proof Rail. Это линия с тремя контроль
 |---:|---|---|---|
 | 01 | `hero` | продуктовый тезис, авторство и ownership loop | proposition-led Release Specimen; split-stage desktop и самостоятельная mobile/landscape композиция с видимым переходом в Signal |
 | 02 | `signal` | причины работать вместе | `emerge`; читатель сам управляет disclosure |
-| 03 | `about` | профиль и проверяемый контекст | `develop`; README-композиция и безопасный GitHub fallback |
-| 04 | `projects` | 25 продуктов | `rise`; desktop grid и mobile horizontal gallery |
+| 03 | `about` | ownership и проверяемый контекст | `develop`; annotated maker's proof с маршрутом Brief → Build → Verify → Release |
+| 04 | `projects` | 29 продуктов | `rise`; desktop grid и mobile horizontal gallery |
 | 05 | `builder` | конфигурация будущего проекта | `assemble`; параметры превращаются в структурированный brief |
 | 06 | `skills` | инженерная и QA-компетенция | `converge`; аналитический холодный акт |
 | 07 | `services` | форматы сотрудничества | `slide-left`; первая половина pinned-overlap с CV |
@@ -165,7 +165,7 @@ Easing tokens: `--ease-out`, `--ease-emphasized`, `--ease-standard`, `--ease-ove
 
 ### 8.1 Карточки
 
-В реестре ровно 25 продуктов, отсортированных по `featuredRank`:
+В реестре ровно 29 продуктов, отсортированных по `featuredRank`:
 
 - 9 `presentation: "live"`: primary CTA открывает реальный HTTPS live-site;
 - 16 `presentation: "case"`: primary CTA открывает локальный case route;
@@ -251,7 +251,7 @@ scroll snap, видимым краем следующей карточки и я
 - fullscreen menu управляет `aria-hidden`, `inert`, focus containment и Escape;
 - active navigation использует `aria-current`;
 - изображения имеют текстовый fallback, а декоративные слои скрыты от accessibility tree;
-- `prefers-reduced-motion: reduce` сохраняет все 26 карточек, тексты, CTA и нативную навигацию;
+- `prefers-reduced-motion: reduce` сохраняет все 29 карточек, тексты, CTA и нативную навигацию;
 - reduced mode отключает continuous scheduler и optional Three.js, но не раскрывает скрытые пользователем данные и не меняет семантическое состояние disclosure;
 - автоматический axe gate покрывает WCAG 2.2 A/AA ruleset, однако он не заменяет NVDA, VoiceOver и проверку на физических устройствах.
 

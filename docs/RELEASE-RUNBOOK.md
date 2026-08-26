@@ -113,7 +113,7 @@ Workflow обязан:
 
 test:production проверяет:
 
-- реальную главную и 26 карточек;
+- реальную главную и 29 карточек;
 - отсутствие first-party HTTP errors/runtime page errors;
 - 48 статических case URL и правильный lang;
 - возврат TTYL к #proj-ttyl без повторного intro.

@@ -1,6 +1,6 @@
 # QA matrix и release gates
 
-Актуально на: 2026-08-25
+Актуально на: 2026-08-27
 
 Тестовый runner: Playwright 1.62.0 + Axe 4.12.1
 
@@ -20,6 +20,8 @@
   текущего CI run или локального report, а не из документа;
 - **MANUAL / EXTERNAL** — проверка требует человека, assistive technology,
   физического устройства или внешней инфраструктуры;
+- **EXTERNAL BLOCKER** — продуктовый сценарий не был запущен из-за подтверждённой
+  проблемы host/runtime до открытия страницы; такой статус не считается PASS;
 - **NOT RUN** — в текущем документальном изменении доказательство не получено.
 
 Документ не обещает «невозможность бага». Релиз считается допустимым, когда
@@ -30,22 +32,23 @@
 
 | Gate | Статус | Доказательство |
 |---|---|---|
-| Generated site contract | **GREEN** | local candidate `v2.14.1 / v242`: `npm run validate` → `OK — 29 products, 10 live routes, 19 case routes, 3 locales`; 57 generated case pages, 58 sitemap URL и 29 responsive project-art sets (2026-08-24) |
-| Full Playwright matrix | **GREEN** | local candidate `v2.14.1 / v242`: `npm test` → 171 passed / 119 profile-specific skipped / 0 failed за 18.9 минуты, без retry; Firefox, iPhone WebKit, desktop/mobile Chromium и reduced-motion выполнены одним финальным процессом (2026-08-25) |
-| Isolated performance budgets | **GREEN** | local candidate `v2.14.1 / v242`: `npm run test:performance` → desktop/mobile 2/2 без ослабления порогов; eager-readiness contract первых четырёх карточек остаётся частью blocking gate (2026-08-24) |
-| Mobile case geometry stress | **GREEN** | all-19-case mobile viewport sweep, chapter deep links и scroll-spy прошли три последовательных повтора: 12 passed / 66 profile-specific skipped; DentForma first viewport дополнительно закреплён без второго transform owner (2026-08-24) |
-| iPhone WebKit critical path | **GREEN** | local candidate `v2.14.1 / v242`: полный gate 3/3 внутри финальной матрицы; намеренно stalled Intro отдельно прошёл 7/7 без retry после исправления порядка публикации release-state, production safety cap не увеличен (2026-08-25) |
-| Build determinism | **GREEN** | local candidate `v2.14.1 / v242`: `npm run check:build` → 64 generated artifacts byte-identical в двух последовательных сборках (2026-08-24) |
-| Dependency/secret gates | **GREEN** | local candidate `v2.14.1 / v242`: `npm audit --audit-level=high` → 0 vulnerabilities; `npm run scan:secrets` → no credential signatures (2026-08-24) |
-| External live routes | **GREEN** | `npm run check:live` → 10/10 approved HTTPS live routes вернули usable HTML, включая новый Echelon Pages route (2026-08-24) |
+| Generated site contract | **GREEN** | local candidate `v245`: `npm run validate` → `OK — 29 products, 10 live routes, 19 case routes, 3 locales`; 57 generated case pages, 58 sitemap URL и 29 responsive project-art sets (2026-08-27) |
+| Browser regression без WebKit | **GREEN** | два serial process без retry: desktop Chromium + Firefox → 135 passed / 12 profile-specific skipped; mobile Chromium + reduced motion → 37 passed / 109 profile-specific skipped. Итого 172 passed / 121 целевой skip / 0 failed (2026-08-27) |
+| iPhone WebKit critical path | **EXTERNAL BLOCKER** | Playwright WebKit завершает launch кодом `0xC0E90002` до создания страницы при активной Windows Verified and Reputable Apps policy. `playwright install --force webkit` не изменил результат; политика безопасности не ослаблялась. Это host-runtime blocker, не product assertion (2026-08-26) |
+| Isolated performance budgets | **GREEN** | local candidate `v245`: staged React mount; `npm run test:performance` → desktop/mobile 2/2 без изменения порогов, 20.8 s desktop и 9.5 s mobile (2026-08-26) |
+| Mobile/catalog geometry stress | **GREEN** | 27 Hero locale/viewport states; 11 canonical viewport About matrix; all-29 mobile art decode/visibility; all-19 case viewport/deep-link/scroll-spy; desktop expanded-card collision test — 0 failed (2026-08-27) |
+| Build determinism | **GREEN** | local candidate `v245`: `npm run check:build` → 64 generated artifacts byte-identical в двух последовательных сборках (2026-08-27) |
+| Dependency/secret gates | **GREEN** | local candidate `v245`: `npm audit --audit-level=high` → 0 vulnerabilities; `npm run scan:secrets` → no credential signatures (2026-08-27) |
+| External live routes | **GREEN** | `npm run check:live` → 10/10 approved HTTPS live routes вернули usable HTML, включая Gorilla Five Signals и Echelon Pages (2026-08-26) |
 | Deployed production smoke | **GREEN (v242)** | merge SHA `68f0ead`, GitHub Actions `32834472208`: build 7m35s, Pages deploy 11s, verify-production 58s — success; независимый `npm run test:production` → 3/3; production HTML HTTP 200, содержит 23 refs `v242` и 0 refs иных версий; 57 case routes, exact-card return и 10/10 live routes подтверждены (2026-08-25) |
 | Post-deploy synthetic monitor | **GREEN (v242)** | независимый `npm run monitor:production`: desktop ready 3595 ms / LCP 1640 ms / CLS 0.0003 / frame p95 66.8 ms; mobile ready 3915 ms / LCP 900 ms / CLS 0.0000 / frame p95 33.3 ms; 0 budget violations. Это synthetic Chromium evidence, не field RUM и не physical-device proof (2026-08-25) |
-| Visual capture + human review | **GREEN** | local candidate `v2.14.1 / v242`: финальный `npm run qa:visual` → 4/4; заново созданы и вручную просмотрены 26 main captures, 38 full-page case captures и 4 contact sheets для desktop/mobile. Видимых обрезок headline, пустых reveal-поз, незагруженных artwork или непредусмотренного horizontal overflow не обнаружено (2026-08-25) |
-| Manual local browser review | **GREEN (local candidate only)** | реальный in-app Chromium: ранее проверены 1440×900, 1280×720, 390×844 и 844×390 для Intro/Hero/Index/buttons/Projects; дополнительно DentForma, MeetingFlow RU/UZ и Telegram Sheets Task Bot проверены на 1280×720 и 390×844, включая hero, CTA, artwork, схемы и RU/EN/UZ overflow. Это не production/physical-device proof (2026-08-24) |
+| Visual capture + human review | **GREEN** | local candidate `v245`: `npm run qa:visual` → 4/4, затем case decode recapture → 2/2; заново созданы и вручную просмотрены 26 main captures, 38 full-page case captures и 4 contact sheets для desktop/mobile. Видимых обрезок headline, пустых reveal-поз, незагруженных artwork или непредусмотренного horizontal overflow не обнаружено (2026-08-26) |
+| Manual local browser review | **GREEN (local candidate only)** | Chromium screenshots/contact sheets проверены для Intro/Hero/Index/About/Projects/buttons и всех 19 case routes на desktop/mobile; отдельные DOM geometry sweeps покрыли 320×568, 390×844, 844×390, 920–1920 desktop и 200% text zoom. Это не production/physical-device proof (2026-08-26) |
 | Manual production browser journey | **GREEN (v2.13.0 only)** | опубликованный `v232` ранее проверен вручную в Chromium; для `v2.13.2` отдельный physical/manual PASS не заявляется. Production Chromium smoke 3/3 и synthetic desktop/mobile monitor вынесены в отдельные строки |
 | NVDA / VoiceOver / physical devices | **NOT RUN** | локальная headless-среда не может честно подтвердить эти проверки |
 
-Production сейчас `v2.14.1 / v242`, опубликованный из SHA `68f0ead` и
+Локальный `v245` остаётся неопубликованным кандидатом. Production сейчас
+`v2.14.1 / v242`, опубликованный из SHA `68f0ead` и
 проверенный workflow `32834472208`, независимым smoke 3/3, live check 10/10 и
 synthetic production monitor без violations. `v2.14.1 / v240` остаётся
 предыдущим rollback baseline. Physical device и assistive-technology проверки
@@ -95,22 +98,22 @@ trace/screenshot/video сохраняются на failure. Retry не
 | `accessibility.spec.js` | Axe WCAG 2.2 A/AA для main, всех 19 case и 404; keyboard reachability skip-link/nav/locale | Axe не заменяет screen reader и cognitive/manual review |
 | `builder.spec.js` | native choices, честный estimate, RU/EN/UZ handoff, mobile target geometry | deterministic UI contract преимущественно desktop Chromium |
 | `builder-estimator.spec.js` | полный combinatorial estimator domain, finite/ordered ranges, monotonic complexity/maturity, AI-layer truth | pure Node domain tests; не проверяет market pricing |
-| `catalog.spec.js` | 29 canonical cards, no duplicate routes, 10/19 split, initial 4 + progressive expand 25, locale parity, exact-card return | route/data contract из registry |
+| `catalog.spec.js` | 29 canonical cards, no duplicate routes, 10/19 split, desktop 4→29, mobile immediate 29 + category filters, locale parity, exact-card return | route/data contract из registry |
 | `contact.spec.js` | отсутствие fake endpoint/success, exact Telegram brief, native validation, mobile reachability | не отправляет реальное сообщение и не доказывает доступность Telegram |
 | `cv.spec.js` | APG tabs, facts/actions/locales, real local PDF bytes, narrow/landscape focus and clipping | binary/download проверены; печать и visual PDF требуют manual pass |
-| `degraded.spec.js` | pre-React recovery, font fallback, artwork fallback, GitHub API fallback, optional Three.js failure | controlled fault injection; не моделирует все network/CDN faults |
+| `degraded.spec.js` | pre-React recovery, font fallback, artwork fallback, About без runtime API, optional Three.js failure | controlled fault injection; не моделирует все network/CDN faults |
 | `design-system.spec.js` | type system, 12 chapters, menu modal/focus/inert, chapter order, mobile hero/dock, intro contract, shared runtime ownership | включает explicit viewport/language geometry contracts |
 | `firefox-smoke.spec.js` | каталог, expand, language, case chapter/locale routing без page errors | smoke, не полный Firefox regression suite |
 | `img-fx-lifecycle.spec.js` | one WebGL renderer/subscriber, latest-host race, tier park, context loss/restore, dispose, in-flight load safety | desktop Chromium; real GPU/driver diversity требует devices |
 | `landings.spec.js` | 19 generated RU structures, mobile overflow sweep, new-case locale routing, chapter deep links, reload preservation | desktop complete sweep + shared mobile geometry sweep |
-| `motion-lifecycle.spec.js` | shared subscribers, magnetic transform ownership, near-viewport parallax, offscreen pause, dispose/re-init, no mobile cursor | engine-independent logic mainly в Chromium |
+| `motion-lifecycle.spec.js` | shared subscribers, stable non-magnetic controls, verification-cursor state, near-viewport parallax, offscreen pause, dispose/re-init, no mobile cursor | engine-independent logic mainly в Chromium |
 | `motion-policy.spec.js` | single tier source, subscription cleanup, reactive reduced motion, high/mid/low capability matrix, viewport class | policy contract, не field performance |
 | `motion-runtime.spec.js` | strict frame phases, single input stream, subscriber cleanup, reduced scheduling stop | scheduler contract в desktop Chromium |
 | `perf-policy-unit.spec.js` | high/low FPS sampling boundaries and sleep behavior | synthetic clock harness; не пользовательская метрика |
 | `performance-budget.spec.js` | intro release, LCP/CLS, long tasks, event latency, scroll frames, transfer budgets, adaptive low-tier response | calibrated only for desktop/mobile Chromium; JSON metrics attached per run |
 | `process.spec.js` | four-phase evidence ledger, no fake terminal telemetry, full RU/EN/UZ IA, compact layout | content/geometry contract |
 | `production-smoke.spec.js` | opt-in deployed main, 57 localized case routes и exact-card return без intro | skipped без `PRODUCTION_SMOKE=1`; использует production base URL и не входит в обычный local `npm test` как выполненный smoke |
-| `reduced-motion.spec.js` | reduced intro, no canvas, content visibility, native navigation, progressive 4→29 catalog contract | dedicated reduced-motion project |
+| `reduced-motion.spec.js` | reduced intro, no canvas, content visibility, native navigation, complete catalog contract | dedicated reduced-motion project |
 | `responsive-matrix.spec.js` | 11 canonical viewports, no overflow, mobile carousel/desktop grid, unobscured focus, 200% text, orientation and breakpoint state | deterministic Chromium reflow matrix; physical browser chrome/safe-area остаются manual |
 | `scene-cinema.spec.js` | latest-intent transaction, balanced events, auxiliary lifecycle rejection без `unhandledrejection`, hard timeout recovery, low-tier cut, reduced/back navigation | native View Transition behavior stubbed для deterministic contracts |
 | `seo-routing.spec.js` | robots/sitemap/404, main locale URL, canonical/social/hreflang/JSON-LD, localized pre-JS HTML, CSP blocks arbitrary inline script/style | не проверяет crawler cache и external indexing |

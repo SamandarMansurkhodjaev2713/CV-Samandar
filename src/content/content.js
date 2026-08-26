@@ -63,7 +63,20 @@ const CONTENT = {
     },
     about: {
       eyebrow: "Profile",
-      title: "Беру задачу — отдаю работающий продукт",
+      title: "От задачи до релиза — один ответственный",
+      title_lines: ["От задачи", "до релиза —", "один ответственный"],
+      proof_label: "Личная отметка · Контур ответственности",
+      statement_label: "Не набор ролей · одна ответственность",
+      route_label: "Один маршрут · без потери контекста",
+      route: [
+        { k: "BRIEF", v: "Разбираю задачу и фиксирую границы" },
+        { k: "BUILD", v: "Проектирую и собираю продукт" },
+        { k: "VERIFY", v: "Проверяю сценарии как QA-инженер" },
+        { k: "RELEASE", v: "Отдаю рабочий и понятный результат" },
+      ],
+      facts_label: "Проверяемые факты",
+      signature: "SAMANDAR · BUILDER + QA",
+      location: "Ташкент · UTC+5",
       lead:
         "Один разработчик отвечает за весь стек: фронт, бэк, AI, инфраструктура. Без передач между подрядчиками — без потерь в переводе.",
       paragraphs: [
@@ -72,15 +85,12 @@ const CONTENT = {
       ],
       stats: [
         { v: "1.5+ года", k: "в разработке" },
-        { v: "10+", k: "проектов" },
+        { v: "29", k: "продуктов в портфолио" },
         { v: "3 курс", k: "Software Engineering" },
         { v: "RU / UZ / EN", k: "языки работы" },
       ],
       status_label: "Доступен · удалённо · контракт и фуллтайм",
-      online_label: "онлайн",
-      less_label: "меньше",
-      more_label: "больше",
-      stack_label: "Основной стек",
+      status_short: "Доступен к проектам",
       currently_label: "Сейчас",
       currently: [
         "веду QA и full-stack на TTYL Platform",
@@ -88,20 +98,6 @@ const CONTENT = {
         "dostupnoe-pravo — legal-проект на TypeScript",
         "CardioGuard — cross-platform health-tech",
       ],
-      recent_label: "Недавние коммиты",
-      recent: [],
-      contrib_label: "Публичная активность · 28 дней",
-      // Deliberately "публичная активность", not "вклад": the strip is built from
-      // the public events feed, which the unauthenticated API can actually give
-      // us — the contribution calendar itself is GraphQL-only and needs a token.
-      // The smaller true claim, not the bigger convenient one. See src/engine/gh.js.
-      // Every word in the live GitHub strip, per locale. The strip mixes
-      // fetched numbers with connective text, so a half-translated version
-      // reads worse than either language alone — the first attempt rendered
-      // "last push 21 ч ago".
-      gh: { repos: "репозиториев", events: "событий / 28 дн", push: "последний пуш",
-            now: "сегодня", h: " ч назад", d: " д назад", mo: " мес назад" },
-      gh_stats: "Публичный GitHub · код и QA-артефакты · Ташкент",
     },
     projects: {
       eyebrow: "Selected work",
@@ -161,17 +157,6 @@ const CONTENT = {
           outcome: "операционная панель для бизнеса",
           status: "NDA",
           url: "projects/marketbot/",
-        },
-        {
-          tag: "IOT · EMBEDDED",
-          name: "Sentinel Edge",
-          problem: "Большинство embedded-демо заканчиваются выводом данных с датчика.",
-          solution: "Firmware + serial-протокол + Node-мост + realtime React-дашборд.",
-          role: "Full-stack + Firmware",
-          stack: ["Arduino C++", "Node.js", "React", "WebSocket"],
-          outcome: "публичный репозиторий + live-дашборд",
-          status: "PROD",
-          url: "https://samandarmansurkhodjaev2713.github.io/sentinel-edge-smart-system/",
         },
         {
           tag: "HEALTH-TECH · MOBILE",
@@ -345,7 +330,7 @@ const CONTENT = {
           points: [
             "Klawis — AI-продукт для юридической сферы: RAG, цитирование источников, live на klawis.uz.",
             "CoupleOS / Softly — потребительский продукт для пар, live на SoftlyLove.uz.",
-            "Task Manage Bot, Sentinel Edge, Marketbot — Telegram-автоматизация, embedded/IoT, event-driven backend.",
+            "Task Manage Bot, BioFlux Observer, Marketbot — Telegram-автоматизация, телеметрия, event-driven backend.",
           ],
           stack: ["Python", "FastAPI", "Rust", "Arduino C++", "RAG"],
         },
@@ -641,7 +626,20 @@ const CONTENT = {
     },
     about: {
       eyebrow: "Profile",
-      title: "I take the brief. I ship the product.",
+      title: "From brief to release — one owner",
+      title_lines: ["From brief", "to release —", "one owner"],
+      proof_label: "Maker's note · Ownership boundary",
+      statement_label: "Not a list of roles · one responsibility",
+      route_label: "One route · no context loss",
+      route: [
+        { k: "BRIEF", v: "Frame the problem and its boundaries" },
+        { k: "BUILD", v: "Design and assemble the product" },
+        { k: "VERIFY", v: "Test critical paths as a QA engineer" },
+        { k: "RELEASE", v: "Hand over a working, legible result" },
+      ],
+      facts_label: "Verifiable facts",
+      signature: "SAMANDAR · BUILDER + QA",
+      location: "Tashkent · UTC+5",
       lead:
         "One engineer owns the whole stack: frontend, backend, AI, infra. No vendor handoffs — nothing lost in translation.",
       paragraphs: [
@@ -650,15 +648,12 @@ const CONTENT = {
       ],
       stats: [
         { v: "1.5+ yrs", k: "building" },
-        { v: "10+", k: "projects" },
+        { v: "29", k: "products in the portfolio" },
         { v: "3rd yr", k: "Software Engineering" },
         { v: "RU / UZ / EN", k: "working languages" },
       ],
       status_label: "Available · remote · contract & full-time",
-      online_label: "online",
-      less_label: "less",
-      more_label: "more",
-      stack_label: "Primary stack",
+      status_short: "Available for projects",
       currently_label: "Currently",
       currently: [
         "QA + full-stack on TTYL Platform",
@@ -666,12 +661,6 @@ const CONTENT = {
         "dostupnoe-pravo — a legal platform in TypeScript",
         "CardioGuard — cross-platform health-tech",
       ],
-      recent_label: "Recent commits",
-      recent: [],
-      contrib_label: "Public activity · 28 days",
-      gh: { repos: "public repos", events: "events / 28d", push: "last push",
-            now: "today", h: "h ago", d: "d ago", mo: "mo ago" },
-      gh_stats: "Public GitHub · code and QA artifacts · Tashkent",
     },
     projects: {
       eyebrow: "Selected work",
@@ -731,17 +720,6 @@ const CONTENT = {
           outcome: "operational panel for the business",
           status: "NDA",
           url: "projects/marketbot/",
-        },
-        {
-          tag: "IOT · EMBEDDED",
-          name: "Sentinel Edge",
-          problem: "Most embedded demos stop at printing sensor values.",
-          solution: "Firmware + serial protocol + Node bridge + realtime React dashboard.",
-          role: "Full-stack + Firmware",
-          stack: ["Arduino C++", "Node.js", "React", "WebSocket"],
-          outcome: "public repository + live dashboard",
-          status: "PROD",
-          url: "https://samandarmansurkhodjaev2713.github.io/sentinel-edge-smart-system/",
         },
         {
           tag: "HEALTH-TECH · MOBILE",
@@ -904,7 +882,7 @@ const CONTENT = {
           points: [
             "Klawis — legal AI product: RAG, cited sources, live at klawis.uz.",
             "CoupleOS / Softly — consumer product for couples, live at SoftlyLove.uz.",
-            "Task Manage Bot, Sentinel Edge, Marketbot — Telegram automation, embedded/IoT, event-driven backend.",
+            "Task Manage Bot, BioFlux Observer, Marketbot — Telegram automation, telemetry and event-driven backend.",
           ],
           stack: ["Python", "FastAPI", "Rust", "Arduino C++", "RAG"],
         },
@@ -1196,7 +1174,20 @@ const CONTENT = {
     },
     about: {
       eyebrow: "Profil",
-      title: "Vazifani olaman — ishlovchi mahsulot beraman",
+      title: "Vazifadan relizgacha — bitta mas'ul",
+      title_lines: ["Vazifadan", "relizgacha —", "bitta mas'ul"],
+      proof_label: "Muallif qaydi · Mas'uliyat chegarasi",
+      statement_label: "Rollar ro'yxati emas · bitta mas'uliyat",
+      route_label: "Bitta yo'l · kontekst yo'qolmaydi",
+      route: [
+        { k: "BRIEF", v: "Vazifa va uning chegaralarini aniqlayman" },
+        { k: "BUILD", v: "Mahsulotni loyihalayman va yig'aman" },
+        { k: "VERIFY", v: "Muhim yo'llarni QA sifatida tekshiraman" },
+        { k: "RELEASE", v: "Ishlaydigan, tushunarli natija beraman" },
+      ],
+      facts_label: "Tekshiriladigan faktlar",
+      signature: "SAMANDAR · BUILDER + QA",
+      location: "Toshkent · UTC+5",
       lead:
         "Bitta muhandis butun stekka javob beradi: frontend, backend, AI, infratuzilma. Pudratchilar orasida uzatish yo'q — tarjimada hech narsa yo'qolmaydi.",
       paragraphs: [
@@ -1205,15 +1196,12 @@ const CONTENT = {
       ],
       stats: [
         { v: "1.5+ yil", k: "rivojlanishda" },
-        { v: "10+", k: "loyiha" },
+        { v: "29", k: "portfoliodagi mahsulot" },
         { v: "3-kurs", k: "Software Engineering" },
         { v: "RU / UZ / EN", k: "ish tillari" },
       ],
       status_label: "Bo'sh · masofadan · shartnoma yoki fulltayim",
-      online_label: "onlayn",
-      less_label: "kamroq",
-      more_label: "ko‘proq",
-      stack_label: "Asosiy stek",
+      status_short: "Loyihalar uchun ochiq",
       currently_label: "Hozir",
       currently: [
         "TTYL Platform'da QA + full-stack",
@@ -1221,12 +1209,6 @@ const CONTENT = {
         "dostupnoe-pravo — TypeScript'da legal platforma",
         "CardioGuard — cross-platform health-tech",
       ],
-      recent_label: "Oxirgi kommitlar",
-      recent: [],
-      contrib_label: "Ochiq faollik · 28 kun",
-      gh: { repos: "repozitoriy", events: "hodisa / 28 kun", push: "oxirgi push",
-            now: "bugun", h: " soat oldin", d: " kun oldin", mo: " oy oldin" },
-      gh_stats: "Ochiq GitHub · kod va QA-artifaktlar · Toshkent",
     },
     projects: {
       eyebrow: "Tanlangan ishlar",
@@ -1286,17 +1268,6 @@ const CONTENT = {
           outcome: "biznes uchun operatsion panel",
           status: "NDA",
           url: "projects/marketbot/",
-        },
-        {
-          tag: "IOT · EMBEDDED",
-          name: "Sentinel Edge",
-          problem: "Ko'p embedded demolar datchik qiymatini chiqarish bilan tugaydi.",
-          solution: "Firmware + serial-protokol + Node-ko'prik + realtime React-dashboard.",
-          role: "Full-stack + Firmware",
-          stack: ["Arduino C++", "Node.js", "React", "WebSocket"],
-          outcome: "ochiq repozitoriy + live-dashboard",
-          status: "PROD",
-          url: "https://samandarmansurkhodjaev2713.github.io/sentinel-edge-smart-system/",
         },
         {
           tag: "HEALTH-TECH · MOBILE",
@@ -1459,7 +1430,7 @@ const CONTENT = {
           points: [
             "Klawis — huquqiy AI-mahsulot: RAG, manba ko'rsatish, klawis.uz'da live.",
             "CoupleOS / Softly — juftliklar uchun iste'mol mahsuloti, SoftlyLove.uz'da live.",
-            "Task Manage Bot, Sentinel Edge, Marketbot — Telegram-avtomatlashtirish, embedded/IoT, event-driven backend.",
+            "Task Manage Bot, BioFlux Observer, Marketbot — Telegram-avtomatlashtirish, telemetriya va event-driven backend.",
           ],
           stack: ["Python", "FastAPI", "Rust", "Arduino C++", "RAG"],
         },
@@ -1768,6 +1739,37 @@ const PROJECT_ADDITIONS = [
         solution: "Echelon’ning ochiq taqdimoti desktop-yordamchining ish smenasini modellashtiradi: kontekst lokal qoladi, avtomatlashtirish kuzatiladi, yakuniy qaror esa insonda bo‘ladi.",
         role: "Product Design + Creative Frontend + QA",
         outcome: "live RU/EN/UZ · 51 visual baseline · Playwright + axe",
+      },
+    },
+  },
+  {
+    slug: "gorilla-five-signals",
+    name: "Gorilla — Five Signals Concept",
+    status: "PUBLIC REVIEW",
+    url: "https://samandarmansurkhodjaev2713.github.io/gorilla-five-signals-concept/uz/",
+    github: "https://github.com/SamandarMansurkhodjaev2713/gorilla-five-signals-concept",
+    stack: ["Astro 7", "TypeScript", "GSAP", "Zod", "Vitest", "Playwright", "axe-core"],
+    i18n: {
+      ru: {
+        tag: "CREATIVE FRONTEND · MOTION SYSTEM",
+        problem: "Энергетический лендинг легко превращается в шумный набор эффектов, где продуктовые различия и локальный контекст теряются за декором.",
+        solution: "Независимый портфолио-концепт связывает пять продуктовых миров одной authored-системой: локализация RU/UZ/EN, конечный motion, производительные режимы и доступный fallback.",
+        role: "Art Direction + Creative Frontend + QA",
+        outcome: "live Pages · full/lite/reduced modes · Playwright + axe",
+      },
+      en: {
+        tag: "CREATIVE FRONTEND · MOTION SYSTEM",
+        problem: "An energy landing page can collapse into noisy effects where product distinctions and local context disappear behind decoration.",
+        solution: "This independent portfolio concept connects five product worlds through one authored system: RU/UZ/EN localization, finite motion, performance tiers and an accessible fallback.",
+        role: "Art Direction + Creative Frontend + QA",
+        outcome: "live Pages · full/lite/reduced modes · Playwright + axe",
+      },
+      uz: {
+        tag: "CREATIVE FRONTEND · MOTION SYSTEM",
+        problem: "Energetik landing shovqinli effektlar to‘plamiga aylanib, mahsulot farqlari va lokal kontekst dekor ortida yo‘qolishi mumkin.",
+        solution: "Mustaqil portfolio-konsept beshta mahsulot olamini bitta mualliflik tizimida bog‘laydi: RU/UZ/EN lokalizatsiya, yakunlanuvchi motion, performance tier va accessibility fallback.",
+        role: "Art Direction + Creative Frontend + QA",
+        outcome: "live Pages · full/lite/reduced modes · Playwright + axe",
       },
     },
   },
@@ -2268,6 +2270,9 @@ function projectGithubLabel(meta, lang) {
 const PROJECT_UI = {
   ru: {
     catalog_unit: "продуктов",
+    filter_label: "Фильтр проектов",
+    filter_all: "Все",
+    filters: { ai: "AI", automation: "Автоматизация", platform: "Продукты", creative: "Creative", mobile: "Mobile" },
     open_live: "Открыть сайт",
     github: "GitHub",
     collapse: "Свернуть",
@@ -2283,6 +2288,9 @@ const PROJECT_UI = {
   },
   en: {
     catalog_unit: "products",
+    filter_label: "Project filter",
+    filter_all: "All",
+    filters: { ai: "AI", automation: "Automation", platform: "Products", creative: "Creative", mobile: "Mobile" },
     open_live: "Open live site",
     github: "GitHub",
     collapse: "Collapse",
@@ -2298,6 +2306,9 @@ const PROJECT_UI = {
   },
   uz: {
     catalog_unit: "mahsulot",
+    filter_label: "Loyiha filtri",
+    filter_all: "Barchasi",
+    filters: { ai: "AI", automation: "Avtomatlashtirish", platform: "Mahsulotlar", creative: "Creative", mobile: "Mobile" },
     open_live: "Saytni ochish",
     github: "GitHub",
     collapse: "Yig‘ish",
@@ -2349,6 +2360,7 @@ Object.keys(CONTENT).forEach(function hydrateProjectCatalog(lang) {
       lifecycle: meta ? meta.lifecycle : null,
       confidentiality: meta ? meta.confidentiality : null,
       portfolioState: meta ? meta.portfolioState : "catalog",
+      categories: meta && Array.isArray(meta.categories) ? meta.categories.slice() : [],
       url: meta ? (meta.presentation === "live" ? meta.liveUrl : meta.casePage) : item.url,
       github: meta ? meta.githubUrl : (PROJECT_GITHUB[item.name] || item.github || null),
       githubLabel: meta ? projectGithubLabel(meta, lang) : null,
@@ -2371,6 +2383,7 @@ Object.keys(CONTENT).forEach(function hydrateProjectCatalog(lang) {
       lifecycle: meta ? meta.lifecycle : null,
       confidentiality: meta ? meta.confidentiality : null,
       portfolioState: meta ? meta.portfolioState : "catalog",
+      categories: meta && Array.isArray(meta.categories) ? meta.categories.slice() : [],
       url: meta ? (meta.presentation === "live" ? meta.liveUrl : meta.casePage) : product.url,
       github: meta ? meta.githubUrl : product.github,
       githubLabel: meta ? projectGithubLabel(meta, lang) : null,

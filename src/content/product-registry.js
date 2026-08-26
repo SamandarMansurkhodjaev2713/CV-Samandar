@@ -237,6 +237,34 @@
       i18n: locale("TTYL Platform", "Закрытая корпоративная платформа с контролем данных.", "A closed enterprise platform with controlled data boundaries.", "Ma’lumot chegaralari boshqariladigan yopiq korporativ platforma."),
     },
     {
+      id: "gorilla-five-signals",
+      slug: "gorilla-five-signals",
+      kind: "standalone",
+      portfolioState: "featured",
+      featuredRank: 15,
+      lifecycle: "demo",
+      confidentiality: "public",
+      presentation: "live",
+      liveUrl: PAGES + "gorilla-five-signals-concept/uz/",
+      githubUrl: GH + "gorilla-five-signals-concept",
+      casePage: null,
+      image: "assets/proj/gorilla-five-signals.webp",
+      accent: "#D66F3C",
+      repositoryAliases: [repo("gorilla-five-signals-concept", "public", "source")],
+      evidenceLevel: "public_source_plus_live_demo",
+      privacyBoundary: [
+        "independent non-commissioned concept with no brand affiliation",
+        "no commercial release or production performance claim",
+        "public review build may continue to change",
+      ],
+      i18n: locale(
+        "Gorilla — Five Signals Concept",
+        "Независимый motion-концепт: пять локализованных продуктовых миров в одной проверяемой web-системе.",
+        "An independent motion concept: five localized product worlds in one verifiable web system.",
+        "Mustaqil motion-konsept: beshta lokal mahsulot olami bitta tekshiriladigan web-tizimda."
+      ),
+    },
+    {
       id: "dostupnoe-pravo",
       slug: "dostupnoe-pravo",
       kind: "standalone",
@@ -333,25 +361,6 @@
       evidenceLevel: "public_source_plus_live_demo",
       privacyBoundary: ["no private data; fictional editorial experience"],
       i18n: locale("Stones", "Материальный editorial-scrollytelling через геологическое время.", "Material editorial scrollytelling through geological time.", "Geologik vaqt bo‘ylab material editorial-scrollytelling."),
-    },
-    {
-      id: "sentinel-edge",
-      slug: "sentinel-edge",
-      kind: "standalone",
-      portfolioState: "catalog",
-      featuredRank: 15,
-      lifecycle: "demo",
-      confidentiality: "public",
-      presentation: "live",
-      liveUrl: PAGES + "sentinel-edge-smart-system/",
-      githubUrl: GH + "sentinel-edge-smart-system",
-      casePage: null,
-      image: "assets/proj/sentinel.webp",
-      accent: "#8FB33E",
-      repositoryAliases: [repo("sentinel-edge-smart-system", "public", "source")],
-      evidenceLevel: "public_source_plus_live_demo",
-      privacyBoundary: ["sensor deployment locations", "real operational telemetry", "production claims"],
-      i18n: locale("Sentinel Edge", "Edge-система мониторинга с локальным сигналом.", "An edge monitoring system with a local signal path.", "Lokal signal yo‘liga ega edge monitoring tizimi."),
     },
     {
       id: "cardioguard",
@@ -661,6 +670,45 @@
       i18n: locale("Birthday Agent", "Надёжный HR-агент: одно точное поздравление, полный аудит и безопасное восстановление.", "A reliable HR agent: one exact greeting, full audit and safe recovery.", "Ishonchli HR-agent: bitta aniq tabrik, to‘liq audit va xavfsiz tiklash."),
     },
   ];
+
+  // Editorial filter taxonomy for the portfolio catalogue. A product may
+  // belong to more than one discipline, but the canonical assignment lives
+  // here with routing and identity — never in the visual component.
+  var PRODUCT_CATEGORIES = {
+    "klawis": ["ai", "platform"],
+    "dentforma": ["platform"],
+    "echelon-desktop": ["ai", "creative"],
+    "ttyl": ["platform"],
+    "growthops-ai": ["ai", "automation"],
+    "meetingflow-ru-uz": ["ai", "automation"],
+    "birthday-agent": ["automation"],
+    "dostupnoe-pravo": ["platform"],
+    "softly": ["platform", "mobile"],
+    "telegram-sheets-task-bot": ["automation"],
+    "ai-classroom": ["ai", "platform"],
+    "car-superapp": ["platform", "mobile"],
+    "helion": ["creative"],
+    "stones": ["creative"],
+    "gorilla-five-signals": ["creative"],
+    "cardioguard": ["mobile"],
+    "task-automation": ["automation"],
+    "marketbot": ["automation"],
+    "izatullo-bel-alma": ["creative"],
+    "forge-learning-os": ["ai", "platform"],
+    "belfproctor": ["ai", "platform"],
+    "laplacefx": ["ai", "platform"],
+    "bioflux-observer": ["platform"],
+    "vfs-killer": ["automation"],
+    "med-exe": ["platform"],
+    "3d-landing": ["creative"],
+    "vacation-control": ["automation"],
+    "b24-sales-analyst": ["ai", "automation"],
+    "chat-messenger": ["platform", "mobile"]
+  };
+
+  PRODUCT_REGISTRY.forEach(function assignProductCategories(product) {
+    product.categories = (PRODUCT_CATEGORIES[product.id] || []).slice();
+  });
 
   root.PRODUCT_REGISTRY = PRODUCT_REGISTRY;
   if (typeof module !== "undefined" && module.exports) module.exports = PRODUCT_REGISTRY;

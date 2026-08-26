@@ -22,6 +22,7 @@
 | section navigation transactions | `src/engine/scene-cinema.js` |
 | project image shader lifecycle | `src/engine/lazy-effects.js`, `src/engine/img-fx.js` |
 | intro timing/readiness | `src/engine/head-boot.js`, `src/engine/intro.js` |
+| staged React mount | `src/components/app.jsx` |
 | цветовые акты | `src/engine/acts.js` |
 | CSS durations/reduced rules | `src/styles/styles.css`, `src/styles/sections.css`, `src/styles/features.css`, `src/projects/landing.css` |
 | performance assertions | `tests/performance-budget.spec.js` |
@@ -46,6 +47,17 @@ flowchart LR
 ```
 
 Архитектурное ограничение: consumer не создаёт собственный постоянный RAF и не дублирует глобальные `scroll`, `pointermove` или `resize` streams. Исключение — ограниченная opening sequence до монтирования приложения; после неё motion принадлежит общему runtime.
+
+### 2.1 Staged application mount
+
+Обычный вход монтирует приложение пятью смысловыми стадиями: Hero/Signal,
+About, Projects, Builder/Skills и оставшиеся главы. Между стадиями используются
+`requestAnimationFrame` и `React.startTransition`; navigation, scroll engine и
+motion measurements получают revision после каждого commit. Это не lazy-load
+контента по скроллу: вся страница становится доступной в течение первых
+270 ms после первого commit, но главный поток не получает один монолитный
+initial React task. Любой deep link, кроме `#hero` и `#signal`, сразу выбирает
+полную стадию, поэтому якорь не ждёт отложенного mount.
 
 ## 3. Единая motion policy
 
@@ -154,7 +166,8 @@ SceneCinema при принятой native transition вызывает `suspend(
 
 - one-shot reveal и scene enter;
 - smart cursor только для fine pointer;
-- magnetic controls и spotlight coordinates;
+- optional magnetic coordinates внутри engine; глобальные CTA и navbar в
+  текущем release используют устойчивую pose без magnetic transform;
 - sticky/pin progress через CSS variables;
 - viewport-limited parallax;
 - center-stage карточки для coarse pointer;
@@ -265,13 +278,14 @@ Renderer не имеет собственного RAF. Latest host token wins: �
 - intro не создаёт canvas;
 - lazy effects не загружают Three.js;
 - ImgFx не активируется;
-- все 26 карточек, CTA, Proof Rail, menu и disclosure semantics остаются.
+- все 29 карточек, CTA, Proof Rail, menu и disclosure semantics остаются.
 
 Reduced motion не имеет права самостоятельно менять `aria-expanded`, выбирать ответ за пользователя или удалять semantic DOM.
 
 ## 11. Responsive motion contracts
 
-- Fine pointer получает authored cursor, pointer light, magnets и intent-loaded ImgFx.
+- Fine pointer получает authored verification cursor, pointer light и
+  intent-loaded ImgFx; основные CTA остаются геометрически стабильными.
 - Coarse pointer сохраняет section motion и горизонтальную gallery choreography, но без cursor imitation и shader download.
 - При `≤900px` Projects остаётся горизонтальной scroll-snap галереей с видимым next-card peek.
 - В short landscape `≤900×520` bottom dock скрыт, чтобы fixed UI не перекрывал движение и keyboard focus.

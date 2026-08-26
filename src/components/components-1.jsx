@@ -10,7 +10,7 @@ function useRevealRoot(deps) {
 }
 
 // ── Reusable section header
-function SecHead({ num, eyebrow, title, meta, em, titleId }) {
+function SecHead({ num, eyebrow, title, lines, meta, em, titleId }) {
   // em: substring within title to render as italic accent
   let titleNode = title;
   if (em && title && title.includes(em)) {
@@ -23,6 +23,7 @@ function SecHead({ num, eyebrow, title, meta, em, titleId }) {
       </>
     );
   }
+  const titleLines = Array.isArray(lines) && lines.length ? lines : null;
   return (
     // data-reveal-from="none": the head itself only FADES in — all the motion
     // belongs to the line-mask below (title slides out from under an invisible
@@ -31,8 +32,14 @@ function SecHead({ num, eyebrow, title, meta, em, titleId }) {
     <header className="sec-head" data-reveal data-reveal-from="none" data-plx="0.045">
       <div>
         <div className="num">{num ? <>{num} · </> : null}{eyebrow}</div>
-        <h2 id={titleId} style={{ marginTop: 14 }}>
-          <span className="lm"><span className="lm-i">{titleNode}</span></span>
+        <h2 id={titleId} style={{ marginTop: 14 }} aria-label={titleLines ? title : undefined}>
+          <span className="lm"><span className="lm-i">
+            {titleLines
+              ? titleLines.map((line, index) => (
+                  <span className="sec-title-line" aria-hidden="true" key={`${index}-${line}`}>{line}</span>
+                ))
+              : titleNode}
+          </span></span>
         </h2>
       </div>
       {meta ? <div className="sec-meta">{meta}</div> : null}
@@ -323,7 +330,7 @@ function Hero({ t, links }) {
           </p>
           <div className="hero-ctas">
             <a
-              href="#contact" className="btn btn-primary" data-magnetic
+              href="#contact" className="btn btn-primary"
               data-cursor="send" data-cursor-label="send → contact"
               onMouseEnter={onCtaFocus} onMouseLeave={onCtaBlur}
               onFocus={onCtaFocus} onBlur={onCtaBlur}
@@ -332,7 +339,7 @@ function Hero({ t, links }) {
                 <span className="btn-label hero-cta-mobile">{t.hero.cta_primary_mobile || t.hero.cta_primary}</span>
                 <span className="arrow">→</span>
               </a>
-              <a href="#projects" className="btn btn-ghost" data-magnetic data-cursor="link" data-cursor-label="→ projects">
+              <a href="#projects" className="btn btn-ghost" data-cursor="link" data-cursor-label="→ projects">
                 <span className="btn-label hero-cta-desktop">{t.hero.cta_secondary}</span>
                 <span className="btn-label hero-cta-mobile">{t.hero.cta_secondary_mobile || t.hero.cta_secondary}</span>
                 <span className="arrow">↘</span>
@@ -499,15 +506,10 @@ function Signal({ t }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ABOUT — README.md card.
-// Replaces the wall-of-text with a developer-recognizable composition:
-//   • Avatar (geometric SA monogram) + handle + online status
-//   • Live UTC+5 Tashkent clock that ticks every second
-//   • Contribution graph (7 rows × 52 cols), intensity deterministic-seeded,
-//     animated waves of pulses simulating "live commits"
-//   • Stats with counters that animate from 0 → target on scroll-into-view
-//   • Tech stack as inline chips
-//   • Markdown-style paragraphs with left accent border
+// ABOUT — annotated maker's proof.
+// This section explains ownership and judgement without duplicating the Stack
+// or Projects sections. It is deliberately static: no decorative live clock,
+// no GitHub telemetry and no claims that can silently change between visits.
 // ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -520,228 +522,85 @@ function AboutStat({ stat, index }) {
   );
 }
 
-const TECH_CHIPS = ["TypeScript", "React", "Next.js", "Node.js", "Postgres", "OpenAI", "Anthropic", "LangChain", "n8n", "Three.js", "Telegram Bot", "Docker"];
-
-// Coarse relative age for the "last push" read-out. Coarse on purpose: a
-// minute-accurate figure invites the reader to watch it tick, which is not what
-// this line is for — it exists to say "the account is alive", once.
-// The unit strings carry their own "ago" per locale (RU " ч назад", EN "h ago"),
-// because appending a hardcoded English "ago" to a localised unit produced
-// exactly the tell it was meant to avoid: "last push 21 ч ago".
-function relativeAge(ts, words) {
-  const w = words || {};
-  const mins = Math.max(0, Math.round((Date.now() - ts) / 60000));
-  if (mins < 60) return w.now || "today";
-  const hours = Math.round(mins / 60);
-  if (hours < 24) return `${hours}${w.h || "h ago"}`;
-  const days = Math.round(hours / 24);
-  if (days < 30) return `${days}${w.d || "d ago"}`;
-  return `${Math.round(days / 30)}${w.mo || "mo ago"}`;
-}
-
 function About({ t }) {
   const ref = useRevealRoot([t]);
-  const cardRef = useRef(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const [clock, setClock] = useState(() => formatTashkentTime(new Date()));
-  // null until the GitHub fetch resolves, and null forever if it fails. The
-  // section renders its static copy in that case — never a synthetic graph.
-  const [gh, setGh] = useState(null);
   const currentlyPhrases = t.about.currently || [];
-
-  // Section-in-view only controls time-sensitive telemetry. Static content is
-  // present in frame zero; the clock sleeps while About is off-screen.
-  useEffect(() => {
-    if (!cardRef.current) return undefined;
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((e) => {
-        setIsVisible(e.isIntersecting);
-      });
-    }, { threshold: [0, 0.15] });
-    io.observe(cardRef.current);
-    return () => io.disconnect();
-  }, []);
-
-  // Tashkent clock — ticks once per second. Uses fixed UTC+5 offset.
-  useEffect(() => {
-    if (!isVisible) return undefined;
-    setClock(formatTashkentTime(new Date()));
-    const id = setInterval(() => setClock(formatTashkentTime(new Date())), 1000);
-    return () => clearInterval(id);
-  }, [isVisible]);
-
-  // Live GitHub telemetry. Fired on mount rather than on scroll-into-view: the
-  // request is two cached GETs against a CDN, it costs nothing to have the
-  // answer ready before the reader arrives, and deferring it would mean the
-  // activity strip pops in under their eyes instead of already being there.
-  // Resolves to null on any failure — see src/engine/gh.js.
-  useEffect(() => {
-    let alive = true;
-    if (!window.__SM_GH) return undefined;
-    window.__SM_GH.load().then(function (data) { if (alive && data) setGh(data); });
-    return function () { alive = false; };
-  }, []);
-
-
-  const recentItems = t.about.recent || [];
-  const statusLabel = t.about.status_label || "Available";
-  const currentlyLabel = t.about.currently_label || "Currently";
-  const recentLabel = t.about.recent_label || "Recent work";
-  const contribLabel = t.about.contrib_label || "Public activity · 28 days";
-  const ghStats = t.about.gh_stats || "";
-  const ghWords = t.about.gh || {};
+  const route = t.about.route || [];
 
   return (
     <section data-section="about" id="about" data-enter="develop" ref={ref}>
       <div className="shell">
-        <SecHead num="03" eyebrow={t.about.eyebrow} title={t.about.title} meta="readme.md" />
+        <SecHead
+          num="03"
+          eyebrow={t.about.eyebrow}
+          title={t.about.title}
+          lines={t.about.title_lines}
+          meta="maker's proof · 03"
+        />
 
-        <article ref={cardRef} className="about-readme card" data-reveal>
-          {/* Header: avatar + handle + status */}
-          <header className="about-readme-head">
-            <div className="about-avatar" aria-hidden="true">
-              <span>SA</span>
-              <span className="about-avatar-shine" />
-            </div>
-            <div className="about-id">
-              <div className="about-id-row">
-                <h3 className="about-id-handle">@samandar</h3>
-                <span className="about-id-status mono"><span className="about-id-status-dot" />{statusLabel}</span>
-              </div>
-              <div className="about-id-meta mono">
-                <span className="about-id-online"><span className="about-id-dot" />{t.about.online_label || "online"}</span>
-                <span className="about-id-sep">·</span>
-                <span>Tashkent · UTC+5</span>
-                <span className="about-id-sep">·</span>
-                <span className="about-clock num-tab">{clock}</span>
-              </div>
-            </div>
+        <article className="about-proof" data-reveal>
+          <header className="about-proof-rail mono">
+            <span>SM / 03</span>
+            <span>{t.about.proof_label}</span>
+            <span className="about-proof-state"><i aria-hidden="true" />{t.about.status_short || t.about.status_label}</span>
           </header>
 
-          {/* Current focus — stable, truthful and readable without waiting for
-              a typewriter loop to reveal the rest of the sentence. */}
-          <div className="about-currently mono">
-            <span className="about-currently-key">{currentlyLabel}:</span>
-            <ul className="about-currently-list">
-              {currentlyPhrases.slice(0, 3).map((item, index) => (
-                <li key={index} className="about-currently-val">{item}</li>
+          <div className="about-proof-main">
+            <div className="about-proof-copy">
+              <span className="about-proof-kicker mono">{t.about.statement_label}</span>
+              <p className="about-proof-lead">{t.about.lead}</p>
+              <blockquote className="about-proof-note">{t.about.paragraphs[0]}</blockquote>
+              {t.about.paragraphs.slice(1).map((paragraph, index) => (
+                <p className="about-proof-paragraph" key={index}>{paragraph}</p>
               ))}
-            </ul>
-          </div>
+            </div>
 
-          {/* Stats counters */}
-          <div className="about-stats">
-            {t.about.stats.map((s, i) => (
-              <AboutStat key={i} stat={s} index={i} />
-            ))}
-          </div>
-
-          {/* Markdown body */}
-          <div className="about-md">
-            <p className="about-md-lead">{t.about.lead}</p>
-            <blockquote className="about-md-quote">
-              {t.about.paragraphs[0]}
-            </blockquote>
-            {t.about.paragraphs.slice(1).map((p, i) => (
-              <p key={i} className="about-md-para">{p}</p>
-            ))}
-          </div>
-
-          {/* Tech-stack chips */}
-          <div className="about-chips" aria-label={t.about.stack_label || "Primary stack"}>
-            {TECH_CHIPS.map((c, i) => (
-              <span key={i} className="about-chip mono">{c}</span>
-            ))}
-          </div>
-
-          {/* Recent work feed */}
-          {recentItems.length > 0 && (
-            <div className="about-recent">
-              <div className="about-recent-head mono">{recentLabel}</div>
-              <ul className="about-recent-list">
-                {recentItems.map((item, i) => (
-                  <li key={i} className="about-recent-item">
-                    <span className="about-recent-when mono">{item.when}</span>
-                    <span className={`about-recent-tag mono about-recent-tag--${item.tag}`}>{item.tag}</span>
-                    <span className="about-recent-msg">{item.msg}</span>
+            <div className="about-proof-route" aria-label={t.about.route_label}>
+              <div className="about-proof-route-head mono">
+                <span>{t.about.route_label}</span>
+                <span>01—04</span>
+              </div>
+              <ol>
+                {route.map((step, index) => (
+                  <li key={`${step.k}-${index}`} style={{ "--about-i": index }}>
+                    <span className="about-proof-route-index mono">0{index + 1}</span>
+                    <strong>{step.k}</strong>
+                    <span>{step.v}</span>
                   </li>
                 ))}
-              </ul>
+              </ol>
             </div>
-          )}
-
-          {/* ── LIVE ACTIVITY ────────────────────────────────────────────
-              Real GitHub public events, 28 daily buckets — see src/engine/gh.js
-              for why this is events rather than the contribution calendar, and
-              for the rate-limit / offline behaviour.
-
-              The thing that used to be here was a 7×28 grid of deterministic
-              pseudo-random cells with a timer flashing random ones to make it
-              look live. It was decoration in the exact shape of a factual
-              claim. When the fetch fails there is no graph at all — falling
-              back to the synthetic one would reintroduce precisely the problem
-              this replaced. */}
-          {gh && gh.days ? (
-            <div className="about-contrib">
-              <div className="about-contrib-head mono">
-                <span>{contribLabel}</span>
-                <span className="about-contrib-legend">
-                  <span>{t.about.less_label || "less"}</span>
-                  <span className="about-contrib-legend-cell" data-level="0" />
-                  <span className="about-contrib-legend-cell" data-level="1" />
-                  <span className="about-contrib-legend-cell" data-level="2" />
-                  <span className="about-contrib-legend-cell" data-level="3" />
-                  <span className="about-contrib-legend-cell" data-level="4" />
-                  <span>{t.about.more_label || "more"}</span>
-                </span>
-              </div>
-              <div
-                className="about-contrib-grid about-contrib-grid--days"
-                style={{ gridTemplateColumns: `repeat(${gh.days.length}, 1fr)` }}
-                aria-hidden="true"
-              >
-                {gh.days.map((d, idx) => (
-                  <span
-                    key={idx}
-                    className="about-contrib-cell"
-                    data-level={d.level}
-                    style={{ animationDelay: `${idx * 26}ms` }}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : null}
-
-          {/* Instrument strip — the live read-out under the activity. Every
-              figure here is fetched, not written: repo count, events in the
-              window, and how long ago the last public push landed. */}
-          <div className="about-gh-stats mono">
-            {gh ? (
-              <>
-                <span className="about-gh-live"><span className="about-gh-dot" />github</span>
-                {gh.repos != null ? <span>{gh.repos} {ghWords.repos || "public repos"}</span> : null}
-                <span>{gh.events} {ghWords.events || "events / 28d"}</span>
-                {gh.lastPush ? <span>{ghWords.push || "last push"} {relativeAge(gh.lastPush, ghWords)}</span> : null}
-              </>
-            ) : ghStats ? (
-              <span>{ghStats}</span>
-            ) : null}
           </div>
+
+          <div className="about-proof-facts" aria-label={t.about.facts_label}>
+            <span className="about-proof-facts-label mono">{t.about.facts_label}</span>
+            <div className="about-stats">
+              {t.about.stats.map((stat, index) => (
+                <AboutStat key={index} stat={stat} index={index} />
+              ))}
+            </div>
+          </div>
+
+          <div className="about-proof-focus">
+            <span className="about-proof-focus-label mono">{t.about.currently_label}</span>
+            <ol>
+              {currentlyPhrases.slice(0, 3).map((item, index) => (
+                <li key={index}>
+                  <span className="mono">0{index + 1}</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <footer className="about-proof-signature mono">
+            <strong>{t.about.signature}</strong>
+            <span>{t.about.location}</span>
+          </footer>
         </article>
       </div>
     </section>
   );
-}
-
-function formatTashkentTime(date) {
-  // Tashkent = UTC+5, no DST.
-  const TASHKENT_OFFSET_HOURS = 5;
-  const utcMs = date.getTime() + date.getTimezoneOffset() * 60_000;
-  const local = new Date(utcMs + TASHKENT_OFFSET_HOURS * 60 * 60 * 1000);
-  const hh = String(local.getHours()).padStart(2, "0");
-  const mm = String(local.getMinutes()).padStart(2, "0");
-  const ss = String(local.getSeconds()).padStart(2, "0");
-  return `${hh}:${mm}:${ss}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -812,15 +671,6 @@ function ProjectCard({ p, i, labels }) {
       id={p.slug ? "proj-" + p.slug : (landingSlug ? "proj-" + landingSlug : undefined)}
       className={`proj-card card proj-visual-${visualVariant} ${i < 4 ? "proj-card--feature" : "proj-card--archive"} ${i % 2 ? "is-reverse" : ""}`}
       data-project={p.slug || undefined}
-      // Alternating parallax rates. The two desktop columns are already offset
-      // vertically in CSS; this makes the offset LIVE — the left column lags
-      // the scroll, the right column leads it, so the pair drifts apart and
-      // back as you move instead of sitting in a fixed staggered grid. Signs
-      // are opposite on purpose: same-sign values at different magnitudes read
-      // as "one column is slightly broken", opposite signs read as depth.
-      // motion.js writes --plx from this; the card's own transform composes it
-      // with the card's CSS hover/focus states (see sections.css).
-      data-plx={i % 2 === 0 ? "0.05" : "-0.03"}
       style={{
         "--proj-i": i,
         "--proj-accent": (PROJ_CARD[p.slug] && PROJ_CARD[p.slug].accent) || "var(--accent)",
@@ -1037,6 +887,44 @@ function ProjectChapterDots({ items, gridRef, labels }) {
   );
 }
 
+function ProjectFilters({ items, active, onChange, labels }) {
+  const names = (labels && labels.filters) || {};
+  const options = ["all"].concat(Object.keys(names)).map((id) => {
+    const count = id === "all"
+      ? items.length
+      : items.filter((item) => Array.isArray(item.categories) && item.categories.indexOf(id) !== -1).length;
+    return { id, count, label: id === "all" ? ((labels && labels.filter_all) || "All") : names[id] };
+  }).filter((option) => option.id === "all" || option.count > 0);
+
+  return (
+    <div className="proj-filter" role="group" aria-label={(labels && labels.filter_label) || "Project filter"}>
+      <div className="proj-filter-head mono">
+        <span>{(labels && labels.filter_label) || "Project filter"}</span>
+        <span>{String(items.length).padStart(2, "0")} · 2024–26</span>
+      </div>
+      <div className="proj-filter-list">
+        {options.map((option) => {
+          const selected = active === option.id;
+          return (
+            <button
+              key={option.id}
+              type="button"
+              className={`proj-filter-chip mono ${selected ? "is-active" : ""}`}
+              data-project-filter={option.id}
+              aria-pressed={selected}
+              onClick={() => onChange(option.id)}
+            >
+              <span className="proj-filter-check" aria-hidden="true">{selected ? "✓" : "·"}</span>
+              <span>{option.label}</span>
+              <span className="proj-filter-count">{String(option.count).padStart(2, "0")}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Index row — the catalogue half of the projects section ──────────────────
 // 21 identically-weighted cards read as a database dump, not a curated body of
 // work. So the section splits: a few hero projects get poster treatment, and
@@ -1058,6 +946,10 @@ function Projects({ t }) {
   // complete catalog expands on intent; mobile keeps its swipe carousel, but
   // nobody has to swipe through 21 cards just to leave the block.
   const FEATURED_PROJECT_COUNT = 4;
+  const [isMobileCatalog, setIsMobileCatalog] = useState(() => (
+    typeof window.matchMedia === "function" && window.matchMedia("(max-width: 900px)").matches
+  ));
+  const [activeFilter, setActiveFilter] = useState("all");
   // Resolve a returning case-page anchor synchronously. Waiting for an effect
   // leaves the requested card display:none during the browser's native anchor
   // resolution and is especially unreliable on mobile under CPU pressure.
@@ -1068,8 +960,39 @@ function Projects({ t }) {
     return items.findIndex((p) => p.slug === slug) >= FEATURED_PROJECT_COUNT;
   });
   const hiddenCount = Math.max(0, items.length - FEATURED_PROJECT_COUNT);
-  const chapterItems = expanded ? items : items.slice(0, FEATURED_PROJECT_COUNT);
+  const filteredItems = activeFilter === "all"
+    ? items
+    : items.filter((item) => Array.isArray(item.categories) && item.categories.indexOf(activeFilter) !== -1);
+  // Mobile is the complete catalogue by design: all 29 products are mounted
+  // immediately and the filter reduces the filmstrip without hiding the rest
+  // behind an expansion command. Desktop keeps a curated four-card opening.
+  const chapterItems = isMobileCatalog
+    ? filteredItems
+    : (expanded ? items : items.slice(0, FEATURED_PROJECT_COUNT));
   const catalogUnit = t.projects.catalog_unit || "products";
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return undefined;
+    const query = window.matchMedia("(max-width: 900px)");
+    function applyLayout() {
+      setIsMobileCatalog(query.matches);
+      if (!query.matches) setActiveFilter("all");
+    }
+    applyLayout();
+    if (query.addEventListener) query.addEventListener("change", applyLayout);
+    else if (query.addListener) query.addListener(applyLayout);
+    return function cleanup() {
+      if (query.removeEventListener) query.removeEventListener("change", applyLayout);
+      else if (query.removeListener) query.removeListener(applyLayout);
+    };
+  }, []);
+
+  function changeProjectFilter(nextFilter) {
+    setActiveFilter(nextFilter);
+    requestAnimationFrame(() => {
+      if (gridRef.current) gridRef.current.scrollTo({ left: 0, behavior: "auto" });
+    });
+  }
 
   // Deep-link: arriving at #proj-<slug> (returning from that product's landing)
   // for a card the collapsed desktop grid hides (index >= 4) → expand the grid
@@ -1090,7 +1013,7 @@ function Projects({ t }) {
   // focus scroll and after any just-completed breakpoint reflow.
   function keepProjectFocusVisible(event) {
     const control = event.target && event.target.closest
-      ? event.target.closest(".proj-cta, .proj-repo, .proj-expand, .proj-chapters button")
+      ? event.target.closest(".proj-cta, .proj-repo, .proj-expand, .proj-chapters button, .proj-filter-chip")
       : null;
     if (!control) return;
     function alignFocusedProjectControl() {
@@ -1125,16 +1048,21 @@ function Projects({ t }) {
       <div className="shell">
         <SecHead num="04" eyebrow={t.projects.eyebrow} title={t.projects.title} meta={`${items.length} ${catalogUnit} · 2024–26`} />
 
+        <ProjectFilters items={items} active={activeFilter} onChange={changeProjectFilter} labels={t.projects} />
+
         {/* On touch the chapter rail belongs before the filmstrip: orientation
             is available before the first swipe and never ends up below a tall
             card. CSS keeps it out of the desktop composition. */}
         <ProjectChapterDots items={chapterItems} gridRef={gridRef} labels={t.projects} />
 
-        <div className={`proj-grid ${expanded ? "is-expanded" : "is-collapsed"}`} ref={gridRef}>
-          {chapterItems.map((p, i) => <ProjectCard key={p.slug || i} p={p} i={i} labels={t.projects} />)}
+        <div className={`proj-grid ${(isMobileCatalog || expanded) ? "is-expanded" : "is-collapsed"}`} ref={gridRef}>
+          {chapterItems.map((p) => {
+            const catalogIndex = items.findIndex((item) => item.slug === p.slug);
+            return <ProjectCard key={p.slug} p={p} i={catalogIndex} labels={t.projects} />;
+          })}
         </div>
 
-        {hiddenCount > 0 ? (
+        {!isMobileCatalog && hiddenCount > 0 ? (
           <button
             type="button"
             className="proj-expand mono"

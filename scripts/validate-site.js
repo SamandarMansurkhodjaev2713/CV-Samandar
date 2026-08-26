@@ -13,6 +13,7 @@ const ALLOWED_PORTFOLIO_STATE = new Set(["featured", "catalog", "hold"]);
 const ALLOWED_CONFIDENTIALITY = new Set(["public", "private_source", "nda", "sensitive"]);
 const ALLOWED_REPO_VISIBILITY = new Set(["public", "private"]);
 const ALLOWED_LIFECYCLE = new Set(["discovery", "build", "prototype", "demo", "live", "production", "source_incomplete"]);
+const ALLOWED_PRODUCT_CATEGORIES = new Set(["ai", "automation", "platform", "creative", "mobile"]);
 const ALLOWED_EVIDENCE_LEVEL = new Set([
   "live_plus_private_source", "showcase_plus_private_source", "case_plus_private_source",
   "public_source_plus_live", "private_source", "documented_discovery",
@@ -143,6 +144,11 @@ function validateRegistry(registry) {
     assert(ALLOWED_EVIDENCE_LEVEL.has(product.evidenceLevel), label + ": unsupported evidenceLevel " + product.evidenceLevel);
     assert(Array.isArray(product.privacyBoundary) && product.privacyBoundary.length > 0, label + ": privacyBoundary is required");
     assert(Array.isArray(product.repositoryAliases), label + ": repositoryAliases must be an array");
+    assert(Array.isArray(product.categories) && product.categories.length > 0, label + ": categories must be a non-empty array");
+    assert(new Set(product.categories).size === product.categories.length, label + ": categories must not contain duplicates");
+    product.categories.forEach(function validateCategory(category) {
+      assert(ALLOWED_PRODUCT_CATEGORIES.has(category), label + ": unsupported category " + category);
+    });
     assert(cleanString(product.image) && product.image.endsWith(".webp"), label + ": WebP image path is required");
     assert(/^#[0-9A-F]{6}$/i.test(product.accent), label + ": accent must be a six-digit hex color");
 

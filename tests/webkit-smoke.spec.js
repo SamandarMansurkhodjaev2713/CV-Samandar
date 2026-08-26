@@ -53,7 +53,11 @@ test("iPhone WebKit head safety releases a stalled authored intro module", async
   await expect(page.locator("#sm-intro")).toHaveCount(0, { timeout: 6000 });
   await expect(page.locator("html")).not.toHaveClass(/intro-lock/);
   await expect(page.locator("#root")).not.toBeEmpty();
-  await expect(page.locator(".hero-ctas .btn").first()).toBeEnabled();
+  // The artificial module stall deliberately spends the complete six-second
+  // head-safety deadline. Give the subsequently mounted shell its own bounded
+  // readiness budget instead of accidentally leaving it only the default
+  // expect remainder on a cold WebKit process.
+  await expect(page.locator(".hero-ctas .btn").first()).toBeEnabled({ timeout: 12000 });
   await expect.poll(() => page.evaluate(() => window.__SM_INTRO && window.__SM_INTRO.reason))
     .toMatch(/^head-safety-/);
 });
@@ -63,15 +67,11 @@ test("iPhone WebKit keeps the critical portfolio journey usable", async ({ page 
 
   await page.goto("/?e2e=1#projects", { waitUntil: "domcontentloaded" });
   await page.locator(".proj-card").first().waitFor({ state: "attached" });
-  await expect(page.locator(".proj-card")).toHaveCount(4);
-  await expect(page.locator(".proj-card:visible")).toHaveCount(4);
-  await expectNoHorizontalOverflow(expect, page, "webkit-main");
-
-  const expand = page.locator(".proj-expand");
-  await expect(expand).toBeVisible();
-  await expand.evaluate((button) => button.click());
   await expect(page.locator(".proj-card")).toHaveCount(orderedProducts.length);
   await expect(page.locator(".proj-card:visible")).toHaveCount(orderedProducts.length);
+  await expect(page.locator(".proj-expand")).toHaveCount(0);
+  await expect(page.locator(".proj-filter-chip")).toHaveCount(6);
+  await expectNoHorizontalOverflow(expect, page, "webkit-main");
 
   await page.locator(".nav-burger").click();
   await expect(page.locator(".nav-menu")).toHaveAttribute("aria-hidden", "false");

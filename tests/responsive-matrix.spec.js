@@ -1,7 +1,7 @@
 "use strict";
 
 const { test, expect } = require("@playwright/test");
-const { settleMain, expectNoHorizontalOverflow } = require("./helpers");
+const { settleMain, expectNoHorizontalOverflow, orderedProducts } = require("./helpers");
 
 const VIEWPORTS = [
   { width: 320, height: 568, label: "320x568 portrait" },
@@ -136,6 +136,7 @@ async function expectProjectGalleryLayout(page, viewport) {
   expect.soft(geometry.visibleCards, `${viewport.label}: gallery has fewer than two usable cards`).toBeGreaterThanOrEqual(2);
 
   if (mobileGallery) {
+    expect.soft(geometry.visibleCards, `${viewport.label}: mobile catalogue does not expose all canonical products`).toBe(orderedProducts.length);
     expect.soft(geometry.display, `${viewport.label}: mobile gallery is not a flex track`).toBe("flex");
     expect.soft(geometry.overflowX, `${viewport.label}: mobile gallery cannot scroll horizontally`).toBe("auto");
     expect.soft(geometry.scrollSnapType, `${viewport.label}: mobile gallery lost scroll snap`).toContain("x");
@@ -158,6 +159,79 @@ async function expectProjectGalleryLayout(page, viewport) {
     expect.soft(geometry.scrollWidth, `${viewport.label}: desktop gallery retained horizontal carousel overflow`).toBeLessThanOrEqual(geometry.clientWidth + 1);
     expect.soft(geometry.pagerVisible, `${viewport.label}: mobile pager leaked into desktop layout`).toBe(false);
   }
+}
+
+async function expectAboutProofLayout(page, viewport) {
+  const proof = page.locator("#about .about-proof");
+  await proof.scrollIntoViewIfNeeded();
+  await afterResponsiveLayout(page);
+
+  const geometry = await proof.evaluate((element) => {
+    const section = element.closest("section");
+    const shell = section.querySelector(":scope > .shell");
+    const heading = section.querySelector(".sec-head h2");
+    const shellRect = shell.getBoundingClientRect();
+    const proofRect = element.getBoundingClientRect();
+    const headingRect = heading.getBoundingClientRect();
+    const lines = Array.from(heading.querySelectorAll(".sec-title-line"));
+    const rows = Array.from(element.querySelectorAll(".about-proof-route li"));
+    const textTargets = Array.from(element.querySelectorAll([
+      ".about-proof-lead",
+      ".about-proof-note",
+      ".about-proof-paragraph",
+      ".about-proof-route li > span:last-child",
+      ".about-stat-v",
+      ".about-stat-k",
+      ".about-proof-focus li > span:last-child",
+    ].join(",")));
+
+    return {
+      viewportWidth: innerWidth,
+      shell: { left: shellRect.left, right: shellRect.right },
+      proof: {
+        left: proofRect.left,
+        right: proofRect.right,
+        width: proofRect.width,
+        scrollWidth: element.scrollWidth,
+        clientWidth: element.clientWidth,
+      },
+      heading: {
+        left: headingRect.left,
+        right: headingRect.right,
+        scrollWidth: heading.scrollWidth,
+        clientWidth: heading.clientWidth,
+      },
+      lines: lines.map((line) => {
+        const rect = line.getBoundingClientRect();
+        return { text: line.textContent, left: rect.left, right: rect.right, width: rect.width };
+      }),
+      rowCount: rows.length,
+      rowColumns: rows[0] ? getComputedStyle(rows[0]).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
+      statCount: element.querySelectorAll(".about-stat").length,
+      leadSize: Number.parseFloat(getComputedStyle(element.querySelector(".about-proof-lead")).fontSize),
+      textOverflows: textTargets.filter((target) => target.scrollWidth > target.clientWidth + 1).map((target) => ({
+        className: target.className,
+        text: target.textContent.trim().slice(0, 80),
+        scrollWidth: target.scrollWidth,
+        clientWidth: target.clientWidth,
+      })),
+    };
+  });
+
+  expect.soft(geometry.proof.left, `${viewport.label}: About proof escapes the shell on the left`).toBeGreaterThanOrEqual(geometry.shell.left - 1);
+  expect.soft(geometry.proof.right, `${viewport.label}: About proof escapes the shell on the right`).toBeLessThanOrEqual(geometry.shell.right + 1);
+  expect.soft(geometry.proof.scrollWidth, `${viewport.label}: About proof has internal horizontal overflow`).toBeLessThanOrEqual(geometry.proof.clientWidth + 1);
+  expect.soft(geometry.heading.scrollWidth, `${viewport.label}: About heading overflows its box`).toBeLessThanOrEqual(geometry.heading.clientWidth + 1);
+  expect.soft(geometry.lines).toHaveLength(3);
+  for (const line of geometry.lines) {
+    expect.soft(line.left, `${viewport.label}: About title line starts outside shell: ${line.text}`).toBeGreaterThanOrEqual(geometry.shell.left - 1);
+    expect.soft(line.right, `${viewport.label}: About title line ends outside shell: ${line.text}`).toBeLessThanOrEqual(geometry.shell.right + 1);
+  }
+  expect.soft(geometry.rowCount, `${viewport.label}: ownership route is incomplete`).toBe(4);
+  expect.soft(geometry.rowColumns, `${viewport.label}: ownership route lost its three-part reading order`).toBe(3);
+  expect.soft(geometry.statCount, `${viewport.label}: About facts are incomplete`).toBe(4);
+  expect.soft(geometry.leadSize, `${viewport.label}: About lead is too small to read`).toBeGreaterThanOrEqual(viewport.width <= 900 ? 23 : 27);
+  expect.soft(geometry.textOverflows, `${viewport.label}: About text clips: ${JSON.stringify(geometry.textOverflows)}`).toEqual([]);
 }
 
 test.describe("stage 9 responsive regression matrix", () => {
@@ -202,6 +276,24 @@ test.describe("stage 9 responsive regression matrix", () => {
     }
   });
 
+  test("About proof typography and reading order survive the canonical viewport sweep", async ({ page }) => {
+    // Keep the new proof-note contract independent from the project carousel.
+    // This makes a regression point to one layout owner and prevents two full
+    // sweeps from sharing one timeout while preserving all eleven viewports.
+    test.setTimeout(90000);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await settleMain(page, "#about");
+    await expect(page.locator("html")).toHaveAttribute("data-deep-link-settled", "about");
+
+    for (const viewport of VIEWPORTS) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await afterResponsiveLayout(page);
+      await expectMainIsRendered(page, `${viewport.label}: About`);
+      await expectNoHorizontalOverflow(expect, page, `${viewport.label}: About`);
+      await expectAboutProofLayout(page, viewport);
+    }
+  });
+
   test("200% text zoom and active menu/gallery survive orientation and breakpoint changes", async ({ page }) => {
     // This scenario performs three live breakpoint transitions while preserving
     // UI state; it contains no sleeps and uses assertion-driven readiness only.
@@ -219,6 +311,7 @@ test.describe("stage 9 responsive regression matrix", () => {
     expect(rootFontSize).toBeGreaterThanOrEqual(31.5);
     await expectMainIsRendered(page, "200% text zoom");
     await expectNoHorizontalOverflow(expect, page, "200% text zoom");
+    await expectAboutProofLayout(page, { width: 390, height: 844, label: "200% text zoom" });
     await expectFocusIsUnobscured(
       page,
       page.locator(".proj-card:visible .proj-cta").first(),
@@ -245,19 +338,22 @@ test.describe("stage 9 responsive regression matrix", () => {
     await expect(page.locator("#site-menu")).not.toHaveClass(/is-open/);
     await expect(page.locator("#main")).not.toHaveAttribute("aria-hidden", "true");
 
-    // Expand and move the carousel before rotating it, then cross the 900px
-    // breakpoint. Expansion is user state and must survive both transitions.
+    // Mobile is the complete catalogue by contract: there is no ambiguous
+    // expansion command. Move the filmstrip, rotate it, then cross the 900px
+    // breakpoint where the curated desktop opening deliberately returns.
     await page.setViewportSize({ width: 390, height: 844 });
     await afterResponsiveLayout(page);
     const expand = page.locator(".proj-expand");
-    await expand.evaluate((button) => button.click());
-    await expect(expand).toHaveAttribute("aria-expanded", "true");
+    await expect(expand).toHaveCount(0);
+    await expect(page.locator(".proj-card")).toHaveCount(orderedProducts.length);
+    await expect(page.locator(".proj-filter-chip")).toHaveCount(6);
     await page.locator(".proj-chapters-controls button").last().click();
     await expect.poll(() => page.locator(".proj-grid").evaluate((grid) => grid.scrollLeft)).toBeGreaterThan(0);
 
     await page.setViewportSize({ width: 844, height: 390 });
     await afterResponsiveLayout(page);
-    await expect(expand).toHaveAttribute("aria-expanded", "true");
+    await expect(expand).toHaveCount(0);
+    await expect(page.locator(".proj-card")).toHaveCount(orderedProducts.length);
     await expect(page.locator(".mobile-dock")).toBeHidden();
     await expect(page.locator(".nav-counter")).toBeVisible();
     await expectNoHorizontalOverflow(expect, page, "expanded gallery after 844x390 orientation change");
@@ -278,7 +374,12 @@ test.describe("stage 9 responsive regression matrix", () => {
 
     await page.setViewportSize({ width: 1024, height: 768 });
     await afterResponsiveLayout(page);
-    await expect(expand).toHaveAttribute("aria-expanded", "true");
+    await expect(page.locator(".proj-card")).toHaveCount(4);
+    const desktopExpand = page.locator(".proj-expand");
+    await expect(desktopExpand).toBeVisible();
+    await desktopExpand.evaluate((button) => button.click());
+    await expect(desktopExpand).toHaveAttribute("aria-expanded", "true");
+    await expect(page.locator(".proj-card")).toHaveCount(orderedProducts.length);
     await expectNoHorizontalOverflow(expect, page, "expanded gallery after desktop breakpoint");
     const desktopGallery = await page.locator(".proj-grid").evaluate((grid) => ({
       display: getComputedStyle(grid).display,

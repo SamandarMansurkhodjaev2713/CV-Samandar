@@ -18,7 +18,7 @@ https://samandarmansurkhodjaev2713.github.io/CV-Samandar/
 
 Каждый запуск последовательно выполняет:
 
-1. `npm run test:production` — главная, 26 карточек, 48 RU / EN / UZ case URL,
+1. `npm run test:production` — главная, 29 карточек, 57 RU / EN / UZ case URL,
    runtime/network errors и возврат case → точная карточка без intro;
 2. `npm run monitor:production` — desktop 1440×1000 и mobile 412×839 в
    Chromium;

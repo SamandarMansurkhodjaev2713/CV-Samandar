@@ -597,8 +597,8 @@
               '<div class="lp-eyebrow mono">' + esc(c.tag || "") + "</div>" +
               '<h1 class="lp-title">' + esc(p.name) + "</h1>" +
               '<p class="lp-signal">' + esc(c.signal || "") + "</p>" +
-              '<div class="lp-cred mono"><span class="lp-cred-dot" aria-hidden="true"></span>' +
-                (c.role ? '<b class="lp-cred-role">' + esc(c.role) + "</b> · " : "") + esc(ui.builtBy) + "</div>" +
+              '<div class="lp-cred mono"><span class="lp-cred-dot" aria-hidden="true"></span><span class="lp-cred-copy">' +
+                (c.role ? '<b class="lp-cred-role">' + esc(c.role) + "</b> · " : "") + esc(ui.builtBy) + "</span></div>" +
               '<div class="lp-cta"><a class="lp-btn lp-btn-primary" href="' + base + '#contact">' + esc(ui.discuss) + ' <span class="lp-arr">→</span></a>' + githubBtn + "</div>" +
             "</div>" +
             '<figure class="lp-hero-visual" data-lp-reveal style="--reveal-delay:.08s"><div class="lp-photo"><img src="' + visual + '" srcset="' + visualSet + '" sizes="(max-width: 980px) calc(100vw - 28px), 55vw" alt="" loading="eager" fetchpriority="high" decoding="async" width="1536" height="512"></div><figcaption class="mono"><span>OBJECT / ' + esc(p.slug) + '</span><span>3:1 · RESPONSIVE EDITORIAL STUDY</span></figcaption></figure>' +
