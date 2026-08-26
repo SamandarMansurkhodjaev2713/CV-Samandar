@@ -66,16 +66,25 @@ retry: прямой вызов навигации мог опередить stag
 ждёт фактический DOM target и отменяет ожидание при более новом intent; App
 немедленно повышает render stage для выбранной смысловой главы. Focused stress
 после исправления прошёл 20/20 без retry. Runtime hotfix получил отдельный
-cache bump `v246`; финальный production evidence фиксируется после повторного
-полного workflow.
+cache bump `v246`. Повторный workflow `33017513257` на SHA `cef063f` прошёл
+полностью: clean build 8m09s, 64 byte-identical generated artifacts, browser
+matrix 175 passed / 121 profile-specific skipped / 0 failed / 0 flaky,
+performance 2/2, Pages deploy 10s и verify-production 54s. Независимый
+post-deploy smoke прошёл 3/3 за 27.9s, live routes — 10/10; production HTML
+вернул HTTP 200, 22 cache refs `v246` и ни одной другой asset version.
+Независимый synthetic monitor также завершился без budget violations:
+desktop ready 4979 ms / LCP 1980 ms / CLS 0.0002 / frame p95 233.4 ms;
+mobile ready 3757 ms / LCP 988 ms / CLS 0.0000 / frame p95 66.6 ms. Это
+constrained-runner Chromium evidence, не field RUM и не обещание постоянного
+FPS на физическом устройстве.
 
 Локальный WebKit на этом Windows host не создаёт browser process: запуск
 завершается кодом `0xC0E90002` до открытия страницы при включённой политике
 Verified and Reputable Apps; принудительная переустановка Playwright WebKit
 ситуацию не изменила. Политика безопасности не ослаблялась, поэтому это
-честно зафиксировано как external host-runtime blocker, а не product failure
-или WebKit PASS. Production smoke, physical iOS/Android и NVDA/VoiceOver для
-`v246` не заявляются до повторного workflow.
+честно зафиксировано как external host-runtime blocker, а не product failure.
+Чистый Linux workflow при этом успешно выполнил WebKit project внутри общей
+матрицы. Physical iOS/Android и NVDA/VoiceOver по-прежнему не заявляются.
 
 ## About maker's proof candidate — v243
 

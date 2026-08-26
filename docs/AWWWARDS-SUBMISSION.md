@@ -170,19 +170,19 @@ mobile performance. Он используется только как допол
 | Локализация | RU / EN / UZ; 57 generated case HTML |
 | Главная | 12 смысловых сцен |
 | Обложки | 29 предметных WebP-наборов 1536/1152/768, 3:1 |
-| Current Release Gate | local candidate `v246`; повторный production gate выполняется |
-| Current production | последний подтверждённый production gate описан в `QA-MATRIX.md` |
+| Current Release Gate | production `v246`; workflow и независимый smoke зелёные |
+| Current production | SHA `cef063f`, workflow `33017513257` |
 | Build | 64 generated artifacts, byte-identical double build |
-| Automated suite | Chromium/Firefox/reduced: 172 pass, 121 profile skips, 0 fail; local WebKit launch blocked before page creation |
+| Automated suite | Chromium/Firefox/WebKit/reduced: 175 pass, 121 profile skips, 0 fail/flaky |
 | Visual release review | 13 main states + 19 cases в desktop/mobile; 64 PNG + 4 contact sheets |
 | Production routes | после выпуска кандидата: main + 57 case URL + 10 live routes; post-deploy smoke и live check обязательны |
 
-Независимый monitor опубликованного `v2.14.1 / v242`, success:
+Независимый monitor опубликованного `v2.14.1 / v246`, success:
 
-- desktop 1440×1000: main ready 3595 ms, LCP 1640 ms, CLS 0.0003,
-  frame p95 66.8 ms;
-- mobile 412×839: main ready 3915 ms, LCP 900 ms, CLS 0.0000,
-  frame p95 33.3 ms;
+- desktop 1440×1000: main ready 4979 ms, LCP 1980 ms, CLS 0.0002,
+  frame p95 233.4 ms;
+- mobile 412×839: main ready 3757 ms, LCP 988 ms, CLS 0.0000,
+  frame p95 66.6 ms;
 - first-party failures и budget violations — 0.
 
 Это synthetic Chromium evidence конкретного runner, не field RUM и не
@@ -260,10 +260,11 @@ case и exact-card return, portrait→landscape. Пальцы/касания н�
 
 - [x] 29 / 10 / 19 product contract подтверждён canonical registry.
 - [x] 57 case routes и RU / EN / UZ parity подтверждены build/validation.
-- [ ] `v246` final local candidate: deterministic build, audit, secret scan,
-  Chromium/Firefox/reduced, axe, performance, live-route и visual gates
-  зелёные; WebKit остаётся непроверенным из-за блокировки host runtime до
-  создания страницы.
+- [x] `v246` final production: deterministic build, audit, secret scan,
+  Chromium/Firefox/WebKit/reduced, axe, performance, live-route и visual gates
+  зелёные; workflow `33017513257` не содержит retry/flaky.
+- [x] `v246` опубликован из `cef063f`; Pages build/deploy/verify-production,
+  независимый smoke 3/3 и live check 10/10 зелёные.
 - [x] `v2.14.1 / v242` опубликован из `68f0ead`; Pages workflow `32834472208`
   завершил build/deploy/verify-production, независимый smoke 3/3, live check
   10/10 и synthetic monitor без violations зелёные.
