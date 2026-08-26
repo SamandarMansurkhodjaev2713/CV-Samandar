@@ -5,7 +5,7 @@ Awwwards-переработки. План и критерии готовност
 `MASTER-IMPLEMENTATION-PLAN.md`; архитектурные контракты — в
 `ARCHITECTURE.md`.
 
-## Release Proof catalog and responsive candidate — v245
+## Release Proof catalog and responsive candidate — v246
 
 Повторный GitHub-аудит сохранил правило «один продукт — одна каноническая
 карточка» и добавил `Gorilla — Five Signals Concept` как самостоятельный
@@ -58,13 +58,24 @@ motion — 37 passed / 109 profile-specific skipped. Совокупно это 1
 dependency audit, documentation contract, 10/10 live routes и
 `git diff --check` зелёные.
 
+Первый production push `v245` прошёл build/deploy/verify, независимый smoke
+3/3 и live check 10/10, но cloud browser report честно отметил один flaky
+retry: прямой вызов навигации мог опередить staged mount секции About и
+получить отсутствующий target. Это был реальный ранний Index-click contract,
+а не только слабость теста. SceneCinema теперь публикует запрос монтирования,
+ждёт фактический DOM target и отменяет ожидание при более новом intent; App
+немедленно повышает render stage для выбранной смысловой главы. Focused stress
+после исправления прошёл 20/20 без retry. Runtime hotfix получил отдельный
+cache bump `v246`; финальный production evidence фиксируется после повторного
+полного workflow.
+
 Локальный WebKit на этом Windows host не создаёт browser process: запуск
 завершается кодом `0xC0E90002` до открытия страницы при включённой политике
 Verified and Reputable Apps; принудительная переустановка Playwright WebKit
 ситуацию не изменила. Политика безопасности не ослаблялась, поэтому это
 честно зафиксировано как external host-runtime blocker, а не product failure
 или WebKit PASS. Production smoke, physical iOS/Android и NVDA/VoiceOver для
-`v245` не заявляются: кандидат ещё не опубликован.
+`v246` не заявляются до повторного workflow.
 
 ## About maker's proof candidate — v243
 

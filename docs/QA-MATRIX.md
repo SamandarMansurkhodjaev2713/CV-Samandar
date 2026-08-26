@@ -32,23 +32,26 @@
 
 | Gate | Статус | Доказательство |
 |---|---|---|
-| Generated site contract | **GREEN** | local candidate `v245`: `npm run validate` → `OK — 29 products, 10 live routes, 19 case routes, 3 locales`; 57 generated case pages, 58 sitemap URL и 29 responsive project-art sets (2026-08-27) |
-| Browser regression без WebKit | **GREEN** | два serial process без retry: desktop Chromium + Firefox → 135 passed / 12 profile-specific skipped; mobile Chromium + reduced motion → 37 passed / 109 profile-specific skipped. Итого 172 passed / 121 целевой skip / 0 failed (2026-08-27) |
+| Generated site contract | **GREEN** | local candidate `v246`: `npm run validate` → `OK — 29 products, 10 live routes, 19 case routes, 3 locales`; 57 generated case pages, 58 sitemap URL и 29 responsive project-art sets (2026-08-27) |
+| Browser regression без WebKit | **GREEN** | два serial process без retry: desktop Chromium + Firefox → 135 passed / 12 profile-specific skipped; mobile Chromium + reduced motion → 37 passed / 109 profile-specific skipped. Итого 172 passed / 121 целевой skip / 0 failed; early-navigation hotfix дополнительно прошёл 20/20 без retry (2026-08-27) |
 | iPhone WebKit critical path | **EXTERNAL BLOCKER** | Playwright WebKit завершает launch кодом `0xC0E90002` до создания страницы при активной Windows Verified and Reputable Apps policy. `playwright install --force webkit` не изменил результат; политика безопасности не ослаблялась. Это host-runtime blocker, не product assertion (2026-08-26) |
-| Isolated performance budgets | **GREEN** | local candidate `v245`: staged React mount; `npm run test:performance` → desktop/mobile 2/2 без изменения порогов, 20.8 s desktop и 9.5 s mobile (2026-08-26) |
+| Isolated performance budgets | **GREEN** | local candidate `v246`: staged React mount; `npm run test:performance` → desktop/mobile 2/2 без изменения порогов, 20.8 s desktop и 9.5 s mobile (2026-08-26) |
 | Mobile/catalog geometry stress | **GREEN** | 27 Hero locale/viewport states; 11 canonical viewport About matrix; all-29 mobile art decode/visibility; all-19 case viewport/deep-link/scroll-spy; desktop expanded-card collision test — 0 failed (2026-08-27) |
-| Build determinism | **GREEN** | local candidate `v245`: `npm run check:build` → 64 generated artifacts byte-identical в двух последовательных сборках (2026-08-27) |
-| Dependency/secret gates | **GREEN** | local candidate `v245`: `npm audit --audit-level=high` → 0 vulnerabilities; `npm run scan:secrets` → no credential signatures (2026-08-27) |
+| Build determinism | **GREEN** | local candidate `v246`: `npm run check:build` → 64 generated artifacts byte-identical в двух последовательных сборках (2026-08-27) |
+| Dependency/secret gates | **GREEN** | local candidate `v246`: `npm audit --audit-level=high` → 0 vulnerabilities; `npm run scan:secrets` → no credential signatures (2026-08-27) |
 | External live routes | **GREEN** | `npm run check:live` → 10/10 approved HTTPS live routes вернули usable HTML, включая Gorilla Five Signals и Echelon Pages (2026-08-26) |
 | Deployed production smoke | **GREEN (v242)** | merge SHA `68f0ead`, GitHub Actions `32834472208`: build 7m35s, Pages deploy 11s, verify-production 58s — success; независимый `npm run test:production` → 3/3; production HTML HTTP 200, содержит 23 refs `v242` и 0 refs иных версий; 57 case routes, exact-card return и 10/10 live routes подтверждены (2026-08-25) |
 | Post-deploy synthetic monitor | **GREEN (v242)** | независимый `npm run monitor:production`: desktop ready 3595 ms / LCP 1640 ms / CLS 0.0003 / frame p95 66.8 ms; mobile ready 3915 ms / LCP 900 ms / CLS 0.0000 / frame p95 33.3 ms; 0 budget violations. Это synthetic Chromium evidence, не field RUM и не physical-device proof (2026-08-25) |
-| Visual capture + human review | **GREEN** | local candidate `v245`: `npm run qa:visual` → 4/4, затем case decode recapture → 2/2; заново созданы и вручную просмотрены 26 main captures, 38 full-page case captures и 4 contact sheets для desktop/mobile. Видимых обрезок headline, пустых reveal-поз, незагруженных artwork или непредусмотренного horizontal overflow не обнаружено (2026-08-26) |
+| Visual capture + human review | **GREEN** | local candidate `v246`: `npm run qa:visual` → 4/4, затем case decode recapture → 2/2; runtime hotfix не меняет layout/visual assets. Заново созданы и вручную просмотрены 26 main captures, 38 full-page case captures и 4 contact sheets для desktop/mobile (2026-08-26) |
 | Manual local browser review | **GREEN (local candidate only)** | Chromium screenshots/contact sheets проверены для Intro/Hero/Index/About/Projects/buttons и всех 19 case routes на desktop/mobile; отдельные DOM geometry sweeps покрыли 320×568, 390×844, 844×390, 920–1920 desktop и 200% text zoom. Это не production/physical-device proof (2026-08-26) |
 | Manual production browser journey | **GREEN (v2.13.0 only)** | опубликованный `v232` ранее проверен вручную в Chromium; для `v2.13.2` отдельный physical/manual PASS не заявляется. Production Chromium smoke 3/3 и synthetic desktop/mobile monitor вынесены в отдельные строки |
 | NVDA / VoiceOver / physical devices | **NOT RUN** | локальная headless-среда не может честно подтвердить эти проверки |
 
-Локальный `v245` остаётся неопубликованным кандидатом. Production сейчас
-`v2.14.1 / v242`, опубликованный из SHA `68f0ead` и
+Локальный `v246` — hotfix-кандидат. Production `v245` из SHA `e2fef97`
+прошёл workflow `33016247396`, smoke 3/3 и live check 10/10, но внутри cloud
+browser report имел один flaky retry ранней навигации; поэтому финальным
+кандидатом не считается и заменяется `v246`. Предыдущий стабильный production
+baseline `v2.14.1 / v242` опубликован из SHA `68f0ead` и
 проверенный workflow `32834472208`, независимым smoke 3/3, live check 10/10 и
 synthetic production monitor без violations. `v2.14.1 / v240` остаётся
 предыдущим rollback baseline. Physical device и assistive-technology проверки

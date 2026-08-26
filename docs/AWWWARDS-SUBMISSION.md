@@ -1,6 +1,6 @@
 # Awwwards submission package
 
-Актуально для локального кандидата: `v245`, 2026-08-27
+Актуально для локального кандидата: `v246`, 2026-08-27
 
 Production: <https://samandarmansurkhodjaev2713.github.io/CV-Samandar/>
 
@@ -170,7 +170,7 @@ mobile performance. Он используется только как допол
 | Локализация | RU / EN / UZ; 57 generated case HTML |
 | Главная | 12 смысловых сцен |
 | Обложки | 29 предметных WebP-наборов 1536/1152/768, 3:1 |
-| Current Release Gate | local candidate `v245`; production smoke ещё не выполнялся |
+| Current Release Gate | local candidate `v246`; повторный production gate выполняется |
 | Current production | последний подтверждённый production gate описан в `QA-MATRIX.md` |
 | Build | 64 generated artifacts, byte-identical double build |
 | Automated suite | Chromium/Firefox/reduced: 172 pass, 121 profile skips, 0 fail; local WebKit launch blocked before page creation |
@@ -260,7 +260,7 @@ case и exact-card return, portrait→landscape. Пальцы/касания н�
 
 - [x] 29 / 10 / 19 product contract подтверждён canonical registry.
 - [x] 57 case routes и RU / EN / UZ parity подтверждены build/validation.
-- [ ] `v245` final local candidate: deterministic build, audit, secret scan,
+- [ ] `v246` final local candidate: deterministic build, audit, secret scan,
   Chromium/Firefox/reduced, axe, performance, live-route и visual gates
   зелёные; WebKit остаётся непроверенным из-за блокировки host runtime до
   создания страницы.

@@ -15,6 +15,7 @@
   var runtime = window.__SM_MOTION_RUNTIME || null;
   var active = null;
   var sequence = 0;
+  var pendingTargetIntent = 0;
   var bound = false;
   var unsubscribePolicy = function () {};
 
@@ -48,6 +49,45 @@
 
   function targetFor(id) {
     return id ? document.getElementById(id) : null;
+  }
+
+  // The React shell mounts non-critical chapters in short stages. A user can
+  // still open the Index and choose a later chapter before that 270 ms window
+  // has completed. Navigation must promote the requested chapter and wait for
+  // its real DOM target instead of silently dropping the first click.
+  function waitForTarget(id) {
+    return new Promise(function (resolve) {
+      var observer = null;
+      var pulse = 0;
+      var timeout = 0;
+      var settled = false;
+
+      function finish(target) {
+        if (settled) return;
+        settled = true;
+        if (observer) observer.disconnect();
+        if (pulse) clearInterval(pulse);
+        if (timeout) clearTimeout(timeout);
+        resolve(target || null);
+      }
+
+      function check() {
+        var target = targetFor(id);
+        if (target) finish(target);
+      }
+
+      if (typeof MutationObserver === "function" && document.documentElement) {
+        observer = new MutationObserver(check);
+        observer.observe(document.documentElement, { childList: true, subtree: true });
+      } else {
+        pulse = setInterval(check, 32);
+      }
+      timeout = setTimeout(function () { finish(targetFor(id)); }, 1500);
+      try {
+        window.dispatchEvent(new CustomEvent("sm:ensure-section", { detail: { id: id } }));
+      } catch (error) { /* a missing target still resolves honestly below */ }
+      check();
+    });
   }
 
   function setActiveSection(id) {
@@ -211,12 +251,8 @@
     return transaction.promise;
   }
 
-  function navigate(value, options) {
+  function navigateResolved(id, target, options) {
     options = options || {};
-    var id = sectionId(value);
-    var target = targetFor(id);
-    if (!id || !target) return Promise.resolve({ id: id, reason: "missing-target" });
-
     // Publish viewport ownership before History or scrolling changes. The
     // first-load deep-link stabilizer listens to this event and yields to the
     // newer transaction even when navigation is invoked through the API rather
@@ -242,6 +278,22 @@
       return Promise.resolve({ id: id, reason: reduced ? "reduced-motion" : limited ? "performance-cut" : "fallback" });
     }
     return begin(id, target, options.source || "programmatic");
+  }
+
+  function navigate(value, options) {
+    options = options || {};
+    var id = sectionId(value);
+    var intent = ++pendingTargetIntent;
+    if (!id) return Promise.resolve({ id: id, reason: "missing-target" });
+    var target = targetFor(id);
+    if (target) return navigateResolved(id, target, options);
+    return waitForTarget(id).then(function (resolved) {
+      if (intent !== pendingTargetIntent) {
+        return { id: id, reason: "superseded-before-mount" };
+      }
+      if (!resolved) return { id: id, reason: "missing-target" };
+      return navigateResolved(id, resolved, options);
+    });
   }
 
   function onClick(event) {

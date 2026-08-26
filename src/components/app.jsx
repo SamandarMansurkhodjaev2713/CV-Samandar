@@ -186,12 +186,12 @@ const EXTRA_SECTION_LABELS = {
 // ONLY on explicit navigation clicks. Reduced-motion falls back to the plain
 // jump (scroll-behavior:auto already handles the scroll itself).
 function flyTo(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
   if (window.SceneCinema && typeof window.SceneCinema.navigate === "function") {
     window.SceneCinema.navigate(id);
     return;
   }
+  const el = document.getElementById(id);
+  if (!el) return;
   const reduced = typeof window.matchMedia === "function" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   try { history.replaceState(null, "", "#" + id); } catch (e) { /* opportunistic */ }
@@ -703,6 +703,20 @@ function App() {
       timers.forEach((timer) => window.clearTimeout(timer));
       frames.forEach((frame) => window.cancelAnimationFrame(frame));
     };
+  }, []);
+
+  // SceneCinema can receive a menu intent during the staged first mount. Make
+  // the requested semantic chapter available immediately; the navigator then
+  // waits for the committed DOM node and completes the original click.
+  useE(() => {
+    function ensureSection(event) {
+      const id = event && event.detail && event.detail.id;
+      if (id && FULL_MENU_SECTIONS.includes(id) && id !== "hero" && id !== "signal") {
+        setRenderStage(4);
+      }
+    }
+    window.addEventListener("sm:ensure-section", ensureSection);
+    return () => window.removeEventListener("sm:ensure-section", ensureSection);
   }, []);
 
   // The opening sequence is a real readiness gate, not a decorative timer.
