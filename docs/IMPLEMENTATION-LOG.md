@@ -39,13 +39,17 @@ approved live routes — 10/10; performance — desktop/mobile 2/2; visual gate 
 за пропавшее изображение.
 
 Полный локальный browser run завершился 187 passed / 118 profile-specific
-skipped / 1 external Windows Firefox compositor timeout. Второй Firefox case
-journey и все пять WebKit critical-path сценариев прошли; Chromium/reduced
-матрица не получила product failure. Навигационный hotfix после visual gate
-отдельно выдержал 18 passed / 2 profile-specific skipped в двух повторах.
-Windows Firefox timeout не объявляется PASS и должен быть закрыт чистым Linux
-CI до deploy. Сам deploy и post-deploy smoke пока `NOT RUN`; раздел v246 ниже
-остаётся последним подтверждённым production evidence.
+skipped / 1 Firefox-smoke failure до catalog control. Linux candidate workflow
+воспроизвёл его и локализовал не compositor-дефект, а устаревший hardcoded
+accessible name `Показать ещё 23`: после роста реестра до 30 продуктов реальная
+кнопка корректно читалась как `Показать ещё 24`. Smoke переведён на
+`orderedProducts.length - 6` и после исправления выдержал 6/6 Firefox journey
+в трёх последовательных циклах. Все пять WebKit critical-path сценариев
+прошли; Chromium/reduced матрица не получила product failure. Навигационный
+hotfix после visual gate отдельно выдержал 18 passed / 2 profile-specific
+skipped в двух повторах. Clean Linux CI для исправленного SHA остаётся
+обязательным до deploy. Сам deploy и post-deploy smoke пока `NOT RUN`; раздел
+v246 ниже остаётся последним подтверждённым production evidence.
 
 ## Release Proof catalog and responsive candidate — v246
 

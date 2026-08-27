@@ -56,6 +56,9 @@
 
 ### Changed
 
+- Firefox catalog smoke больше не хранит вручную количество скрытых карточек:
+  accessible name expand-control вычисляется из канонического product registry,
+  поэтому добавление продукта не создаёт ложный release blocker.
 - About больше не имитирует профильный dashboard: live-clock, GitHub telemetry,
   stack chips и повторяющая Projects лента заменены на одну annotated maker's
   proof-композицию. Она связывает позиционирование Builder + QA с маршрутом

@@ -49,7 +49,7 @@ portfolio gate, remote CI, production или provider-backed evidence.
 |---|---|---|
 | Generated/site contract | **GREEN (local candidate)** | `validate` → 30 products / 10 live / 20 case / 3 locales; `check:build` → 67 byte-identical generated artifacts; 60 localized case HTML и 61 sitemap URL |
 | Security/dependencies/docs | **GREEN (local candidate)** | secret scan clean; `npm audit --audit-level=high` → 0 vulnerabilities; documentation contract → 17/17; `git diff --check` без whitespace error |
-| Browser matrix | **EXTERNAL BLOCKER (local Windows Firefox)** | `npm test` → 187 passed / 118 profile-specific skipped / 1 Firefox compositor timeout до нажатия catalog control. Второй Firefox case journey прошёл; WebKit 5/5, Chromium и reduced-motion product failures отсутствуют. Это не PASS: clean Linux CI обязателен до deploy |
+| Browser matrix | **TARGETED GREEN / CLEAN CI REQUIRED** | Первый candidate run выявил устаревшее hardcoded ожидание Firefox-smoke: `Показать ещё 23` после роста канонического каталога до 30 продуктов. Smoke теперь вычисляет `orderedProducts.length - 6`; targeted Firefox stress → 6/6 в трёх последовательных циклах. Полный clean Linux CI для исправленного SHA остаётся обязательным до deploy |
 | Navigation landing regression | **GREEN (local candidate)** | explicit pinned-section landing исправлен; targeted navigation/cinema suite в двух повторах → 18 passed / 2 profile-specific skipped / 0 failed |
 | Performance budgets | **GREEN (local candidate)** | isolated desktop/mobile Chromium → 2/2 без изменения порогов |
 | External live routes | **GREEN (local candidate)** | 10/10 approved HTTPS routes вернули usable HTML |

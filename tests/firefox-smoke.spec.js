@@ -18,7 +18,8 @@ test.describe("Firefox release smoke", () => {
     await expect(page.locator(".proj-card")).toHaveCount(6);
     await expect(page.locator(".proj-card:visible")).toHaveCount(6);
 
-    await page.getByRole("button", { name: /Показать ещё 23/ }).click();
+    const hiddenCount = orderedProducts.length - 6;
+    await page.getByRole("button", { name: `Показать ещё ${hiddenCount}` }).click();
     await expect(page.locator(".proj-card")).toHaveCount(orderedProducts.length);
     await expect(page.locator(".proj-card:visible")).toHaveCount(orderedProducts.length);
 
