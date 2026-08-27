@@ -2,6 +2,17 @@
 
 const { useEffect: useE, useRef: useR, useState: useS } = React;
 
+const ERROR_COPY = {
+  ru: { code: "ВОССТАНОВЛЕНИЕ", title: "Интерфейс не открылся", body: "Проекты и контакты в безопасности. Обновите страницу — если сбой повторится, напишите мне напрямую.", reload: "Обновить страницу", telegram: "Написать в Telegram" },
+  en: { code: "RECOVERY", title: "The interface did not open", body: "Projects and contact links are safe. Reload the page — if the issue repeats, message me directly.", reload: "Reload page", telegram: "Message on Telegram" },
+  uz: { code: "TIKLASH", title: "Interfeys ochilmadi", body: "Loyihalar va aloqa havolalari xavfsiz. Sahifani yangilang — muammo takrorlansa, menga to‘g‘ridan-to‘g‘ri yozing.", reload: "Sahifani yangilash", telegram: "Telegram’da yozish" },
+};
+
+function initialLanguage() {
+  const requested = new URLSearchParams(window.location.search || "").get("lang");
+  return requested === "en" || requested === "uz" ? requested : "ru";
+}
+
 // ── Error Boundary (class component — required by React API)
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { error: null }; }
@@ -9,14 +20,15 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(err, info) { console.error("[ErrorBoundary]", err, info); }
   render() {
     if (this.state.error) {
+      const copy = ERROR_COPY[initialLanguage()] || ERROR_COPY.ru;
       return (
         <main className="fatal-shell" role="alert">
-          <span className="fatal-code mono">RECOVERY · 01</span>
-          <h1>Интерфейс не открылся</h1>
-          <p>Проекты и контакты в безопасности. Обновите страницу — если сбой повторится, напишите мне напрямую.</p>
+          <span className="fatal-code mono">{copy.code} · 01</span>
+          <h1>{copy.title}</h1>
+          <p>{copy.body}</p>
           <div className="fatal-actions">
-            <button type="button" onClick={() => window.location.reload()}>Обновить страницу</button>
-            <a href="https://t.me/killallofthem13">Написать в Telegram</a>
+            <button type="button" onClick={() => window.location.reload()}>{copy.reload}</button>
+            <a href="https://t.me/killallofthem13">{copy.telegram}</a>
           </div>
           <span className="fatal-foot mono">SAMANDAR · RELEASE PROOF</span>
         </main>
@@ -33,10 +45,54 @@ const NAV_SECTIONS = ["about", "projects", "skills", "services", "cv", "faq", "c
 // mobile rail can never describe three different pages.
 const FULL_MENU_SECTIONS = ["hero", "signal", "about", "projects", "builder", "skills", "services", "cv", "process", "faq", "trust", "contact"];
 const FULL_MENU_LABELS = {
-  ru: { hero: "Старт", signal: "Почему со мной", process: "Метод", builder: "Конструктор", trust: "Гарантия качества" },
+  ru: { hero: "Старт", signal: "Почему со мной", process: "Метод", builder: "Конструктор", trust: "Качество" },
   en: { hero: "Start", signal: "Why me", process: "Method", builder: "Project builder", trust: "Quality proof" },
-  uz: { hero: "Boshlanish", signal: "Nega men", process: "Jarayon", builder: "Konstruktor", trust: "Sifat kafolati" },
+  uz: { hero: "Boshlanish", signal: "Nega men", process: "Jarayon", builder: "Konstruktor", trust: "Sifat" },
 };
+
+const MAIN_HEAD_META = {
+  ru: {
+    title: "Samandar — Full-stack Product Engineer, AI Automation & QA",
+    description: "Full-stack product engineer и QA-инженер из Ташкента. Создаю web-продукты и AI-автоматизации — от UX и кода до проверенного релиза. Remote, RU/UZ/EN.",
+    ogTitle: "Full-stack Product Engineer · AI Automation · QA",
+    ogDescription: "Проектирую, собираю и проверяю web-продукты и AI-автоматизации — один ответственный от задачи до релиза.",
+    locale: "ru_RU",
+  },
+  en: {
+    title: "Samandar — Full-stack Product Engineer, AI Automation & QA",
+    description: "Full-stack product engineer and QA engineer in Tashkent. I design, build and verify web products and AI automation end to end. Remote, RU/UZ/EN.",
+    ogTitle: "Full-stack Product Engineer · AI Automation · QA",
+    ogDescription: "I design, build and verify web products and AI automation — one owner from the brief to a tested release.",
+    locale: "en_US",
+  },
+  uz: {
+    title: "Samandar — Full-stack Product Engineer, AI Automation va QA",
+    description: "Toshkentdagi full-stack product engineer va QA muhandisi. Web-mahsulotlar va AI avtomatlashtirishni UX’dan tekshirilgan relizgacha yarataman. Remote, RU/UZ/EN.",
+    ogTitle: "Full-stack Product Engineer · AI Automation · QA",
+    ogDescription: "Web-mahsulotlar va AI avtomatlashtirishni loyihalayman, yarataman va tekshiraman — vazifadan relizgacha bitta mas’ul.",
+    locale: "uz_UZ",
+  },
+};
+
+function syncMainHead(lang) {
+  const meta = MAIN_HEAD_META[lang] || MAIN_HEAD_META.ru;
+  const base = "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/";
+  const canonical = lang === "ru" ? base : `${base}?lang=${lang}`;
+  function setContent(selector, value) {
+    const node = document.querySelector(selector);
+    if (node) node.setAttribute("content", value);
+  }
+  document.title = meta.title;
+  setContent('meta[name="description"]', meta.description);
+  setContent('meta[property="og:title"]', meta.ogTitle);
+  setContent('meta[property="og:description"]', meta.ogDescription);
+  setContent('meta[property="og:locale"]', meta.locale);
+  setContent('meta[property="og:url"]', canonical);
+  setContent('meta[name="twitter:title"]', meta.title);
+  setContent('meta[name="twitter:description"]', meta.ogDescription);
+  const canonicalLink = document.querySelector('link[rel="canonical"]');
+  if (canonicalLink) canonicalLink.setAttribute("href", canonical);
+}
 
 // ── Haptic helper.
 // `navigator.vibrate` is supported on Android Chrome and ~most Android browsers.
@@ -246,7 +302,6 @@ const MENU_ACCENT = Object.fromEntries(FULL_MENU_SECTIONS.map((id) => [id, "205,
 function Nav({ t, lang, setLang, active, contentRevision }) {
   const [open, setOpen] = useS(false);
   const [menuPresent, setMenuPresent] = useS(false);
-  const [peek, setPeek] = useS(null);
   const burgerRef = useR(null);
   const closeRef = useR(null);
   const menuRef = useR(null);
@@ -259,12 +314,23 @@ function Nav({ t, lang, setLang, active, contentRevision }) {
   // with the dock (same querySelectorAll pattern), so the counter can never
   // disagree with the actual page.
   const [secOrder, setSecOrder] = useS([]);
-  const [clock, setClock] = useS("");
   const menuCopy = {
-      ru: { dialog: "Навигация по сайту", open: "Открыть меню", close: "Закрыть меню", trigger: "МЕНЮ", language: "Язык", sound: "Звук интерфейса" },
-      en: { dialog: "Site navigation", open: "Open menu", close: "Close menu", trigger: "MENU", language: "Language", sound: "Interface sound" },
-      uz: { dialog: "Sayt bo‘yicha navigatsiya", open: "Menyuni ochish", close: "Menyuni yopish", trigger: "MENYU", language: "Til", sound: "Interfeys ovozi" },
-  }[lang] || { dialog: "Site navigation", open: "Open menu", close: "Close menu", trigger: "MENU", language: "Language", sound: "Interface sound" };
+      ru: {
+        dialog: "Навигация по сайту", open: "Открыть оглавление", close: "Закрыть оглавление",
+        trigger: "ОГЛАВЛЕНИЕ", language: "Язык", index: "Оглавление", choose: "Выберите главу",
+        note: "Один маршрут: позиционирование, работы, процесс и прямой контакт.", current: "Текущая глава",
+      },
+      en: {
+        dialog: "Site navigation", open: "Open index", close: "Close index",
+        trigger: "INDEX", language: "Language", index: "Index", choose: "Choose a chapter",
+        note: "One route through positioning, work, process and direct contact.", current: "Current chapter",
+      },
+      uz: {
+        dialog: "Sayt bo‘yicha navigatsiya", open: "Mundarijani ochish", close: "Mundarijani yopish",
+        trigger: "MUNDARIJA", language: "Til", index: "Mundarija", choose: "Bo‘limni tanlang",
+        note: "Pozitsiya, ishlar, jarayon va bevosita aloqa bo‘ylab yagona yo‘l.", current: "Joriy bo‘lim",
+      },
+  }[lang] || { dialog: "Site navigation", open: "Open index", close: "Close index", trigger: "INDEX", language: "Language", index: "Index", choose: "Choose a chapter", note: "One clear route through the portfolio.", current: "Current chapter" };
 
   useE(() => {
     setSecOrder([...document.querySelectorAll("section[data-section]")].map((el) => el.getAttribute("data-section")));
@@ -364,12 +430,6 @@ function Nav({ t, lang, setLang, active, contentRevision }) {
     window.requestAnimationFrame(() => {
       if (closeRef.current) closeRef.current.focus({ preventScroll: true });
     });
-    function tick() {
-      const d = new Date(Date.now() + (5 * 60 + new Date().getTimezoneOffset()) * 60000);
-      setClock([d.getHours(), d.getMinutes(), d.getSeconds()].map((n) => String(n).padStart(2, "0")).join(":"));
-    }
-    tick();
-    const iv = window.setInterval(tick, 1000);
     const release = () => {
       document.body.style.overflow = prev;
       root.style.overflow = prevRoot;
@@ -380,7 +440,6 @@ function Nav({ t, lang, setLang, active, contentRevision }) {
         else element.setAttribute("aria-hidden", ariaHidden);
       });
       window.removeEventListener("keydown", onKey);
-      window.clearInterval(iv);
       const destination = destinationRef.current;
       destinationRef.current = null;
       if (destination) {
@@ -401,7 +460,6 @@ function Nav({ t, lang, setLang, active, contentRevision }) {
     menuReleaseRef.current.release = release;
     return () => {
       window.removeEventListener("keydown", onKey);
-      window.clearInterval(iv);
       // The visual shutter now clears in 360 ms. Keep the semantic/inert lock
       // only a hair longer than the pixels, otherwise a destination feels
       // frozen after it is already visible. The old 580 ms release was
@@ -417,11 +475,6 @@ function Nav({ t, lang, setLang, active, contentRevision }) {
   const extra = EXTRA_SECTION_LABELS[lang] || EXTRA_SECTION_LABELS.ru;
   const activeLabel = t.nav[active] || extra[active] || "";
   const progress = total > 1 ? idx / (total - 1) : 0;
-  // The menu must have a complete resting composition before hover exists.
-  // `peek` used to be null on open, leaving the entire right half black until
-  // the pointer happened to cross a link. Use the current chapter as the
-  // truthful default and let hover/focus temporarily retune the instrument.
-  const menuPreview = peek || { k: active, i: idx };
 
   function go(e, id) {
     e.preventDefault();
@@ -447,154 +500,104 @@ function Nav({ t, lang, setLang, active, contentRevision }) {
   }
 
   return (
-    // The fullscreen menu is a SIBLING of <nav>, not a child. <nav> carries a
-    // backdrop-filter, and a filtered element becomes the containing block for
-    // its position:fixed descendants — which trapped the "fullscreen" menu
-    // inside the 60px bar (it opened, but as a 1280x59 sliver). Keeping it
-    // outside is the only robust fix; z-index keeps the burger clickable above it.
     <>
-    <nav
-      aria-label={t.nav.label || "Primary navigation"}
-      className={`nav ${open ? "nav-open" : ""} ${capsule ? "is-capsule" : ""}`}
-      style={{ "--nav-progress": `${Math.max(0.04, progress) * 100}%` }}
-    >
-      <div className="nav-inner">
-        <a href="#hero" className="brand" data-cursor="link" data-cursor-label="↑ top" onClick={(e) => go(e, "hero")}>
-          <span className="brand-mark" />
-            <span className="brand-name">SAMANDAR<span className="brand-sub"> / RELEASE PROOF</span></span>
-        </a>
-
-        {/* Section counter — capsule-mode telemetry: 04 / 11 · Проекты with an
-            odometer roll on change and a hairline progress track underneath. */}
-        <div className="nav-counter mono" aria-hidden="true">
-          <Drum value={num} />
-          <span className="nav-counter-sep">/ {String(total).padStart(2, "0")}</span>
-          <span key={active} className="nav-counter-name">{activeLabel}</span>
-          <span className="nav-counter-track"><i style={{ transform: `scaleX(${progress})` }} /></span>
-        </div>
-
-        <ul className="nav-links">
-          {NAV_SECTIONS.map((k) => (
-            <li key={k}><a href={`#${k}`} onClick={(e) => go(e, k)} className={active === k ? "active" : ""} aria-current={active === k ? "location" : undefined} data-cursor="link" data-cursor-label={`→ ${t.nav[k]}`}>{t.nav[k]}</a></li>
-          ))}
-        </ul>
-
-        <div className="nav-right">
-          <div className="lang" role="group" aria-label={menuCopy.language}>
-            {["ru", "en", "uz"].map((L) => (
-              <button key={L} onClick={() => setLang(L)} className={lang === L ? "active" : ""} aria-pressed={lang === L}>{L.toUpperCase()}</button>
-            ))}
-          </div>
-          {/* Persistent primary CTA — always one click from a conversation. */}
-          <a href="#contact" className="nav-cta" data-cursor="send" data-cursor-label="send → contact" onClick={(e) => go(e, "contact")}>
-            <span className="nav-cta-dot" aria-hidden="true" />
-            {t.hero.cta_primary}
+      <nav
+        aria-label={t.nav.label || "Primary navigation"}
+        className={`nav ${open ? "nav-open" : ""} ${capsule ? "is-capsule" : ""}`}
+        style={{ "--nav-progress": `${Math.max(0.04, progress) * 100}%` }}
+      >
+        <div className="nav-inner">
+          <a href="#hero" className="brand" data-cursor="link" data-cursor-label="↑ top" onClick={(e) => go(e, "hero")}>
+            <span className="brand-mark" aria-hidden="true">S</span>
+            <span className="brand-name">SAMANDAR<span className="brand-sub"> / PRODUCT ENGINEER</span></span>
           </a>
-          <button
-            ref={burgerRef}
-            type="button"
-            className="nav-burger"
-            aria-label={open ? menuCopy.close : menuCopy.open}
-            aria-expanded={open}
-            aria-controls="site-menu"
-            data-label={menuCopy.trigger}
-            onClick={toggleMenu}
-          >
-            <span /><span /><span />
-          </button>
+
+          <a className="nav-counter" href={`#${active}`} onClick={(e) => go(e, active)} aria-label={`${menuCopy.current}: ${activeLabel}`}>
+            <span className="nav-counter-coordinate mono"><Drum value={num} /><span className="nav-counter-sep">/{String(total).padStart(2, "0")}</span></span>
+            <span key={active} className="nav-counter-name">{activeLabel}</span>
+            <span className="nav-counter-track" aria-hidden="true"><i style={{ transform: `scaleX(${progress})` }} /></span>
+          </a>
+
+          <ul className="nav-links" aria-hidden="true">
+            {NAV_SECTIONS.map((k) => <li key={k}><a href={`#${k}`} tabIndex="-1">{t.nav[k]}</a></li>)}
+          </ul>
+
+          <div className="nav-right">
+            <a href="#contact" className="nav-cta" data-cursor="send" data-cursor-label="send → contact" onClick={(e) => go(e, "contact")}>
+              <span>{t.hero.cta_primary}</span><span className="arrow" aria-hidden="true">→</span>
+            </a>
+            <button
+              ref={burgerRef}
+              type="button"
+              className="nav-burger"
+              aria-label={open ? menuCopy.close : menuCopy.open}
+              aria-expanded={open}
+              aria-controls="site-menu"
+              onClick={toggleMenu}
+            >
+              <span className="nav-burger-label">{menuCopy.trigger}</span>
+              <span className="nav-burger-lines" aria-hidden="true"><i /><i /></span>
+            </button>
+          </div>
         </div>
-      </div>
+      </nav>
 
-    </nav>
-
-      {/* Fullscreen menu — the navigation SCENE (desktop + mobile). Huge type,
-          chapter numbering, live telemetry. Items line-mask in with a stagger. */}
       <div
         ref={menuRef}
         id="site-menu"
-        className={`nav-menu ${open ? "is-open" : ""}`}
-        style={{
-          "--menu-index": menuPreview.i,
-          "--menu-accent-rgb": MENU_ACCENT[menuPreview.k] || "217, 119, 87",
-        }}
+        className={`nav-menu ${menuPresent ? "is-present" : ""} ${open ? "is-open" : ""}`}
         role="dialog"
         aria-modal="true"
         aria-label={menuCopy.dialog}
         aria-hidden={!menuPresent}
+        inert={menuPresent ? undefined : ""}
       >
-        <button
-          ref={closeRef}
-          type="button"
-          className="nav-menu-close"
-          data-cursor="close"
-          aria-label={menuCopy.close}
-          onClick={closeMenu}
-        >
+        <button ref={closeRef} type="button" className="nav-menu-close" data-cursor="close" aria-label={menuCopy.close} onClick={closeMenu}>
           <span /><span />
         </button>
-        <div className="nav-menu-brand mono" aria-hidden="true">
-          <span className="brand-mark" />
-          <span>SAMANDAR · INDEX / {num}</span>
+
+        <div className="nav-menu-brand">
+          <span className="brand-mark" aria-hidden="true">S</span>
+          <span>SAMANDAR</span>
+          <span className="mono">{menuCopy.index} / {String(total).padStart(2, "0")}</span>
         </div>
-        <div className="nav-menu-glow" aria-hidden="true" />
+
         <div className="nav-menu-inner">
-          <ul className="nav-menu-links" onMouseLeave={() => setPeek(null)}>
+          <header className="nav-menu-intro">
+            <span className="mono">{menuCopy.index}</span>
+            <h2>{menuCopy.choose}</h2>
+            <p>{menuCopy.note}</p>
+          </header>
+
+          <ul className="nav-menu-links">
             {FULL_MENU_SECTIONS.map((k, i) => (
               <li key={k} style={{ "--i": i }}>
-                <a
-                  href={`#${k}`} onClick={(e) => go(e, k)} className={active === k ? "active" : ""}
-                  aria-current={active === k ? "location" : undefined}
-                  onMouseEnter={() => setPeek({ k, i })} onFocus={() => setPeek({ k, i })}
-                >
+                <a href={`#${k}`} onClick={(e) => go(e, k)} className={active === k ? "active" : ""} aria-current={active === k ? "location" : undefined}>
                   <span className="nav-menu-num mono">{String(i + 1).padStart(2, "0")}</span>
                   <span className="nav-menu-mask"><span className="nav-menu-word">{t.nav[k] || FULL_MENU_LABELS[lang][k]}</span></span>
-                  <span className="nav-menu-arrow" aria-hidden="true">→</span>
+                  <span className="nav-menu-arrow" aria-hidden="true">↗</span>
                 </a>
               </li>
             ))}
           </ul>
 
-          {/* Live chapter preview. The menu stops being a list of words and
-              becomes a map: hovering an entry paints the panel in THAT act's
-              colour (the same value acts.js uses when you actually get there)
-              and blows its chapter number up. No invented facts, no thumbnails
-              to keep in sync — just the chapter's own identity, early. */}
-          <div className="nav-peek is-on" aria-hidden="true">
-            {/* Comma alpha (`rgba(r, g, b, a)`) — MENU_ACCENT is comma-separated,
-                and the slash form only accepts space-separated channels. */}
-            <div className="nav-peek-wash" style={{ background: `radial-gradient(ellipse 90% 80% at 50% 20%, rgba(${MENU_ACCENT[menuPreview.k] || "217, 119, 87"}, 0.30), transparent 70%)` }} />
-            <div key={menuPreview.k} className="nav-peek-body">
-              <span className="nav-peek-num" style={{ color: `rgb(${MENU_ACCENT[menuPreview.k] || "217, 119, 87"})` }}>
-                {String(menuPreview.i + 1).padStart(2, "0")}
-              </span>
-              <span className="nav-peek-name">{t.nav[menuPreview.k] || FULL_MENU_LABELS[lang][menuPreview.k]}</span>
-            </div>
-            <div className="nav-peek-proof">
-              <span /><span /><span />
-            </div>
-            <span className="nav-peek-ring nav-peek-ring--a" />
-            <span className="nav-peek-ring nav-peek-ring--b" />
-          </div>
+          <aside className="nav-peek is-on" aria-hidden="true">
+            <span className="nav-peek-label mono">{menuCopy.current}</span>
+            <span className="nav-peek-num">{num}</span>
+            <span className="nav-peek-name">{activeLabel}</span>
+            <span className="nav-peek-rule" />
+          </aside>
+
           <div className="nav-menu-foot">
             <a href="#contact" className="nav-menu-cta" onClick={(e) => go(e, "contact")}>
               {t.hero.cta_primary} <span className="arrow">→</span>
             </a>
-            {/* Sound layer opt-in — state lives on html.sm-sound (sound.js),
-                so a language re-render can never show a stale label. */}
-            <button type="button" className="sound-toggle mono" aria-label={menuCopy.sound} aria-pressed={document.documentElement.classList.contains("sm-sound")}>
-              <span className="sound-toggle-dot" aria-hidden="true" />
-              SOUND
-            </button>
             <div className="lang nav-menu-lang" role="group" aria-label={menuCopy.language}>
               {["ru", "en", "uz"].map((L) => (
                 <button key={L} onClick={() => setLang(L)} className={lang === L ? "active" : ""} aria-pressed={lang === L}>{L.toUpperCase()}</button>
               ))}
             </div>
-            <div className="nav-menu-tele mono">
-                <span>TASHKENT · UTC+5</span>
-                <span>BUILDER + QA · {clock}</span>
-                <span>RELEASE PROOF · v.2026</span>
-            </div>
+            <div className="nav-menu-fact mono"><span>TASHKENT · UTC+5</span><span>REMOTE · RU / UZ / EN</span></div>
           </div>
         </div>
       </div>
@@ -603,10 +606,8 @@ function Nav({ t, lang, setLang, active, contentRevision }) {
 }
 
 function MobileScrollDock({ t, lang, activeSection, visible }) {
-  // The rail is a truthful 12-chapter status map, not twelve tiny fake
-  // buttons. Navigation lives in the persistent menu; the dock communicates
-  // exact position and preserves one clear touch action.
   const activeIdx = Math.max(0, FULL_MENU_SECTIONS.indexOf(activeSection));
+  const progress = FULL_MENU_SECTIONS.length > 1 ? activeIdx / (FULL_MENU_SECTIONS.length - 1) : 0;
   const extra = EXTRA_SECTION_LABELS[lang] || EXTRA_SECTION_LABELS.ru;
   const activeLabel = (t.nav && t.nav[activeSection]) || extra[activeSection] || "";
   function onContactClick(e) {
@@ -616,11 +617,7 @@ function MobileScrollDock({ t, lang, activeSection, visible }) {
   }
   return (
     <div className={`mobile-dock ${visible ? "is-visible" : ""} ${activeSection === "projects" ? "is-project-context" : ""}`} role="region" aria-label={lang === "ru" ? "Положение на странице" : lang === "uz" ? "Sahifadagi joylashuv" : "Page position"}>
-      <ol className="mobile-dock-dots" aria-hidden="true">
-        {FULL_MENU_SECTIONS.map((id, i) => (
-          <li key={id}><span className={`mobile-dock-dot ${i === activeIdx ? "is-active" : ""}`} /></li>
-        ))}
-      </ol>
+      <span className="mobile-dock-progress" aria-hidden="true"><i style={{ transform: `scaleX(${progress})` }} /></span>
       <div className="mobile-dock-label mono">
         <span className="mobile-dock-label-num">/{String(activeIdx + 1).padStart(2, "0")}</span>
         <span>{activeLabel}</span>
@@ -852,47 +849,50 @@ function App() {
   // Backfill CV doc fields (id, langs, strengths, foot) so the resume layout
   // renders even if the content bundles haven't been extended yet.
   useE(() => {
+    const productCount = Array.isArray(window.PRODUCT_REGISTRY)
+      ? window.PRODUCT_REGISTRY.filter((product) => product && product.catalog !== false).length
+      : 30;
     const I18N = {
       ru: {
-        id: { name: "Самандар", role: "Software Engineer · Product Builder · QA Engineer",
+        id: { name: "Самандар", role: "Product Engineer · Full-stack Developer · AI Automation · QA Engineering",
               meta: ["Ташкент · UTC+5", "Открыт к проектам", "3 курс · Software Engineering"],
-              stats: [{ k: "опыт", v: "1 год 8 мес" }, { k: "продуктов", v: "10+" }, { k: "фокус", v: "Builder + QA" }, { k: "языки", v: "RU · UZ · EN" }] },
+              stats: [{ k: "опыт", v: "1 год 8 мес" }, { k: "продуктов", v: String(productCount) }, { k: "фокус", v: "Builder + QA" }, { k: "языки", v: "RU · UZ · EN" }] },
         exp_title: "опыт", langs_title: "языки", strengths_title: "сильные стороны",
         strengths: [
-          { t: "Системное мышление от прод-идеи до прод-деплоя", p: "TTYL Platform — от архитектуры и API до деплоя и багфиксов в проде: весь цикл на одном человеке." },
+          { t: "Системное мышление от идеи до релизной готовности", p: "TTYL Platform — архитектура, API, релизная проверка и исправление дефектов перед передачей: весь цикл на одном человеке." },
           { t: "AI-интеграции уровня продакшна, не демки", p: "Klawis (klawis.uz): RAG, гибридный поиск и цитирование источников в живом юридическом AI-продукте." },
           { t: "Качество как часть разработки, а не отдельный этап", p: "QA на TTYL: test plans, Playwright E2E со скриншотами и traces, контроль регрессий перед релизом." },
           { t: "Тёплая коммуникация с клиентами — проверено на практике", p: "UniCall: специалист по работе с клиентами, лучший сотрудник месяца за качество коммуникации." },
         ],
-        langs: [{ k: "Русский", label: "свободное владение" }, { k: "Oʻzbek", label: "хороший рабочий" }, { k: "English", label: "хороший рабочий" }],
+        langs: [{ k: "Русский", label: "свободное владение" }, { k: "Oʻzbek", label: "рабочий уровень" }, { k: "English", label: "рабочий уровень" }],
         foot: "обновлено 2026 · PDF доступен для скачивания",
       },
       en: {
-        id: { name: "Samandar", role: "Software Engineer · Product Builder · QA Engineer",
+        id: { name: "Samandar", role: "Product Engineer · Full-stack Developer · AI Automation · QA Engineering",
               meta: ["Tashkent · UTC+5", "Open to projects", "3rd-year · Software Engineering"],
-              stats: [{ k: "experience", v: "1 yr 8 mos" }, { k: "products", v: "10+" }, { k: "focus", v: "Builder + QA" }, { k: "languages", v: "RU · UZ · EN" }] },
+              stats: [{ k: "experience", v: "1 yr 8 mos" }, { k: "products", v: String(productCount) }, { k: "focus", v: "Builder + QA" }, { k: "languages", v: "RU · UZ · EN" }] },
         exp_title: "experience", langs_title: "languages", strengths_title: "strengths",
         strengths: [
-          { t: "End-to-end ownership from product idea to prod deploy", p: "TTYL Platform — from architecture and API to deploy and prod bugfixes: the whole cycle on one person." },
+          { t: "End-to-end ownership from product idea to release readiness", p: "TTYL Platform — architecture, API, release verification and defect fixing before handoff: the whole cycle owned by one person." },
           { t: "Production AI integrations, not demos", p: "Klawis (klawis.uz): RAG, hybrid search and source citation in a live legal AI product." },
           { t: "Quality baked into building, not a separate stage", p: "QA at TTYL: test plans, Playwright E2E with screenshots and traces, regression control before release." },
           { t: "Warm client communication — proven in practice", p: "UniCall: customer support specialist, employee of the month for communication quality." },
         ],
-        langs: [{ k: "Russian", label: "fluent" }, { k: "Uzbek", label: "good working" }, { k: "English", label: "good working" }],
+        langs: [{ k: "Russian", label: "fluent" }, { k: "Uzbek", label: "working proficiency" }, { k: "English", label: "working proficiency" }],
         foot: "updated 2026 · PDF available to download",
       },
       uz: {
-        id: { name: "Samandar", role: "Software Engineer · Product Builder · QA Engineer",
+        id: { name: "Samandar", role: "Product Engineer · Full-stack Developer · AI Automation · QA Engineering",
               meta: ["Toshkent · UTC+5", "Loyihalarga ochiq", "3-kurs · Software Engineering"],
-              stats: [{ k: "tajriba", v: "1 yil 8 oy" }, { k: "mahsulot", v: "10+" }, { k: "fokus", v: "Builder + QA" }, { k: "tillar", v: "RU · UZ · EN" }] },
+              stats: [{ k: "tajriba", v: "1 yil 8 oy" }, { k: "mahsulot", v: String(productCount) }, { k: "fokus", v: "Builder + QA" }, { k: "tillar", v: "RU · UZ · EN" }] },
         exp_title: "tajriba", langs_title: "tillar", strengths_title: "kuchli tomonlar",
         strengths: [
-          { t: "Mahsulot g'oyasidan prod-deploygacha to'liq egalik", p: "TTYL Platform — arxitektura va API'dan deploy va prod-bagfikslargacha: butun sikl bitta odamda." },
+          { t: "Mahsulot g'oyasidan reliz tayyorligigacha to'liq egalik", p: "TTYL Platform — arxitektura, API, reliz tekshiruvi va topshirishdan oldingi defect fix: butun sikl bitta odamda." },
           { t: "Production darajadagi AI integratsiyalar", p: "Klawis (klawis.uz): jonli yuridik AI-mahsulotda RAG, gibrid qidiruv va manba iqtiboslari." },
           { t: "Sifat — bosqich emas, ishlab chiqishning bir qismi", p: "TTYL'da QA: test-rejalar, Playwright E2E skrinshot va traces bilan, relizdan oldin regressiya nazorati." },
           { t: "Mijozlar bilan iliq muloqot — amaliyotda sinalgan", p: "UniCall: mijozlar bilan ishlash bo'yicha mutaxassis, muloqot sifati uchun oyning eng yaxshi xodimi." },
         ],
-        langs: [{ k: "Ruscha", label: "erkin" }, { k: "Oʻzbek", label: "yaxshi ishchi" }, { k: "English", label: "yaxshi ishchi" }],
+        langs: [{ k: "Ruscha", label: "erkin" }, { k: "Oʻzbek", label: "ishchi daraja" }, { k: "Inglizcha", label: "ishchi daraja" }],
         foot: "2026 yil yangilangan · PDF yuklash mumkin",
       },
     };
@@ -1031,6 +1031,20 @@ function App() {
         } finally {
           root.style.scrollBehavior = previous;
         }
+
+        // E2E pages already disable authored transitions and late visual
+        // effects at parser time. Once the mounted shell owns the requested
+        // target and one geometry correction has completed, waiting on font
+        // or observer quiet time adds no product coverage and can starve
+        // Firefox under a long serial matrix. Production keeps the full
+        // stabilisation window below.
+        if (
+          deterministicTestMode &&
+          document.documentElement.getAttribute("data-app-boot") === "ready"
+        ) {
+          stopSettling();
+          return;
+        }
       }
       const now = performance.now();
       const fontsReady = !document.fonts || document.fonts.status === "loaded";
@@ -1107,6 +1121,7 @@ function App() {
       else url.searchParams.set("lang", lang);
       history.replaceState(history.state, "", url.pathname + url.search + url.hash);
     } catch (error) { /* progressive enhancement */ }
+    syncMainHead(lang);
   }, [tweaks.density, lang]);
   useE(() => {
     document.documentElement.style.setProperty("--motion", String(tweaks.motion));
@@ -1169,7 +1184,7 @@ function App() {
   }, [lang, tweaks.density, renderStage]);
 
   // Active section is the only source of truth for the mobile command dock.
-  const midScrollVisible = activeSection !== "hero" && activeSection !== "signal" && activeSection !== "contact";
+  const midScrollVisible = !["hero", "signal", "cv", "trust", "contact"].includes(activeSection);
 
   function skipToMain(event) {
     event.preventDefault();
@@ -1187,7 +1202,6 @@ function App() {
 
       <div className="bg-noise" />
       <div className="scroll-progress" />
-      <SystemFrame active={activeSection} />
 
       <Nav
         t={t}
@@ -1215,10 +1229,9 @@ function App() {
           <About t={t} />
         </>}
         {renderStage >= 2 && <Projects t={t} />}
-        {/* The constructor sits immediately after the work: you have just seen
-            what gets built, so the natural next move is to price your own. It
-            used to be the 9th of 12 sections — the single most distinctive
-            thing on the site, buried where most readers never reached it. */}
+        {/* The specification sits immediately after the work: the visitor has
+            seen what gets built and can now turn their own idea into a first
+            scope, risk and next-step outline without a fake instant quote. */}
         {renderStage >= 3 && <>
           <ProjectBuilder t={t} links={LINKS} />
           <Skills t={t} />

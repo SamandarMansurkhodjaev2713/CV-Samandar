@@ -458,7 +458,7 @@ html.lp-is-leaving::after { transform: translate3d(0, 0, 0); }
 .lp-diagram-edge > text { fill: var(--lp-mute); font: 8px var(--lp-mono); letter-spacing: .035em; }
 .lp-diagram marker path { fill: var(--lp-accent); }
 .lp-diagram-node rect { fill: #11120f; stroke: rgba(242,238,229,.25); stroke-width: 1; vector-effect: non-scaling-stroke; }
-.lp-diagram-node text { fill: var(--lp-text); font: 500 13px var(--lp-body); }
+.lp-diagram-node text { fill: var(--lp-text); font: 500 11px var(--lp-body); }
 .lp-diagram[data-diagram="cycle"] .lp-diagram-edge path { stroke: rgba(var(--lp-accent-rgb) / .62); }
 .lp-diagram[data-diagram="boundary"] .lp-diagram-node:nth-of-type(4) rect,
 .lp-diagram[data-diagram="gates"] .lp-diagram-node:nth-of-type(4) rect { stroke: var(--lp-accent); }

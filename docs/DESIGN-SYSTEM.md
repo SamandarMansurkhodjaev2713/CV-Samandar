@@ -2,7 +2,7 @@
 
 Статус: описание текущей реализации.
 
-Область: главная страница, 29 карточек продуктов и 19 проектных case routes.
+Область: главная страница, 30 карточек продуктов и 20 проектных case routes.
 
 Локали: RU, EN, UZ.
 
@@ -21,8 +21,8 @@
 | порядок и состав 12 сцен | `FULL_MENU_SECTIONS` и фактический DOM в `src/components/app.jsx` |
 | компоненты главной | `src/components/*.jsx`; одноимённые `.js` — generated artifacts |
 | тексты главной и карточек RU/EN/UZ | `src/content/content.js` |
-| идентичность, порядок, маршруты и публичные границы 29 продуктов | `src/content/product-registry.js` |
-| содержимое 19 кейсов | `src/projects/landings-data.js` |
+| идентичность, порядок, маршруты и публичные границы 30 продуктов | `src/content/product-registry.js` |
+| содержимое 20 кейсов | `src/projects/landings-data.js` |
 | разметка кейсов и общий UI-копирайт | `src/projects/render.js` |
 | базовые токены и shell | `src/styles/styles.css` |
 | композиции сцен и адаптивность главной | `src/styles/sections.css`, `src/styles/features.css`, `src/styles/cv-doc.css`, V3 layer `src/styles/art-direction.css` и финальный release owner `src/styles/release-polish.css` |
@@ -30,7 +30,7 @@
 | production CSS главной | generated `src/styles/app.bundle.min.css`; собирается `build.js` из authored sources в фиксированном порядке |
 | адаптивные и визуальные проверяемые контракты | `tests/responsive-matrix.spec.js`, `tests/stage5-sections.spec.js`, `tests/landings.spec.js`, `tests/visual-release.spec.js` |
 
-Если текст документа расходится с этими файлами, верен код. Числа `25 / 9 / 16 / 3` дополнительно закреплены в `scripts/validate-site.js` и проверяются до и после сборки.
+Если текст документа расходится с этими файлами, верен код. Числа `30 / 10 / 20 / 3` дополнительно закреплены в `scripts/validate-site.js` и проверяются до и после сборки.
 
 ## 2. Дизайн-намерение
 
@@ -66,8 +66,8 @@ Signature motif — Proof Rail. Это линия с тремя контроль
 | 01 | `hero` | продуктовый тезис, авторство и ownership loop | proposition-led Release Specimen; split-stage desktop и самостоятельная mobile/landscape композиция с видимым переходом в Signal |
 | 02 | `signal` | причины работать вместе | `emerge`; читатель сам управляет disclosure |
 | 03 | `about` | ownership и проверяемый контекст | `develop`; annotated maker's proof с маршрутом Brief → Build → Verify → Release |
-| 04 | `projects` | 29 продуктов | `rise`; desktop grid и mobile horizontal gallery |
-| 05 | `builder` | конфигурация будущего проекта | `assemble`; параметры превращаются в структурированный brief |
+| 04 | `projects` | 30 продуктов | `rise`; desktop grid и mobile horizontal gallery |
+| 05 | `builder` | Scope Preview будущего проекта | `assemble`; параметры превращаются в composition, relative complexity, stages, risks и next step без цены или обещания срока |
 | 06 | `skills` | инженерная и QA-компетенция | `converge`; аналитический холодный акт |
 | 07 | `services` | форматы сотрудничества | `slide-left`; первая половина pinned-overlap с CV |
 | 08 | `cv` | документированная карьера | `curtain`; светлый документ внутри тёмной главы |
@@ -77,6 +77,11 @@ Signature motif — Proof Rail. Это линия с тремя контроль
 | 12 | `contact` | финальное действие | `rise-bright`; тёплая кульминация и второй pinned-overlap |
 
 Два `Interlude` между крупными актами являются связками, а не самостоятельными секциями: у них нет `data-section`, поэтому они не искажают нумерацию и навигацию.
+
+Scope Preview не является калькулятором или офертой. Он помогает увидеть состав
+решения, относительную сложность, этапы, риски и следующий шаг; коммерческие
+условия обсуждаются индивидуально после уточнения scope, зависимостей и формата
+работы.
 
 ## 4. Цвет и материальность
 
@@ -165,26 +170,29 @@ Easing tokens: `--ease-out`, `--ease-emphasized`, `--ease-standard`, `--ease-ove
 
 ### 8.1 Карточки
 
-В реестре ровно 29 продуктов, отсортированных по `featuredRank`:
+В реестре ровно 30 продуктов, отсортированных по `featuredRank`:
 
-- 9 `presentation: "live"`: primary CTA открывает реальный HTTPS live-site;
-- 16 `presentation: "case"`: primary CTA открывает локальный case route;
+- 10 `presentation: "live"`: primary CTA открывает реальный HTTPS live-site;
+- 19 `presentation: "case"`: primary CTA открывает локальный case route;
 - публичный GitHub, если он разрешён реестром, остаётся отдельным secondary CTA;
 - возврат из кейса ведёт к `#proj-<slug>`, раскрывает каталог при необходимости и возвращает позицию чтения к исходной карточке.
 
-Desktop-каталог — двухколоночная feature-сетка `7/5`, где крупная и компактная
-карточки образуют управляемый ритм, но используют одинаковую информационную
-иерархию. Верхняя кромка, status, CTA, ambient wash и pager берут уникальный
-`accent` продукта из registry; композиция фотографии уточняется независимой
-`object-position`, поэтому индивидуальность не зависит только от цвета.
+Desktop-каталог начинает с шести сильнейших карточек в порядке DentForma, Klawis,
+TTYL Platform, BelfProctor, Softly и GrowthOps AI; явная команда раскрывает
+остальные 24. Двухколоночная feature-сетка `7/5` чередует крупные и компактные
+карточки, но сохраняет одну информационную иерархию. Верхняя кромка, status,
+CTA, ambient wash и pager берут уникальный `accent` продукта из registry;
+композиция фотографии уточняется независимой `object-position`, поэтому
+индивидуальность не зависит только от цвета.
 
-При ширине `≤900px` каталог становится горизонтальной flex-галереей с нативным
-scroll snap, видимым краем следующей карточки и явным pager; она не заменяется
-вертикальным списком и не перехватывает вертикальный scroll. Пока Projects
-является активной сценой, его собственный pager заменяет общий mobile dock,
-чтобы два нижних управляющих слоя не конкурировали. На `320 px` pager обязан
-оставаться не выше `72 px`, карточка — не уже читаемой viewport-колонки, а
-заголовок — иметь auto-height без обрезки.
+При ширине `≤900px` все 30 карточек доступны сразу, а локализованные
+category-фильтры сужают тот же canonical array без дублей. Каталог становится
+горизонтальной flex-галереей с нативным scroll snap, видимым краем следующей
+карточки и явным pager; она не заменяется вертикальным списком и не перехватывает
+вертикальный scroll. Пока Projects является активной сценой, его собственный
+pager заменяет общий mobile dock, чтобы два нижних управляющих слоя не
+конкурировали. На `320 px` pager обязан оставаться не выше `72 px`, карточка —
+не уже читаемой viewport-колонки, а заголовок — иметь auto-height без обрезки.
 
 ### 8.2 Обложки
 
@@ -202,7 +210,7 @@ scroll snap, видимым краем следующей карточки и я
 
 ### 8.3 Case pages
 
-Каждый из 19 кейсов имеет три физически сгенерированные страницы: RU в `/projects/<slug>/`, EN в `/projects/<slug>/en/`, UZ в `/projects/<slug>/uz/`. Итого — 57 статических HTML-файлов.
+Каждый из 20 кейсов имеет три физически сгенерированные страницы: RU в `/projects/<slug>/`, EN в `/projects/<slug>/en/`, UZ в `/projects/<slug>/uz/`. Итого — 60 статических HTML-файлов.
 
 Единая структура содержит:
 
@@ -251,7 +259,7 @@ scroll snap, видимым краем следующей карточки и я
 - fullscreen menu управляет `aria-hidden`, `inert`, focus containment и Escape;
 - active navigation использует `aria-current`;
 - изображения имеют текстовый fallback, а декоративные слои скрыты от accessibility tree;
-- `prefers-reduced-motion: reduce` сохраняет все 29 карточек, тексты, CTA и нативную навигацию;
+- `prefers-reduced-motion: reduce` сохраняет все 30 карточек, тексты, CTA и нативную навигацию;
 - reduced mode отключает continuous scheduler и optional Three.js, но не раскрывает скрытые пользователем данные и не меняет семантическое состояние disclosure;
 - автоматический axe gate покрывает WCAG 2.2 A/AA ruleset, однако он не заменяет NVDA, VoiceOver и проверку на физических устройствах.
 

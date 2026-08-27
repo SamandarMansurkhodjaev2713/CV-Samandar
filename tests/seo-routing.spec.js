@@ -1,7 +1,7 @@
 "use strict";
 
 const { test, expect } = require("@playwright/test");
-const { caseProducts, switchMainLanguage } = require("./helpers");
+const { caseProducts, orderedProducts, switchMainLanguage } = require("./helpers");
 
 test("@smoke discovery artifacts and the real 404 route are deployable", async ({ request, page }) => {
   const robots = await request.get("/robots.txt");
@@ -28,10 +28,14 @@ test("main language URLs are shareable and preserve deep-link context", async ({
   await page.locator("#projects").waitFor({ state: "attached" });
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page).toHaveURL(/\?e2e=1&lang=en#projects$/);
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\?lang=en$/);
+  await expect(page.locator('meta[property="og:locale"]')).toHaveAttribute("content", "en_US");
 
   await switchMainLanguage(page, "UZ");
   await expect(page.locator("html")).toHaveAttribute("lang", "uz");
   await expect(page).toHaveURL(/\?e2e=1&lang=uz#projects$/);
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\?lang=uz$/);
+  await expect(page.locator('meta[property="og:locale"]')).toHaveAttribute("content", "uz_UZ");
 
   await page.reload({ waitUntil: "domcontentloaded" });
   await expect(page.locator("html")).toHaveAttribute("lang", "uz");
@@ -43,9 +47,16 @@ test("main and case pages expose canonical social and locale metadata", async ({
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/CV-Samandar\/$/);
   await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /^https:\/\//);
   await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(4);
-  const mainStructuredData = JSON.parse(await page.locator('script[type="application/ld+json"]').textContent());
+  const mainStructuredData = JSON.parse(await page.locator('script[type="application/ld+json"]').first().textContent());
   expect(mainStructuredData["@graph"].map((item) => item["@type"])).toEqual(
     expect.arrayContaining(["Person", "WebSite", "ProfilePage"])
+  );
+  const projectItemList = JSON.parse(await page.locator("#portfolio-projects-jsonld").textContent());
+  expect(projectItemList["@type"]).toBe("ItemList");
+  expect(projectItemList.numberOfItems).toBe(orderedProducts.length);
+  expect(projectItemList.itemListElement).toHaveLength(orderedProducts.length);
+  expect(projectItemList.itemListElement.map((entry) => entry.position)).toEqual(
+    orderedProducts.map((_, index) => index + 1)
   );
 
   const product = caseProducts.find((item) => item.slug === "chat-app");

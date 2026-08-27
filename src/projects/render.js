@@ -37,6 +37,11 @@
       viewGithub: "Смотреть на GitHub",
       requestAccess: "Запросить доступ",
       quickView: "Кратко",
+      systemChrome: "Система · 03 / 05",
+      artifactChrome: "Артефакт проекта",
+      mediaChrome: "3:1 · адаптивный источник",
+      qualityChrome: "QA · доказательства",
+      nextChrome: "Следующий шаг",
       product: "Продукт",
       complexity: "Сложность",
       impact: "Эффект",
@@ -55,7 +60,7 @@
       footNote: "Часть портфолио Samandar · Full-Stack · AI Automation · QA",
       builtBy: "один инженер · код · архитектура · деплой · QA",
       ctaHead: "Нужен похожий продукт?",
-      ctaSub: "Соберу под ключ — от архитектуры до деплоя и QA. Отвечу с оценкой за 24 часа.",
+      ctaSub: "Сначала уточню задачу и ограничения, затем предложу состав работы, этапы и следующий шаг.",
       telegram: "Написать в Telegram",
       languageLabel: "Язык страницы",
     },
@@ -70,6 +75,11 @@
       viewGithub: "View on GitHub",
       requestAccess: "Request access",
       quickView: "At a glance",
+      systemChrome: "System · 03 / 05",
+      artifactChrome: "Project artefact",
+      mediaChrome: "3:1 · responsive source",
+      qualityChrome: "QA · evidence",
+      nextChrome: "Next step",
       product: "Product",
       complexity: "Complexity",
       impact: "Impact",
@@ -88,7 +98,7 @@
       footNote: "Part of Samandar's portfolio · Full-Stack · AI Automation · QA",
       builtBy: "one engineer · code · architecture · deploy · QA",
       ctaHead: "Need something like this?",
-      ctaSub: "I'll build it end-to-end — from architecture to deploy and QA. I'll reply with an estimate within 24 hours.",
+      ctaSub: "First I’ll clarify the task and constraints, then propose the work scope, stages and next step.",
       telegram: "Message on Telegram",
       languageLabel: "Page language",
     },
@@ -103,6 +113,11 @@
       viewGithub: "GitHub'da ko'rish",
       requestAccess: "Kirish so'rash",
       quickView: "Qisqacha",
+      systemChrome: "Tizim · 03 / 05",
+      artifactChrome: "Loyiha artefakti",
+      mediaChrome: "3:1 · moslashuvchan manba",
+      qualityChrome: "QA · dalillar",
+      nextChrome: "Keyingi qadam",
       product: "Mahsulot",
       complexity: "Murakkablik",
       impact: "Samara",
@@ -121,7 +136,7 @@
       footNote: "Samandar portfoliosining bir qismi · Full-Stack · AI Automation · QA",
       builtBy: "bitta muhandis · kod · arxitektura · deploy · QA",
       ctaHead: "Shunga o'xshash mahsulot kerakmi?",
-      ctaSub: "Kalit topshiriladigan holda quraman — arxitekturadan deploy va QA'gacha. 24 soatda baho bilan javob beraman.",
+      ctaSub: "Avval vazifa va cheklovlarni aniqlayman, keyin ish tarkibi, bosqichlar va keyingi qadamni taklif qilaman.",
       telegram: "Telegram'da yozish",
       languageLabel: "Sahifa tili",
     },
@@ -134,12 +149,12 @@
   }
 
   function quickItems(q, ui) {
-    var labels = [ui.product, ui.complexity, ui.impact];
     return (q || [])
       .map(function (row, i) {
+        var index = String(i + 1).padStart(2, "0") + " / " + String(q.length).padStart(2, "0");
         return (
           '<div class="lp-quick-item">' +
-          '<span class="lp-quick-k mono">' + esc(labels[i] || row.k || "") + "</span>" +
+          '<span class="lp-quick-k mono">' + esc(row.k || index) + "</span>" +
           '<span class="lp-quick-v">' + esc(row.v) + "</span>" +
           "</div>"
         );
@@ -412,6 +427,29 @@
         edges: [e("update","auth","telegram_id"),e("auth","domain","version"),e("domain","batch","transaction plan"),e("batch","state","one commit"),e("batch","outbox","one commit"),e("outbox","update",tr(lang,"ошибка → повтор","failure → retry","xato → retry"),[910,366,96,366])],
         zones: [{ x: 612, y: 18, w: 376, h: 344, label: tr(lang,"ОДНА АТОМАРНАЯ ЗАПИСЬ","ONE ATOMIC COMMIT","BITTA ATOMAR COMMIT") }]
       };
+      case "wedding-invitations-uz": return {
+        kind: "publish",
+        nodes: [
+          n("couple", "Пространство пары", "Couple workspace", "Juftlik workspace", 18, 144, 156),
+          n("draft", "Управляемый draft", "Managed draft", "Boshqariladigan draft", 214, 144, 164),
+          n("version", "Версия публикации", "Publication version", "Nashr versiyasi", 426, 52, 174),
+          n("artifact", "Неизменяемый артефакт", "Immutable artefact", "O‘zgarmas artefakt", 426, 254, 174),
+          n("reader", "Private guest read", "Private guest read", "Private guest read", 650, 144, 164),
+          n("rsvp", "RSVP + audit", "RSVP + audit", "RSVP + audit", 862, 144, 120)
+        ],
+        edges: [
+          e("couple","draft","authorise"),
+          e("draft","version",tr(lang,"подтвердить","confirm","tasdiqlash")),
+          e("version","artifact","digest"),
+          e("artifact","reader","validated"),
+          e("reader","rsvp",tr(lang,"ответ гостя","guest response","mehmon javobi")),
+          e("rsvp","couple",tr(lang,"операционный список","operations list","operatsion ro‘yxat"),[916,360,90,360])
+        ],
+        zones: [
+          { x: 394, y: 18, w: 204, h: 344, label: tr(lang,"ГРАНИЦА ПУБЛИКАЦИИ","PUBLISH BOUNDARY","NASHR CHEGARASI") },
+          { x: 628, y: 92, w: 354, h: 176, label: tr(lang,"ПРИВАТНЫЙ ГОСТЕВОЙ КОНТУР","PRIVATE GUEST BOUNDARY","PRIVATE MEHMON KONTURI") }
+        ]
+      };
       default:
         return {
           kind: "pipeline",
@@ -447,14 +485,34 @@
       return '<g class="lp-diagram-edge"><path d="' + pathFor(edge) + '" marker-end="url(#' + markerId + ')"></path>' +
         (edge.label ? '<text x="' + lx + '" y="' + ly + '">' + esc(edge.label) + '</text>' : '') + '</g>';
     }).join("");
+    function nodeLines(label, width) {
+      var words = String(label || "").trim().split(/\s+/).filter(Boolean);
+      var limit = Math.max(10, Math.floor((width - 24) / 7.2));
+      var lines = [];
+      words.forEach(function (word) {
+        var current = lines[lines.length - 1] || "";
+        if (!current || (current + " " + word).length > limit) {
+          if (lines.length < 3) lines.push(word);
+          else lines[2] += " " + word;
+        } else {
+          lines[lines.length - 1] = current + " " + word;
+        }
+      });
+      return lines.length ? lines : [""];
+    }
     var nodes = d.nodes.map(function (node, i) {
+      var lines = nodeLines(node.label, node.w);
+      var startY = lines.length === 1 ? 42 : lines.length === 2 ? 34 : 27;
+      var tspans = lines.map(function (line, lineIndex) {
+        return '<tspan x="' + (node.w / 2) + '" dy="' + (lineIndex ? 15 : 0) + '">' + esc(line) + '</tspan>';
+      }).join("");
       return '<g class="lp-diagram-node" style="--node-i:' + i + '" transform="translate(' + node.x + ' ' + node.y + ')">' +
         '<rect width="' + node.w + '" height="72" rx="14"></rect>' +
-        '<text x="' + (node.w / 2) + '" y="42" text-anchor="middle" textLength="' + Math.max(52, node.w - 24) + '" lengthAdjust="spacingAndGlyphs">' + esc(node.label) + '</text>' +
+        '<text x="' + (node.w / 2) + '" y="' + startY + '" text-anchor="middle">' + tspans + '</text>' +
       '</g>';
     }).join("");
     return '<section class="lp-diagram" data-lp-reveal data-diagram="' + esc(d.kind) + '">' +
-      '<div class="lp-diagram-head"><div><span class="lp-eyebrow mono">SYSTEM · ' + esc(d.kind.toUpperCase()) + '</span><h2 class="lp-h2">' + esc(title) + '</h2></div><span class="lp-diagram-hint mono">' + esc(hint) + '</span></div>' +
+      '<div class="lp-diagram-head"><div><span class="lp-eyebrow mono">' + esc((UI[lang] || UI.ru).systemChrome) + '</span><h2 class="lp-h2">' + esc(title) + '</h2></div><span class="lp-diagram-hint mono">' + esc(hint) + '</span></div>' +
       '<div class="lp-diagram-scroll" tabindex="0"><svg class="lp-diagram-svg" viewBox="0 0 1000 420" role="img" aria-label="' + esc(title) + '"><defs><marker id="' + markerId + '" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z"></path></marker></defs>' + zones + edges + nodes + '</svg></div>' +
     '</section>';
   }
@@ -479,7 +537,8 @@
       "chat-app": ["#A4423F", "164 66 63"],
       dentforma: ["#4F7F7A", "79 127 122"],
       "meetingflow-ru-uz": ["#B8783D", "184 120 61"],
-      "telegram-sheets-task-bot": ["#4F765B", "79 118 91"]
+      "telegram-sheets-task-bot": ["#4F765B", "79 118 91"],
+      "wedding-invitations-uz": ["#A85F4E", "168 95 78"]
     };
     return themes[slug] || ["#D97757", "217 119 87"];
   }
@@ -504,7 +563,8 @@
       "chat-app": "outbox",
       dentforma: "calibration",
       "meetingflow-ru-uz": "relay",
-      "telegram-sheets-task-bot": "ledger"
+      "telegram-sheets-task-bot": "ledger",
+      "wedding-invitations-uz": "fold"
     };
     return profiles[slug] || "split";
   }
@@ -601,7 +661,7 @@
                 (c.role ? '<b class="lp-cred-role">' + esc(c.role) + "</b> · " : "") + esc(ui.builtBy) + "</span></div>" +
               '<div class="lp-cta"><a class="lp-btn lp-btn-primary" href="' + base + '#contact">' + esc(ui.discuss) + ' <span class="lp-arr">→</span></a>' + githubBtn + "</div>" +
             "</div>" +
-            '<figure class="lp-hero-visual" data-lp-reveal style="--reveal-delay:.08s"><div class="lp-photo"><img src="' + visual + '" srcset="' + visualSet + '" sizes="(max-width: 980px) calc(100vw - 28px), 55vw" alt="" loading="eager" fetchpriority="high" decoding="async" width="1536" height="512"></div><figcaption class="mono"><span>OBJECT / ' + esc(p.slug) + '</span><span>3:1 · RESPONSIVE EDITORIAL STUDY</span></figcaption></figure>' +
+            '<figure class="lp-hero-visual" data-lp-reveal style="--reveal-delay:.08s"><div class="lp-photo"><img src="' + visual + '" srcset="' + visualSet + '" sizes="(max-width: 980px) calc(100vw - 28px), 55vw" alt="" loading="eager" fetchpriority="high" decoding="async" width="1536" height="512"></div><figcaption class="mono"><span>' + esc(ui.artifactChrome) + ' / ' + esc(p.slug) + '</span><span>' + esc(ui.mediaChrome) + '</span></figcaption></figure>' +
           "</section>" +
 
           '<nav class="lp-chapters" aria-label="' + esc(ui.chapterNav) + '">' + chapterNav + '</nav>' +
@@ -623,7 +683,7 @@
           '<section class="lp-act lp-act--evidence" id="evidence" data-lp-chapter="evidence">' +
             '<div class="lp-act-head" data-lp-reveal><span class="lp-act-num mono">04 / 05</span><h2>' + esc(ui.chapters[3]) + '</h2></div>' +
             '<div class="lp-grid2" data-lp-reveal>' + block(ui.unique, c.unique) + block(ui.employer, c.employer) + "</div>" +
-            (c.quality ? '<section class="lp-quality" data-lp-reveal><div class="lp-quality-glow" aria-hidden="true"></div><div class="lp-eyebrow mono lp-quality-eyebrow">Quality · QA</div><h2 class="lp-h2">' + esc(ui.quality) + '</h2><p class="lp-p">' + esc(c.quality) + '</p>' + qaLink + '</section>' : '') +
+            (c.quality ? '<section class="lp-quality" data-lp-reveal><div class="lp-quality-glow" aria-hidden="true"></div><div class="lp-eyebrow mono lp-quality-eyebrow">' + esc(ui.qualityChrome) + '</div><h2 class="lp-h2">' + esc(ui.quality) + '</h2><p class="lp-p">' + esc(c.quality) + '</p>' + qaLink + '</section>' : '') +
           "</section>" +
 
           '<section class="lp-act lp-act--boundary" id="boundary" data-lp-chapter="boundary">' +
@@ -631,7 +691,7 @@
             (c.boundary ? '<div class="lp-boundary" data-lp-reveal><span class="lp-boundary-mark mono" aria-hidden="true">!</span><div><div class="lp-eyebrow mono">' + esc(ui.boundary) + '</div><p class="lp-p">' + esc(c.boundary) + '</p></div></div>' : '') +
           "</section>" +
 
-          '<section class="lp-final" data-lp-reveal><div class="lp-final-glow" aria-hidden="true"></div><span class="lp-eyebrow mono">NEXT · BUILD</span><h2 class="lp-final-head">' + esc(ui.ctaHead) + '</h2><p class="lp-final-sub">' + esc(ui.ctaSub) + '</p><div class="lp-cta lp-final-cta"><a class="lp-btn lp-btn-primary" href="' + base + '#contact">' + esc(ui.discuss) + ' <span class="lp-arr">→</span></a><a class="lp-btn lp-btn-ghost" href="' + TG + '" target="_blank" rel="noopener noreferrer">' + esc(ui.telegram) + ' <span class="lp-arr">↗</span></a></div></section>' +
+          '<section class="lp-final" data-lp-reveal><div class="lp-final-glow" aria-hidden="true"></div><span class="lp-eyebrow mono">' + esc(ui.nextChrome) + '</span><h2 class="lp-final-head">' + esc(ui.ctaHead) + '</h2><p class="lp-final-sub">' + esc(ui.ctaSub) + '</p><div class="lp-cta lp-final-cta"><a class="lp-btn lp-btn-primary" href="' + base + '#contact">' + esc(ui.discuss) + ' <span class="lp-arr">→</span></a><a class="lp-btn lp-btn-ghost" href="' + TG + '" target="_blank" rel="noopener noreferrer">' + esc(ui.telegram) + ' <span class="lp-arr">↗</span></a></div></section>' +
 
           '<footer class="lp-foot"><a class="lp-foot-back mono" href="' + base + '#proj-' + esc(p.slug) + '"><span class="lp-back-arr">←</span> ' + esc(ui.allProjects) + '</a><span class="lp-foot-note mono">' + esc(ui.footNote) + '</span></footer>' +
         "</main>" +

@@ -536,6 +536,11 @@ section[data-enter].sec-bound:not(.sec-in) { opacity: 0; }
 section[data-enter].sec-nav-landed {
   opacity: 1 !important;
   filter: none !important;
+  /* Explicit menu/deep-link navigation owns the landing pose. Pinned pairs
+     normally translate the section itself from --pin-p; leaving that transform
+     active can place CV/Contact underneath the fixed navigation even though
+     scroll-margin is correct. Ordinary reader-driven scrolling is unchanged. */
+  transform: none !important;
   animation: none !important;
 }
 .pin-host > section[data-enter].sec-nav-landed > .shell {

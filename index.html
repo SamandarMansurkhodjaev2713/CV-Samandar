@@ -3,21 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-fQxNatlXJsRhvAL/QuJfv6CxwgCOoymEHGDAInX5jSk='; style-src 'self'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.github.com; media-src 'self'; worker-src 'self' blob:; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-xB0cI3otihCX8aoziCjr1tzEwJiEv/UDRxKyWDQ8ZUM=' 'sha256-npbnlMSDSopExw40pXk4DG4GNvGJeJXbUUUcHuEYVEc='; style-src 'self'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.github.com; media-src 'self'; worker-src 'self' blob:; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="theme-color" content="#1F1E1B" />
   <meta name="color-scheme" content="dark" />
 
   <!-- Intro curtain: paint a solid warm panel over the page on frame 0 so there
-       is no flash of hero before the "Boot Sequence" loader (percentage +
-       CORE.AI status while the real application loads underneath — see
-       src/engine/intro.js).
+       is no flash of Hero before the short release-audit sequence while the
+       real application loads underneath (see src/engine/intro.js).
        LCP text (h1/CTA) still renders underneath (occluded, not delayed: the
        element IS painted, the LCP timestamp is unaffected by being visually
        covered while loading). -->
-  <script src="src/engine/head-boot.js?v=246"></script>
+  <script src="src/engine/head-boot.js?v=247"></script>
 
-  <title>Samandar — Product Engineer · AI Automation · QA</title>
-  <meta name="description" content="Samandar Mansurkhodjaev — product engineer и QA-инженер из Ташкента. Создаю web-продукты, AI-автоматизации и внутренние системы: UX, код, тесты и deploy." />
+  <title>Samandar — Full-stack Product Engineer, AI Automation &amp; QA</title>
+  <meta name="description" content="Full-stack product engineer и QA-инженер из Ташкента. Создаю web-продукты и AI-автоматизации — от UX и кода до проверенного релиза. Remote, RU/UZ/EN." />
   <meta name="author" content="Samandar Mansurkhodjaev" />
   <meta name="robots" content="index,follow,max-image-preview:large" />
 
@@ -27,9 +26,9 @@
 
   <!-- Open Graph — absolute URLs are required by Telegram / LinkedIn crawlers. -->
   <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="Samandar — Product Engineer · AI Automation · QA" />
-  <meta property="og:title" content="Samandar — Product Engineer · AI Automation · QA" />
-  <meta property="og:description" content="Создаю и проверяю web-продукты, AI-автоматизации и внутренние системы — от UX и архитектуры до тестов и deploy." />
+  <meta property="og:site_name" content="Samandar Mansurkhodjaev — Product Engineering" />
+  <meta property="og:title" content="Full-stack Product Engineer · AI Automation · QA" />
+  <meta property="og:description" content="Проектирую, собираю и проверяю web-продукты и AI-автоматизации — один ответственный от задачи до релиза." />
   <meta property="og:image" content="https://samandarmansurkhodjaev2713.github.io/CV-Samandar/og-image.png" />
   <meta property="og:image:secure_url" content="https://samandarmansurkhodjaev2713.github.io/CV-Samandar/og-image.png" />
   <meta property="og:image:width" content="1200" />
@@ -42,8 +41,8 @@
 
   <!-- Twitter / X card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Samandar — Product Engineer · AI Automation · QA" />
-  <meta name="twitter:description" content="Web-продукты, AI-автоматизация и QA: полный цикл от задачи до проверенного релиза." />
+  <meta name="twitter:title" content="Samandar — Full-stack Product Engineer · AI Automation · QA" />
+  <meta name="twitter:description" content="Web-продукты и AI-автоматизация: UX, full-stack разработка и QA в одном контуре ответственности." />
   <meta name="twitter:image" content="https://samandarmansurkhodjaev2713.github.io/CV-Samandar/og-image.png" />
   <meta name="twitter:image:alt" content="Samandar — Product Engineer, AI Automation and QA" />
 
@@ -66,8 +65,8 @@
         "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person",
         "name": "Samandar Mansurkhodjaev",
         "alternateName": "Samandar",
-        "jobTitle": "Product Engineer · AI Automation · QA Engineer",
-        "description": "Product engineer who designs, builds, verifies and deploys web products, AI automation and reliable internal systems end to end.",
+        "jobTitle": "Full-stack Product Engineer · AI Automation · QA Engineer",
+        "description": "Full-stack product engineer and QA engineer who designs, builds, verifies and deploys web products, AI automation and internal systems end to end. Open to remote product roles and client projects.",
         "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/",
         "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/og-image.png",
         "email": "mailto:sam4k27@gmail.com",
@@ -79,23 +78,24 @@
         ],
         "address": { "@type": "PostalAddress", "addressLocality": "Tashkent", "addressCountry": "UZ" },
         "knowsLanguage": ["ru", "uz", "en"],
-        "knowsAbout": ["Product engineering", "Quality assurance", "Test automation", "Playwright", "Full-stack development", "AI automation", "RAG", "Telegram bots", "Next.js", "FastAPI", "TypeScript", "Python", "Rust"],
-        "alumniOf": { "@type": "CollegeOrUniversity", "name": "IT Park University" }
+        "knowsAbout": ["Product engineering", "Full-stack development", "Quality assurance", "Test automation", "API testing", "Playwright", "SQL", "Docker", "AI automation", "RAG", "Telegram bots", "Next.js", "FastAPI", "TypeScript", "Python", "Rust"],
+        "affiliation": { "@type": "CollegeOrUniversity", "name": "IT Park University" }
       },
       {
         "@type": "WebSite",
         "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#website",
         "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/",
-        "name": "Samandar — Product Engineer · AI Automation · QA",
+        "name": "Samandar Mansurkhodjaev — Full-stack Product Engineer · AI Automation · QA",
         "inLanguage": ["ru", "en", "uz"],
-        "author": { "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person" }
+        "author": { "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person" },
+        "hasPart": { "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#projects" }
       },
       {
         "@type": "ProfilePage",
         "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#profile",
         "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/",
         "name": "Портфолио Samandar Mansurkhodjaev",
-        "description": "Web-продукты, AI-автоматизация и QA: от задачи до проверенного релиза.",
+        "description": "Portfolio of a full-stack product engineer and QA engineer: web products, AI automation, testing and verifiable releases.",
         "inLanguage": ["ru", "en", "uz"],
         "mainEntity": { "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person" },
         "isPartOf": { "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#website" }
@@ -103,6 +103,474 @@
     ]
   }
   </script>
+
+  <!-- GENERATED:PROJECT-ITEMLIST:START -->
+  <script type="application/ld+json" id="portfolio-projects-jsonld">
+  {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#projects",
+    "name": "Product work by Samandar Mansurkhodjaev",
+    "about": {
+      "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+    },
+    "numberOfItems": 30,
+    "itemListOrder": "https://schema.org/ItemListOrderAscending",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/dentforma/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "DentForma — Browser 3D Review",
+          "description": "Private browser-based 3D shape review: a controlled workflow from STL to an immutable result.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/dentforma/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/dentforma.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "url": "https://klawis.uz",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "Klawis — Legal AI Assistant",
+          "description": "Legal AI with source-grounded answers.",
+          "url": "https://klawis.uz",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/klawis.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/ttyl/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "TTYL Platform",
+          "description": "A closed enterprise platform with controlled data boundaries.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/ttyl/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/ttyl.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 4,
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/belfproctor/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "BelfProctor",
+          "description": "A safely disclosed proctoring case without private telemetry.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/belfproctor/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/belfproctor.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 5,
+        "url": "https://softlylove.uz",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "CoupleOS / Softly",
+          "description": "A private space built for two people.",
+          "url": "https://softlylove.uz",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/softly.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 6,
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/growthops-ai/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "GrowthOps AI",
+          "description": "A factory of narrow AI automations with verifiable cores.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/growthops-ai/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/growthops-ai.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 7,
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/wedding-invitations-uz/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "Wedding Invitations Uzbekistan",
+          "description": "A private wedding-invitation platform with RU/UZ publishing and RSVP workflows.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/wedding-invitations-uz/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/wedding-invitations-uz.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 8,
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/birthday-agent/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "Birthday Agent",
+          "description": "A reliable HR agent: one exact greeting, full audit and safe recovery.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/birthday-agent/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/birthday-agent.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 9,
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/meetingflow-ru-uz/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "MeetingFlow RU/UZ",
+          "description": "A meeting follows a verifiable path: calendar, recording, RU/UZ transcript, document and confirmed delivery.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/meetingflow-ru-uz/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/meetingflow-ru-uz.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 10,
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/b24-sales-analyst/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "B24 Sales Analyst",
+          "description": "A read-only CRM analyst: deterministic metrics, AI only explains.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/b24-sales-analyst/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/b24-sales-analyst.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 11,
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/chat-app/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "ChAT — Offline-first Messenger",
+          "description": "A messenger with a resilient offline outbox and verifiable access rules.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/chat-app/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/chat-app.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 12,
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/vacation-control/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "Vacation Control Agent",
+          "description": "An HR agent that carries leave from schedule to confirmed order.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/vacation-control/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/vacation-control.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 13,
+        "url": "https://samandarmansurkhodjaev2713.github.io/echelon-site-main/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "Echelon Desktop",
+          "description": "A personal desktop assistant for a business owner: remembers context, completes routine work and leaves decisions to the human.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/echelon-site-main/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/echelon-desktop.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 14,
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/ai-classroom/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "AI Classroom Intelligence",
+          "description": "Evidence-first classroom analysis with mandatory human review.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/ai-classroom/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/ai-classroom.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 15,
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/telegram-sheets-task-bot/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "Telegram Sheets Task Bot",
+          "description": "A task workflow without a separate server: authorization, atomic Sheets transactions, signed actions and audit.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/telegram-sheets-task-bot/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/telegram-sheets-task-bot.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 16,
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/forge/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "Forge / Learning OS",
+          "description": "A system that turns learning material into an operable process.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/forge/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/forge.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 17,
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/marketbot/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "Marketbot",
+          "description": "A controlled marketplace-offer pipeline.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/marketbot/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/marketbot.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 18,
+        "url": "https://samandarmansurkhodjaev2713.github.io/gorilla-five-signals-concept/uz/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "Gorilla — Five Signals Concept",
+          "description": "An independent motion concept: five localized product worlds in one verifiable web system.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/gorilla-five-signals-concept/uz/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/gorilla-five-signals.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 19,
+        "url": "https://dostupnoe-pravo-alpha.vercel.app/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "Доступное Право",
+          "description": "A legal-practice CRM with verifiable data isolation.",
+          "url": "https://dostupnoe-pravo-alpha.vercel.app/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/dostupnoe-pravo.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 20,
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/car-superapp/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "CAR Superapp",
+          "description": "A documented discovery and architecture phase for workshop operations.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/car-superapp/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/car-superapp.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 21,
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/task-manager/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "Task-manager / Task Manage Bot",
+          "description": "Two explicitly separated task-automation implementations.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/task-manager/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/task-manager.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 22,
+        "url": "https://samandarmansurkhodjaev2713.github.io/cardioguard/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "CardioGuard",
+          "description": "A mobile demo for heart-rhythm observation.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/cardioguard/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/cardioguard.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 23,
+        "url": "https://izzatullo.uz/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "IZATULO / BEL ALMA",
+          "description": "A trilingual B2B supplier catalog.",
+          "url": "https://izzatullo.uz/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/izatullo.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 24,
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/laplacefx/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "LaplaceFX",
+          "description": "A research/demo system for measuring trading signals and risk.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/laplacefx/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/laplacefx.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 25,
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/bioflux/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "BioFlux Observer",
+          "description": "A prototype for observing industrial flow and thresholds.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/bioflux/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/bioflux.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 26,
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/med-exe/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "med-exe",
+          "description": "A prototype for a local medical calculation tool.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/med-exe/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/med-exe.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 27,
+        "url": "https://samandarmansurkhodjaev2713.github.io/helion/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "Helion",
+          "description": "Cinematic scrollytelling for a fictional space program.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/helion/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/helion.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 28,
+        "url": "https://samandarmansurkhodjaev2713.github.io/stones/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "Stones",
+          "description": "Material editorial scrollytelling through geological time.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/stones/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/stones.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 29,
+        "url": "https://samandarmansurkhodjaev2713.github.io/3d-landing/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "3D Landing",
+          "description": "A WebGL experiment where space becomes the interface.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/3d-landing/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/3d-landing.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 30,
+        "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/vfs-killer/",
+        "item": {
+          "@type": "CreativeWork",
+          "name": "VFS Killer",
+          "description": "An archival case with incomplete source; no readiness claim.",
+          "url": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/projects/vfs-killer/",
+          "image": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/assets/proj/vfs-killer.webp",
+          "author": {
+            "@id": "https://samandarmansurkhodjaev2713.github.io/CV-Samandar/#person"
+          }
+        }
+      }
+    ]
+  }
+  </script>
+  <!-- GENERATED:PROJECT-ITEMLIST:END -->
 
   <!-- ════════════════════════════════════════════════════════════════════
        v51 — restructured paths. All app code lives under src/:
@@ -114,10 +582,10 @@
        Vendor libs (Three / React / Babel) remain in /vendor.
        ═══════════════════════════════════════════════════════════════════ -->
 
-  <!-- The seven authored CSS sources are compiled in their original cascade
+  <!-- Authored CSS sources are compiled in their declared cascade
        order into one deterministic blocking bundle. Source files stay readable;
        visitors avoid six requests and repeated parser setup. -->
-  <link rel="stylesheet" href="src/styles/app.bundle.min.css?v=246" />
+  <link rel="stylesheet" href="src/styles/app.bundle.min.css?v=247" />
 
   <!-- The parser-painted proof and the semantic Hero use this face. Warming
        the two ranges prevents the main statement from becoming a late LCP
@@ -128,23 +596,22 @@
   <!-- Fetch the application graph in parallel, but execute it in frame-sized
        stages through bootstrap.js. This keeps the intro responsive instead
        of turning parser work into one monolithic main-thread task. -->
-  <link rel="preload" as="script" href="vendor/react.production.min.js?v=246" />
-  <link rel="preload" as="script" href="vendor/react-dom.production.min.js?v=246" />
-  <link rel="preload" as="script" href="src/content/product-registry.js?v=246" />
-  <link rel="preload" as="script" href="src/content/content.js?v=246" />
-  <link rel="preload" as="script" href="src/engine/themes.js?v=246" />
-  <link rel="preload" as="script" href="src/engine/perf.js?v=246" />
-  <link rel="preload" as="script" href="src/engine/motion-runtime.js?v=246" />
-  <link rel="preload" as="script" href="src/engine/builder-estimator.js?v=246" />
-  <link rel="preload" as="script" href="src/engine/acts.js?v=246" />
-  <link rel="preload" as="script" href="src/engine/sound.js?v=246" />
-  <link rel="preload" as="script" href="src/engine/motion.js?v=246" />
-  <link rel="preload" as="script" href="src/engine/scene-cinema.js?v=246" />
-  <link rel="preload" as="script" href="src/engine/lazy-effects.js?v=246" />
-  <link rel="preload" as="script" href="src/components/tweaks-panel.js?v=246" />
-  <link rel="preload" as="script" href="src/components/components-1.js?v=246" />
-  <link rel="preload" as="script" href="src/components/components-2.js?v=246" />
-  <link rel="preload" as="script" href="src/components/app.js?v=246" />
+  <link rel="preload" as="script" href="vendor/react.production.min.js?v=247" />
+  <link rel="preload" as="script" href="vendor/react-dom.production.min.js?v=247" />
+  <link rel="preload" as="script" href="src/content/product-registry.js?v=247" />
+  <link rel="preload" as="script" href="src/content/content.js?v=247" />
+  <link rel="preload" as="script" href="src/engine/themes.js?v=247" />
+  <link rel="preload" as="script" href="src/engine/perf.js?v=247" />
+  <link rel="preload" as="script" href="src/engine/motion-runtime.js?v=247" />
+  <link rel="preload" as="script" href="src/engine/builder-estimator.js?v=247" />
+  <link rel="preload" as="script" href="src/engine/acts.js?v=247" />
+  <link rel="preload" as="script" href="src/engine/motion.js?v=247" />
+  <link rel="preload" as="script" href="src/engine/scene-cinema.js?v=247" />
+  <link rel="preload" as="script" href="src/engine/lazy-effects.js?v=247" />
+  <link rel="preload" as="script" href="src/components/tweaks-panel.js?v=247" />
+  <link rel="preload" as="script" href="src/components/components-1.js?v=247" />
+  <link rel="preload" as="script" href="src/components/components-2.js?v=247" />
+  <link rel="preload" as="script" href="src/components/app.js?v=247" />
 </head>
 <body>
   <!-- Frame-zero release proof. It is intentionally outside #root so the
@@ -165,8 +632,8 @@
         <span class="release-proof-crop release-proof-crop--tr"></span>
         <span class="release-proof-crop release-proof-crop--bl"></span>
         <span class="release-proof-crop release-proof-crop--br"></span>
-        <span class="release-proof-folio mono">RP–001 / 2026</span>
-        <span class="release-proof-owner mono">SAMANDAR · PRODUCT ENGINEERING</span>
+        <span class="release-proof-folio mono">PRODUCT ENGINEERING</span>
+        <span class="release-proof-owner mono">SAMANDAR MANSURKHODJAEV</span>
         <div class="release-proof-impression">
           <span class="release-proof-ink release-proof-ink--a">RELEASE</span>
           <span class="release-proof-ink release-proof-ink--b">RELEASE</span>
@@ -174,13 +641,49 @@
         </div>
         <span class="release-proof-register release-proof-register--a"></span>
         <span class="release-proof-register release-proof-register--b"></span>
-        <div class="release-proof-verdict"><span class="mono">QA / FINAL PROOF</span><strong>READY</strong></div>
+        <div class="release-proof-verdict"><span class="mono">BUILD + QA</span><strong>ONE OWNER</strong></div>
         <ol class="release-proof-map"><li><span>01</span><strong>BUILD</strong></li><li><span>02</span><strong>VERIFY</strong></li><li><span>03</span><strong>SHIP</strong></li></ol>
         <span class="release-proof-inspection"></span>
       </div>
     </figure>
   </div>
-  <div id="root"></div>
+  <div id="root">
+    <!-- Progressive first-screen contract. React replaces this authored Hero
+         in place; until then the visitor still receives a readable proposition
+         and two real contact routes instead of an empty application mount. -->
+    <main id="main" class="static-app-fallback" data-static-app-fallback>
+      <section data-section="hero" id="hero" class="hero hero--release-proof is-lit static-hero-fallback">
+        <div class="hero-stack">
+          <div class="shell hero-band hero-band--top">
+            <span class="eyebrow hero-eyebrow">Product Engineer · Full-stack · AI Automation · QA</span>
+            <span class="hero-status"><span class="status-dot"></span><span class="mono hero-status-copy">доступен для проектов</span></span>
+          </div>
+          <div class="hero-copy-stage">
+            <p class="hero-signature mono">Samandar Mansurkhodjaev · Product engineer</p>
+            <h1 class="hero-name" aria-label="Из задачи — в работающий продукт.">
+              <span class="hn-line hero-statement-line hero-statement-line--1 hn-line--given">Из задачи —</span>
+              <span class="hn-line hero-statement-line hero-statement-line--2 hn-line--family">в продукт.</span>
+            </h1>
+          </div>
+          <div class="shell hero-band hero-band--rule">
+            <p class="hero-roles">Full-stack Developer <i class="hero-roles-sep" aria-hidden="true">/</i> AI Automation <i class="hero-roles-sep" aria-hidden="true">/</i> QA Engineering</p>
+          </div>
+          <div class="shell hero-band hero-band--act">
+            <p class="hero-tagline">Проектирую, собираю и проверяю цифровые продукты — один ответственный от задачи до релиза.</p>
+            <div class="hero-ctas">
+              <a href="https://t.me/killallofthem13" class="btn btn-primary" rel="noopener noreferrer">
+                <span class="btn-label">Написать</span><span class="arrow">→</span>
+              </a>
+              <a href="https://github.com/SamandarMansurkhodjaev2713" class="btn btn-ghost" rel="noopener noreferrer">
+                <span class="btn-label">GitHub</span><span class="arrow">↗</span>
+              </a>
+            </div>
+            <p class="static-hero-fallback-status mono" role="status" aria-live="polite">Интерактивный каталог загружается</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
   <noscript>
     <main class="fatal-shell">
       <span class="fatal-code">NO JAVASCRIPT · STATIC ACCESS</span>
@@ -192,11 +695,11 @@
       </div>
     </main>
   </noscript>
-  <script src="src/engine/app-watchdog.js?v=246"></script>
+  <script src="src/engine/app-watchdog.js?v=247"></script>
 
   <!-- Intro starts before the application graph. Bootstrap yields between
        scripts, so the sequence remains responsive while the app mounts. -->
-  <script src="src/engine/intro.js?v=246"></script>
-  <script src="src/engine/bootstrap.js?v=246"></script>
+  <script src="src/engine/intro.js?v=247"></script>
+  <script src="src/engine/bootstrap.js?v=247"></script>
 </body>
 </html>

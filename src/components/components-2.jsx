@@ -286,11 +286,9 @@ function Services({ t }) {
         ) : null}
 
         {/* ── THE TWO ARGUMENTS ─────────────────────────────────────────
-            Price and speed, kept as two separate panels rather than one
-            "fast and affordable" line. They answer different objections, and
-            collapsing them into a single claim is what makes that claim sound
-            like marketing — each one here names the specific mechanism that
-            makes it true (no chain to pay for; no handoffs to wait on). */}
+            Ownership and iteration pace, kept as separate mechanisms rather
+            than collapsed into a generic marketing promise. Commercial terms
+            remain individual and are not inferred by this section. */}
         {args.length ? (
           <div className="svc-args">
             {args.map((a, i) => (
@@ -489,17 +487,16 @@ function CV({ t, links }) {
     return function () { window.removeEventListener("afterprint", handler); };
   }, []);
 
-  // derive aggregate stats from timeline
-  const years = (() => {
-    const ys = t.cv.timeline.map(n => parseInt(String(n.y).match(/\d{4}/)?.[0] || "0", 10)).filter(Boolean);
-    if (!ys.length) return null;
-    return `${Math.min(...ys)}—${Math.max(...ys)}`;
-  })();
-
   return (
     <section data-section="cv" id="cv" data-enter="curtain" ref={ref} onFocusCapture={keepTimelineFocusVisible}>
       <div className="shell">
-        <SecHead num="08" eyebrow={t.cv.eyebrow} title={t.cv.title} em={t.cv.title.split(" ").pop()} meta={`v.2026 · ${years || "active"}`} />
+        <SecHead
+          num="08"
+          eyebrow={t.cv.eyebrow}
+          title={t.cv.title}
+          em={t.cv.title.split(" ").pop()}
+          meta={document.documentElement.lang === "en" ? "current · 2026" : document.documentElement.lang === "uz" ? "yangilangan · 2026" : "актуально · 2026"}
+        />
 
         <article className="cv-doc" data-reveal>
           {/* Doc chrome */}
@@ -712,7 +709,7 @@ function CV({ t, links }) {
           ) : null}
 
           <footer className="cv-doc-foot mono">
-            <span>— end of file —</span>
+            <span>CV / 2026</span>
             <span>{t.cv.foot || "generated 2026 · verifiable on request"}</span>
           </footer>
         </article>
@@ -785,13 +782,10 @@ function Process({ t }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PROJECT BUILDER — "Живой конструктор проекта"
-// The site's signature interactive + lead magnet. The visitor picks a project
-// TYPE and SCALE; a warm architecture blueprint assembles live (a layered
-// "system cake": client → logic → intelligence → data → infrastructure) while
-// a readout crystallizes (stack · timeline · budget). CTAs: a Telegram
-// deep-link and a handoff that pre-fills the Contact form via a window
-// CustomEvent ("sm:builder-config").
+// PROJECT BUILDER — an interactive, pre-discovery project specification.
+// The visitor defines product shape and readiness; the sheet responds with
+// composition, relative complexity, stages, risks and one useful next step.
+// It never invents a price or delivery promise from insufficient input.
 //
 // Why a layer stack, not measured SVG connectors: every layer is a fixed slot
 // toggled by `is-active` (grid-rows 0fr→1fr collapse — the same trick the FAQ
@@ -823,15 +817,18 @@ function ProjectBuilder({ t, links }) {
   });
   const type = b.types.find(function find(item) { return item.k === typeId; });
   const stage = b.stages.find(function find(item) { return item.k === stageId; });
-  const driverLabels = result.driverIds.map(function label(id) {
+  const selectedDriverIds = estimator.DRIVER_IDS.filter(function selected(id) { return driverIds.has(id); });
+  const selectedReadinessIds = estimator.READINESS_IDS.filter(function selected(id) { return readinessIds.has(id); });
+  const driverLabels = selectedDriverIds.map(function label(id) {
     const item = b.drivers.find(function find(driver) { return driver.k === id; });
     return item ? item.label : id;
   });
-  const capabilityLabels = result.capabilityIds.map(function label(id) { return b.capabilities[id] || id; });
-  const riskLabels = result.exclusionIds.map(function label(id) { return b.risks[id] || id; });
-  const budgetText = `$${result.budget.min.toLocaleString("en-US")}–${result.budget.max.toLocaleString("en-US")}`;
-  const weeksText = `${result.weeks.min}–${result.weeks.max} ${b.units.weeks}`;
-  const confidenceText = b.confidence[result.confidence.band] || result.confidence.band;
+  const activeLayers = result.layers.filter(function keepActive(layer) { return layer.active; });
+  const compositionLabels = activeLayers.map(function label(layer) { return b.layers[layer.id] || layer.id; });
+  const stageLabels = result.stagePlanIds.map(function label(id) { return b.stagePlan[id] || id; });
+  const riskLabels = result.riskIds.map(function label(id) { return b.risks[id] || id; });
+  const nextStepText = b.nextSteps[result.nextStepId] || result.nextStepId;
+  const complexityText = b.complexity[result.complexity.band] || result.complexity.band;
 
   function choose(setter, value) {
     if (typeof navigator !== "undefined" && navigator.vibrate) {
@@ -854,8 +851,11 @@ function ProjectBuilder({ t, links }) {
       b.summaryTitle,
       `${type ? type.label : typeId} · ${stage ? stage.label : stageId}`,
       driverLabels.length ? `${b.labels.drivers}: ${driverLabels.join(", ")}` : `${b.labels.drivers}: ${b.labels.none}`,
-      `${b.readout.time}: ${weeksText}`,
-      `${b.readout.budget}: ${budgetText}`,
+      `${b.readout.composition}: ${compositionLabels.join(", ")}`,
+      `${b.readout.complexity}: ${complexityText}`,
+      `${b.readout.stages}: ${stageLabels.join(" → ")}`,
+      `${b.readout.risks}: ${riskLabels.length ? riskLabels.join("; ") : b.labels.noRisks}`,
+      `${b.readout.next}: ${nextStepText}`,
       b.notice,
     ].join("\n");
   }
@@ -869,13 +869,9 @@ function ProjectBuilder({ t, links }) {
         detail: {
           typeId: typeId,
           stageId: stageId,
-          driverIds: result.driverIds,
-          readinessIds: result.readinessIds,
-          estimateBandId: result.estimateBandId,
-          timelineBandId: result.timelineBandId,
-          budgetLabel: budgetText,
-          timelineLabel: weeksText,
-          result: result,
+          driverIds: selectedDriverIds,
+          readinessIds: selectedReadinessIds,
+          specification: result,
           summary: summaryLine(),
         },
       }));
@@ -900,12 +896,12 @@ function ProjectBuilder({ t, links }) {
         <SecHead num="05" eyebrow={b.eyebrow} title={b.title} meta={b.meta} titleId="builder-title" />
         <p className="lead-line" data-reveal>{b.lead}</p>
 
-        <form className="builder card" aria-labelledby="builder-title" onSubmit={function preventSubmit(event) { event.preventDefault(); }} data-reveal>
-          <div className="builder-console-rail mono" aria-hidden="true">
-            <span>{b.meta}</span>
-            <span>{`${type ? type.label : typeId} / ${stage ? stage.label : stageId}`}</span>
-            <span>{`v${result.estimateVersion}`}</span>
-          </div>
+        <form className="builder builder--spec card" aria-labelledby="builder-title" onSubmit={function preventSubmit(event) { event.preventDefault(); }} data-reveal>
+          <header className="builder-sheet-intro">
+            <span className="builder-sheet-kicker mono">{b.sheetKicker}</span>
+            <strong>{b.sheetTitle}</strong>
+            <span>{b.sheetNote}</span>
+          </header>
           {/* CHOICES */}
           <div className="builder-choices">
             <fieldset className="builder-step">
@@ -969,29 +965,45 @@ function ProjectBuilder({ t, links }) {
             </fieldset>
           </div>
 
-          <div className="builder-readout-block">
-            <p className="builder-notice">{b.notice}</p>
+          <aside className="builder-readout-block" aria-label={b.specificationTitle}>
+            <div className="builder-spec-head">
+              <span className="mono">{b.specificationTitle}</span>
+              <strong>{type ? type.label : typeId}</strong>
+              <span>{stage ? stage.label : stageId}</span>
+            </div>
             <dl className="builder-readout">
-              <div className="builder-readout-row"><dt className="builder-readout-k mono">{b.readout.time}</dt><dd className="builder-readout-v mono">{weeksText}</dd></div>
-              <div className="builder-readout-row"><dt className="builder-readout-k mono">{b.readout.budget}</dt><dd className="builder-readout-v mono">{budgetText}</dd></div>
-              <div className="builder-readout-row"><dt className="builder-readout-k mono">{b.readout.confidence}</dt><dd className="builder-readout-v mono">{confidenceText}</dd></div>
+              <div className="builder-readout-row builder-readout-row--composition">
+                <dt className="builder-readout-k mono">{b.readout.composition}</dt>
+                <dd className="builder-readout-v builder-tag-list">
+                  {compositionLabels.map(function renderComposition(label, index) { return <span key={index}>{label}</span>; })}
+                </dd>
+              </div>
+              <div className="builder-readout-row builder-readout-row--complexity">
+                <dt className="builder-readout-k mono">{b.readout.complexity}</dt>
+                <dd className={`builder-readout-v builder-complexity builder-complexity--${result.complexity.band}`}>{complexityText}</dd>
+              </div>
+              <div className="builder-readout-row builder-readout-row--stages">
+                <dt className="builder-readout-k mono">{b.readout.stages}</dt>
+                <dd className="builder-readout-v">
+                  <ol className="builder-stage-plan">
+                    {stageLabels.map(function renderStageLabel(label, index) { return <li key={index}><span className="mono">{String(index + 1).padStart(2, "0")}</span>{label}</li>; })}
+                  </ol>
+                </dd>
+              </div>
+              <div className="builder-readout-row builder-readout-row--risks">
+                <dt className="builder-readout-k mono">{b.readout.risks}</dt>
+                <dd className="builder-readout-v">
+                  {riskLabels.length ? <ul className="builder-risk-list">{riskLabels.map(function renderRisk(label, index) { return <li key={index}>{label}</li>; })}</ul> : <span className="builder-ready-state">{b.labels.noRisks}</span>}
+                </dd>
+              </div>
+              <div className="builder-readout-row builder-readout-row--next">
+                <dt className="builder-readout-k mono">{b.readout.next}</dt>
+                <dd className="builder-readout-v"><strong>{nextStepText}</strong></dd>
+              </div>
             </dl>
-            <div className="builder-result-group">
-              <h3 className="builder-spec-h mono">{b.labels.includes}</h3>
-              <ul className="builder-includes">
-                {(capabilityLabels.length ? capabilityLabels : [b.labels.core]).map(function renderCapability(label, index) {
-                  return <li key={index} className="builder-include"><span className="builder-include-tick" aria-hidden="true">✓</span><span>{label}</span></li>;
-                })}
-              </ul>
-            </div>
-            <div className="builder-boundary">
-              <span className="builder-boundary-k mono">{b.labels.risks}</span>
-              <span className="builder-boundary-v">{riskLabels.length ? riskLabels.join(" · ") : b.labels.ready}</span>
-            </div>
-            <div className="a11y-only" role="status" aria-live="polite" aria-atomic="true">
-              {`${type ? type.label : typeId}. ${stage ? stage.label : stageId}. ${weeksText}. ${budgetText}. ${confidenceText}.`}
-            </div>
-          </div>
+            <p className="builder-notice">{b.notice}</p>
+            <div className="a11y-only" role="status" aria-live="polite" aria-atomic="true">{summaryLine()}</div>
+          </aside>
 
           <div className="builder-cta-block">
             <div className="builder-cta">
@@ -1010,14 +1022,22 @@ function ProjectBuilder({ t, links }) {
           <div id="builder-architecture" className={`builder-stage ${architectureOpen ? "is-open" : ""}`} hidden={!architectureOpen}>
             <div className="builder-stage-head">
               <span className="mono">{b.architecture}</span>
-              <span className="mono">v{result.estimateVersion}</span>
+              <span>{b.architectureNote}</span>
             </div>
             <ol className="builder-proof-mini" aria-label={b.proofLabel}>
-              {b.proof.map(function renderProof(item, index) { return <li key={index}><span className="mono">{String(index + 1).padStart(2, "0")}</span><strong>{item}</strong></li>; })}
+              {["build", "verify", "ship"].map(function renderProof(group, index) {
+                return (
+                  <li key={group}>
+                    <span className="mono">{String(index + 1).padStart(2, "0")}</span>
+                    <strong>{b.proofScope[group]}</strong>
+                    <small>{result.proofScope[group].map(function label(id) { return b.proofItems[id] || id; }).join(" · ")}</small>
+                  </li>
+                );
+              })}
             </ol>
             <div className="builder-layers">
               <span className="builder-backbone" />
-              {result.layers.filter(function keepActive(layer) { return layer.active; }).map(function renderLayer(L, index) {
+              {activeLayers.map(function renderLayer(L, index) {
                 return (
                   <div key={L.id} className={`builder-layer builder-layer--${L.id}`} style={{ "--li": index }}>
                     <div className="builder-layer-body">
@@ -1025,8 +1045,8 @@ function ProjectBuilder({ t, links }) {
                         <span className="builder-layer-name mono">{b.layers[L.id]}</span>
                       </div>
                       <div className="builder-layer-tech">
-                        {L.tech.map(function renderChip(tech, chipIndex) {
-                          return <span key={chipIndex} className="builder-chip mono" style={{ "--ci": chipIndex }}>{tech}</span>;
+                        {L.componentIds.map(function renderChip(componentId, chipIndex) {
+                          return <span key={componentId} className="builder-chip" style={{ "--ci": chipIndex }}>{b.components[componentId] || componentId}</span>;
                         })}
                       </div>
                     </div>
@@ -1263,21 +1283,13 @@ function Contact({ t, links }) {
   // breadth of services. Chips let the visitor click as many as apply, which
   // also reveals the available service categories at a glance.
   const [scopeSet, setScopeSet] = useState2(() => new Set());
-  // Budget slider — 5 fixed buckets so we don't ask for awkward exact numbers.
-  // Confirmed directly against the real Uzbekistan market (client's own
-  // numbers, 2026-07) — see BUILDER_SCALE_META above for the same pass.
-  const BUDGET_BUCKETS = ["< $150", "$150–400", "$400–900", "$900–2k", "$2k+"];
-  const [budgetIdx, setBudgetIdx] = useState2(1);
-  const [builderBudget, setBuilderBudget] = useState2("");
   // Timeline preference — small chip row for urgency, helps scoping.
   const TIMELINE_LABEL = t.contact.form.timeline || "Сроки";
   const TIMELINE_OPTS = t.contact.timeline_opts || ["ASAP", "1–2 недели", "1–2 месяца", "гибко"];
   const [timelineIdx, setTimelineIdx] = useState2(3);
-  const [builderTimeline, setBuilderTimeline] = useState2("");
-  const BUDGET_LABEL = t.contact.form.budget || "Бюджет";
   // Handoff target: the project builder above dispatches "sm:builder-config"
   // when the visitor clicks "перенести в заявку" — we pre-fill the matching
-  // scope chip, budget bucket, and drop a summary into the message field so
+  // scope chip and drop a summary into the message field so
   // they land on a form that already understands their build.
   const msgRef = useRef2(null);
   useEffect2(function builderHandoff() {
@@ -1288,8 +1300,6 @@ function Contact({ t, links }) {
       if (typeof scopeIndex === "number" && t.contact.scope_opts[scopeIndex]) {
         setScopeSet(new Set([t.contact.scope_opts[scopeIndex]]));
       }
-      setBuilderBudget(d.budgetLabel || "");
-      setBuilderTimeline(d.timelineLabel || "");
       if (d.summary && msgRef.current) {
         msgRef.current.value = d.summary;
         // nudge the reveal/validation state so the filled field looks alive
@@ -1314,8 +1324,7 @@ function Contact({ t, links }) {
   function buildFd(formEl) {
     const fd = new FormData(formEl);
     fd.append("scope", Array.from(scopeSet).join(", "));
-    fd.append("budget", builderBudget || BUDGET_BUCKETS[budgetIdx]);
-    fd.append("timeline", builderTimeline || TIMELINE_OPTS[timelineIdx]);
+    fd.append("timeline", TIMELINE_OPTS[timelineIdx]);
     return fd;
   }
 
@@ -1330,7 +1339,6 @@ function Contact({ t, links }) {
       g("name") ? (L.name || "Имя") + ": " + g("name") : "",
       g("contact") ? (L.email || "Email / Telegram") + ": " + g("contact") : "",
       g("scope") ? (L.scope || "Scope") + ": " + g("scope") : "",
-      g("budget") ? (L.budget || "Бюджет") + ": " + g("budget") : "",
       g("timeline") ? (L.timeline || "Сроки") + ": " + g("timeline") : "",
       "",
       g("message"),
@@ -1433,44 +1441,7 @@ function Contact({ t, links }) {
                   );
                 })}
               </div>
-            </div>
-
-            {/* Budget bucket slider — 5 discrete steps with track tick marks
-                so you can SEE which bucket you're snapping to. */}
-            <div className="ff">
-              <span className="ff-k mono">
-                {BUDGET_LABEL}
-                <span className="ff-k-val">{builderBudget || BUDGET_BUCKETS[budgetIdx]}</span>
-              </span>
-              <div className="ff-range-wrap">
-                <input
-                  type="range"
-                  className="ff-range"
-                  min="0"
-                  max={BUDGET_BUCKETS.length - 1}
-                  step="1"
-                  value={budgetIdx}
-                  aria-label={BUDGET_LABEL}
-                  aria-valuetext={builderBudget || BUDGET_BUCKETS[budgetIdx]}
-                  onChange={(e) => { setBudgetIdx(parseInt(e.target.value, 10)); setBuilderBudget(""); }}
-                  style={{ "--val-pct": `${(budgetIdx / (BUDGET_BUCKETS.length - 1)) * 100}%` }}
-                />
-                <div className="ff-range-track-marks" aria-hidden="true">
-                  {BUDGET_BUCKETS.map(function renderMark(_b, i) {
-                    const cls = i < budgetIdx ? "is-passed" : (i === budgetIdx ? "is-current" : "");
-                    return <span key={i} className={`ff-range-track-mark ${cls}`} />;
-                  })}
-                </div>
-                <div className="ff-range-ticks mono" aria-hidden="true">
-                  {BUDGET_BUCKETS.map(function renderTick(b, i) {
-                    return (
-                      <span key={i} className={`ff-range-tick ${i === budgetIdx ? "is-active" : ""}`}>
-                        {b}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
+              <p className="contact-scope-note">{t.contact.price_note}</p>
             </div>
 
             {/* Timeline urgency chips. */}
@@ -1485,7 +1456,7 @@ function Contact({ t, links }) {
                         type="radio"
                         name="timeline-ui"
                         checked={i === timelineIdx}
-                        onChange={() => { setTimelineIdx(i); setBuilderTimeline(""); }}
+                        onChange={() => setTimelineIdx(i)}
                       />
                       <span>{o}</span>
                     </label>

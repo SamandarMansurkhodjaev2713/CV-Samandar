@@ -2,7 +2,12 @@
 
 const { test, expect } = require("@playwright/test");
 const AxeBuilder = require("@axe-core/playwright").default;
-const { settleMain, caseProducts, expectNoHorizontalOverflow } = require("./helpers");
+const {
+  settleMain,
+  caseProducts,
+  waitForCaseStyles,
+  expectNoHorizontalOverflow,
+} = require("./helpers");
 
 test("main semantic shell has no WCAG 2.2 A/AA axe violations", async ({ page, isMobile, browserName }) => {
   test.skip(browserName === "webkit", "Axe semantics are engine-independent; WebKit keeps the functional/keyboard matrix.");
@@ -19,6 +24,7 @@ for (const product of caseProducts) {
     test.skip(browserName === "webkit" || isMobile, "The shared case renderer is audited once per product in desktop Chromium.");
     test.setTimeout(90000);
     await page.goto("/" + product.casePage, { waitUntil: "domcontentloaded" });
+    await waitForCaseStyles(page);
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
       .analyze();

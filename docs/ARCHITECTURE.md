@@ -4,27 +4,27 @@
 
 Runtime: статический сайт для GitHub Pages, React без модульного bundler-runtime.
 
-Контентная модель: 29 canonical products, из них 10 live и 19 case.
+Контентная модель: 30 canonical products, из них 10 live и 20 case.
 
-Генерация кейсов: 16 routes × RU/EN/UZ = 48 статических HTML-страниц.
+Генерация кейсов: 20 routes × RU/EN/UZ = 60 статических HTML-страниц.
 
 ## 1. Границы системы
 
 Репозиторий содержит две связанные поверхности:
 
-1. Главная интерактивная страница с 12 сценами и 29 карточками продуктов.
-2. Статически сгенерированные case pages для 19 продуктов, которые нельзя или недостаточно честно показать прямым live-переходом.
+1. Главная интерактивная страница с 12 сценами и 30 карточками продуктов.
+2. Статически сгенерированные case pages для 20 продуктов, которые нельзя или недостаточно честно показать прямым live-переходом.
 
 Сайт не имеет application backend, SSR, runtime transpilation, service worker или клиентского роутера общего назначения. Главная не зависит от runtime API: профиль, каталог и доказательные факты являются authored/static content. Главная требует JavaScript и предоставляет `<noscript>`-контакты; тело каждого кейса уже находится в generated HTML до выполнения JavaScript.
 
 ```mermaid
 flowchart TD
-  R["Canonical product registry\n29 products"] --> C["Main content\nRU / EN / UZ cards"]
-  R --> L["Case data\n19 products × 3 locales"]
+  R["Canonical product registry\n30 products"] --> C["Main content\nRU / EN / UZ cards"]
+  R --> L["Case data\n20 products × 3 locales"]
   C --> A["React main shell\n12 scenes"]
   L --> G["build.js + shared renderer"]
-  G --> H["57 static case pages"]
-  R --> S["sitemap.xml\n58 URLs"]
+  G --> H["60 static case pages"]
+  R --> S["sitemap.xml\n61 URLs"]
   P["Motion policy"] --> M["Shared frame runtime"]
   M --> A
   M --> X["Motion / Acts / ImgFx"]
@@ -39,10 +39,10 @@ flowchart TD
 | Данные / поведение | Источник истины | Производные артефакты |
 |---|---|---|
 | product id, slug, rank, lifecycle, confidentiality, presentation, live/GitHub/case route, image, accent, evidence boundary | `src/content/product-registry.js` | карточки, metadata, sitemap, route expectations |
-| тексты 12 сцен и 29 карточек на главной | `src/content/content.js` | runtime `window.CONTENT` |
+| тексты 12 сцен и 30 карточек на главной | `src/content/content.js` | runtime `window.CONTENT` |
 | React-компоненты | `src/components/*.jsx` | соседние `*.js`, создаваемые `build.js` |
-| полный набор 19 case definitions | `src/projects/landings-data.js` | baked body и runtime re-render |
-| единая HTML-разметка кейса и locale UI labels | `src/projects/render.js` | 48 `projects/**/index.html` и browser re-render |
+| полный набор 20 case definitions | `src/projects/landings-data.js` | baked body и runtime re-render |
+| единая HTML-разметка кейса и locale UI labels | `src/projects/render.js` | 60 `projects/**/index.html` и browser re-render |
 | case runtime: язык, chapter spy, reveal, image fallback | `src/projects/landing.js` | поведение уже сгенерированной страницы |
 | дизайн и responsive layout | authored `src/styles/*.css` (кроме generated bundle), `src/projects/landing.css` | `src/styles/app.bundle.min.css`, computed layout в браузере |
 | CSP, JSX/CSS compilation, case generation, sitemap | `build.js` | `index.html` CSP, compiled JS/CSS, case HTML, `sitemap.xml` |
@@ -68,13 +68,14 @@ Generated `.js`, `src/styles/app.bundle.min.css` и `projects/**/index.html` н�
 
 Primary CTA идёт на `liveUrl`. GitHub показывается вторично только если `githubUrl` разрешён реестром.
 
-### 3.2 Case presentation — 19 маршрутов
+### 3.2 Case presentation — 20 маршрутов
 
 | Slug | RU route | EN / UZ routes |
 |---|---|---|
 | `dentforma` | `/projects/dentforma/` | `/en/`, `/uz/` внутри route |
 | `growthops-ai` | `/projects/growthops-ai/` | `/en/`, `/uz/` внутри route |
 | `ttyl` | `/projects/ttyl/` | `/en/`, `/uz/` |
+| `wedding-invitations-uz` | `/projects/wedding-invitations-uz/` | `/en/`, `/uz/` |
 | `meetingflow-ru-uz` | `/projects/meetingflow-ru-uz/` | `/en/`, `/uz/` |
 | `birthday-agent` | `/projects/birthday-agent/` | `/en/`, `/uz/` |
 | `telegram-sheets-task-bot` | `/projects/telegram-sheets-task-bot/` | `/en/`, `/uz/` |
@@ -93,6 +94,21 @@ Primary CTA идёт на `liveUrl`. GitHub показывается втори�
 | `chat-app` | `/projects/chat-app/` | `/en/`, `/uz/` |
 
 В таблице `/en/` и `/uz/` означают дочерние пути соответствующего RU route. Реальный deployment base — `/CV-Samandar/`; абсолютные canonical URL формирует `build.js`.
+
+Wedding Invitations Uzbekistan занимает rank 7 и остаётся
+`BUILD / sensitive / private case` с private source. Публичная модель допускает
+локально подтверждённую platform foundation ниже RC и project-scoped claims
+55 governed tasks, 65 passed browser tests и 10 authored art directions с
+review `2026-08-27`. Remote CI, production и provider-backed evidence не входят
+в архитектурные claims.
+
+### 3.3 Presentation contract
+
+`featuredRank` задаёт единственный канонический порядок для обеих responsive
+композиций. Desktop first view монтирует шесть продуктов: DentForma, Klawis,
+TTYL Platform, BelfProctor, Softly и GrowthOps AI; явное раскрытие добавляет
+остальные 24. Mobile сразу монтирует все 30 и применяет category-фильтры к тому
+же массиву без дублей, альтернативных rank или скрытого второго каталога.
 
 ## 4. Главная: runtime architecture
 
@@ -123,16 +139,24 @@ Deep link с hash пропускает intro, чтобы прямой перех
 1. vendored React и ReactDOM;
 2. product registry и main content;
 3. theme, performance policy и motion runtime;
-4. estimator, acts, sound, authored motion, SceneCinema и lazy effects;
+4. estimator, acts, authored motion, SceneCinema и lazy effects;
 5. compiled React components и app shell.
 
 Скрипты — обычные browser globals, не ES modules. Порядок является частью архитектурного контракта: поздние файлы используют globals ранних.
+
+Звуковой слой намеренно отсутствует: интерфейс не загружает audio runtime, не сохраняет скрытое звуковое состояние и не создаёт звук без явного пользовательского управления.
 
 ### 4.3 Двенадцать сцен
 
 Канонический массив и фактический DOM-порядок:
 
 `hero → signal → about → projects → builder → skills → services → cv → process → faq → trust → contact`
+
+Builder — это Scope Preview, а не коммерческий калькулятор. Внутренний decision
+module вычисляет composition, relative complexity, stages, risks и next step.
+Runtime-контракт запрещает денежный output и обещание срока; коммерческие
+условия определяются индивидуально после уточнения scope, зависимостей и формата
+работы.
 
 Hero/Signal используют нативный `position: sticky`. Фоновый Release Gate
 внутри Proof Chamber принадлежит статичному `#sm-hero-media`, а React Hero —
@@ -154,8 +178,8 @@ history; отдельные UI-поверхности не вычисляют с
 3. детерминированная сборка authored CSS через pinned `lightningcss` в
    `src/styles/app.bundle.min.css`;
 4. пересчёт CSP главной по точным hash всех inline data blocks;
-5. генерация 19 кейсов по 3 локали — 57 HTML-файлов;
-6. генерация sitemap: главная + 57 case locale URLs = 58 URL;
+5. генерация 20 кейсов по 3 локали — 60 HTML-файлов;
+6. генерация sitemap: главная + 60 case locale URLs = 61 URL;
 7. повторная validation уже с generated files и проверкой source/generated
    parity.
 
@@ -281,7 +305,7 @@ Meta CSP не содержит `upgrade-insecure-requests`: production уже о
 - `npm test` — validate и весь Playwright suite;
 - `npm run test:desktop`, `npm run test:mobile`, `npm run test:a11y`;
 - `npm run test:performance` — отдельный Chromium desktop/mobile gate с одним worker;
-- `npm run qa:visual` — opt-in capture 12 секций, fullscreen-меню и 19 кейсов на desktop/mobile;
+- `npm run qa:visual` — opt-in capture 12 секций, fullscreen-меню и 20 кейсов на desktop/mobile;
 - `npm run scan:secrets` и `npm run check:live` — отдельные release checks.
 
 Наличие теста означает наличие контракта, но не означает, что он был запущен в текущем окружении. Результаты должны подтверждаться свежим test output или CI artifact, а ручные проверки — отдельным checklist.

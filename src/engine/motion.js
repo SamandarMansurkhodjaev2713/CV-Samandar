@@ -42,10 +42,8 @@
   var cursor = null;
   var cursorRing = null;
   var cursorLabel = null;
-  var cursorCoords = null;
   var cursorMode = "default";
   var cursorText = "";
-  var cursorSection = "";
   var cursorAccent = "";
   var cursorPosition = { x: -100, y: -100 };
   var cursorTarget = { x: -100, y: -100 };
@@ -229,19 +227,18 @@
     cursor = document.createElement("div");
     cursor.className = "sc-cursor";
     cursor.setAttribute("aria-hidden", "true");
+    // The resting pose is explicit from the first paint. Without this
+    // attribute, :not([data-mode="default"]) matched before the first pointer
+    // event and exposed the legacy measurement frame in the middle of Hero.
+    cursor.setAttribute("data-mode", "default");
     cursor.innerHTML = [
-      '<div class="sc-cross sc-cross-h"></div>',
-      '<div class="sc-cross sc-cross-v"></div>',
       '<div class="sc-ring"></div>',
-      '<div class="sc-caliper"><i></i><i></i><b></b></div>',
       '<div class="sc-dot"></div>',
       '<div class="sc-label"><span class="sc-label-key"></span><span class="sc-label-val"></span></div>',
-      '<div class="sc-coords"></div>',
     ].join("");
     document.body.appendChild(cursor);
     cursorRing = cursor.querySelector(".sc-ring");
     cursorLabel = cursor.querySelector(".sc-label");
-    cursorCoords = cursor.querySelector(".sc-coords");
     document.body.classList.add("has-smart-cursor");
     cursorMoving = true;
     if (runtime) runtime.wake("cursor-build");
@@ -252,7 +249,6 @@
     cursor = null;
     cursorRing = null;
     cursorLabel = null;
-    cursorCoords = null;
     morphElement = null;
     morphRect = null;
     cursorMoving = false;
@@ -268,7 +264,7 @@
     // concatenated desktop + mobile labels and produced broken cursor text.
     var source = element ? (element.innerText || element.textContent || "") : "";
     var value = source.replace(/\s+/g, " ").trim();
-    return value.length > 20 ? value.slice(0, 19) + "…" : value;
+    return value.length > 32 ? value.slice(0, 31) + "…" : value;
   }
 
   function cursorInfo(target) {
@@ -306,14 +302,14 @@
       var parts = cursorText.split(":");
       var language = (document.documentElement.lang || "ru").slice(0, 2);
       var actionSets = {
-        ru: { link: "ОТКРЫТЬ", drag: "ДВИГАТЬ", file: "ФАЙЛ", copy: "КОПИРОВАТЬ", send: "ОТПРАВИТЬ", input: "ВВОД", tab: "ВЫБРАТЬ", target: "ПРОВЕРИТЬ" },
-        en: { link: "OPEN", drag: "MOVE", file: "FILE", copy: "COPY", send: "SEND", input: "INPUT", tab: "SELECT", target: "INSPECT" },
-        uz: { link: "OCHISH", drag: "SURISH", file: "FAYL", copy: "NUSXA", send: "YUBORISH", input: "KIRITISH", tab: "TANLASH", target: "TEKSHIRISH" },
+        ru: { link: "ОТКРЫТЬ", drag: "ДВИГАТЬ", file: "ФАЙЛ", copy: "КОПИРОВАТЬ", send: "ОТПРАВИТЬ", input: "ВВОД", tab: "ВЫБРАТЬ", target: "ПРОВЕРИТЬ", read: "ЧИТАТЬ", close: "ЗАКРЫТЬ", expand: "РАСКРЫТЬ", collapse: "СВЕРНУТЬ" },
+        en: { link: "OPEN", drag: "MOVE", file: "FILE", copy: "COPY", send: "SEND", input: "INPUT", tab: "SELECT", target: "INSPECT", read: "READ", close: "CLOSE", expand: "EXPAND", collapse: "COLLAPSE" },
+        uz: { link: "OCHISH", drag: "SURISH", file: "FAYL", copy: "NUSXA", send: "YUBORISH", input: "KIRITISH", tab: "TANLASH", target: "TEKSHIRISH", read: "O‘QISH", close: "YOPISH", expand: "OCHISH", collapse: "YIG‘ISH" },
       };
       var actionNames = actionSets[language] || actionSets.ru;
       key.textContent = (parts.length > 1
         ? parts.shift().toUpperCase()
-        : (actionNames[cursorMode] || "VERIFY")) + " //";
+        : (actionNames[cursorMode] || actionNames.target)) + " //";
       value.textContent = parts.length ? parts.join(":").trim() : cursorText;
     }
     cursor.classList.toggle("has-label", Boolean(cursorText));
@@ -340,8 +336,6 @@
   function onPointerOver(event) {
     if (!cursor) return;
     var info = cursorInfo(event.target);
-    var section = event.target && event.target.closest ? event.target.closest("section[data-section]") : null;
-    cursorSection = section ? (section.id || section.getAttribute("data-section") || "") : "";
     if (!info) {
       setCursorMode("default", "");
       morphElement = null;
@@ -535,13 +529,6 @@
     // Reserve the bottom proof rail and mobile browser chrome instead of
     // waiting until the label is technically outside the viewport.
     cursor.classList.toggle("label-up", cursorTarget.y > viewportHeight - 150);
-    if (cursorCoords) {
-      cursorCoords.textContent = morphRect
-        ? (cursorSection ? "#" + cursorSection.toUpperCase() + " · " : "") +
-          Math.round(morphRect.width) + "×" + Math.round(morphRect.height)
-        : "X" + String(Math.round(cursorTarget.x)).padStart(4, "0") +
-          " / Y" + String(Math.round(cursorTarget.y)).padStart(4, "0");
-    }
     if (cursorRing) {
       cursorRing.style.width = ring.width.toFixed(2) + "px";
       cursorRing.style.height = ring.height.toFixed(2) + "px";

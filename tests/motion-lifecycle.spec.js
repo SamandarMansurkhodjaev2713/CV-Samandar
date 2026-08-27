@@ -16,7 +16,7 @@ async function forceHighMotion(page) {
   await expect.poll(() => page.evaluate(() => window.__SM_MOTION_POLICY.tier)).toBe("high");
 }
 
-test("authored motion uses two shared runtime subscribers and a stable verification cursor", async ({ page }, testInfo) => {
+test("authored motion uses two shared runtime subscribers and a restrained contextual cursor", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-chromium", "desktop fine pointer owns the authored cursor");
   await settleMotion(page);
   await forceHighMotion(page);
@@ -45,8 +45,8 @@ test("authored motion uses two shared runtime subscribers and a stable verificat
   expect(interaction.computedTranslate).toBe("none");
   expect(interaction.computedTransform).toBe("none");
   await expect(page.locator(".sc-label-val")).not.toHaveText("");
-  await expect.poll(() => page.locator(".sc-caliper").evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity))).toBeGreaterThan(0.75);
-  await expect.poll(() => page.locator(".sc-coords").evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity))).toBeGreaterThan(0.75);
+  await expect(page.locator(".sc-label-key")).toHaveText("ОТПРАВИТЬ //");
+  await expect(page.locator(".sc-caliper, .sc-coords, .sc-cross")).toHaveCount(0);
 
   await expect.poll(() => page.evaluate(() => window.Motion.__debug().cursorMoving)).toBe(false);
   const settledCursor = await page.locator(".sc-ring").evaluate((element) => ({

@@ -96,9 +96,13 @@ test("CV stays operable and unclipped across narrow portrait and landscape", asy
     { width: 844, height: 390 },
   ];
 
-  for (const viewport of viewports) {
+  for (const [viewportIndex, viewport] of viewports.entries()) {
     await page.setViewportSize(viewport);
-    await settleMain(page, "#cv");
+    if (viewportIndex === 0) {
+      await settleMain(page, "#cv");
+    } else {
+      await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    }
     await expect(page.locator("html")).toHaveAttribute("data-deep-link-settled", "cv");
     await expect(page.locator("#cv")).toBeVisible();
     const geometry = await page.evaluate(() => {

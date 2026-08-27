@@ -1073,30 +1073,6 @@ body.cursor-hover .cursor-dot { opacity: 0; }
   font-size: 10.5px; letter-spacing: 0.14em;
   color: var(--text-mute); text-transform: uppercase;
 }
-/* Sound toggle — html.sm-sound (set by sound.js) is the single state truth. */
-.sound-toggle {
-  display: inline-flex; align-items: center; gap: 8px;
-  appearance: none; background: transparent; cursor: pointer;
-  border: 1px solid var(--line-strong); border-radius: 999px;
-  padding: 8px 14px;
-  font-size: 10.5px; letter-spacing: 0.16em;
-  color: var(--text-mute);
-  transition: color var(--d-fast), border-color var(--d-fast);
-  min-height: 44px;
-}
-.sound-toggle:hover { color: var(--text); border-color: var(--accent); }
-.sound-toggle-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--text-mute); opacity: 0.5;
-  transition: background .25s, opacity .25s, box-shadow .25s;
-}
-html.sm-sound .sound-toggle { color: var(--accent); border-color: rgba(var(--accent-rgb) / 0.5); }
-html.sm-sound .sound-toggle-dot {
-  background: var(--accent); opacity: 1;
-  box-shadow: 0 0 8px rgba(var(--accent-rgb) / 0.8);
-  animation: soundPulse 1.8s ease-in-out infinite;
-}
-@keyframes soundPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
 @media (max-width: 640px) {
   .nav-menu-inner { padding-bottom: max(22px, env(safe-area-inset-bottom)); }
   .nav-menu-links {
@@ -1424,7 +1400,6 @@ html.sm-is-leaving { cursor: progress; }
   .lang button { min-width: 44px; min-height: 44px; padding: 0 10px; }
   .btn { min-height: 48px; }
   .nav-links a { min-height: 44px; }
-  .sound-toggle { min-height: 48px; padding-inline: 16px; }
 }
 
 /* — Focus — */

@@ -15,7 +15,7 @@ const result = spawnSync(
     // The visual suite already writes its complete evidence as authored PNGs
     // and contact sheets. Playwright trace/video duplicates every long scroll
     // frame and can require several gigabytes while two case contexts close on
-    // Windows. Keep the product assertions and all 68 captures, but run the
+    // Windows. Keep the product assertions and all 70 captures, but run the
     // evidence contexts sequentially and do not create redundant diagnostics.
     "--workers=1",
     "--trace=off",

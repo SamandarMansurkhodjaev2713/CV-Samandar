@@ -15,10 +15,10 @@ test.describe("Firefox release smoke", () => {
     page.on("pageerror", (error) => pageErrors.push(error.message));
 
     await settleMain(page, "#projects");
-    await expect(page.locator(".proj-card")).toHaveCount(4);
-    await expect(page.locator(".proj-card:visible")).toHaveCount(4);
+    await expect(page.locator(".proj-card")).toHaveCount(6);
+    await expect(page.locator(".proj-card:visible")).toHaveCount(6);
 
-    await page.getByRole("button", { name: /Показать ещё 25/ }).click();
+    await page.getByRole("button", { name: /Показать ещё 23/ }).click();
     await expect(page.locator(".proj-card")).toHaveCount(orderedProducts.length);
     await expect(page.locator(".proj-card:visible")).toHaveCount(orderedProducts.length);
 

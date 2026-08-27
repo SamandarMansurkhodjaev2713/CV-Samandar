@@ -5,6 +5,48 @@ Awwwards-переработки. План и критерии готовност
 `MASTER-IMPLEMENTATION-PLAN.md`; архитектурные контракты — в
 `ARCHITECTURE.md`.
 
+## Portfolio contract candidate — v247 pre-release
+
+Текущий pre-release-контракт сохраняет один канонический каталог из 30
+продуктов: 10 public live и 20 privacy-safe case. Сборочная модель должна
+выпускать 60 локализованных case HTML и sitemap из 61 URL без дублей маршрутов.
+
+Первый desktop-вид Projects содержит ровно шесть сильнейших записей в
+утверждённом порядке: DentForma, Klawis, TTYL Platform, BelfProctor, Softly и
+GrowthOps AI. После явного раскрытия доступны остальные 24. Mobile сразу
+показывает все 30 карточек и category-фильтры; обе композиции читают один
+`featuredRank`-порядок из canonical registry.
+
+`Wedding Invitations Uzbekistan` добавлен как rank 7
+`BUILD / sensitive / private case` с private source. Локальный repository review
+подтверждает platform foundation ниже RC и три project-scoped claim:
+55 governed tasks, 65 passed browser tests и 10 authored art directions;
+`reviewedAt` — `2026-08-27`. Это не remote CI, production deployment,
+provider-backed evidence или утверждение о production readiness.
+
+Builder переопределён как Scope Preview, а не калькулятор. Его результат
+содержит только composition, relative complexity, stages, risks и next step.
+Цена, денежный диапазон и обещание срока не вычисляются; коммерческие условия
+обсуждаются индивидуально после уточнения scope, зависимостей и формата работы.
+
+Локальный v247 release gate на `2026-08-28` подтвердил: validator —
+30/10/20 и три локали; deterministic build — 67 byte-identical generated
+artifacts; secret scan и dependency audit — clean / 0 vulnerabilities;
+approved live routes — 10/10; performance — desktop/mobile 2/2; visual gate —
+4/4, 66 scene/case captures и четыре свежих contact sheet. Contact sheets
+главной и всех 20 кейсов просмотрены вручную; responsive WebP дополнительно
+проверены прямым decode/element-paint, чтобы full-page compositor не выдавался
+за пропавшее изображение.
+
+Полный локальный browser run завершился 187 passed / 118 profile-specific
+skipped / 1 external Windows Firefox compositor timeout. Второй Firefox case
+journey и все пять WebKit critical-path сценариев прошли; Chromium/reduced
+матрица не получила product failure. Навигационный hotfix после visual gate
+отдельно выдержал 18 passed / 2 profile-specific skipped в двух повторах.
+Windows Firefox timeout не объявляется PASS и должен быть закрыт чистым Linux
+CI до deploy. Сам deploy и post-deploy smoke пока `NOT RUN`; раздел v246 ниже
+остаётся последним подтверждённым production evidence.
+
 ## Release Proof catalog and responsive candidate — v246
 
 Повторный GitHub-аудит сохранил правило «один продукт — одна каноническая
@@ -19,7 +61,8 @@ secondary CTA — на публичный репозиторий. `Sentinel Edge
 1536×512, 1152×384 и 768×256 без текста, UI, логотипов и закрытых данных.
 Мобильный каталог теперь сразу показывает все 29 карточек и фильтрует их по
 пяти честным категориям без повторного монтирования дублей; desktop сохраняет
-четыре курируемые записи до явного раскрытия. Каждая из 29 mobile-картинок
+шесть курируемых записей — DentForma, Klawis, TTYL Platform, BelfProctor,
+Softly и GrowthOps AI — до явного раскрытия. Каждая из 29 mobile-картинок
 отдельно проверена на responsive `currentSrc`, decode, размеры 3:1, opacity и
 видимость. Карточки больше не делят `transform` между layout и parallax, а
 геометрический тест подтверждает отсутствие пересечений после раскрытия.

@@ -236,8 +236,8 @@ function Hero({ t, links }) {
           <span className="release-proof-crop release-proof-crop--tr" />
           <span className="release-proof-crop release-proof-crop--bl" />
           <span className="release-proof-crop release-proof-crop--br" />
-          <span className="release-proof-folio mono">RP–001 / 2026</span>
-          <span className="release-proof-owner mono">SAMANDAR · PRODUCT ENGINEERING</span>
+          <span className="release-proof-folio mono">PRODUCT ENGINEERING</span>
+          <span className="release-proof-owner mono">SAMANDAR MANSURKHODJAEV</span>
           <div className="release-proof-impression">
             <span className="release-proof-ink release-proof-ink--a">RELEASE</span>
             <span className="release-proof-ink release-proof-ink--b">RELEASE</span>
@@ -246,8 +246,8 @@ function Hero({ t, links }) {
           <span className="release-proof-register release-proof-register--a" />
           <span className="release-proof-register release-proof-register--b" />
           <div className="release-proof-verdict">
-            <span className="mono">QA / FINAL PROOF</span>
-            <strong>READY</strong>
+            <span className="mono">BUILD + QA</span>
+            <strong>ONE OWNER</strong>
           </div>
           <ol className="release-proof-map">
           {proofSteps.map((step, index) => (
@@ -259,7 +259,7 @@ function Hero({ t, links }) {
           </ol>
           <span className="release-proof-inspection" />
         </div>
-        <figcaption className="release-proof-caption mono">FINAL CHECK BEFORE PRODUCTION</figcaption>
+        <figcaption className="release-proof-caption mono">DESIGN · FULL-STACK · AI · QUALITY</figcaption>
       </figure>
 
       {/* Four horizontal bands, top to bottom: identification, the masthead,
@@ -282,10 +282,9 @@ function Hero({ t, links }) {
           </span>
         </div>
 
-        {/* The first viewport now leads with the product promise, not a giant
-            signature. The name remains visible as authorship, while the h1
-            says what a visitor actually gets. Per-letter spans preserve the
-            authored Intro hand-off; aria-label exposes one natural sentence. */}
+        {/* Keep complete phrases as the layout unit. Cyrillic and long localized
+            words must shape naturally; motion reveals the line mask rather
+            than splitting glyphs into fragile positioned boxes. */}
         <div className="hero-copy-stage">
           <p className="hero-signature mono">{t.hero.signature || `${HERO_GIVEN} ${HERO_FAMILY}`}</p>
           <h1 className="hero-name" aria-label={t.hero.statement_aria || statementLines.join(" ")}>
@@ -296,7 +295,7 @@ function Hero({ t, links }) {
                 aria-hidden="true"
                 key={`${lineIndex}-${line}`}
               >
-                {heroLetters(line)}
+                {line}
               </span>
             ))}
           </h1>
@@ -936,16 +935,16 @@ function ProjectFilters({ items, active, onChange, labels }) {
 // list of 17 name/tag/status rows with a floating hover preview — is gone. It
 // read as a spreadsheet: seventeen identical rows in a portfolio whose entire
 // argument is that the work is varied. The section is back to ONE presentation
-// for every project (a card), collapsed to the four strongest on desktop and
+// for every project (a card), collapsed to the six strongest on desktop and
 // expandable on intent, and a swipe carousel on mobile.
 function Projects({ t }) {
   const ref = useRevealRoot([t]);
   const gridRef = useRef(null);
   const items = t.projects.items;
-  // Four strongest product families lead the section on every viewport. The
+  // Six strongest product families lead the section on every viewport. The
   // complete catalog expands on intent; mobile keeps its swipe carousel, but
   // nobody has to swipe through 21 cards just to leave the block.
-  const FEATURED_PROJECT_COUNT = 4;
+  const FEATURED_PROJECT_COUNT = 6;
   const [isMobileCatalog, setIsMobileCatalog] = useState(() => (
     typeof window.matchMedia === "function" && window.matchMedia("(max-width: 900px)").matches
   ));
@@ -963,9 +962,9 @@ function Projects({ t }) {
   const filteredItems = activeFilter === "all"
     ? items
     : items.filter((item) => Array.isArray(item.categories) && item.categories.indexOf(activeFilter) !== -1);
-  // Mobile is the complete catalogue by design: all 29 products are mounted
+  // Mobile is the complete catalogue by design: all products are mounted
   // immediately and the filter reduces the filmstrip without hiding the rest
-  // behind an expansion command. Desktop keeps a curated four-card opening.
+  // behind an expansion command. Desktop keeps a curated six-card opening.
   const chapterItems = isMobileCatalog
     ? filteredItems
     : (expanded ? items : items.slice(0, FEATURED_PROJECT_COUNT));
@@ -995,7 +994,7 @@ function Projects({ t }) {
   }
 
   // Deep-link: arriving at #proj-<slug> (returning from that product's landing)
-  // for a card the collapsed desktop grid hides (index >= 4) → expand the grid
+  // for a card the collapsed desktop grid hides (index >= 6) → expand the grid
   // so App's scroll-to-hash can actually reach it. Runs once on mount.
   useEffect(() => {
     const id = (window.location.hash || "").replace(/^#/, "");

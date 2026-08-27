@@ -6,15 +6,23 @@
 
 ### Added
 
+- Новый authenticated GitHub-аудит выделил `Wedding Invitations Uzbekistan` в
+  самостоятельный private case-продукт с rank 7 и статусом
+  `BUILD / sensitive / private_source`. Локально подтверждена platform
+  foundation ниже RC и project-scoped evidence: 55 governed tasks, 65 passed
+  browser tests и 10 authored art directions, reviewed `2026-08-27`. Remote CI,
+  production и provider-backed evidence не заявляются. Текущий каталог содержит
+  30 продуктов: 10 live и 20 case; сборочный контракт — 60 локализованных case
+  HTML и 61 URL в sitemap.
 - Повторный GitHub-аудит добавил `Gorilla — Five Signals Concept` как новый
   самостоятельный public live-продукт: primary CTA ведёт на RU/UZ/EN Pages,
   secondary CTA — на публичный source. `Sentinel Edge` по решению владельца
-  удалён из реестра, карточек, фильтров, изображений и текущей документации;
-  общее число канонических продуктов осталось равным 29.
-- Мобильный каталог теперь сразу монтирует все 29 продуктов и предлагает
-  явные category-фильтры с количеством результатов. Десктоп сохраняет
-  курируемое вступление из четырёх карточек и раскрывает полный каталог по
-  команде; оба режима используют один порядок и один реестр без дублей.
+  удалён из реестра, карточек, фильтров, изображений и текущей документации.
+- Мобильный каталог теперь сразу монтирует все 30 продуктов и предлагает
+  явные category-фильтры с количеством результатов. Десктоп сначала показывает
+  шесть сильнейших продуктов — DentForma, Klawis, TTYL Platform, BelfProctor,
+  Softly и GrowthOps AI — и раскрывает остальные 24 по команде; оба режима
+  используют один порядок и один реестр без дублей.
 - Intro получил readiness-proof по реальному состоянию `SHELL / TYPE / MEDIA`:
   три отметки меняются только при фактической готовности соответствующего
   слоя и не имитируют production-телеметрию.
@@ -40,11 +48,11 @@
   имитируют; собственные menu controls не получают второй click-ripple поверх
   своей close/open анимации.
 - SEO graph главной теперь описывает `Person`, `WebSite` и `ProfilePage`, а
-  каждая из 57 локализованных case-страниц — `CreativeWork`, `WebPage`, автора
+  каждая из 60 локализованных case-страниц — `CreativeWork`, `WebPage`, автора
   и `BreadcrumbList`; validator не пропускает неполную structured-data схему.
 - Layout-regression gate для 320 px project gallery, светлого CV/Quality shell
-  и явных межсекционных переходов; базовые ценовые диапазоны Builder 2026.2
-  закреплены отдельным domain-тестом.
+  и явных межсекционных переходов; decision-контракт Builder/Scope Preview
+  закреплён отдельными UI/domain-тестами без денежной оценки и обещания срока.
 
 ### Changed
 
@@ -83,21 +91,28 @@
   `requestAnimationFrame`/`React.startTransition`, а deep links сразу получают
   полную оболочку. Это убирает монолитный initial long task без scroll-lazy
   контента или потери маршрутов.
-- Все 19 case routes приведены к общему Release Field: Inter body, Oswald
+- Все 20 case routes приведены к общему Release Field: Inter body, Oswald
   display, единая сетка, прямоугольные controls и chapter rhythm. Устаревшие
   wave/gauge/lens pseudo-HUD cues отключены; уникальность сохраняют предметное
   изображение, accent, схема, QA-блок и аргументация.
 - Длинные описания в карточках сокращены до тезисов без потери фактов; полный
   контекст остаётся на case-странице. Метаданные каталога теперь честно говорят
-  `29 продуктов`, а не называют все позиции кейсами; desktop сначала монтирует
-  четыре сильнейшие карточки, а mobile сразу показывает все 29 и фильтрует их
-  без дублей.
-- Стартовые диапазоны оценки снижены до `$150–450` для прототипа,
-  `$450–1,400` для MVP и `$1,500–4,200` для production; форма контакта использует
-  согласованные более низкие budget buckets. Это ориентир, не публичная оферта.
+  `30 продуктов`, а не называют все позиции кейсами; desktop сначала монтирует
+  DentForma, Klawis, TTYL Platform, BelfProctor, Softly и GrowthOps AI, а mobile
+  сразу показывает все 30 и фильтрует их без дублей.
+- Builder/Scope Preview больше не формирует цену, денежный диапазон или обещание
+  срока. Результат описывает состав решения, относительную сложность, этапы,
+  риски и следующий шаг; коммерческие условия обсуждаются индивидуально после
+  уточнения объёма, зависимостей и формата работы.
 
 ### Fixed
 
+- Явная навигация к CV, Services, Quality и Contact теперь отключает
+  scroll-linked transform pinned-пары на самой целевой секции. `scroll-margin`
+  снова является единственным владельцем финальной позиции: заголовок не
+  прячется под fixed navbar, а обычный reader-driven overlap остаётся без
+  изменений. Visual harness повторяет тот же production-контракт вместо
+  измерения промежуточного animation frame.
 - Ранний клик по главе в fullscreen Index больше не теряется во время
   staged React mount. SceneCinema запрашивает нужную смысловую секцию, ждёт
   её фактический DOM commit и только затем выполняет исходный navigation
@@ -115,7 +130,7 @@
   WebKit, при которой здоровая страница уже была видна, но состояние загрузки
   оставалось неопределённым; намеренно stalled WebKit-сценарий прошёл 7/7.
 - Visual-release runner больше не создаёт параллельно многогигабайтные копии
-  68 authored PNG в Playwright trace/video. Только этот evidence job работает
+  70 authored PNG в Playwright trace/video. Только этот evidence job работает
   последовательно и без дублирующей диагностики; screenshot, decode, reveal,
   full-page и contact-sheet проверки сохранены и прошли 4/4.
 - Hero headline и role rail больше не дробятся на независимо трансформируемые
@@ -131,7 +146,7 @@
   8 px воздуха до нижнего proof rail.
 - Contact-sheet visual gate ждёт фактический `HTMLImageElement.decode()` для
   каждой страницы вместо фиксированных семи секунд, устраняя гонку на тяжёлой
-  матрице 19 desktop-кейсов без ослабления визуальной проверки.
+  полной desktop-матрице кейсов без ослабления визуальной проверки.
 - Low-tier scroll больше не перечитывает геометрию всех 12 глав и не вычисляет
   уже отключённые pin/parallax/magnetic transforms на каждом кадре. Авторский
   desktop-cursor и нативный Hero→Signal handoff сохраняются, а observer fallback

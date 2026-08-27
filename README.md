@@ -123,7 +123,7 @@ Playwright покрывает:
 - клавиатуру, focus visibility, семантику, axe и reduced motion;
 - desktop/mobile responsive-состояния и смену ориентации;
 - Chromium, Firefox smoke и WebKit smoke;
-- motion/performance policy, WebGL/image lifecycle, sound lifecycle и degraded-state recovery;
+- motion/performance policy, WebGL/image lifecycle, отсутствие скрытого audio runtime и degraded-state recovery;
 - SEO, CSP, 404/deep-link routing, generated discovery files и performance-бюджеты.
 
 Визуальный release review выполняется отдельно через `npm run qa:visual`, чтобы автоматические проверки не подменяли дизайнерское решение.

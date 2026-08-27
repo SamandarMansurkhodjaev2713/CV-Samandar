@@ -6,18 +6,24 @@ const { settleMain, expectNoHorizontalOverflow } = require("./helpers");
 test.describe("honest degraded states", () => {
   test.skip(({ isMobile }) => isMobile, "Each failure contract is viewport-independent and covered once.");
 
-  test("pre-React failure resolves to a useful recovery surface", async ({ page }) => {
+  test("pre-React failure preserves the useful progressive Hero", async ({ page }) => {
     test.setTimeout(20000);
     await page.route("**/src/components/app.js*", (route) => route.abort("failed"));
     await page.goto("/#hero", { waitUntil: "domcontentloaded" });
-    const recovery = page.getByRole("alert");
-    await expect(recovery).toBeVisible({ timeout: 12000 });
-    await expect(recovery.getByRole("heading")).toContainText("Сайт не загрузился");
-    await expect(recovery.getByRole("link", { name: "Написать в Telegram" }))
+    const fallback = page.locator("[data-static-app-fallback]");
+    await expect(fallback).toBeVisible({ timeout: 12000 });
+    await expect(fallback.getByRole("heading", { level: 1 })).toContainText("Из задачи");
+    await expect(fallback.getByRole("link", { name: "Написать" }))
       .toHaveAttribute("href", "https://t.me/killallofthem13");
+    await expect(fallback.getByRole("link", { name: "GitHub" }))
+      .toHaveAttribute("href", "https://github.com/SamandarMansurkhodjaev2713");
+    await expect(fallback).toHaveAttribute("data-static-state", "degraded");
+    await expect(fallback.locator(".static-hero-fallback-status"))
+      .toContainText("прямые контакты работают");
+    await expect(page.locator("html")).not.toHaveClass(/intro-lock/);
   });
 
-  test("a shell that mounts after the intro deadline replaces recovery synchronously", async ({ page }) => {
+  test("a late React shell replaces the progressive Hero synchronously", async ({ page }) => {
     test.setTimeout(20000);
     await page.route("**/src/components/app.js*", async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 3400));
@@ -25,8 +31,10 @@ test.describe("honest degraded states", () => {
     });
 
     await page.goto("/?late-shell=1", { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("alert")).toBeVisible({ timeout: 7000 });
-    await page.locator("#main").waitFor({ state: "attached", timeout: 10000 });
+    await expect(page.locator("[data-static-app-fallback]")).toBeVisible({ timeout: 7000 });
+    await expect(page.locator("html")).toHaveAttribute("data-app-boot", "ready", { timeout: 10000 });
+    await expect(page.locator("[data-static-app-fallback]")).toHaveCount(0);
+    await expect(page.locator("#main #hero h1")).toBeVisible();
 
     await expect(page.locator("#sm-intro")).toHaveCount(0);
     await expect(page.locator("html")).not.toHaveClass(/intro-lock/);

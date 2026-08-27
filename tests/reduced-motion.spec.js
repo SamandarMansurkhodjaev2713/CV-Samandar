@@ -19,7 +19,7 @@ test("reduced motion preserves all content and native navigation", async ({ page
   await page.locator("#main").waitFor({ state: "attached" });
   await page.locator(".proj-card").first().waitFor({ state: "attached" });
   expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(true);
-  await expect(page.locator(".proj-card")).toHaveCount(4);
+  await expect(page.locator(".proj-card")).toHaveCount(6);
   await expect(page.locator("#main")).toBeVisible();
   await expect(page.locator("#root")).not.toHaveAttribute("aria-hidden", "true");
   const behavior = await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior);

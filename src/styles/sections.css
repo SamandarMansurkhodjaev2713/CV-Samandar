@@ -1676,17 +1676,17 @@ html[data-perf="low"] .proj-grid > .proj-card { translate: none; }
 .proj-repo:focus-visible,
 .proj-cta:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 
-/* Four portfolio-defining cases lead the section; the other seventeen are one
-   click away. They stay in the DOM while collapsed (display:none, not unmounted)
+/* Six portfolio-defining cases lead the section; the remaining catalog is one
+   click away. Hidden records stay discoverable through the canonical registry
    so deep links and in-page search still find them, and Projects' mount effect
    expands the grid when the URL carries a #proj-<slug> that lives past the
-   fourth card.
+   sixth card.
    NOT scoped to desktop. The earlier version collapsed the desktop grid only,
    which left the phone with all 21 cards swipeable behind a pager that was
    built from the collapsed four — swipe to the seventh card and the dots sat
    frozen at 4/4 with no way to represent where you were. Same rule on both, so
    the carousel and its pager always describe the same set. */
-.proj-grid.is-collapsed > .proj-card:nth-child(n+5) { display: none; }
+.proj-grid.is-collapsed > .proj-card:nth-child(n+7) { display: none; }
 
 /* ══ FINALE — the contact section as culmination ════════════════════════════
    The page's warmest, brightest screen. It already arrives behind a shutter
@@ -1821,7 +1821,7 @@ html[data-perf="low"] .ilude-lm { transform: none; }
      styles — critical because the card's base `transform` carries the live
      hover-tilt (rotateX/rotateY var); a `both` fill would freeze transform:none
      and permanently kill the tilt. */
-  .proj-grid.is-expanded > .proj-card:nth-child(n+5) {
+  .proj-grid.is-expanded > .proj-card:nth-child(n+7) {
     animation: projExpandIn .5s var(--e-entrance, cubic-bezier(.2,.6,.18,1)) backwards;
   }
 }
@@ -1832,9 +1832,9 @@ html[data-perf="low"] .ilude-lm { transform: none; }
   to   { transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .proj-grid.is-expanded > .proj-card:nth-child(n+5) { animation: none; }
+  .proj-grid.is-expanded > .proj-card:nth-child(n+7) { animation: none; }
 }
-html[data-motion-lite] .proj-grid.is-expanded > .proj-card:nth-child(n+5) { animation: none; }
+html[data-motion-lite] .proj-grid.is-expanded > .proj-card:nth-child(n+7) { animation: none; }
 .proj-expand {
   margin: 24px auto 0;
   display: flex;

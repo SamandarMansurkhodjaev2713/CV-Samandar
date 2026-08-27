@@ -31,7 +31,7 @@ module.exports = defineConfig({
     locale: "ru-RU",
     timezoneId: "Asia/Tashkent",
     colorScheme: "dark",
-    // The explicit visual-release job writes 68 PNG evidence files itself.
+    // The explicit visual-release job writes 70 PNG evidence files itself.
     // Retaining a second frame-by-frame trace/video copy can exhaust a small
     // Windows system drive while two long full-page case sweeps close.
     trace: process.env.VISUAL_QA === "1" ? "off" : "retain-on-failure",

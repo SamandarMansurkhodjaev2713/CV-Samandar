@@ -1,8 +1,9 @@
-// builder-estimator.js — locale-neutral, deterministic scope-preview model.
+// builder-estimator.js — deterministic, locale-neutral project specification.
 //
-// The model intentionally returns a range, assumptions and confidence instead
-// of pretending to produce a quote. It is shared by the UI, Contact handoff and
-// Node tests, so display and delivery cannot silently diverge.
+// The form deliberately does not calculate money or delivery dates: a short
+// questionnaire cannot produce an honest commercial promise. It exposes only
+// the decisions useful before discovery — composition, relative complexity,
+// delivery stages, risks and the next concrete step.
 (function exposeBuilderEstimator(root, factory) {
   var api = factory();
   if (typeof module !== "undefined" && module.exports) module.exports = api;
@@ -10,141 +11,155 @@
 })(typeof window !== "undefined" ? window : globalThis, function createBuilderEstimator() {
   "use strict";
 
-  var VERSION = "2026.2";
+  var VERSION = "2026.3";
   var TYPE_IDS = ["web", "ai", "bot", "automation"];
   var STAGE_IDS = ["prototype", "mvp", "production"];
   var DRIVER_IDS = ["ai", "integrations", "auth", "payments", "realtime", "migration", "motion", "load"];
   var READINESS_IDS = ["brief", "access", "design", "deadline"];
+  var COMPLEXITY_BANDS = ["low", "moderate", "high", "critical"];
+  var LAYER_IDS = ["client", "logic", "ai", "data", "qa", "infra"];
+  var COMPONENT_IDS = [
+    "react-client", "telegram-client", "workflow-client",
+    "node-api", "python-api", "workflow-engine",
+    "llm", "retrieval", "evals",
+    "postgres", "redis", "migration-pipeline",
+    "acceptance", "test-design", "api-ui", "regression", "load-checks",
+    "managed-deploy", "containers", "ci", "observability", "queue-cdn"
+  ];
+  var STAGE_PLAN_IDS = [
+    "define", "prototype", "acceptance", "decision",
+    "architecture", "build", "verify", "release", "audit", "handoff"
+  ];
+  var RISK_IDS = [
+    "brief-gap", "access-gap", "design-gap", "deadline-gap",
+    "ai-quality", "third-party", "payments", "realtime", "migration", "load"
+  ];
+  var NEXT_STEP_IDS = [
+    "scope-clarification", "dependency-access-review", "critical-flow-alignment",
+    "scope-prioritization", "technical-discovery", "scope-confirmation"
+  ];
+  var PROOF_ITEM_IDS = [
+    "working-slice", "contracts", "data-path", "ai-evals",
+    "acceptance", "test-design", "api-ui", "regression", "load-checks",
+    "deploy", "monitoring", "handoff", "decision"
+  ];
 
-  var TYPES = {
-    web: { factor: 1, client: ["Next.js / React"], logic: ["FastAPI / Node.js"] },
-    ai: { factor: 1.28, client: ["Next.js / React"], logic: ["FastAPI"], forceAi: true },
-    bot: { factor: 0.8, client: ["Telegram Bot API / Web App"], logic: ["Node.js / Python"] },
-    automation: { factor: 0.92, client: ["Webhooks / n8n"], logic: ["Python / Node.js"] },
-  };
-  var STAGES = {
-    prototype: { weeks: { min: 1, max: 2 }, budget: { min: 150, max: 450 }, confidenceBase: 0.82 },
-    mvp: { weeks: { min: 2, max: 5 }, budget: { min: 450, max: 1400 }, confidenceBase: 0.76 },
-    production: { weeks: { min: 6, max: 12 }, budget: { min: 1500, max: 4200 }, confidenceBase: 0.68 },
-  };
+  var TYPE_BASE = { web: 5, ai: 13, bot: 6, automation: 7 };
+  var STAGE_WEIGHT = { prototype: 0, mvp: 14, production: 28 };
   var DRIVER_WEIGHT = {
-    ai: 0.24,
-    integrations: 0.13,
-    auth: 0.1,
-    payments: 0.13,
-    realtime: 0.16,
-    migration: 0.16,
-    motion: 0.12,
-    load: 0.2,
+    ai: 8, integrations: 5, auth: 4, payments: 7,
+    realtime: 7, migration: 8, motion: 4, load: 10
   };
-  var CAPABILITIES = {
-    ai: "ai",
-    integrations: "integrations",
-    auth: "auth",
-    payments: "payments",
-    realtime: "realtime",
-    migration: "migration",
-    motion: "motion",
-    load: "load",
+  var READINESS_GAP_WEIGHT = { brief: 6, access: 5, design: 4, deadline: 3 };
+  var STAGE_PLANS = {
+    prototype: ["define", "prototype", "acceptance", "decision"],
+    mvp: ["define", "architecture", "build", "verify", "release"],
+    production: ["audit", "architecture", "build", "verify", "release", "handoff"]
+  };
+  var DRIVER_RISKS = {
+    ai: "ai-quality", integrations: "third-party", payments: "payments",
+    realtime: "realtime", migration: "migration", load: "load"
+  };
+  var READINESS_RISKS = {
+    brief: "brief-gap", access: "access-gap", design: "design-gap", deadline: "deadline-gap"
   };
 
-  function uniqueAllowed(values, allowed) {
-    var seen = Object.create(null);
-    return (Array.isArray(values) ? values : []).filter(function keep(value) {
-      if (allowed.indexOf(value) === -1 || seen[value]) return false;
-      seen[value] = true;
-      return true;
-    });
+  function canonical(values, allowed) {
+    var source = Array.isArray(values) ? values : [];
+    return allowed.filter(function present(id) { return source.indexOf(id) !== -1; });
   }
 
-  function roundMoney(value) {
-    if (value <= 1000) return Math.ceil(value / 50) * 50;
-    return Math.ceil(value / 100) * 100;
-  }
-
-  function confidenceBand(score) {
-    if (score >= 0.78) return "high";
-    if (score >= 0.58) return "medium";
+  function bandFor(score) {
+    if (score >= 70) return "critical";
+    if (score >= 50) return "high";
+    if (score >= 30) return "moderate";
     return "low";
   }
 
-  function candidateLayers(typeId, stageId, driverIds) {
-    var type = TYPES[typeId];
+  function layer(id, active, componentIds) {
+    return { id: id, active: !!active, componentIds: active ? componentIds.slice() : [] };
+  }
+
+  function buildLayers(typeId, stageId, driverIds) {
     var has = function has(id) { return driverIds.indexOf(id) !== -1; };
-    var aiActive = !!type.forceAi || has("ai");
-    var data = ["PostgreSQL"];
-    var infra = stageId === "production"
-      ? ["Docker", "GitHub Actions", "Sentry"]
-      : ["Managed deploy"];
-    if (aiActive) data.push("pgvector");
-    if (has("realtime") || has("load")) data.push("Redis");
-    if (has("load")) infra.push("Queue / CDN");
+    var aiActive = typeId === "ai" || has("ai");
+    var client = typeId === "bot" ? ["telegram-client"]
+      : typeId === "automation" ? ["workflow-client"] : ["react-client"];
+    var logic = typeId === "ai" ? ["python-api"]
+      : typeId === "automation" ? ["workflow-engine", "node-api"] : ["node-api"];
+    var data = ["postgres"];
+    var qa = stageId === "prototype" ? ["acceptance"] : ["test-design", "api-ui", "regression"];
+    var infra = stageId === "production" ? ["containers", "ci", "observability"] : ["managed-deploy"];
+
+    if (has("realtime") || has("load")) data.push("redis");
+    if (has("migration")) data.push("migration-pipeline");
+    if (has("load")) {
+      qa.push("load-checks");
+      infra.push("queue-cdn");
+    }
+
     return [
-      { id: "client", active: true, tech: type.client.slice() },
-      { id: "logic", active: true, tech: type.logic.slice() },
-      { id: "ai", active: aiActive, tech: aiActive ? ["Claude / OpenAI", "RAG / Evals"] : [] },
-      { id: "data", active: true, tech: data },
-      { id: "qa", active: true, tech: stageId === "prototype" ? ["Acceptance checks"] : ["Test design", "API / UI regression"] },
-      { id: "infra", active: true, tech: infra },
+      layer("client", true, client),
+      layer("logic", true, logic),
+      layer("ai", aiActive, aiActive ? ["llm", "retrieval", "evals"] : []),
+      layer("data", true, data),
+      layer("qa", true, qa),
+      layer("infra", true, infra)
     ];
+  }
+
+  function riskIdsFor(driverIds, missingReadiness) {
+    var risks = missingReadiness.map(function readinessRisk(id) { return READINESS_RISKS[id]; });
+    DRIVER_IDS.forEach(function addDriverRisk(id) {
+      if (driverIds.indexOf(id) === -1 || !DRIVER_RISKS[id]) return;
+      if (risks.indexOf(DRIVER_RISKS[id]) === -1) risks.push(DRIVER_RISKS[id]);
+    });
+    return risks;
+  }
+
+  function nextStepFor(typeId, stageId, driverIds, missingReadiness) {
+    var priority = [
+      ["brief", "scope-clarification"],
+      ["access", "dependency-access-review"],
+      ["design", "critical-flow-alignment"],
+      ["deadline", "scope-prioritization"]
+    ];
+    for (var index = 0; index < priority.length; index += 1) {
+      if (missingReadiness.indexOf(priority[index][0]) !== -1) return priority[index][1];
+    }
+    if (typeId === "ai" || stageId === "production" || driverIds.length >= 4) return "technical-discovery";
+    return "scope-confirmation";
+  }
+
+  function proofScopeFor(stageId, driverIds) {
+    var build = ["working-slice", "contracts", "data-path"];
+    var verify = stageId === "prototype" ? ["acceptance"] : ["test-design", "api-ui", "regression"];
+    var ship = stageId === "prototype" ? ["decision"] : ["deploy", "monitoring", "handoff"];
+    if (driverIds.indexOf("ai") !== -1) build.push("ai-evals");
+    if (driverIds.indexOf("load") !== -1) verify.push("load-checks");
+    return { build: build, verify: verify, ship: ship };
   }
 
   function estimateProject(config) {
     config = config || {};
     var typeId = TYPE_IDS.indexOf(config.typeId) !== -1 ? config.typeId : "web";
     var stageId = STAGE_IDS.indexOf(config.stageId) !== -1 ? config.stageId : "mvp";
-    var driverIds = uniqueAllowed(config.driverIds, DRIVER_IDS);
-    var readinessIds = uniqueAllowed(config.readinessIds, READINESS_IDS);
-    var type = TYPES[typeId];
-    var stage = STAGES[stageId];
-    var driverFactor = driverIds.reduce(function sum(total, id) { return total + DRIVER_WEIGHT[id]; }, 0);
+    var driverIds = canonical(config.driverIds, DRIVER_IDS);
+    var readinessIds = canonical(config.readinessIds, READINESS_IDS);
     var missingReadiness = READINESS_IDS.filter(function missing(id) { return readinessIds.indexOf(id) === -1; });
-    var uncertaintyFactor = missingReadiness.length * 0.055;
-    var factor = type.factor * (1 + driverFactor + uncertaintyFactor);
-    var weeks = {
-      min: Math.max(1, Math.ceil(stage.weeks.min * factor)),
-      max: Math.max(1, Math.ceil(stage.weeks.max * factor)),
-    };
-    var budget = {
-      currency: "USD",
-      min: roundMoney(stage.budget.min * factor),
-      max: roundMoney(stage.budget.max * factor),
-    };
-    var confidenceScore = Math.max(0.35, Math.min(0.92,
-      stage.confidenceBase + readinessIds.length * 0.035 - driverIds.length * 0.012
-    ));
-    var capabilities = driverIds.map(function mapCapability(id) { return CAPABILITIES[id]; });
-    if (type.forceAi && capabilities.indexOf("ai") === -1) capabilities.unshift("ai");
-    var layers = candidateLayers(typeId, stageId, driverIds);
-    var thirdParty = driverIds.some(function thirdPartyFlag(id) {
-      return id === "integrations" || id === "payments" || id === "ai";
-    });
+    var score = TYPE_BASE[typeId] + STAGE_WEIGHT[stageId];
+
+    driverIds.forEach(function addDriver(id) { score += DRIVER_WEIGHT[id]; });
+    missingReadiness.forEach(function addGap(id) { score += READINESS_GAP_WEIGHT[id]; });
+    score = Math.max(0, Math.min(100, Math.round(score)));
 
     return {
-      estimateVersion: VERSION,
-      typeId: typeId,
-      stageId: stageId,
-      driverIds: driverIds,
-      readinessIds: readinessIds,
-      capabilityIds: capabilities,
-      assumptionIds: readinessIds.slice(),
-      exclusionIds: missingReadiness,
-      confidence: { score: Number(confidenceScore.toFixed(2)), band: confidenceBand(confidenceScore) },
-      weeks: weeks,
-      budget: budget,
-      flags: {
-        thirdParty: thirdParty,
-        hosting: stageId !== "prototype",
-        content: readinessIds.indexOf("brief") === -1,
-      },
-      layers: layers,
-      proofScope: {
-        build: capabilities.concat(["client", "logic", "data"]),
-        verify: stageId === "prototype" ? ["acceptance"] : ["test-design", "api-ui", "regression"],
-        ship: stageId === "prototype" ? ["demo"] : ["deploy", "monitoring", "rollback"],
-      },
-      estimateBandId: "custom-usd-" + budget.min + "-" + budget.max,
-      timelineBandId: "weeks-" + weeks.min + "-" + weeks.max,
+      complexity: { score: score, band: bandFor(score) },
+      layers: buildLayers(typeId, stageId, driverIds),
+      nextStepId: nextStepFor(typeId, stageId, driverIds, missingReadiness),
+      proofScope: proofScopeFor(stageId, driverIds),
+      riskIds: riskIdsFor(driverIds, missingReadiness),
+      stagePlanIds: STAGE_PLANS[stageId].slice()
     };
   }
 
@@ -154,6 +169,13 @@
     STAGE_IDS: STAGE_IDS,
     DRIVER_IDS: DRIVER_IDS,
     READINESS_IDS: READINESS_IDS,
-    estimateProject: estimateProject,
+    COMPLEXITY_BANDS: COMPLEXITY_BANDS,
+    LAYER_IDS: LAYER_IDS,
+    COMPONENT_IDS: COMPONENT_IDS,
+    STAGE_PLAN_IDS: STAGE_PLAN_IDS,
+    RISK_IDS: RISK_IDS,
+    NEXT_STEP_IDS: NEXT_STEP_IDS,
+    PROOF_ITEM_IDS: PROOF_ITEM_IDS,
+    estimateProject: estimateProject
   };
 });

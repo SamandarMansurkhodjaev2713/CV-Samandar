@@ -78,7 +78,7 @@
         { kind: "tool", name: "Edit",  arg: "sections.css  (+86 lines)" },
         { kind: "tool", name: "Bash",  arg: "git diff --stat" },
         { kind: "output", text: "  3 files changed, 412 insertions(+), 4 deletions(-)" },
-        { kind: "done", text: "✓ Done · 3 files · $0.18 · cached: 91%" },
+        { kind: "done", text: "✓ Verified · 3 files · checks passed" },
       ],
     },
     {
@@ -94,7 +94,7 @@
         { kind: "tool", name: "Edit",  arg: "sections.css · .skills-stars" },
         { kind: "tool", name: "Bash",  arg: "python -m http.server 3000" },
         { kind: "output", text: "  Serving HTTP on 0.0.0.0 port 3000 …" },
-        { kind: "done", text: "✓ Done · 4 files · $0.27 · cached: 88%" },
+        { kind: "done", text: "✓ Verified · 4 files · checks passed" },
       ],
     },
     {
@@ -108,7 +108,7 @@
         { kind: "tool", name: "Edit",  arg: "sections.css · .proj-dither-canvas" },
         { kind: "output", text: "  → Atkinson 6-neighbour distribution" },
         { kind: "output", text: "  → session-cached after first reveal" },
-        { kind: "done", text: "✓ Done · 3 files · $0.14 · cached: 93%" },
+        { kind: "done", text: "✓ Verified · 3 files · checks passed" },
       ],
     },
   ];

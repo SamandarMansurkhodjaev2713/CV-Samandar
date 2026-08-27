@@ -58,8 +58,11 @@ const STYLE_SOURCES = [
   "cv-doc.css",
   "features.css",
   "art-direction.css",
-  "release-polish.css",
   "release-proof.css",
+  // Final integration layer. It intentionally follows the historical
+  // release-proof sheet so responsive/navigation fixes cannot be shadowed by
+  // an older release-specific media query in the production bundle.
+  "release-polish.css",
 ];
 const STYLES_DIR = path.join(__dirname, "src", "styles");
 const STYLE_BUNDLE = "app.bundle.min.css";
@@ -238,14 +241,80 @@ function htmlAttr(s) {
     .replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+function metaDescription(value, maxLength) {
+  const text = String(value == null ? "" : value).replace(/\s+/g, " ").trim();
+  const limit = maxLength || 158;
+  if (text.length <= limit) return text;
+  const clipped = text.slice(0, limit - 1)
+    .replace(/\s+\S*$/, "")
+    .replace(/[\s,:;—-]+$/, "");
+  return clipped + "…";
+}
+
+const PROJECT_ITEMLIST_START = "<!-- GENERATED:PROJECT-ITEMLIST:START -->";
+const PROJECT_ITEMLIST_END = "<!-- GENERATED:PROJECT-ITEMLIST:END -->";
+
+function refreshMainProjectItemList() {
+  const indexPath = path.join(__dirname, "index.html");
+  const registry = require("./src/content/product-registry.js")
+    .slice()
+    .sort(function byFeaturedRank(a, b) { return a.featuredRank - b.featuredRank; });
+  const personId = SITE_BASE + "#person";
+  const itemList = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "@id": SITE_BASE + "#projects",
+    name: "Product work by Samandar Mansurkhodjaev",
+    about: { "@id": personId },
+    numberOfItems: registry.length,
+    itemListOrder: "https://schema.org/ItemListOrderAscending",
+    itemListElement: registry.map(function mapProduct(product, index) {
+      const route = product.presentation === "live" ? product.liveUrl : product.casePage;
+      const url = /^https?:\/\//i.test(route || "")
+        ? route
+        : SITE_BASE + String(route || "").replace(/^\/+/, "");
+      const english = product.i18n && product.i18n.en ? product.i18n.en : {};
+      return {
+        "@type": "ListItem",
+        position: index + 1,
+        url: url,
+        item: {
+          "@type": "CreativeWork",
+          name: english.name || product.id,
+          description: english.descriptor || "",
+          url: url,
+          image: SITE_BASE + product.image,
+          author: { "@id": personId },
+        },
+      };
+    }),
+  };
+  const json = JSON.stringify(itemList, null, 2).replace(/</g, "\\u003c");
+  const block = PROJECT_ITEMLIST_START + "\n" +
+    '  <script type="application/ld+json" id="portfolio-projects-jsonld">\n' +
+    json.split("\n").map(function indent(line) { return "  " + line; }).join("\n") + "\n" +
+    "  </script>\n  " + PROJECT_ITEMLIST_END;
+  let source = normalizeLf(fs.readFileSync(indexPath, "utf8"));
+  const start = source.indexOf(PROJECT_ITEMLIST_START);
+  const end = source.indexOf(PROJECT_ITEMLIST_END);
+  if (start === -1 || end === -1 || end < start) {
+    throw new Error("main project ItemList markers are missing or malformed");
+  }
+  source = source.slice(0, start) + block + source.slice(end + PROJECT_ITEMLIST_END.length);
+  writeUtf8IfChanged(indexPath, source);
+  process.stdout.write("[build] project ItemList -> index.html (" + registry.length + " products)\n");
+  return registry.length;
+}
+
 function renderLandingPage(p, R, version, lang, base) {
   const copy = (p.i18n && p.i18n[lang]) || (p.i18n && p.i18n.ru) || {};
   const v = version ? "?v=" + version : "";
   const caseTitle = lang === "en"
-    ? "Product engineering case"
-    : (lang === "uz" ? "Mahsulot ishlab chiqish keysi" : "Кейс продуктовой разработки");
+    ? "product case"
+    : (lang === "uz" ? "mahsulot keysi" : "кейс продукта");
   const title = p.name + " — " + caseTitle + " | Samandar";
-  const desc = copy.signal || "";
+  const fullDesc = String(copy.signal || "").replace(/\s+/g, " ").trim();
+  const desc = metaDescription(fullDesc);
   const route = "projects/" + p.slug + "/" + (lang === "ru" ? "" : lang + "/");
   const ogUrl = SITE_BASE + route;
   const localeCode = lang === "en" ? "en_US" : (lang === "uz" ? "uz_UZ" : "ru_RU");
@@ -262,7 +331,7 @@ function renderLandingPage(p, R, version, lang, base) {
         "@type": "CreativeWork",
         "@id": workId,
         name: p.name,
-        description: desc,
+        description: fullDesc,
         url: ogUrl,
         image: ogImg,
         inLanguage: lang,
@@ -315,7 +384,7 @@ function renderLandingPage(p, R, version, lang, base) {
     '<link rel="alternate" hreflang="uz" href="' + htmlAttr(SITE_BASE + "projects/" + p.slug + "/uz/") + '">',
     '<link rel="alternate" hreflang="x-default" href="' + htmlAttr(SITE_BASE + "projects/" + p.slug + "/") + '">',
     '<meta property="og:type" content="website">',
-    '<meta property="og:site_name" content="Samandar — Product Engineer · AI Automation · QA">',
+    '<meta property="og:site_name" content="Samandar Mansurkhodjaev — Product Engineering">',
     '<meta property="og:title" content="' + htmlAttr(title) + '">',
     '<meta property="og:description" content="' + htmlAttr(desc) + '">',
     '<meta property="og:url" content="' + htmlAttr(ogUrl) + '">',
@@ -445,6 +514,7 @@ function main() {
   let landingCount = 0;
   let sitemapCount = 0;
   try {
+    refreshMainProjectItemList();
     refreshMainCsp();
     landingCount = buildLandings();
     sitemapCount = buildSitemap();

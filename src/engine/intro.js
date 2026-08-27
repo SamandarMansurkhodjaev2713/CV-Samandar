@@ -19,9 +19,9 @@
   };
   var REPEAT = {
     visualMs: 1450,
-    minMs: 1950,
+    minMs: 2050,
     skipMinMs: 1050,
-    hardRevealMs: 2250,
+    hardRevealMs: 2350,
     recoveryMs: 2450,
     revealMs: 330,
     holdMs: 60,
@@ -78,7 +78,6 @@
     var skipRequested = false;
     var prepared = false;
     var displayed = -1;
-    var logIndex = -1;
     var lastStatus = "";
 
     var boot;
@@ -87,9 +86,6 @@
     var state;
     var status;
     var proofSteps;
-    var auditNodes;
-    var log;
-    var clock;
     var skipButton;
     var canvas;
     var context;
@@ -98,52 +94,22 @@
     var height = 0;
     var dpr = 1;
 
-    var BOOT_LINES = (function () {
-      try {
-        var lines = window.CONTENT && window.CONTENT.ru &&
-          window.CONTENT.ru.hero && window.CONTENT.ru.hero.boot_lines;
-        if (lines && lines.length) return lines.slice();
-      } catch (error) { /* Use the stable fallback below. */ }
-      return [
-        "init product.system ... ok",
-        "mount semantic.shell ... ok",
-        "verify type.and.media ... ok",
-        "bind quality.runtime ... ok",
-        "ship READY",
-      ];
-    })();
-
-    var BUILD_TAG = (function () {
-      try {
-        var script = document.querySelector('script[src*="?v="]');
-        var match = script && String(script.src).match(/[?&]v=([^&]+)/);
-        return match ? "BUILD " + match[1] : "BUILD 2026";
-      } catch (error) {
-        return "BUILD 2026";
-      }
-    })();
-
-    function escapeHtml(value) {
-      return String(value == null ? "" : value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-    }
-
-    function formatLine(value) {
-      var text = String(value == null ? "" : value);
-      var match = text.match(/^(.*?)(ok|READY|done)\s*$/);
-      if (!match) return escapeHtml(text);
-      return escapeHtml(match[1]) +
-        '<span class="sm-boot-ok">' + escapeHtml(match[2]) + "</span>";
-    }
-
-    function formatClock(milliseconds) {
-      var seconds = Math.max(0, Math.floor(milliseconds / 1000));
-      return "T+00:" +
-        String(Math.floor(seconds / 60) % 100).padStart(2, "0") + ":" +
-        String(seconds % 60).padStart(2, "0");
-    }
+    var copy = intent.copy || {
+      aria: "Preparing the portfolio",
+      label: "SAMANDAR / RELEASE SHEET",
+      route: ["ASSEMBLE", "VERIFY", "REVEAL"],
+      statusRegister: "Aligning the first-frame layers",
+      statusShell: "Assembling the page structure",
+      statusFonts: "Checking the typography",
+      statusHero: "Preparing the opening scene",
+      statusVerified: "The first frame is ready",
+      statusReady: "Ready to view",
+      statusFinalizing: "Finishing the first frame",
+      statusOnline: "Portfolio ready",
+      skip: "Continue",
+      skipAria: "Open the portfolio",
+      verdict: "ONE OWNER"
+    };
 
     function readiness() {
       var ready = intent.ready || {};
@@ -159,14 +125,19 @@
       return ready.shell && ready.fonts && ready.hero;
     }
 
+    function readinessStage() {
+      var ready = readiness();
+      if (revealing) return 4;
+      return 1 + (ready.shell ? 1 : 0) + (ready.fonts ? 1 : 0) + (ready.hero ? 1 : 0);
+    }
+
     function currentStatus(value) {
       var ready = readiness();
-      if (value < 44) return "ASSEMBLING SYSTEM";
-      if (!ready.shell) return "MOUNTING SHELL";
-      if (!ready.fonts) return "VERIFYING TYPE";
-      if (!ready.hero) return "CALIBRATING SCENE";
-      if (value < 90) return "SYSTEMS VERIFIED";
-      return "READY TO SHIP";
+      if (!ready.shell) return value < 24 ? copy.statusRegister : copy.statusShell;
+      if (!ready.fonts) return copy.statusFonts;
+      if (!ready.hero) return copy.statusHero;
+      if (value < 90) return copy.statusVerified;
+      return copy.statusReady;
     }
 
     function setStatus(next) {
@@ -175,33 +146,9 @@
       status.textContent = next;
     }
 
-    function renderLog() {
-      if (!log || logIndex < 0) return;
-      var first = Math.max(0, logIndex - 2);
-      var html = "";
-      for (var index = first; index <= logIndex; index += 1) {
-        html += '<div class="' + (index === logIndex ? "cur" : "on") + '">' +
-          formatLine(BOOT_LINES[index]) + "</div>";
-      }
-      log.innerHTML = html;
-    }
-
-    function revealLogTo(index) {
-      var next = Math.min(index, BOOT_LINES.length - 1);
-      if (next <= logIndex) return;
-      logIndex = next;
-      renderLog();
-    }
-
-    function setLog(value) {
-      if (BOOT_LINES.length < 2) return;
-      var next = Math.floor(clamp01(value / 90) * (BOOT_LINES.length - 1));
-      revealLogTo(Math.min(next, BOOT_LINES.length - 2));
-    }
-
-    function updateProof(value) {
+    function updateProof(stage) {
       if (!proofSteps || !proofSteps.length) return;
-      var active = value < 44 ? 0 : value < 90 ? 1 : 2;
+      var active = stage <= 1 ? 0 : stage < 4 ? 1 : 2;
       var ready = readiness();
       for (var index = 0; index < proofSteps.length; index += 1) {
         proofSteps[index].classList.toggle("is-active", index === active);
@@ -210,37 +157,27 @@
         if (revealing) done = true;
         proofSteps[index].classList.toggle("is-done", done);
       }
-
-      if (auditNodes && auditNodes.length) {
-        var readinessState = readiness();
-        var auditState = [readinessState.shell, readinessState.fonts, readinessState.hero];
-        for (var auditIndex = 0; auditIndex < auditNodes.length; auditIndex += 1) {
-          var verified = auditState[auditIndex] === true || revealing;
-          auditNodes[auditIndex].classList.toggle("is-verified", verified);
-          auditNodes[auditIndex].setAttribute("data-state", verified ? "verified" : "checking");
-        }
-      }
     }
 
     function setPercent(value) {
-      var next = Math.round(Math.max(0, Math.min(100, value)));
-      if (next === displayed) return;
-      displayed = next;
-      if (percent) percent.textContent = String(next).padStart(2, "0");
-      if (progress) progress.style.width = next + "%";
-      if (state && !revealing) {
-        state.textContent = next < 44 ? "BUILD" : next < 90 ? "VERIFY" : "SHIP";
-      }
-      updateProof(next);
-      setStatus(currentStatus(next));
-
-      if (!prepared && next >= 78) {
+      if (!prepared && value >= 78) {
         prepared = true;
         intent.prepared = true;
         try {
           window.dispatchEvent(new CustomEvent("sm:intro-prep"));
         } catch (error) { /* Optional animation hand-off. */ }
       }
+      var next = readinessStage();
+      if (next === displayed) {
+        setStatus(currentStatus(value));
+        return;
+      }
+      displayed = next;
+      if (percent) percent.textContent = String(next).padStart(2, "0");
+      if (progress) progress.style.width = (next * 25) + "%";
+      if (state) state.textContent = next <= 1 ? copy.route[0] : next < 4 ? copy.route[1] : copy.route[2];
+      updateProof(next);
+      setStatus(currentStatus(value));
     }
 
     function sizeParticles() {
@@ -298,12 +235,10 @@
       panel.removeAttribute("style");
       panel.setAttribute("role", "dialog");
       panel.setAttribute("aria-modal", "true");
-      panel.setAttribute("aria-label", "Portfolio loading sequence");
+      panel.setAttribute("aria-label", copy.aria);
       panel.setAttribute("aria-busy", "true");
       panel.innerHTML = "";
-      panel.style.background =
-        "linear-gradient(180deg, #151512, #0b0d0c)," +
-        "radial-gradient(circle at 68% 42%, rgba(" + accent.join(",") + ",.12), transparent 42%)";
+      panel.style.background = "linear-gradient(180deg, #151512, #0b0d0c)";
 
       var instrument = document.createElement("div");
       instrument.className = "sm-boot-instrument sm-boot-proof";
@@ -315,16 +250,16 @@
         '<span class="release-proof-crop release-proof-crop--tr"></span>' +
         '<span class="release-proof-crop release-proof-crop--bl"></span>' +
         '<span class="release-proof-crop release-proof-crop--br"></span>' +
-        '<span class="release-proof-folio mono">RP–001 / 2026</span>' +
-        '<span class="release-proof-owner mono">SAMANDAR · PRODUCT ENGINEERING</span>' +
+        '<span class="release-proof-folio mono">PRODUCT ENGINEERING</span>' +
+        '<span class="release-proof-owner mono">SAMANDAR MANSURKHODJAEV</span>' +
         '<div class="release-proof-impression">' +
         '<span class="release-proof-ink release-proof-ink--a">RELEASE</span>' +
         '<span class="release-proof-ink release-proof-ink--b">RELEASE</span>' +
         '<span class="release-proof-ink release-proof-ink--key">RELEASE</span></div>' +
         '<span class="release-proof-register release-proof-register--a"></span>' +
         '<span class="release-proof-register release-proof-register--b"></span>' +
-        '<div class="release-proof-verdict"><span class="mono">QA / FINAL PROOF</span><strong>READY</strong></div>' +
-        '<ol class="release-proof-map"><li><span>01</span><strong>BUILD</strong></li><li><span>02</span><strong>VERIFY</strong></li><li><span>03</span><strong>SHIP</strong></li></ol>' +
+        '<div class="release-proof-verdict"><span class="mono">BUILD + QA</span><strong>' + copy.verdict + '</strong></div>' +
+        '<ol class="release-proof-map"><li><span>01</span><strong>' + copy.route[0] + '</strong></li><li><span>02</span><strong>' + copy.route[1] + '</strong></li><li><span>03</span><strong>' + copy.route[2] + '</strong></li></ol>' +
         '<span class="release-proof-inspection"></span></div>';
       panel.appendChild(instrument);
 
@@ -343,17 +278,11 @@
       boot.style.top = (CORE_Y * 100).toFixed(1) + "%";
       if (!frameBoot) {
         boot.innerHTML =
-          '<div class="sm-boot-label mono">SAMANDAR / RELEASE PROOF <span class="sm-boot-state">BUILD</span></div>' +
-          '<div class="sm-boot-route mono" aria-hidden="true"><span>BUILD</span><span>VERIFY</span><span>SHIP</span></div>' +
-          '<div class="sm-boot-pct" aria-hidden="true"><span class="sm-boot-pct-n">00</span><span class="sm-boot-pct-sign">%</span></div>' +
+          '<div class="sm-boot-label mono">' + copy.label + ' <span class="sm-boot-state">' + copy.route[0] + '</span></div>' +
+          '<div class="sm-boot-route mono" aria-hidden="true"><span>' + copy.route[0] + '</span><span>' + copy.route[1] + '</span><span>' + copy.route[2] + '</span></div>' +
+          '<div class="sm-boot-pct" aria-hidden="true"><span class="sm-boot-pct-n">01</span><span class="sm-boot-pct-sign">/04</span></div>' +
           '<div class="sm-boot-line" aria-hidden="true"><i></i></div>' +
-          '<div class="sm-boot-status mono" role="status" aria-live="polite">INITIALIZING</div>' +
-          '<div class="sm-boot-log mono" aria-hidden="true"></div>';
-      } else if (!boot.querySelector(".sm-boot-log")) {
-        var frameLog = document.createElement("div");
-        frameLog.className = "sm-boot-log mono";
-        frameLog.setAttribute("aria-hidden", "true");
-        boot.appendChild(frameLog);
+          '<div class="sm-boot-status mono" role="status" aria-live="polite">' + copy.statusRegister + '</div>';
       }
       panel.appendChild(boot);
 
@@ -362,43 +291,12 @@
       state = boot.querySelector(".sm-boot-state");
       status = boot.querySelector(".sm-boot-status");
       proofSteps = Array.prototype.slice.call(boot.querySelectorAll(".sm-boot-route span"));
-      log = boot.querySelector(".sm-boot-log");
-
-      /* This strip is not decorative telemetry: every mark is wired to the
-         same readiness contract that owns the curtain. It lets the opening
-         scene communicate the portfolio's actual promise — shell, type and
-         media are checked before release — without inventing production logs. */
-      var audit = document.createElement("ol");
-      audit.className = "sm-boot-audit mono";
-      audit.setAttribute("aria-hidden", "true");
-      audit.innerHTML =
-        '<li data-state="checking"><span>01</span><strong>SHELL</strong><i></i></li>' +
-        '<li data-state="checking"><span>02</span><strong>TYPE</strong><i></i></li>' +
-        '<li data-state="checking"><span>03</span><strong>MEDIA</strong><i></i></li>';
-      panel.appendChild(audit);
-      auditNodes = Array.prototype.slice.call(audit.querySelectorAll("li"));
-
-      var telemetryLeft = document.createElement("div");
-      telemetryLeft.className = "sm-boot-tele sm-boot-tele--l mono";
-      telemetryLeft.setAttribute("aria-hidden", "true");
-      telemetryLeft.innerHTML =
-        "<div><b>TASHKENT</b> · UZ</div><div>41.31°N · 69.24°E · UTC+5</div>";
-      panel.appendChild(telemetryLeft);
-
-      var telemetryRight = document.createElement("div");
-      telemetryRight.className = "sm-boot-tele sm-boot-tele--r mono";
-      telemetryRight.setAttribute("aria-hidden", "true");
-      telemetryRight.innerHTML =
-        "<div>SM · " + escapeHtml(BUILD_TAG) + "</div>" +
-        '<div class="sm-boot-clock"><b>T+00:00:00</b></div>';
-      panel.appendChild(telemetryRight);
-      clock = telemetryRight.querySelector(".sm-boot-clock b");
 
       skipButton = document.createElement("button");
       skipButton.className = "sm-boot-skip mono";
       skipButton.type = "button";
-      skipButton.textContent = "SKIP INTRO";
-      skipButton.setAttribute("aria-label", "Пропустить интро");
+      skipButton.textContent = copy.skip;
+      skipButton.setAttribute("aria-label", copy.skipAria);
       skipButton.addEventListener("click", requestSkip);
       panel.appendChild(skipButton);
       skipTimer = window.setTimeout(function () {
@@ -410,7 +308,7 @@
       if (finished || revealing) return;
       skipRequested = true;
       panel.setAttribute("data-skip-requested", "true");
-      setStatus(isReady() ? "READY TO SHIP" : "FINALIZING");
+      setStatus(isReady() ? copy.statusReady : copy.statusFinalizing);
     }
 
     function onKeydown(event) {
@@ -506,9 +404,8 @@
       detachListeners();
       intent.revealReason = reason;
       setPercent(100);
-      revealLogTo(BOOT_LINES.length - 1);
-      if (state) state.textContent = "ONLINE";
-      setStatus("ONLINE");
+      if (state) state.textContent = copy.route[2];
+      setStatus(copy.statusOnline);
       if (boot) boot.classList.add("is-online");
       updateProof(100);
       if (typeof intent.unveilRoot === "function") intent.unveilRoot();
@@ -554,7 +451,7 @@
           panel.style.clipPath = "inset(50% 0 50% 0)";
           panel.style.webkitClipPath = "inset(50% 0 50% 0)";
           // Keep the remaining shutter opaque while it collapses. Fading the
-          // whole panel exposed two typographic systems at once (the 100%
+          // whole panel exposed two typographic systems at once (the stage
           // readout over Hero), which looked like a broken loading state.
           panel.style.opacity = "1";
         });
@@ -576,8 +473,6 @@
       var elapsed = now - createdAt;
       var value = visualProgress(elapsed);
       setPercent(value);
-      setLog(value);
-      if (clock) clock.textContent = formatClock(elapsed);
       if (!reduced) drawParticles(now);
 
       var ready = isReady();
@@ -602,7 +497,7 @@
         return;
       }
 
-      if (skipRequested && !ready) setStatus("FINALIZING");
+      if (skipRequested && !ready) setStatus(copy.statusFinalizing);
       if (reduced) {
         timerId = window.setTimeout(function () {
           tick(performance.now());
@@ -616,7 +511,6 @@
       buildDom();
       attachListeners();
       setPercent(0);
-      setLog(0);
     } catch (error) {
       if (readiness().shell) teardown("setup-fallback");
       else recover();

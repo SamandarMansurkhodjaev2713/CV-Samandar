@@ -119,6 +119,39 @@ html.sm-hero-shell-live .release-proof-copy-static {
   visibility: hidden;
 }
 
+/* The parser-owned semantic Hero shares the final geometry while the React
+   graph is still mounting. Its copy owns the first screen, while the material
+   release proof remains supplied by #sm-hero-media underneath. */
+body:has(.static-hero-fallback) #sm-hero-media .release-proof-copy-static {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.static-app-fallback,
+.static-hero-fallback {
+  position: relative;
+  z-index: 1;
+}
+
+.static-hero-fallback .hero-stack {
+  z-index: 2;
+}
+
+.static-hero-fallback-status {
+  position: absolute;
+  right: 0;
+  bottom: -20px;
+  margin: 0;
+  color: rgba(238,232,219,.44);
+  font-size: 8px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.static-app-fallback[data-static-state="degraded"] .static-hero-fallback-status {
+  color: var(--rp-brass);
+}
+
 .release-proof-shadow {
   position: absolute;
   inset: 8% -3% -4% 8%;
@@ -818,10 +851,18 @@ html.e2e-stable .hero--release-proof .hero-name .hn-i {
 
 .nav-menu {
   color: var(--rp-bone);
+  visibility: hidden;
+  pointer-events: none;
+  transition: clip-path .62s cubic-bezier(.76,0,.24,1) !important;
   background:
     linear-gradient(90deg, rgba(238,232,219,.025) 1px, transparent 1px) 0 0 / 8.333% 100%,
     linear-gradient(132deg, #11120f, #080907 72%);
 }
+.nav-menu.is-present,
+.nav-menu.is-open {
+  visibility: visible;
+}
+.nav-menu.is-open { pointer-events: auto; }
 .nav-menu::before {
   opacity: .36;
   background: linear-gradient(90deg, transparent 49.95%, rgba(238,232,219,.12) 50%, transparent 50.05%);
@@ -858,6 +899,17 @@ html.e2e-stable .hero--release-proof .hero-name .hn-i {
 .nav-peek-num { font: 650 min(28vw,420px)/.72 var(--rp-display); color: var(--rp-brass) !important; letter-spacing: -.07em; }
 .nav-peek-name { display: none; }
 .nav-menu-foot { left: 4vw; right: 4vw; bottom: 24px; min-height: 58px; padding-top: 15px; border-top: 1px solid rgba(238,232,219,.13); }
+.nav-menu-foot,
+.nav-menu.is-open .nav-menu-foot {
+  /* Keep the real controls geometrically stationary while the menu shutter
+     opens. WebKit can otherwise keep touch targets in an unstable pose under
+     CPU pressure because an ancestor is still translating. The authored
+     reveal remains in opacity and the surrounding clip-path transition. */
+  transform: none;
+  transition-property: opacity;
+  transition-duration: .28s;
+  transition-timing-function: ease;
+}
 .nav-menu-cta { min-height: 48px; border: 1px solid var(--rp-brass); border-radius: 0; background: var(--rp-brass); color: var(--rp-ink); box-shadow: none; }
 .nav-menu-cta:hover,
 .nav-menu-cta:focus-visible { background: var(--rp-bone); box-shadow: none; }
@@ -2365,57 +2417,6 @@ html[data-perf="low"] #about .about-proof-route::after { transform: scaleX(1); }
   }
 }
 
-/* Intro audit: three marks are connected to real readiness flags rather than
-   a decorative fake console. The verified state lands with one finite stamp. */
-#sm-intro .sm-boot-audit {
-  position: absolute;
-  z-index: 3;
-  left: clamp(22px, 5vw, 76px);
-  right: clamp(22px, 5vw, 76px);
-  bottom: max(84px, calc(env(safe-area-inset-bottom) + 68px));
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  border-top: 1px solid rgba(238,232,219,.13);
-}
-#sm-intro .sm-boot-audit li {
-  position: relative;
-  min-height: 44px;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 10px;
-  padding: 0 13px;
-  border-right: 1px solid rgba(238,232,219,.1);
-  color: rgba(238,232,219,.37);
-  font-size: 8px;
-  letter-spacing: .13em;
-  transition: color .28s ease, background-color .28s ease;
-}
-#sm-intro .sm-boot-audit li:last-child { border-right: 0; }
-#sm-intro .sm-boot-audit li > span { color: rgba(238,232,219,.26); }
-#sm-intro .sm-boot-audit li > i {
-  width: 6px;
-  height: 6px;
-  border: 1px solid rgba(238,232,219,.28);
-  transform: rotate(45deg);
-}
-#sm-intro .sm-boot-audit li.is-verified {
-  color: var(--rp-bone);
-  background: rgba(200,162,96,.035);
-}
-#sm-intro .sm-boot-audit li.is-verified > i {
-  border-color: var(--rp-brass);
-  background: var(--rp-brass);
-  animation: introAuditStamp .42s var(--rp-snap) both;
-}
-@keyframes introAuditStamp {
-  from { opacity: 0; transform: rotate(45deg) scale(2.1); }
-  to { opacity: 1; transform: rotate(45deg) scale(1); }
-}
-
 /* The mobile curtain now has a visible leading edge. Native sticky still owns
    the movement; this adds no scroll handler and turns the first gesture into
    an unmistakable physical hand-off from proof to capabilities. */
@@ -2431,25 +2432,4 @@ html[data-perf="low"] #about .about-proof-route::after { transform: scaleX(1); }
       repeating-linear-gradient(90deg, transparent 0 31px, rgba(238,232,219,.12) 31px 32px);
   }
   #signal > .shell { padding-top: 20px; }
-  #sm-intro .sm-boot-audit {
-    left: 16px;
-    right: 16px;
-    bottom: max(66px, calc(env(safe-area-inset-bottom) + 58px));
-  }
-  #sm-intro .sm-boot-audit li {
-    grid-template-columns: auto 1fr;
-    gap: 7px;
-    padding-inline: 9px;
-    font-size: 7px;
-  }
-  #sm-intro .sm-boot-audit li > i { display: none; }
-}
-
-@media (max-height: 620px) {
-  #sm-intro .sm-boot-audit { display: none; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #sm-intro .sm-boot-audit li,
-  #sm-intro .sm-boot-audit li.is-verified > i { transition: none; animation: none; }
 }

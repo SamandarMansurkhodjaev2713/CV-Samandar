@@ -100,7 +100,8 @@ test("FAQ remains a readable transcript and Quality makes risk-proportional prom
   await expect(page.locator("#faq .dlg-turn")).toHaveCount(7);
   await expect(page.locator("#faq button, #faq details")).toHaveCount(0);
   await expect(page.locator("#faq")).not.toContainText(/1[–-]2 недели|1\.5 месяца|за несколько дней/i);
-  await expect(page.locator("#faq")).toContainText(/проектный эскиз/i);
+  await expect(page.locator("#faq")).toContainText(/Стоимость всегда обсуждается индивидуально/i);
+  await expect(page.locator("#faq")).not.toContainText(/(?:\$|€|£|₽|USD|EUR|RUB|UZS)\s*\d|\d[\d\s.,]*\s*(?:₽|руб(?:лей)?)/i);
 
   await expect(page.locator("#trust .proto-clause")).toHaveCount(6);
   await expect(page.locator("#trust")).not.toContainText(/CI\/CD на каждый пуш|красный билд не уезжает/i);

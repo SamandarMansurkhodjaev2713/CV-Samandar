@@ -42,6 +42,28 @@ async function expectNoHorizontalOverflow(expect, page, label) {
   expect.soft(geometry.bodyWidth).toBeLessThanOrEqual(geometry.clientWidth + 1);
 }
 
+async function waitForCaseStyles(page) {
+  await page.locator(".lp-page").waitFor({ state: "attached" });
+  await page.waitForFunction(() => {
+    const stylesheet = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+      .find((link) => /\/src\/projects\/landing\.css(?:\?|$)/.test(link.href || ""));
+    const button = document.querySelector(".lp-btn");
+    const language = document.querySelector(".lp-lang-btn");
+    if (!stylesheet || !stylesheet.sheet || !button || !language) return false;
+    const buttonStyle = getComputedStyle(button);
+    const languageStyle = getComputedStyle(language);
+    return parseFloat(buttonStyle.minHeight) >= 44 &&
+      parseFloat(languageStyle.minHeight) >= 44;
+  }, null, { timeout: 9000 });
+  await page.evaluate(() => {
+    if (!document.fonts || !document.fonts.ready) return undefined;
+    return Promise.race([
+      document.fonts.ready.catch(() => undefined),
+      new Promise((resolve) => window.setTimeout(resolve, 2000)),
+    ]);
+  });
+}
+
 async function switchMainLanguage(page, language, options) {
   const target = String(language || "ru").toLowerCase();
   const keepMenuOpen = Boolean(options && options.keepMenuOpen);
@@ -92,6 +114,7 @@ module.exports = {
   liveProducts,
   settleMain,
   switchMainLanguage,
+  waitForCaseStyles,
   expectNoHorizontalOverflow,
   expectResponsiveProjectImage,
 };

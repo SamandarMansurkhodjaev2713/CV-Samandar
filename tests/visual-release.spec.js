@@ -67,12 +67,26 @@ async function waitForVisualReadiness(page) {
 async function captureMain(page, label) {
   await page.goto("/?release-visual=1#hero", { waitUntil: "domcontentloaded" });
   await page.locator("#main").waitFor({ state: "attached" });
+  // #main now has a parser-owned progressive Hero, so its mere presence no
+  // longer proves that the complete React document is ready for a section
+  // sweep. Wait for ownership transfer explicitly; otherwise a fast harness
+  // can scroll while the fallback is being replaced and save Hero repeatedly.
+  await page.waitForFunction(() => (
+    document.documentElement.getAttribute("data-app-boot") === "ready" &&
+    !document.querySelector("[data-static-app-fallback]") &&
+    document.querySelectorAll("section[data-section]").length >= 12
+  ), null, { timeout: 10000 });
   await waitForVisualReadiness(page);
   await page.evaluate(() => {
+    // Contact sheets compare the authored final poses, not a random frame from
+    // a scroll entrance. This also matches Playwright's `animations: disabled`
+    // screenshot contract while making the pre-capture landing deterministic.
+    document.documentElement.classList.add("e2e-stable");
     if (window.__SM_MOTION_POLICY && window.__SM_MOTION_POLICY.__set) {
       window.__SM_MOTION_POLICY.__set("high");
     }
-    document.documentElement.style.scrollBehavior = "auto";
+    document.documentElement.style.setProperty("scroll-behavior", "auto", "important");
+    document.body.style.setProperty("scroll-behavior", "auto", "important");
     // The page starts at #hero to skip the authored Intro. Yield the first-load
     // deep-link stabilizer before the matrix starts moving through chapters;
     // otherwise its final #hero correction can race the first #signal capture
@@ -89,9 +103,29 @@ async function captureMain(page, label) {
     await page.evaluate((id) => {
       const target = document.getElementById(id);
       if (!target) throw new Error("Missing main section #" + id);
+      // The production navigation transaction lands an explicit destination in
+      // its final pose before scrolling (SceneCinema.prepareExplicitDestination).
+      // Mirror that contract here: measuring a section while its ordinary
+      // scroll entrance still owns `transform` makes getBoundingClientRect()
+      // report the animation offset instead of the actual scroll landing.
+      target.classList.add("sec-in", "sec-nav-landed");
       history.replaceState(null, "", "#" + id);
       target.scrollIntoView({ behavior: "auto", block: "start" });
     }, section);
+    await expect.poll(async () => page.evaluate((id) => {
+      const target = document.getElementById(id);
+      if (!target) return Number.POSITIVE_INFINITY;
+      if (id === "hero") return Math.abs(window.scrollY);
+      const rect = target.getBoundingClientRect();
+      const margin = Number.parseFloat(getComputedStyle(target).scrollMarginTop) || 0;
+      const absoluteTop = window.scrollY + rect.top;
+      const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      const expectedScroll = Math.max(0, Math.min(maxScroll, absoluteTop - margin));
+      return Math.abs(window.scrollY - expectedScroll);
+    }, section), {
+      timeout: 5000,
+      message: "visual capture did not land on #" + section,
+    }).toBeLessThanOrEqual(2);
     await waitForVisualReadiness(page);
     await page.waitForTimeout(420);
     const file = path.join(OUTPUT, "main-" + label + "-" + section + ".png");
@@ -140,6 +174,14 @@ async function captureCases(page, label) {
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: "auto" }));
     await page.waitForTimeout(240);
     await waitForVisualReadiness(page);
+    // Chromium may keep a decoded hero WebP out of the full-page compositor
+    // after the long reveal sweep. An element screenshot is a paint fence: it
+    // forces the exact responsive source into a rasterized frame before the
+    // evidence capture, without changing product state or adding a delay guess.
+    await page.locator(".lp-photo img").screenshot({ animations: "disabled" });
+    await page.evaluate(() => new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(resolve));
+    }));
     const file = path.join(
       OUTPUT,
       "case-" + CASE_CAPTURE_REVISION + "-" + label + "-" + product.slug + ".png"

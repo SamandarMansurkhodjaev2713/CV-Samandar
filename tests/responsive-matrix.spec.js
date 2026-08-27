@@ -374,7 +374,7 @@ test.describe("stage 9 responsive regression matrix", () => {
 
     await page.setViewportSize({ width: 1024, height: 768 });
     await afterResponsiveLayout(page);
-    await expect(page.locator(".proj-card")).toHaveCount(4);
+    await expect(page.locator(".proj-card")).toHaveCount(6);
     const desktopExpand = page.locator(".proj-expand");
     await expect(desktopExpand).toBeVisible();
     await desktopExpand.evaluate((button) => button.click());

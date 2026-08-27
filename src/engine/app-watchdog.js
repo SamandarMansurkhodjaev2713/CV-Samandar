@@ -5,7 +5,19 @@
 
   function recover(code) {
     var root = document.getElementById("root");
-    if (!root || root.childElementCount) return;
+    if (!root) return;
+    var staticFallback = root.querySelector("[data-static-app-fallback]");
+    if (staticFallback) {
+      staticFallback.setAttribute("data-static-state", "degraded");
+      var fallbackStatus = staticFallback.querySelector(".static-hero-fallback-status");
+      if (fallbackStatus) {
+        fallbackStatus.textContent = document.documentElement.getAttribute("data-app-boot") === "failed"
+          ? "Интерактивная часть недоступна · прямые контакты работают"
+          : "Загрузка занимает больше обычного · прямые контакты работают";
+      }
+      return;
+    }
+    if (root.childElementCount) return;
     var intro = document.getElementById("sm-intro");
     if (intro) intro.remove();
     document.documentElement.classList.remove("intro-lock");

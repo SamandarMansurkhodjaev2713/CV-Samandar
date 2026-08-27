@@ -24,19 +24,20 @@ test("Builder + QA proof rail and authored type hierarchy survive every viewport
   await expect(page.locator("#hero .hero-input-cluster")).toHaveCount(0);
   await expect(page.locator(".hero-instrument-orbit")).toHaveCount(0);
   await expect(page.locator(".hero-proof-step")).toHaveCount(3);
-  await expect(page.locator(".hero-roles")).toContainText(/Builder/i);
+  await expect(page.locator(".hero-roles")).toContainText(/Product Engineer/i);
+  await expect(page.locator(".hero-roles")).toContainText(/Full-stack Developer/i);
   await expect(page.locator(".hero-roles")).toContainText("QA");
 
   const type = await page.evaluate(() => {
-    const letters = Array.from(document.querySelectorAll(".hero-name .hn-i"));
+    const headlineLines = Array.from(document.querySelectorAll(".hero-name .hero-statement-line"));
     return {
       headingPrimary: getComputedStyle(document.querySelector(".hero-statement-line--1")).fontFamily,
       headingAccent: getComputedStyle(document.querySelector(".hero-statement-line--2")).fontFamily,
       body: getComputedStyle(document.body).fontFamily,
       mono: getComputedStyle(document.querySelector(".hero-proof-label")).fontFamily,
-      headlineSettled: letters.length > 0 && letters.every((letter) =>
-        Number.parseFloat(getComputedStyle(letter).opacity) >= 0.99 &&
-        letter.getBoundingClientRect().height > 0
+      headlineSettled: headlineLines.length > 0 && headlineLines.every((line) =>
+        Number.parseFloat(getComputedStyle(line).opacity) >= 0.99 &&
+        line.getBoundingClientRect().height > 0
       ),
     };
   });
@@ -83,12 +84,13 @@ test("the twelve chapters keep one canonical order and truthful numbering", asyn
   ]);
 });
 
-test("fullscreen menu owns the interaction layer and its language controls receive real pointer input", async ({ page }) => {
+test("fullscreen menu owns the interaction layer and its language controls receive real pointer input", async ({ page, isMobile }) => {
   await settleMain(page, "#hero");
   await page.locator(".nav-burger").click();
   await expect(page.locator(".nav-menu")).toHaveClass(/is-open/);
   await expect(page.locator(".sc-ripple")).toHaveCount(0);
-  await expect(page.locator(".nav-menu .nav-peek")).toBeVisible();
+  if (isMobile) await expect(page.locator(".nav-menu .nav-peek")).toBeHidden();
+  else await expect(page.locator(".nav-menu .nav-peek")).toBeVisible();
   await expect(page.locator(".nav-menu .nav-peek")).toHaveCSS("pointer-events", "none");
 
   const layers = await page.evaluate(() => ({
@@ -109,7 +111,8 @@ test("fullscreen menu owns the interaction layer and its language controls recei
   await page.locator(".nav-menu-close").click();
   await expect(page.locator(".nav-menu")).not.toHaveClass(/is-open/);
   await expect(page.locator(".nav-burger")).toHaveAttribute("aria-expanded", "false");
-  await expect(page.locator(".hero-roles")).toContainText("Builder");
+  await expect(page.locator(".hero-roles")).toContainText("Product Engineer");
+  await expect(page.locator(".hero-roles")).toContainText("QA");
   await expectNoHorizontalOverflow(expect, page, "menu language switch");
 });
 
@@ -257,11 +260,12 @@ test("short desktop menu keeps all twelve localized chapters separated", async (
   }
 });
 
-test("mobile command dock reports the exact chapter with a truthful twelve-part rail", async ({ page }, testInfo) => {
+test("mobile command dock reports the exact chapter with one truthful progress rail", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile-chromium", "mobile shell contract");
   await settleMain(page, "#process");
-  await expect(page.locator(".mobile-dock-dot")).toHaveCount(12);
-  await expect(page.locator(".mobile-dock-dot.is-active")).toHaveCount(1);
+  await expect(page.locator(".mobile-dock-progress")).toHaveCount(1);
+  await expect(page.locator(".mobile-dock-progress > i")).toHaveCount(1);
+  await expect(page.locator(".mobile-dock-dot")).toHaveCount(0);
   await expect(page.locator(".mobile-dock-label-num")).toHaveText("/09");
   await expect(page.locator(".mobile-dock-label")).toContainText("Метод");
   await expectNoHorizontalOverflow(expect, page, "mobile command dock");
@@ -270,10 +274,10 @@ test("mobile command dock reports the exact chapter with a truthful twelve-part 
 test("mobile Hero keeps its CTA, proof rail and Signal handoff collision-free", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile-chromium", "mobile geometry contract");
   /* This is one deterministic 27-state matrix (3 locales × 9 viewports), not
-     a single interaction. A clean serial run takes ~49s on the Windows visual
-     runner before any assertion fails, so give the matrix its own bounded
-     budget while keeping the default timeout for every user journey. */
-  test.setTimeout(70_000);
+     a single interaction. Resizing the real motion runtime repeatedly is
+     intentionally more expensive than a user journey, especially while trace
+     and video capture are enabled, so keep a dedicated bounded matrix budget. */
+  test.setTimeout(180_000);
   await settleMain(page, "#hero");
   const viewports = [
     { width: 320, height: 568 },
@@ -314,7 +318,7 @@ test("mobile Hero keeps its CTA, proof rail and Signal handoff collision-free", 
         const signal = document.getElementById("signal").getBoundingClientRect();
         const proof = document.querySelector(".hero-proof").getBoundingClientRect();
         const name = document.querySelector(".hero-name");
-        const ink = Array.from(document.querySelectorAll(".hero-name .hn-i"))
+        const ink = Array.from(document.querySelectorAll(".hero-name .hero-statement-line"))
           .map((node) => node.getBoundingClientRect());
         const buttons = Array.from(document.querySelectorAll(".hero-ctas .btn")).map((button) => {
           const rect = button.getBoundingClientRect();
@@ -327,7 +331,7 @@ test("mobile Hero keeps its CTA, proof rail and Signal handoff collision-free", 
         });
         return {
           heroHeight: hero.height,
-          signalPeek: innerHeight - signal.top,
+          signalTop: signal.top,
           proofTop: proof.top,
           proofBottom: proof.bottom,
           nameOverflow: name.scrollWidth - name.clientWidth,
@@ -353,8 +357,20 @@ test("mobile Hero keeps its CTA, proof rail and Signal handoff collision-free", 
         }
       });
       if (viewport.height > viewport.width && viewport.width <= 430) {
-        expect(geometry.signalPeek, `Signal cue at ${caseId}`).toBeGreaterThanOrEqual(64);
-        expect(geometry.heroHeight, `curtain distance at ${caseId}`).toBeLessThanOrEqual(viewport.height * 0.9);
+        expect(geometry.heroHeight, `sticky Hero height at ${caseId}`).toBeGreaterThanOrEqual(viewport.height * 0.98);
+        expect(geometry.heroHeight, `sticky Hero height at ${caseId}`).toBeLessThanOrEqual(viewport.height * 1.02);
+        expect(Math.abs(geometry.signalTop - viewport.height), `Signal starts directly after Hero at ${caseId}`).toBeLessThanOrEqual(2);
+
+        await page.evaluate((height) => window.scrollTo(0, Math.round(height * 0.68)), viewport.height);
+        await page.waitForTimeout(30);
+        const handoff = await page.evaluate(() => ({
+          heroTop: document.getElementById("hero").getBoundingClientRect().top,
+          signalTop: document.getElementById("signal").getBoundingClientRect().top,
+        }));
+        expect(Math.abs(handoff.heroTop), `Hero stays pinned during handoff at ${caseId}`).toBeLessThanOrEqual(2);
+        expect(handoff.signalTop, `Signal rises into view at ${caseId}`).toBeGreaterThanOrEqual(viewport.height * 0.18);
+        expect(handoff.signalTop, `Signal rises on one natural swipe at ${caseId}`).toBeLessThanOrEqual(viewport.height * 0.48);
+        await page.evaluate(() => window.scrollTo(0, 0));
       }
     }
   }
@@ -388,13 +404,13 @@ test("a production deep link settles on the requested chapter after layout and f
   await expect.poll(
     () => page.locator("#process").evaluate((element) => {
       const top = Math.round(element.getBoundingClientRect().top);
-      return top >= 60 && top <= 92;
+      return top >= 60 && top <= 104;
     }),
     { timeout: 7000 }
   ).toBe(true);
   const top = await page.locator("#process").evaluate((element) => Math.round(element.getBoundingClientRect().top));
   expect(top).toBeGreaterThanOrEqual(60);
-  expect(top).toBeLessThanOrEqual(92);
+  expect(top).toBeLessThanOrEqual(104);
   await expect(page.locator(".mobile-dock-label-num")).toHaveText("/09");
   await expect(page.locator(".mobile-dock-label")).toContainText("Метод");
 });
@@ -479,8 +495,9 @@ test("intro owns the scroll lock and always releases into a readable hero", asyn
 
   const contract = await page.evaluate(() => window.__INTRO_CONTRACT);
   expect(contract.frames).toHaveLength(1);
-  expect(contract.frames[0].text).toContain("SAMANDAR / RELEASE PROOF");
-  expect(contract.frames[0].text).toContain("BUILD");
+  expect(contract.frames[0].text).toContain("SAMANDAR / РЕЛИЗНЫЙ ЛИСТ");
+  expect(contract.frames[0].text).toContain("СОБРАТЬ");
+  expect(contract.frames[0].text).not.toMatch(/\d{1,3}%/);
   expect(contract.frames[0].role).toBe("dialog");
   expect(contract.frames[0].busy).toBe("true");
   expect(contract.frames[0].lock).toBe(true);

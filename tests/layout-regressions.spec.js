@@ -55,14 +55,15 @@ test("mobile navigation remains light on both document chapters", async ({ page 
   await page.setViewportSize({ width: 390, height: 844 });
   for (const hash of ["#cv", "#trust"]) {
     await settleMain(page, hash);
-    const bars = await page.locator(".nav-burger span").evaluateAll((elements) => elements.map((element) => ({
+    const bars = await page.locator(".nav-burger-lines i").evaluateAll((elements) => elements.map((element) => ({
       background: getComputedStyle(element).backgroundColor,
+      triggerColor: getComputedStyle(element.closest(".nav-burger")).color,
       width: element.getBoundingClientRect().width,
       height: element.getBoundingClientRect().height,
     })));
-    expect(bars).toHaveLength(3);
+    expect(bars).toHaveLength(2);
     for (const bar of bars) {
-      expect(bar.background, hash + " burger bar inherited document ink").toMatch(/rgb\(242, 234, 220\)/);
+      expect(bar.background, hash + " burger bar must inherit the authored navigation ink").toBe(bar.triggerColor);
       expect(bar.width).toBeGreaterThanOrEqual(16);
       expect(bar.height).toBeGreaterThanOrEqual(1);
     }

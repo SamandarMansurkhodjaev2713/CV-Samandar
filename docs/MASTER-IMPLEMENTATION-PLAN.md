@@ -40,8 +40,8 @@
 | Этап | Состояние | Проверяемый результат |
 | --- | --- | --- |
 | 0. Baseline и rollback | выполнен | `pre-awwwards-v210`, baseline и рабочая ветка |
-| 1–4. Реестр, архитектура и оболочка | выполнен | 29 продуктов, единый registry, recovery, intro и 12-главная навигация |
-| 5–8. Главная, изображения, кейсы и контент | выполнен | 12 секций + fullscreen-меню, 29 обложек, 19 case × 3 локали, truth audit и Awwwards-полировка |
+| 1–4. Реестр, архитектура и оболочка | выполнен | 30 продуктов, единый registry, recovery, intro и 12-главная навигация |
+| 5–8. Главная, изображения, кейсы и контент | выполнен | 12 секций + fullscreen-меню, 30 обложек, 20 case × 3 локали, truth audit и Awwwards-полировка |
 | 9–12. Responsive, motion, WCAG и QA | выполнен | viewport/browser-матрица, performance budgets и regression gates |
 | 13. Документация | выполнен | 17 обязательных документов, ADR, QA-матрица, physical/AT protocol, runbook и автоматический docs-contract |
 | 14. Предрелиз и выпуск | выполнен | `v2.14.1 / v237` опубликован из merge SHA `adc3e861`; Actions `32084173961`, deploy, verify-production, независимый smoke 3/3, live 9/9 и cache graph 30/30 зелёные |
@@ -51,6 +51,28 @@
 Статус отражает только зафиксированные и проверенные контракты. Детальные
 доказательства, версии и результаты тестов находятся в
 `docs/IMPLEMENTATION-LOG.md`.
+
+## 2.2. Текущий pre-release-контракт v247
+
+- Канонический каталог: 30 продуктов — 10 live и 20 case; генерация должна
+  давать 60 локализованных case HTML и 61 URL в sitemap.
+- Desktop сначала показывает шесть сильнейших продуктов в порядке DentForma,
+  Klawis, TTYL Platform, BelfProctor, Softly, GrowthOps AI, затем по явной
+  команде раскрывает остальные 24.
+- Mobile сразу показывает все 30 продуктов и category-фильтры без дублей и
+  отдельного альтернативного порядка.
+- Wedding Invitations Uzbekistan занимает rank 7 как
+  `BUILD / sensitive / private case` с private source. Публичная граница
+  допускает только локально проверенную platform foundation ниже RC и
+  project-scoped claims 55 governed tasks, 65 passed browser tests и 10 authored
+  art directions (`reviewedAt: 2026-08-27`); remote CI, production и provider
+  evidence не заявляются.
+- Builder/Scope Preview возвращает composition, relative complexity, stages,
+  risks и next step. Он не оценивает деньги или срок; коммерческие условия
+  обсуждаются индивидуально после уточнения scope, зависимостей и формата
+  работы.
+- Полный v247 gate, deploy и post-deploy smoke остаются обязательными будущими
+  доказательствами и не считаются выполненными этим документальным обновлением.
 
 ## 3. Непереговорные правила
 
@@ -254,10 +276,13 @@ mobile.
 3. **About:** человеческое позиционирование и проверяемые факты собраны в
    статичную maker's proof-композицию; раздел не меняет форму из-за внешнего API
    и не дублирует Stack или Projects.
-4. **Projects:** сильнейшие первыми; на мобильном сохраняется выразительная
-   горизонтальная галерея с видимым управлением и альтернативой жесту.
-5. **Builder:** понятный конфигуратор задачи с корректными результатами по
-   составу, сроку и диапазону бюджета; output не выглядит обещанием оферты.
+4. **Projects:** desktop начинает с шести сильнейших в утверждённом порядке и
+   раскрывает ещё 24 по явной команде; mobile сразу содержит все 30 в
+   выразительной горизонтальной галерее с фильтрами, видимым управлением и
+   альтернативой жесту.
+5. **Builder / Scope Preview:** понятный конфигуратор задачи возвращает состав,
+   относительную сложность, этапы, риски и следующий шаг; деньги и срок не
+   оцениваются, а коммерческие условия обсуждаются индивидуально.
 6. **Stack:** доказательная матрица Builder + QA, связанная с реальными
    репозиториями и инструментами.
 7. **Services:** не перечень технологий, а ясные продуктовые предложения,
@@ -432,7 +457,8 @@ mobile.
 **Static/unit**
 
 - schema, unique slugs, локали, URL, build determinism;
-- builder calculations и граничные комбинации;
+- Builder decision model, отсутствие денежных/временных обещаний и граничные
+  комбинации;
 - format/size/alt всех изображений;
 - source/generated parity.
 
@@ -440,7 +466,8 @@ mobile.
 
 - intro: first/repeat/skip/timeout/deep link;
 - меню и каждый раздел;
-- 21+ карточка: primary/secondary CTA;
+- 30 карточек: desktop first view 6→30, mobile immediate 30 + filters,
+  primary/secondary CTA;
 - все внутренние визитки и возврат к точной карточке;
 - RU/EN/UZ switch;
 - builder, FAQ, CV download, contact links;

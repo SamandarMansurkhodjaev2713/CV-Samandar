@@ -27,7 +27,7 @@ OUTPUT_SPECS = (
 )
 MIN_QUALITY = 52
 MAX_QUALITY = 94
-EXPECTED_COUNT = 29
+EXPECTED_COUNT = 30
 
 
 def centered_ratio_crop(image: Image.Image) -> Image.Image:

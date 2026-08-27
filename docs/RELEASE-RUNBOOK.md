@@ -3,9 +3,9 @@
 ## 1. Назначение
 
 Порядок выпуска статического портфолио на GitHub Pages без ручного расхождения
-между source, generated HTML и production. Текущий контракт: 29 продуктов,
-10 live-маршрутов, 19 case-маршрутов, RU/EN/UZ, 57 generated case pages и
-58 URL в sitemap.
+между source, generated HTML и production. Текущий контракт: 30 продуктов,
+10 live-маршрутов, 20 case-маршрутов, RU/EN/UZ, 60 generated case pages и
+61 URL в sitemap.
 
 Production:
 https://samandarmansurkhodjaev2713.github.io/CV-Samandar/
@@ -43,8 +43,22 @@ Baseline rollback: tag pre-awwwards-v210.
     npm run qa:visual
     git diff --check
 
+До визуальной приёмки отдельно подтвердить текущий продуктовый контракт:
+
+- validator сообщает 30 products / 10 live / 20 case / 3 locale, сборка — 60
+  case HTML, sitemap — 61 URL;
+- desktop first view содержит DentForma, Klawis, TTYL Platform, BelfProctor,
+  Softly и GrowthOps AI, затем раскрывает остальные 24;
+- mobile сразу содержит все 30 карточек и рабочие category-фильтры;
+- Wedding Invitations Uzbekistan имеет rank 7, status
+  `BUILD / sensitive / private case`, три project-scoped claim с review
+  `2026-08-27` и не содержит remote CI/production/provider claims;
+- Builder/Scope Preview показывает composition, relative complexity, stages,
+  risks и next step, не выводит деньги или обещание срока; commercial terms
+  обозначены как индивидуальные.
+
 qa:visual сохраняет ignored-артефакты в tmp/release-qa/: 12 сцен главной и
-16 полноразмерных case pages на desktop/mobile плюс четыре contact sheet.
+20 полноразмерных case pages на desktop/mobile плюс четыре contact sheet.
 Full-page case capture сначала выполняет реальный scroll-sweep, поэтому
 IntersectionObserver/lazy content входит в проверку.
 
@@ -113,9 +127,9 @@ Workflow обязан:
 
 test:production проверяет:
 
-- реальную главную и 29 карточек;
+- реальную главную и 30 карточек;
 - отсутствие first-party HTTP errors/runtime page errors;
-- 48 статических case URL и правильный lang;
+- 60 статических case URL и правильный lang;
 - возврат TTYL к #proj-ttyl без повторного intro.
 
 Ручной smoke:
@@ -123,9 +137,11 @@ test:production проверяет:
 - hard refresh production с уникальным query;
 - intro первого и повторного визита;
 - menu → Projects → case → back;
+- desktop top-6 → раскрытие 30 и mobile all-30 category filters;
 - RU/EN/UZ;
 - mobile dock/landscape;
-- Builder result → Contact;
+- Scope Preview: пять обязательных результатов без цены/срока → Contact с
+  индивидуальными commercial terms;
 - CV PDF;
 - custom 404.
 
