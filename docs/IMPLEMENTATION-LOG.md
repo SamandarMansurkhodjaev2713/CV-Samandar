@@ -5,9 +5,9 @@ Awwwards-переработки. План и критерии готовност
 `MASTER-IMPLEMENTATION-PLAN.md`; архитектурные контракты — в
 `ARCHITECTURE.md`.
 
-## Portfolio contract candidate — v247 pre-release
+## Portfolio production release — v247
 
-Текущий pre-release-контракт сохраняет один канонический каталог из 30
+Текущий production-контракт сохраняет один канонический каталог из 30
 продуктов: 10 public live и 20 privacy-safe case. Сборочная модель должна
 выпускать 60 локализованных case HTML и sitemap из 61 URL без дублей маршрутов.
 
@@ -40,16 +40,23 @@ approved live routes — 10/10; performance — desktop/mobile 2/2; visual gate 
 
 Полный локальный browser run завершился 187 passed / 118 profile-specific
 skipped / 1 Firefox-smoke failure до catalog control. Linux candidate workflow
-воспроизвёл его и локализовал не compositor-дефект, а устаревший hardcoded
-accessible name `Показать ещё 23`: после роста реестра до 30 продуктов реальная
-кнопка корректно читалась как `Показать ещё 24`. Smoke переведён на
+локализовал не compositor-дефект, а устаревший hardcoded accessible name
+`Показать ещё 23`: после роста реестра до 30 продуктов реальная кнопка
+корректно читалась как `Показать ещё 24`. Smoke переведён на
 `orderedProducts.length - 6` и после исправления выдержал 6/6 Firefox journey
 в трёх последовательных циклах. Все пять WebKit critical-path сценариев
 прошли; Chromium/reduced матрица не получила product failure. Навигационный
 hotfix после visual gate отдельно выдержал 18 passed / 2 profile-specific
-skipped в двух повторах. Clean Linux CI для исправленного SHA остаётся
-обязательным до deploy. Сам deploy и post-deploy smoke пока `NOT RUN`; раздел
-v246 ниже остаётся последним подтверждённым production evidence.
+skipped в двух повторах.
+
+Clean Linux workflow `33125562641` на исправленном SHA `b7b6a1f` подтвердил
+полную browser/accessibility матрицу: 188 passed / 118 profile-specific skipped
+/ 0 failed, а изолированный desktop/mobile performance gate — 2/2. GitHub
+Pages workflow `33126087905` на том же SHA завершил build, deploy и
+verify-production со статусом success. После публикации независимый локальный
+production smoke прошёл 3/3, а live-route check — 10/10 usable HTML. Таким
+образом, v247 является текущим подтверждённым production release; v246 ниже
+сохранён только как предыдущий baseline.
 
 ## Release Proof catalog and responsive candidate — v246
 

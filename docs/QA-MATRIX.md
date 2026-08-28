@@ -30,9 +30,9 @@
 
 ## 2. Текущее доказательство этого изменения
 
-### v247 pre-release candidate
+### Подтверждённый production release — v247
 
-Документальный контракт кандидата: 30 продуктов, 10 live, 20 case, 60
+Документальный контракт релиза: 30 продуктов, 10 live, 20 case, 60
 локализованных case HTML и 61 sitemap URL; desktop first view — DentForma,
 Klawis, TTYL Platform, BelfProctor, Softly и GrowthOps AI; mobile — все 30
 карточек и category-фильтры. Builder/Scope Preview обязан выдавать composition,
@@ -49,14 +49,14 @@ portfolio gate, remote CI, production или provider-backed evidence.
 |---|---|---|
 | Generated/site contract | **GREEN (local candidate)** | `validate` → 30 products / 10 live / 20 case / 3 locales; `check:build` → 67 byte-identical generated artifacts; 60 localized case HTML и 61 sitemap URL |
 | Security/dependencies/docs | **GREEN (local candidate)** | secret scan clean; `npm audit --audit-level=high` → 0 vulnerabilities; documentation contract → 17/17; `git diff --check` без whitespace error |
-| Browser matrix | **TARGETED GREEN / CLEAN CI REQUIRED** | Первый candidate run выявил устаревшее hardcoded ожидание Firefox-smoke: `Показать ещё 23` после роста канонического каталога до 30 продуктов. Smoke теперь вычисляет `orderedProducts.length - 6`; targeted Firefox stress → 6/6 в трёх последовательных циклах. Полный clean Linux CI для исправленного SHA остаётся обязательным до deploy |
+| Browser matrix | **GREEN (clean Linux CI)** | Workflow `33125562641` на SHA `b7b6a1f`: полный desktop/mobile/accessibility gate → 188 passed / 118 profile-specific skipped / 0 failed; изолированный performance gate → 2/2. До clean run устаревшее Firefox-ожидание `Показать ещё 23` было заменено вычислением `orderedProducts.length - 6`; targeted Firefox stress дополнительно прошёл 6/6 в трёх последовательных циклах |
 | Navigation landing regression | **GREEN (local candidate)** | explicit pinned-section landing исправлен; targeted navigation/cinema suite в двух повторах → 18 passed / 2 profile-specific skipped / 0 failed |
 | Performance budgets | **GREEN (local candidate)** | isolated desktop/mobile Chromium → 2/2 без изменения порогов |
 | External live routes | **GREEN (local candidate)** | 10/10 approved HTTPS routes вернули usable HTML |
 | Visual capture + human review | **GREEN (local candidate)** | `qa:visual` → 4/4; 26 main/menu + 40 full-page case captures + 4 contact sheet = 70 PNG. Четыре sheet просмотрены вручную; hero WebP отдельно подтверждены decode/element-paint. Physical devices не заявляются |
-| v247 deploy и post-deploy smoke | **NOT RUN** | Кандидат не объявлен опубликованным; production evidence ниже относится к v246 |
+| v247 deploy и post-deploy smoke | **GREEN (production)** | GitHub Pages workflow `33126087905` на SHA `b7b6a1f`: build, deploy и verify-production завершились success. После публикации локальный production smoke → 3/3, независимый live-route check → 10/10 usable HTML. Production URL: `https://samandarmansurkhodjaev2713.github.io/CV-Samandar/` |
 
-### Последний подтверждённый release baseline — v246
+### Предыдущий подтверждённый release baseline — v246
 
 | Gate | Статус | Доказательство |
 |---|---|---|

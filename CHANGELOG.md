@@ -56,6 +56,12 @@
 
 ### Changed
 
+- Release v247 подтверждён на SHA `b7b6a1f`: clean Linux workflow
+  `33125562641` завершил полный browser/accessibility gate с результатом
+  188 passed / 118 profile-specific skipped / 0 failed и performance 2/2;
+  GitHub Pages workflow `33126087905` успешно выполнил build, deploy и
+  verify-production. После публикации production smoke прошёл 3/3, а проверка
+  десяти внешних live-маршрутов — 10/10 usable HTML.
 - Firefox catalog smoke больше не хранит вручную количество скрытых карточек:
   accessible name expand-control вычисляется из канонического product registry,
   поэтому добавление продукта не создаёт ложный release blocker.
