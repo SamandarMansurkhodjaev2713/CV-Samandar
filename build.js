@@ -66,6 +66,13 @@ const STYLE_SOURCES = [
 ];
 const STYLES_DIR = path.join(__dirname, "src", "styles");
 const STYLE_BUNDLE = "app.bundle.min.css";
+const STYLE_TARGETS = lightningcss.browserslistToTargets([
+  "Chrome >= 100",
+  "Edge >= 100",
+  "Firefox >= 100",
+  "Safari >= 15.4",
+  "iOS >= 15.4",
+]);
 // Babel preset configuration. "react" → JSX transform only.
 // Generated component scripts are shipped directly, so whitespace/comments
 // are deployment bytes and parser work. Keep authored JSX readable and emit a
@@ -156,6 +163,7 @@ function buildStyleBundle() {
     code: Buffer.from(source, "utf8"),
     minify: true,
     sourceMap: false,
+    targets: STYLE_TARGETS,
   });
   if (!result || !result.code || !result.code.length) {
     throw new Error("Lightning CSS produced an empty style bundle");

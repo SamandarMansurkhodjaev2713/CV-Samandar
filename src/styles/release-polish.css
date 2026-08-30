@@ -774,89 +774,6 @@ section[data-section]:not([data-section="hero"]) {
   line-height: .92;
 }
 
-/* ── Persistent calibration frame ─────────────────────────────────────── */
-.system-frame {
-  position: fixed;
-  inset: 0;
-  z-index: 900;
-  pointer-events: none;
-  color: rgba(241, 238, 230, .42);
-}
-
-.system-frame::before,
-.system-frame::after {
-  content: "";
-  position: absolute;
-  top: 18px;
-  bottom: 14px;
-  width: 1px;
-  background: linear-gradient(180deg, transparent 0 7%, var(--rf-line) 7% 93%, transparent 93%);
-}
-
-.system-frame::before { left: 18px; }
-.system-frame::after { right: 18px; }
-
-.system-frame-tele {
-  position: absolute;
-  top: 7px;
-  font-size: 7px;
-  line-height: 1;
-  letter-spacing: .18em;
-  white-space: nowrap;
-}
-
-.system-frame-tele--left { left: 28px; }
-.system-frame-tele--center { left: 50%; transform: translateX(-50%); }
-.system-frame-tele--right { right: 28px; }
-
-.system-frame-depth {
-  position: absolute;
-  top: 96px;
-  right: 8px;
-  bottom: 24px;
-  width: 20px;
-}
-
-.system-frame-depth > span {
-  position: absolute;
-  top: 0;
-  right: -1px;
-  writing-mode: vertical-rl;
-  font-size: 7px;
-  letter-spacing: .2em;
-}
-
-.system-frame-depth > i {
-  position: absolute;
-  top: 76px;
-  bottom: 0;
-  right: 9px;
-  width: 1px;
-  background: rgba(241, 238, 230, .12);
-}
-
-.system-frame-depth > b {
-  position: absolute;
-  top: calc(76px + (100% - 76px) * var(--system-progress));
-  right: 5px;
-  width: 9px;
-  height: 1px;
-  background: var(--rf-brass);
-  box-shadow: 0 0 14px rgba(205, 165, 103, .4);
-  transition: top .9s var(--rf-ease);
-}
-
-.system-frame-corner {
-  position: absolute;
-  bottom: 10px;
-  width: 16px;
-  height: 10px;
-  border-bottom: 1px solid rgba(241, 238, 230, .2);
-}
-
-.system-frame-corner--bl { left: 18px; border-left: 1px solid rgba(241, 238, 230, .2); }
-.system-frame-corner--br { right: 18px; border-right: 1px solid rgba(241, 238, 230, .2); }
-
 /* ── Navigation: quiet instrument, not a segmented dashboard ──────────── */
 .nav,
 .nav.is-capsule {
@@ -1286,17 +1203,6 @@ section.sec-in .sec-head::after { transition-duration: 1.15s; }
 }
 
 @media (max-width: 900px) {
-  .system-frame::before { left: 8px; }
-  .system-frame::after { right: 8px; }
-  .system-frame-tele { font-size: 5.5px; letter-spacing: .12em; }
-  .system-frame-tele--left { left: 16px; }
-  .system-frame-tele--center { display: none; }
-  .system-frame-tele--right { right: 16px; }
-  .system-frame-depth { display: none; }
-  .system-frame-corner { bottom: 7px; }
-  .system-frame-corner--bl { left: 8px; }
-  .system-frame-corner--br { right: 8px; }
-
   .nav .nav-inner,
   .nav.is-capsule .nav-inner { padding-top: 7px; }
   .nav-burger span { left: 16px; right: auto; width: 20px; }
