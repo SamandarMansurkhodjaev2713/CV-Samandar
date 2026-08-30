@@ -2907,3 +2907,435 @@ html.e2e-stable .hero--release-proof .hero-name .hero-statement-line {
   .hero--release-proof .hero-ctas { grid-template-columns: 1.15fr .85fr !important; }
   .hero--release-proof .hero-ctas .btn { min-height: 44px; }
 }
+
+/* ===========================================================================
+   V249 — EDITORIAL AIR
+   The product proof stays factual; the interface stops narrating itself.
+   One chapter marker, one navigation state and one visual idea per scene.
+   ========================================================================== */
+
+/* Retire the pseudo-operating-system layer. It repeated information already
+   present in the real navigation and made every chapter feel like a template. */
+.system-frame,
+.sec-meta,
+.hero--release-proof .hero-band--top,
+.hero--release-proof .hero-signature,
+.hero--release-proof .hero-band--rule,
+.hero--release-proof .hero-proof,
+.release-proof-folio,
+.release-proof-owner,
+.release-proof-map,
+.release-proof-caption,
+.release-proof-register,
+.release-proof-crop,
+.release-proof-inspection { display: none !important; }
+
+/* A single physical release seal replaces the technical dashboard. */
+.release-proof {
+  top: 50% !important;
+  right: clamp(54px,7vw,128px) !important;
+  left: auto !important;
+  width: min(39vw,570px) !important;
+  height: min(39vw,570px) !important;
+  transform: translateY(-47%) !important;
+}
+.release-proof-shadow {
+  inset: 8% !important;
+  border-radius: 50% !important;
+  filter: blur(34px) !important;
+  opacity: .38 !important;
+}
+.release-proof-sheet {
+  border: 1px solid rgba(205,165,103,.32) !important;
+  border-radius: 50% !important;
+  background:
+    radial-gradient(circle at 36% 30%, rgba(238,232,219,.08), transparent 27%),
+    radial-gradient(circle, rgba(205,165,103,.09), transparent 64%),
+    #11100d !important;
+  box-shadow: inset 0 0 0 1px rgba(238,232,219,.025), 0 44px 110px rgba(0,0,0,.3) !important;
+}
+.release-proof-sheet::before {
+  content: "";
+  position: absolute;
+  inset: 12%;
+  border: 1px solid rgba(238,232,219,.11);
+  border-radius: 50%;
+}
+.release-proof-sheet::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 14%;
+  width: 72%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(205,165,103,.65), transparent);
+  transform: rotate(-12deg);
+}
+.release-proof-impression {
+  top: 35% !important;
+  left: 8% !important;
+  width: 84% !important;
+  height: 25% !important;
+  text-align: center;
+}
+.release-proof-ink {
+  width: 100%;
+  font-size: clamp(58px,7.4vw,112px) !important;
+  letter-spacing: -.055em !important;
+}
+.release-proof-ink--a,
+.release-proof-ink--b { display: none !important; }
+.release-proof-verdict {
+  top: 61% !important;
+  right: 21% !important;
+  left: 21% !important;
+  min-height: 42px !important;
+  padding-inline: 14px !important;
+  border-color: rgba(205,165,103,.32) !important;
+  background: rgba(8,8,6,.64) !important;
+}
+.release-proof-verdict span { display: none !important; }
+.release-proof-verdict strong {
+  width: 100%;
+  text-align: center;
+  font-size: clamp(14px,1.55vw,22px) !important;
+  letter-spacing: .02em !important;
+}
+
+/* Hero copy gets room to be understood before it asks for action. */
+.hero--release-proof .hero-copy-stage {
+  width: min(48vw,720px) !important;
+  margin-left: clamp(58px,5.5vw,104px) !important;
+}
+.hero--release-proof .hero-band--act {
+  width: min(47vw,680px) !important;
+  margin: auto 0 0 clamp(58px,5.5vw,104px) !important;
+  padding: 26px 0 34px !important;
+  border-top: 1px solid rgba(238,232,219,.14) !important;
+  gap: 20px !important;
+}
+.hero--release-proof .hero-tagline {
+  max-width: 42ch !important;
+  color: rgba(238,232,219,.7) !important;
+  font-size: clamp(16px,1.15vw,19px) !important;
+  line-height: 1.55 !important;
+}
+
+/* Calm, authored navigation: identity, current chapter, action, menu. */
+.nav { padding: 12px 14px 0 !important; }
+.nav .nav-inner,
+.nav.is-capsule .nav-inner {
+  min-height: 62px !important;
+  border: 1px solid rgba(238,232,219,.13) !important;
+  border-radius: 14px !important;
+  background: rgba(10,10,8,.9) !important;
+  box-shadow: 0 18px 48px rgba(0,0,0,.22) !important;
+  overflow: hidden;
+}
+.nav .brand-sub,
+.nav-counter-coordinate,
+.nav-burger-label { display: none !important; }
+.nav-counter {
+  grid-template-columns: minmax(0,1fr) !important;
+  padding-inline: 22px !important;
+}
+.nav-counter-name {
+  display: block !important;
+  color: rgba(238,232,219,.78) !important;
+  font: 540 12px/1 var(--f-body,sans-serif) !important;
+  letter-spacing: .01em !important;
+  text-transform: none !important;
+}
+.nav-burger {
+  width: 62px !important;
+  min-width: 62px !important;
+  padding-inline: 19px !important;
+}
+.nav-burger-lines { width: 24px !important; }
+.nav-burger-lines {
+  position: relative !important;
+  height: 16px !important;
+  background: transparent !important;
+}
+.nav-burger-lines i {
+  position: absolute !important;
+  right: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 1px !important;
+  background: rgba(238,232,219,.82) !important;
+  transform: none !important;
+}
+.nav-burger-lines i:first-child { top: 4px !important; }
+.nav-burger-lines i:last-child { bottom: 4px !important; }
+.nav-cta {
+  justify-content: center !important;
+  padding-inline: 22px !important;
+  font-family: var(--f-body,sans-serif) !important;
+  font-size: 12px !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+/* Buttons are useful controls, not clipped sci-fi plates. */
+.btn,
+.proj-cta,
+.proj-repo,
+.proj-expand,
+.nav-menu-cta,
+.builder-cta-alt,
+.contact-submit,
+.contact-email,
+.footer-cta {
+  clip-path: none !important;
+  border-radius: 999px !important;
+  font-family: var(--f-body,sans-serif) !important;
+  font-weight: 600 !important;
+  letter-spacing: .015em !important;
+  text-transform: none !important;
+}
+.btn::before,
+.btn::after,
+.proj-cta::before,
+.proj-repo::before,
+.proj-expand::before { border-radius: inherit !important; }
+
+/* Let the commissioned still lifes read as photographs. */
+#projects .proj-screen-scanlines,
+#projects .proj-screen-grid,
+#projects .proj-screen-cell { display: none !important; }
+#projects .proj-screen img { filter: none !important; }
+#projects .proj-filter-check { display: none !important; }
+#projects .proj-filter-chip {
+  border-radius: 999px !important;
+  font-family: var(--f-body,sans-serif) !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+#projects .proj-filter-chip.is-active {
+  color: #11100d !important;
+  background: var(--rp-brass,#cda567) !important;
+  border-color: var(--rp-brass,#cda567) !important;
+}
+#projects .proj-grid { row-gap: clamp(34px,4vw,62px) !important; }
+
+/* Remove document-chrome labels inside long chapters, while retaining every
+   fact and the actual chapter marker in SecHead. */
+.about-proof-rail,
+.about-proof-kicker,
+.about-proof-route-head,
+.about-proof-facts-label,
+.about-proof-focus-label,
+.about-proof-signature,
+.builder-kicker,
+.builder-sheet-kicker { display: none !important; }
+.about-proof { border-radius: 18px !important; }
+.about-proof-main { padding-top: clamp(34px,4vw,64px) !important; }
+
+/* Signal is an accordion, not another telemetry panel. */
+#signal .signal-path,
+#signal .row-ghost { display: none !important; }
+#signal .signal-rows { margin-top: clamp(28px,4vw,58px) !important; }
+#signal .signal-row::after { opacity: 0 !important; }
+
+/* Decorative oversized numerals duplicated the real service index and made
+   the interface read like a generated dashboard. Keep the actual sequence,
+   remove the ornamental echo. */
+.svc .row-ghost { display: none !important; }
+
+/* Consistent whitespace and readable headline scale. */
+section:not([data-section="hero"]) > .shell {
+  padding-block: clamp(118px,11vw,176px) !important;
+}
+.sec-head { margin-bottom: clamp(54px,6vw,88px) !important; }
+.sec-head h2,
+#projects .sec-head h2 {
+  max-width: 11ch !important;
+  font-size: clamp(64px,6.6vw,104px) !important;
+  line-height: .94 !important;
+  letter-spacing: -.045em !important;
+}
+#process .sec-head h2 { max-width: 13ch !important; }
+.lead-line {
+  max-width: 56ch !important;
+  color: rgba(238,232,219,.68) !important;
+  font-size: clamp(17px,1.35vw,21px) !important;
+  line-height: 1.6 !important;
+}
+
+@media (min-width: 901px) {
+  .nav .nav-inner,
+  .nav.is-capsule .nav-inner {
+    grid-template-columns: minmax(240px,.8fr) minmax(200px,.72fr) minmax(310px,.78fr) !important;
+  }
+  .nav-right { grid-template-columns: minmax(180px,1fr) 62px !important; }
+  #about .sec-head h2 { max-width: 12ch !important; font-size: clamp(60px,6vw,96px) !important; }
+}
+
+@media (max-width: 900px) {
+  /* Critical: an earlier desktop layer used opacity:1!important. A closed
+     mobile dialog must actually disappear, not remain as an invisible trap. */
+  .nav-menu { opacity: 0 !important; visibility: hidden !important; }
+  .nav-menu.is-open { opacity: 1 !important; visibility: visible !important; }
+
+  .nav-menu .nav-menu-links { gap: 8px 22px !important; }
+  .nav-menu-links li { border: 0 !important; }
+  .nav-menu-links a {
+    min-height: 44px !important;
+    grid-template-columns: minmax(0,1fr) !important;
+    padding-inline: 0 !important;
+  }
+  .nav-menu-num,
+  .nav-menu-arrow { display: none !important; }
+  .nav-menu .nav-menu-word { font-size: clamp(20px,5.8vw,26px) !important; }
+
+  .nav { padding: 8px 8px 0 !important; }
+  .nav .nav-inner,
+  .nav.is-capsule .nav-inner {
+    grid-template-columns: minmax(0,1fr) 54px !important;
+    min-height: 54px !important;
+    border-radius: 11px !important;
+  }
+  .nav-counter { display: none !important; }
+  .nav .brand { padding-inline: 8px !important; }
+  .nav .brand-mark { width: 32px !important; height: 32px !important; flex-basis: 32px !important; }
+  .nav-counter { padding-inline: 10px !important; }
+  .nav-counter-name { font-size: 11px !important; font-weight: 600 !important; }
+  .nav-counter-name { text-align: center !important; }
+
+  .release-proof {
+    top: calc(var(--nav-h) + 18px) !important;
+    right: 50% !important;
+    left: auto !important;
+    width: clamp(170px,48vw,206px) !important;
+    height: clamp(170px,48vw,206px) !important;
+    transform: translateX(50%) !important;
+  }
+  .release-proof-verdict { right: 16% !important; left: 16% !important; min-height: 30px !important; }
+  .release-proof-verdict strong { font-size: 12px !important; }
+  .release-proof-ink { font-size: clamp(42px,12vw,54px) !important; }
+  .hero--release-proof .hero-copy-stage {
+    width: 100% !important;
+    margin: clamp(214px,29svh,252px) 0 0 !important;
+  }
+  .hero--release-proof .hero-band--act {
+    width: 100% !important;
+    margin: auto 0 0 !important;
+    padding: 15px 0 0 !important;
+    gap: 12px !important;
+  }
+  .hero--release-proof .hero-tagline { max-width: 33ch !important; font-size: 14px !important; line-height: 1.48 !important; }
+  .hero--release-proof .hero-ctas .btn { font-family: var(--f-body,sans-serif) !important; font-size: 12px !important; text-transform: none !important; }
+
+  section:not([data-section="hero"]) > .shell { padding-block: clamp(88px,22vw,118px) !important; }
+  .sec-head { margin-bottom: 44px !important; }
+  .sec-head,
+  .sec-head .lm,
+  .sec-head .lm-i,
+  .sec-head h2 {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    clip-path: none !important;
+  }
+  .sec-head h2,
+  #projects .sec-head h2,
+  #about .sec-head h2 {
+    max-width: 10ch !important;
+    font-size: clamp(39px,11.5vw,52px) !important;
+    line-height: .98 !important;
+    letter-spacing: -.04em !important;
+  }
+  .sec-head .num { margin-bottom: 12px !important; color: rgba(205,165,103,.82) !important; }
+  #about .sec-head h2 { max-width: 100% !important; }
+  #about .sec-head .sec-title-line { white-space: nowrap !important; }
+  #about .sec-head .sec-title-line:nth-child(3) { font-size: .66em !important; }
+  .lead-line { font-size: 16px !important; line-height: 1.58 !important; }
+
+  #projects .proj-filter-list { gap: 8px !important; }
+  #projects .proj-filter-chip { min-height: 42px !important; padding-inline: 15px !important; }
+  #projects .proj-filter-count { display: none !important; }
+  #projects .proj-grid { row-gap: 34px !important; }
+  #projects .proj-card { border-radius: 16px !important; overflow: hidden !important; }
+  #projects .proj-card .proj-body { padding: 24px 20px 22px !important; }
+
+  .about-proof-main { padding-top: 30px !important; }
+  #signal .signal-row-tail-text { display: none !important; }
+  .svc-acc-row.is-open .svc-detail-inner {
+    animation: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    clip-path: none !important;
+  }
+  .quality-stage { padding: 34px 22px !important; }
+  .quality-stage-number { font-size: 42px !important; opacity: .78; }
+
+  /* A quiet contextual action instead of a second technical navbar. */
+  .mobile-dock,
+  .mobile-dock.is-visible {
+    left: 12px !important;
+    right: 12px !important;
+    bottom: calc(12px + env(safe-area-inset-bottom,0px)) !important;
+    width: auto !important;
+    min-height: 58px !important;
+    padding: 6px !important;
+    gap: 8px !important;
+    transform: translateY(0) !important;
+    border: 1px solid rgba(238,232,219,.14) !important;
+    border-radius: 16px !important;
+    background: rgba(12,12,10,.9) !important;
+    box-shadow: 0 16px 42px rgba(0,0,0,.3) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(105%) !important;
+    backdrop-filter: blur(18px) saturate(105%) !important;
+    clip-path: none !important;
+  }
+  .mobile-dock:not(.is-visible) {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translateY(calc(100% + 24px)) !important;
+  }
+  .mobile-dock::before,
+  .mobile-dock-progress,
+  .mobile-dock-label-num { display: none !important; }
+  .mobile-dock-label {
+    flex: 1 1 auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    padding-left: 10px !important;
+    overflow: hidden !important;
+    color: rgba(238,232,219,.72) !important;
+    font: 600 12px/1.2 var(--f-body,sans-serif) !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+  }
+  .mobile-dock-label > span:last-child {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  .mobile-dock-cta {
+    flex: 0 0 auto !important;
+    min-height: 46px !important;
+    padding-inline: 18px !important;
+    border: 0 !important;
+    border-radius: 12px !important;
+    background: var(--rp-brass,#cda567) !important;
+    color: #11100d !important;
+    font: 650 12px/1 var(--f-body,sans-serif) !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+  }
+  .mobile-dock-cta-long { display: none !important; }
+  .mobile-dock-cta-short { display: inline !important; }
+}
+
+@media (max-width: 360px) {
+  .release-proof { width: 160px !important; height: 160px !important; }
+  .hero--release-proof .hero-copy-stage { margin-top: 190px !important; }
+  .hero--release-proof .hero-name .hero-statement-line,
+  .hero--release-proof .hero-name .hero-statement-line--1,
+  .hero--release-proof .hero-name .hero-statement-line--2 { font-size: clamp(36px,11.8vw,43px) !important; }
+  .nav .nav-inner,
+  .nav.is-capsule .nav-inner { grid-template-columns: minmax(0,1fr) 50px !important; }
+}

@@ -5,6 +5,28 @@ Awwwards-переработки. План и критерии готовност
 `MASTER-IMPLEMENTATION-PLAN.md`; архитектурные контракты — в
 `ARCHITECTURE.md`.
 
+## Editorial air candidate — v249
+
+V249 устраняет визуальную перегрузку последнего кандидата без изменения
+фактов и каталога. Hero сведён к одному release-seal и прямому тезису; navbar,
+CTA, mobile dock и оглавление больше не имитируют операционную панель. В
+длинных главах удалены декоративные telemetry labels, scanlines и большие
+дублирующие номера, а вертикальный ритм увеличен.
+
+Ручной просмотр в реальном браузере выполнен для Hero, About, Projects,
+Builder, Stack, Services, CV, Process, FAQ, Quality и Contact на 390×844 и для
+ключевых Hero/Projects/Quality композиций на 1440×900. Отдельно проверены
+закрытое и открытое mobile-оглавление, отсутствие horizontal overflow,
+отрисовка project-artwork и финальная поза раскрытого Services. Найденный при
+просмотре дефект — mobile menu с унаследованным `opacity:1!important` — закрыт
+явным hidden/open контрактом. Второй дефект — невидимый initial frame ответа
+Services при deep link — закрыт неизменяемой читаемой финальной позой.
+
+Generated HTML и style bundle пересобраны с единой asset version v249.
+Автоматизированные release-gates и production evidence фиксируются отдельно;
+этот блок документирует именно выполненную визуальную проверку, а не внешний
+deploy.
+
 ## Visual alignment candidate — v248
 
 V248 закрывает конкретные дефекты, найденные ручным просмотром production
