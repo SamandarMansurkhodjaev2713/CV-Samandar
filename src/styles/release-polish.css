@@ -3362,6 +3362,24 @@ section:not([data-section="hero"]) > .shell {
 }
 
 @media (max-width: 900px) and (max-height: 520px) and (orientation: landscape) {
+  .nav .nav-inner,
+  .nav.is-capsule .nav-inner {
+    grid-template-columns: minmax(220px,1fr) minmax(150px,.7fr) 54px !important;
+  }
+  .nav-counter,
+  .nav.is-capsule .nav-counter {
+    position: static !important;
+    display: grid !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+  .nav-counter-name {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
   .hero--release-proof .hero-stack {
     padding: calc(var(--nav-h) + 12px) 14px 12px !important;
   }
