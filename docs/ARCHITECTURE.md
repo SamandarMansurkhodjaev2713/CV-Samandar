@@ -105,10 +105,11 @@ review `2026-08-27`. Remote CI, production и provider-backed evidence не вх
 ### 3.3 Presentation contract
 
 `featuredRank` задаёт единственный канонический порядок для обеих responsive
-композиций. Desktop first view монтирует шесть продуктов: DentForma, Klawis,
-TTYL Platform, BelfProctor, Softly и GrowthOps AI; явное раскрытие добавляет
-остальные 24. Mobile сразу монтирует все 30 и применяет category-фильтры к тому
-же массиву без дублей, альтернативных rank или скрытого второго каталога.
+композиций. `PRODUCT_FEATURED_COUNT` задаёт размер первого desktop-акта и
+сейчас равен четырём: DentForma, Klawis, TTYL Platform и BelfProctor; явное
+раскрытие добавляет остальные 26. Mobile сразу монтирует все 30 и применяет
+category-фильтры к тому же массиву без дублей, альтернативных rank или скрытого
+второго каталога.
 
 ## 4. Главная: runtime architecture
 

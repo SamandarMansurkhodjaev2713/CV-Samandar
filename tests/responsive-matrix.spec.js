@@ -1,7 +1,7 @@
 "use strict";
 
 const { test, expect } = require("@playwright/test");
-const { settleMain, expectNoHorizontalOverflow, orderedProducts } = require("./helpers");
+const { settleMain, expectNoHorizontalOverflow, orderedProducts, featuredProductCount } = require("./helpers");
 
 const VIEWPORTS = [
   { width: 320, height: 568, label: "320x568 portrait" },
@@ -374,7 +374,7 @@ test.describe("stage 9 responsive regression matrix", () => {
 
     await page.setViewportSize({ width: 1024, height: 768 });
     await afterResponsiveLayout(page);
-    await expect(page.locator(".proj-card")).toHaveCount(6);
+    await expect(page.locator(".proj-card")).toHaveCount(featuredProductCount);
     const desktopExpand = page.locator(".proj-expand");
     await expect(desktopExpand).toBeVisible();
     await desktopExpand.evaluate((button) => button.click());

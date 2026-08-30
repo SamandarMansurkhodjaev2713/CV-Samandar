@@ -2499,3 +2499,411 @@ html.e2e-stable .hero--release-proof .hero-name .hero-statement-line {
   pointer-events: auto;
   clip-path: inset(0) !important;
 }
+
+/* --------------------------------------------------------------------------
+   V248 — editorial alignment pass
+   One final source-order owner for the release defects found in the browser:
+   navbar clipping, over-dense mobile chrome, fragile section masks, a mixed
+   four/six-card opening and the detached light-paper Quality treatment.
+   -------------------------------------------------------------------------- */
+
+/* The desktop masthead is a three-part rail. Every track is allowed to shrink;
+   fixed children may never make the right-hand action disappear. */
+@media (min-width: 901px) {
+  .nav .nav-inner,
+  .nav.is-capsule .nav-inner {
+    grid-template-columns: minmax(250px,.92fr) minmax(220px,.7fr) minmax(340px,.92fr) !important;
+  }
+  .nav-right {
+    grid-template-columns: minmax(0,1fr) 132px !important;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .nav-cta { min-width: 0; overflow: hidden; white-space: nowrap; }
+  .nav-burger {
+    width: 100% !important;
+    min-width: 0;
+    padding-inline: 15px !important;
+    overflow: hidden;
+  }
+  .nav-burger-label {
+    position: static !important;
+    inset: auto !important;
+    width: auto !important;
+    height: auto !important;
+    flex: 0 0 auto;
+    min-width: 0;
+    white-space: nowrap;
+    color: var(--rp-bone, #eee8db) !important;
+    background: transparent !important;
+    transform: none !important;
+  }
+  .nav-burger-lines {
+    position: relative !important;
+    inset: auto !important;
+    width: 24px !important;
+    height: 14px !important;
+    flex: 0 0 24px;
+    transform: none !important;
+  }
+}
+
+/* Quality belongs to the same dark release world as the rest of the site.
+   Three moments make the QA story scannable; six concrete checks remain the
+   evidence. No faux document, protocol ID, tags or decorative signature. */
+#trust {
+  color: var(--rp-bone, #eee8db) !important;
+  background:
+    linear-gradient(180deg, rgba(205,165,103,.035), transparent 28%),
+    #0d0d0a !important;
+}
+#trust::before { opacity: .34 !important; }
+#trust .sec-head { border-bottom-color: rgba(238,232,219,.14) !important; }
+#trust .sec-head h2 { color: var(--rp-bone, #eee8db) !important; }
+#trust .sec-head .num,
+#trust .sec-head .eyebrow,
+#trust .sec-meta { color: rgba(238,232,219,.55) !important; }
+#trust .lead-line {
+  max-width: 66ch;
+  color: rgba(238,232,219,.72) !important;
+}
+.quality-system {
+  margin-top: clamp(34px,5vw,72px);
+  overflow: hidden;
+  border: 1px solid rgba(205,165,103,.24);
+  border-radius: 22px;
+  background: rgba(18,17,13,.88);
+  box-shadow: 0 36px 100px rgba(0,0,0,.28);
+}
+.quality-stages {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.quality-stage {
+  position: relative;
+  min-width: 0;
+  padding: clamp(26px,3.2vw,48px);
+  border-right: 1px solid rgba(238,232,219,.1);
+}
+.quality-stage:last-child { border-right: 0; }
+.quality-stage::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--rp-brass, #cda567);
+  transition: width .9s var(--rp-ease, cubic-bezier(.16,1,.3,1));
+}
+#trust.sec-in .quality-stage::before { width: 100%; }
+.quality-stage-head { min-height: 190px; }
+.quality-stage-number {
+  display: block;
+  margin-bottom: 26px;
+  color: var(--rp-brass, #cda567);
+  font: italic 500 clamp(42px,4.5vw,72px)/.75 var(--f-editorial, serif);
+  letter-spacing: -.06em;
+}
+.quality-stage h3 {
+  margin: 0 0 12px;
+  color: var(--rp-bone, #eee8db);
+  font: 540 clamp(25px,2.2vw,34px)/1 var(--f-display, sans-serif);
+  letter-spacing: -.035em;
+}
+.quality-stage-head p {
+  margin: 0;
+  color: rgba(238,232,219,.62) !important;
+  font: 400 15px/1.58 var(--f-body, sans-serif);
+}
+.quality-checks { margin: 0; padding: 0; list-style: none; }
+.quality-check {
+  display: grid;
+  grid-template-columns: 20px minmax(0,1fr);
+  gap: 12px;
+  padding: 19px 0;
+  border-top: 1px solid rgba(238,232,219,.1);
+}
+.quality-check-mark {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  margin-top: 2px;
+  border: 1px solid rgba(218,116,78,.62);
+  border-radius: 50%;
+  color: var(--rp-ember, #da744e);
+  font: 700 10px/1 sans-serif;
+}
+.quality-check strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--rp-bone, #eee8db);
+  font: 560 15px/1.3 var(--f-body, sans-serif);
+}
+.quality-check p {
+  margin: 0;
+  color: rgba(238,232,219,.55) !important;
+  font: 400 14px/1.55 var(--f-body, sans-serif);
+}
+.quality-decision {
+  display: grid;
+  grid-template-columns: minmax(130px,.24fr) minmax(0,1fr);
+  gap: clamp(20px,3vw,48px);
+  align-items: start;
+  padding: clamp(24px,3vw,42px) clamp(26px,3.2vw,48px);
+  border-top: 1px solid rgba(205,165,103,.28);
+  background: linear-gradient(90deg,rgba(205,165,103,.13),rgba(205,165,103,.025));
+}
+.quality-decision-label {
+  padding-top: .5em;
+  color: var(--rp-brass, #cda567) !important;
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.quality-decision strong {
+  max-width: 50ch;
+  color: var(--rp-bone, #eee8db);
+  font: 500 clamp(20px,2vw,28px)/1.35 var(--f-body, sans-serif);
+  letter-spacing: -.025em;
+}
+
+/* The curated desktop opening is exactly four authored covers. The archive is
+   an explicit second beat and never occupies grid space while collapsed. */
+@media (min-width: 901px) {
+  #projects .proj-grid.is-collapsed { grid-template-columns: repeat(12,minmax(0,1fr)); }
+  #projects .proj-grid.is-collapsed > .proj-card--feature:nth-child(1),
+  #projects .proj-grid.is-collapsed > .proj-card--feature:nth-child(4) { grid-column: span 7; }
+  #projects .proj-grid.is-collapsed > .proj-card--feature:nth-child(2),
+  #projects .proj-grid.is-collapsed > .proj-card--feature:nth-child(3) { grid-column: span 5; }
+  #projects .proj-expand {
+    width: 100%;
+    min-height: 58px;
+    margin-top: 26px;
+    justify-content: space-between;
+    padding-inline: 22px;
+  }
+}
+
+@media (max-width: 900px) {
+  /* Mobile keeps the authored curtain transition but removes duplicated
+     telemetry. The first viewport now has one artifact, one promise, one
+     explanation and one action row. */
+  .system-frame { display: none !important; }
+  .sec-meta { display: none !important; }
+  .nav .nav-inner,
+  .nav.is-capsule .nav-inner {
+    grid-template-columns: minmax(126px,1fr) minmax(94px,.72fr) 54px !important;
+  }
+  .nav-counter-coordinate {
+    display: flex !important;
+    align-items: baseline;
+    font-size: 7px !important;
+    letter-spacing: .1em;
+    white-space: nowrap;
+  }
+  .nav-counter { grid-template-columns: auto minmax(0,1fr) !important; }
+  .nav-counter-name {
+    display: block !important;
+    overflow: hidden;
+    font-size: 9.5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nav-menu-intro p { display: none; }
+  .nav-menu-intro h2 { margin-bottom: 0; }
+  .nav-menu .nav-menu-word { line-height: 1.04 !important; }
+  .nav-menu {
+    clip-path: inset(0) !important;
+    opacity: 0;
+    transition: opacity .22s ease !important;
+  }
+  .nav-menu.is-open { clip-path: inset(0) !important; opacity: 1; }
+  .nav-menu .nav-menu-foot {
+    position: relative !important;
+    z-index: 20 !important;
+    pointer-events: auto !important;
+    isolation: isolate;
+  }
+  .nav-menu .nav-menu-lang,
+  .nav-menu .nav-menu-lang button {
+    position: relative;
+    z-index: 21;
+    pointer-events: auto !important;
+  }
+
+  section:not([data-section="hero"]) > .shell { padding-block: clamp(68px,10vw,94px); }
+  .sec-head {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    margin-bottom: 32px !important;
+    padding-bottom: 18px;
+  }
+  .sec-head > div:first-child { min-width: 0; }
+  .sec-head .num { margin-bottom: 9px; font-size: 8px; }
+  .sec-head .lm {
+    overflow: hidden !important;
+    padding-block: .18em .12em !important;
+    margin-block: -.18em -.12em !important;
+  }
+  .sec-head .lm-i { overflow: visible !important; }
+  .sec-head h2,
+  #projects .sec-head h2 {
+    max-width: 100% !important;
+    font-size: clamp(40px,12.4vw,60px) !important;
+    line-height: .94 !important;
+    letter-spacing: -.045em !important;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
+  }
+  .sec-title-line { display: block; width: 100%; }
+  #about .sec-head h2 {
+    font-size: clamp(38px,11.8vw,57px) !important;
+    letter-spacing: -.05em !important;
+  }
+  #about .sec-head .sec-title-line:nth-child(3) { font-size: .63em !important; }
+  .lead-line { max-width: 38ch; font-size: 16px !important; line-height: 1.55 !important; }
+
+  .hero--release-proof .hero-stack {
+    min-height: 100svh !important;
+    height: 100svh !important;
+    padding: calc(var(--nav-h) + 12px) 16px 20px !important;
+  }
+  .hero--release-proof .hero-band--top { display: none !important; }
+  .release-proof {
+    top: calc(var(--nav-h) + 10px) !important;
+    right: 16px !important;
+    left: 16px !important;
+    width: auto !important;
+    height: clamp(188px,27svh,236px) !important;
+    transform: none !important;
+  }
+  .release-proof-folio,
+  .release-proof-owner,
+  .release-proof-map,
+  .release-proof-caption,
+  .release-proof-register { display: none !important; }
+  .release-proof-impression { top: 17% !important; height: 39% !important; }
+  .release-proof-verdict { top: 60% !important; }
+  .hero--release-proof .hero-copy-stage {
+    width: auto !important;
+    margin: clamp(236px,33svh,300px) 0 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  .hero--release-proof .hero-signature {
+    margin: 0 0 10px !important;
+    padding: 0 0 8px !important;
+    font-size: 7px !important;
+  }
+  .hero--release-proof .hero-name { gap: 2px !important; }
+  .hero--release-proof .hero-name .hero-statement-line,
+  .hero--release-proof .hero-name .hero-statement-line--1,
+  .hero--release-proof .hero-name .hero-statement-line--2 {
+    width: fit-content;
+    max-width: 100% !important;
+    margin: 0 !important;
+    font-size: clamp(43px,12.6vw,61px) !important;
+    line-height: .9 !important;
+    letter-spacing: -.052em !important;
+    white-space: nowrap;
+  }
+  .hero--release-proof .hero-band--rule { display: none !important; }
+  .hero--release-proof .hero-band--act {
+    width: 100% !important;
+    margin: auto 0 0 !important;
+    padding: 16px 0 0 !important;
+    border-top: 1px solid rgba(238,232,219,.14);
+    gap: 13px !important;
+  }
+  .hero--release-proof .hero-tagline {
+    max-width: 35ch;
+    font-size: 15px !important;
+    line-height: 1.48 !important;
+  }
+  .hero--release-proof .hero-ctas .btn { min-height: 50px; font-size: 10.5px; }
+  .hero--release-proof .hero-proof { display: none !important; }
+
+  #projects .proj-filter-head { display: none !important; }
+  #projects .proj-filter-chips { margin-top: 0; }
+  #projects .proj-filter-chip { min-height: 44px; padding-inline: 14px; }
+  #projects .proj-card .proj-meta dd { font-size: 14px !important; line-height: 1.5; }
+  #projects .proj-card .proj-name { overflow-wrap: anywhere; }
+
+  /* Service accordions must read as decisions, not tall miniature landing
+     pages. The related case remains visible as one compact proof row. */
+  #services .svc-detail-inner { gap: 12px; }
+  #services .svc-related {
+    grid-template-columns: minmax(0,1fr) auto !important;
+    grid-template-rows: auto auto !important;
+    gap: 3px 12px !important;
+    min-height: 72px;
+    padding: 14px 15px !important;
+  }
+  #services .svc-related-eyebrow { grid-column: 1; grid-row: 1; }
+  #services .svc-related-name { grid-column: 1; grid-row: 2; font-size: 19px; }
+  #services .svc-related-meta { display: none !important; }
+  #services .svc-related-arrow { grid-column: 2; grid-row: 1 / 3; align-self: center; }
+  #services .svc-acc-body { padding-bottom: 18px; }
+
+  .quality-system { margin-top: 30px; border-radius: 16px; }
+  .quality-stages { grid-template-columns: 1fr; }
+  .quality-stage { padding: 28px 20px; border-right: 0; border-bottom: 1px solid rgba(238,232,219,.1); }
+  .quality-stage:last-child { border-bottom: 0; }
+  .quality-stage-head { min-height: 0; margin-bottom: 24px; }
+  .quality-stage-number { margin-bottom: 18px; font-size: 52px; }
+  .quality-stage h3 { font-size: 28px; }
+  .quality-stage-head p { font-size: 16px; line-height: 1.55; }
+  .quality-check { padding: 18px 0; }
+  .quality-check strong { font-size: 16px; }
+  .quality-check p { font-size: 16px; line-height: 1.5; }
+  .quality-decision { grid-template-columns: 1fr; gap: 12px; padding: 24px 20px 28px; }
+  .quality-decision-label { padding-top: 0; }
+  .quality-decision strong { font-size: 21px; }
+}
+
+@media (max-width: 360px) {
+  .nav .nav-inner,
+  .nav.is-capsule .nav-inner { grid-template-columns: minmax(112px,1fr) minmax(78px,.64fr) 50px !important; }
+  .nav-counter-name { font-size: 8.5px; }
+  .hero--release-proof .hero-name .hero-statement-line,
+  .hero--release-proof .hero-name .hero-statement-line--1,
+  .hero--release-proof .hero-name .hero-statement-line--2 { font-size: clamp(37px,12.2vw,44px) !important; }
+  .hero--release-proof .hero-tagline { font-size: 14px !important; }
+  .hero--release-proof .hero-ctas { grid-template-columns: minmax(0,1.2fr) minmax(0,.8fr) !important; }
+  .hero--release-proof .hero-ctas .btn { padding-inline: 9px; font-size: 10.5px; }
+}
+
+@media (max-width: 900px) and (max-height: 520px) and (orientation: landscape) {
+  .release-proof {
+    top: calc(var(--nav-h) + 4px) !important;
+    right: 14px !important;
+    left: auto !important;
+    width: 47vw !important;
+    height: calc(100svh - var(--nav-h) - 18px) !important;
+  }
+  .hero--release-proof .hero-stack { padding: calc(var(--nav-h) + 8px) 14px 12px !important; }
+  .hero--release-proof .hero-copy-stage {
+    width: 47% !important;
+    margin: auto 0 0 !important;
+  }
+  .hero--release-proof .hero-name .hero-statement-line,
+  .hero--release-proof .hero-name .hero-statement-line--1,
+  .hero--release-proof .hero-name .hero-statement-line--2 { font-size: min(6.4vw,10.2vh) !important; }
+  .hero--release-proof .hero-band--act {
+    width: 47% !important;
+    margin: 8px 0 0 !important;
+    padding-top: 8px !important;
+    gap: 6px !important;
+  }
+  .hero--release-proof .hero-tagline { font-size: 10px !important; line-height: 1.32 !important; }
+  .hero--release-proof .hero-ctas { grid-template-columns: 1.15fr .85fr !important; }
+  .hero--release-proof .hero-ctas .btn { min-height: 44px; }
+}

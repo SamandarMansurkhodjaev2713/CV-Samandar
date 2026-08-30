@@ -5,6 +5,43 @@ Awwwards-переработки. План и критерии готовност
 `MASTER-IMPLEMENTATION-PLAN.md`; архитектурные контракты — в
 `ARCHITECTURE.md`.
 
+## Visual alignment candidate — v248
+
+V248 закрывает конкретные дефекты, найденные ручным просмотром production
+композиции: обрезанную desktop-метку оглавления, неестественный Hero-copy,
+конфликт четырёх feature-композиций с шестью смонтированными карточками,
+хрупкие mobile title masks и визуально чужой светлый QA-протокол.
+
+Hero использует полные фразы как типографическую единицу: RU «От задачи — к
+продукту», EN «From brief — to a product», UZ «Vazifadan —
+mahsulotgacha». Desktop navbar теперь распределяет доступную ширину между
+action и menu без абсолютного позиционирования текста; mobile показывает и
+координату, и название текущей главы. На 320×568 обе Hero CTA остаются внутри
+первого viewport.
+
+Canonical `PRODUCT_FEATURED_COUNT=4` определяет desktop preview: DentForma,
+Klawis, TTYL Platform и BelfProctor. После раскрытия добавляются остальные 26;
+mobile сразу монтирует все 30 и фильтрует тот же массив. Геометрическая проверка
+подтвердила четыре mounted/visible card до раскрытия и отсутствие пересечений.
+
+Trust преобразован в тёмный quality lifecycle из трёх этапов и шести
+фактических проверок. Release decision формулирует границу готовности без
+выдуманных метрик. Mobile chrome и section headers упрощены: системная
+телеметрия скрыта, основной текст сохраняет 16 px, а Services показывает
+related case как компактную доказательную строку.
+
+Локальная проверка кандидата на `2026-08-30`: validator — 30/10/20 и три
+локали; deterministic build — 67 byte-identical generated artifacts; secret
+scan — clean; dependency audit — 0 vulnerabilities; approved live routes —
+10/10; desktop performance — green, mobile performance — green в чистом
+одиночном worker; visual gate — 4/4 со всеми desktop/mobile сценами и 20
+визитками. Полный Windows browser run дал 186 passed / 118 profile-specific
+skipped и два ресурсных сбоя host: Chromium OOM на BelfProctor axe и `ENOSPC`
+при записи артефакта теста порядка глав. Оба сценария после освобождения
+ресурсов независимо прошли 1/1 в `--workers=1`; это фиксируется как
+локализованный host incident, а не как продуктовый дефект или clean full-run.
+Clean CI и production evidence фиксируются только после выпуска того же SHA.
+
 ## Portfolio production release — v247
 
 Текущий production-контракт сохраняет один канонический каталог из 30

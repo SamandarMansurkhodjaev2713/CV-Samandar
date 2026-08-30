@@ -56,6 +56,21 @@
 
 ### Changed
 
+- V248 исправляет подтверждённые визуальные дефекты релизной композиции:
+  естественный RU/EN/UZ тезис Hero, полностью помещающийся desktop navbar,
+  читаемый мобильный индикатор главы и устойчивые section-title masks без
+  обрезания локализованных строк.
+- Desktop Projects теперь монтирует ровно четыре главных продукта — DentForma,
+  Klawis, TTYL Platform и BelfProctor — и раскрывает остальные 26 по явной
+  команде. Mobile сохраняет все 30 карточек и category-фильтры без кнопки
+  раскрытия; число desktop-preview читается из canonical registry contract.
+- Trust больше не использует светлый faux-protocol. Раздел стал тёмным
+  трёхэтапным quality lifecycle «до кода → во время сборки → перед релизом» с
+  шестью фактическими проверками и отдельным release decision.
+- Mobile final layer убирает повторяющуюся декоративную телеметрию, сохраняет
+  нативный Hero→Signal handoff, удерживает Hero целиком на 320×568 и уплотняет
+  связанные кейсы в Services без потери действия или содержания.
+
 - Release v247 подтверждён на SHA `b7b6a1f`: clean Linux workflow
   `33125562641` завершил полный browser/accessibility gate с результатом
   188 passed / 118 profile-specific skipped / 0 failed и performance 2/2;

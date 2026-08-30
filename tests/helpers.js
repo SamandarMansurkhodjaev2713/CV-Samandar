@@ -3,6 +3,7 @@
 const path = require("path");
 
 const registry = require(path.join(__dirname, "..", "src", "content", "product-registry.js"));
+const featuredProductCount = Number(registry.FEATURED_COUNT) || 4;
 const orderedProducts = registry.slice().sort((a, b) => a.featuredRank - b.featuredRank);
 const caseProducts = orderedProducts.filter((product) => product.presentation === "case");
 const liveProducts = orderedProducts.filter((product) => product.presentation === "live");
@@ -109,6 +110,7 @@ function expectResponsiveProjectImage(expect, image, label) {
 
 module.exports = {
   registry,
+  featuredProductCount,
   orderedProducts,
   caseProducts,
   liveProducts,

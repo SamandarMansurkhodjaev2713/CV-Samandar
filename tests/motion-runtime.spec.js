@@ -60,6 +60,7 @@ test("reduced motion permits a final frame but stops continuous scheduling", asy
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?runtime-reduced=1#hero", { waitUntil: "domcontentloaded" });
   await page.locator("#main").waitFor({ state: "attached" });
+  await expect.poll(() => page.evaluate(() => Boolean(window.__SM_MOTION_RUNTIME))).toBe(true);
 
   const frames = await page.evaluate(async () => {
     const runtime = window.__SM_MOTION_RUNTIME;

@@ -14,6 +14,7 @@
   var OWNER = "SamandarMansurkhodjaev2713";
   var GH = "https://github.com/" + OWNER + "/";
   var PAGES = "https://" + OWNER.toLowerCase() + ".github.io/";
+  var FEATURED_PRODUCT_COUNT = 4;
 
   function locale(name, ru, en, uz) {
     return {
@@ -746,5 +747,9 @@
   });
 
   root.PRODUCT_REGISTRY = PRODUCT_REGISTRY;
-  if (typeof module !== "undefined" && module.exports) module.exports = PRODUCT_REGISTRY;
+  root.PRODUCT_FEATURED_COUNT = FEATURED_PRODUCT_COUNT;
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = PRODUCT_REGISTRY;
+    module.exports.FEATURED_COUNT = FEATURED_PRODUCT_COUNT;
+  }
 })(typeof window !== "undefined" ? window : (typeof globalThis !== "undefined" ? globalThis : {}));

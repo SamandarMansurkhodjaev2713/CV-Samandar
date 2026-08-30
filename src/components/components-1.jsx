@@ -935,16 +935,16 @@ function ProjectFilters({ items, active, onChange, labels }) {
 // list of 17 name/tag/status rows with a floating hover preview — is gone. It
 // read as a spreadsheet: seventeen identical rows in a portfolio whose entire
 // argument is that the work is varied. The section is back to ONE presentation
-// for every project (a card), collapsed to the six strongest on desktop and
+// for every project (a card), collapsed to the four strongest on desktop and
 // expandable on intent, and a swipe carousel on mobile.
 function Projects({ t }) {
   const ref = useRevealRoot([t]);
   const gridRef = useRef(null);
   const items = t.projects.items;
-  // Six strongest product families lead the section on every viewport. The
+  // Four strongest product families lead the desktop section. The
   // complete catalog expands on intent; mobile keeps its swipe carousel, but
   // nobody has to swipe through 21 cards just to leave the block.
-  const FEATURED_PROJECT_COUNT = 6;
+  const FEATURED_PROJECT_COUNT = Number(window.PRODUCT_FEATURED_COUNT) || 4;
   const [isMobileCatalog, setIsMobileCatalog] = useState(() => (
     typeof window.matchMedia === "function" && window.matchMedia("(max-width: 900px)").matches
   ));
@@ -964,7 +964,7 @@ function Projects({ t }) {
     : items.filter((item) => Array.isArray(item.categories) && item.categories.indexOf(activeFilter) !== -1);
   // Mobile is the complete catalogue by design: all products are mounted
   // immediately and the filter reduces the filmstrip without hiding the rest
-  // behind an expansion command. Desktop keeps a curated six-card opening.
+  // behind an expansion command. Desktop keeps a curated four-card opening.
   const chapterItems = isMobileCatalog
     ? filteredItems
     : (expanded ? items : items.slice(0, FEATURED_PROJECT_COUNT));
@@ -994,7 +994,7 @@ function Projects({ t }) {
   }
 
   // Deep-link: arriving at #proj-<slug> (returning from that product's landing)
-  // for a card the collapsed desktop grid hides (index >= 6) → expand the grid
+  // for a card the collapsed desktop grid hides (index >= featured count) → expand the grid
   // so App's scroll-to-hash can actually reach it. Runs once on mount.
   useEffect(() => {
     const id = (window.location.hash || "").replace(/^#/, "");

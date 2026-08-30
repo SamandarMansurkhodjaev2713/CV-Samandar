@@ -68,8 +68,9 @@ test("reduced motion is reactive policy state without removing readable content"
 
   await page.goto("/?policy-contract=1#hero", { waitUntil: "domcontentloaded" });
   await page.locator("#main").waitFor({ state: "attached" });
+  await expect.poll(() => page.evaluate(() => Boolean(window.__SM_MOTION_POLICY))).toBe(true);
 
-    const policy = await page.evaluate(() => ({
+  const policy = await page.evaluate(() => ({
     state: window.__SM_MOTION_POLICY.getState(),
     allowsMotion: window.__SM_MOTION_POLICY.allows("motion"),
     allowsShader: window.__SM_MOTION_POLICY.allows("shader"),

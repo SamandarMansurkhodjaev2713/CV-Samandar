@@ -3,6 +3,7 @@
 const { test, expect } = require("@playwright/test");
 const {
   orderedProducts,
+  featuredProductCount,
   caseProducts,
   liveProducts,
   settleMain,
@@ -16,13 +17,11 @@ test.describe("project catalog", () => {
     expect(orderedProducts.map((product) => product.featuredRank)).toEqual(
       Array.from({ length: 30 }, (_, index) => index + 1)
     );
-    expect(orderedProducts.slice(0, 6).map((product) => product.id)).toEqual([
+    expect(orderedProducts.slice(0, featuredProductCount).map((product) => product.id)).toEqual([
       "dentforma",
       "klawis",
       "ttyl",
       "belfproctor",
-      "softly",
-      "growthops-ai",
     ]);
     expect(orderedProducts.some((product) => /sentinel(?:-edge)?/i.test(product.id))).toBe(false);
   });
@@ -54,9 +53,9 @@ test.describe("project catalog", () => {
     test.skip(isMobile, "Desktop keeps a curated first view; mobile exposes the complete filterable catalog immediately.");
     await settleMain(page, "#projects");
 
-    await expect(page.locator(".proj-card")).toHaveCount(6);
-    await expect(page.locator(".proj-card:visible")).toHaveCount(6);
-    const expand = page.getByRole("button", { name: `Показать ещё ${orderedProducts.length - 6}` });
+    await expect(page.locator(".proj-card")).toHaveCount(featuredProductCount);
+    await expect(page.locator(".proj-card:visible")).toHaveCount(featuredProductCount);
+    const expand = page.getByRole("button", { name: `Показать ещё ${orderedProducts.length - featuredProductCount}` });
     await expect(expand).toBeVisible();
     // The page deliberately uses scroll-linked transforms. Trigger the already
     // verified visible control directly so this state contract cannot race a

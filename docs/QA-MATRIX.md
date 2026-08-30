@@ -1,6 +1,6 @@
 # QA matrix и release gates
 
-Актуально на: 2026-08-28
+Актуально на: 2026-08-30
 
 Тестовый runner: Playwright 1.62.0 + Axe 4.12.1
 
@@ -29,6 +29,25 @@
 выполнен, а открытых critical/high дефектов нет.
 
 ## 2. Текущее доказательство этого изменения
+
+### Локальный release candidate — v248
+
+Контракт кандидата: 30 продуктов, 10 live, 20 privacy-safe case; desktop
+показывает четыре feature-карточки (DentForma, Klawis, TTYL Platform,
+BelfProctor), mobile — все 30 с фильтрами. Hero, navbar и mobile chapter masks
+перестроены без изменения нативного scroll-контракта. Quality — тёмный
+трёхэтапный lifecycle с шестью фактическими проверками и release decision.
+
+| Gate | Статус | Доказательство |
+|---|---|---|
+| Generated/site contract | **GREEN (local candidate)** | `validate` → 30 products / 10 live / 20 case / 3 locales; `check:build` → 67 byte-identical generated artifacts; asset version единообразно поднята до `v248` |
+| Security/dependencies | **GREEN (local candidate)** | secret scan clean; `npm audit --audit-level=high` → 0 vulnerabilities; `git diff --check` без whitespace error |
+| Targeted product regressions | **GREEN (local candidate)** | Catalog/Quality/Services → 21 passed / 5 profile-specific skipped / 0 failed; mobile Hero locale/viewport matrix → green; WebKit menu/catalog critical path → green; 200% text zoom → green |
+| Full Windows browser run | **HOST INCIDENT, localized** | 186 passed / 118 profile-specific skipped; BelfProctor axe worker завершился Chromium OOM, затем chapter-order artifact не записался из-за `ENOSPC`. После освобождения ресурсов оба сценария независимо прошли 1/1 в `--workers=1`. Clean full-run переносится в CI того же SHA; flaky или product PASS не заявляется |
+| Performance budgets | **GREEN (local candidate)** | desktop budget прошёл в общем gate; первый mobile run имел единичный host long task после memory pressure, чистый isolated mobile run → 1/1 без изменения порогов |
+| External live routes | **GREEN (local candidate)** | 10/10 approved HTTPS routes вернули usable HTML |
+| Visual capture | **GREEN (local candidate)** | `qa:visual` → 4/4: desktop/mobile main scenes и все 20 desktop/mobile case pages; browser geometry отдельно подтверждает 320×568 Hero, 4/26 desktop Projects, all-30 mobile Projects и отсутствие document overflow |
+| Deploy и post-deploy smoke | **NOT RUN** | Выполняются только после clean CI и публикации этого SHA из `main` |
 
 ### Подтверждённый production release — v247
 

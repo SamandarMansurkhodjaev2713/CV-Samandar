@@ -1,7 +1,7 @@
 "use strict";
 
 const { test, expect } = require("@playwright/test");
-const { orderedProducts, settleMain, switchMainLanguage, expectNoHorizontalOverflow } = require("./helpers");
+const { orderedProducts, featuredProductCount, settleMain, switchMainLanguage, expectNoHorizontalOverflow } = require("./helpers");
 
 test.describe("Firefox release smoke", () => {
   // Windows may need tens of seconds to hand a real compositor window to the
@@ -15,10 +15,10 @@ test.describe("Firefox release smoke", () => {
     page.on("pageerror", (error) => pageErrors.push(error.message));
 
     await settleMain(page, "#projects");
-    await expect(page.locator(".proj-card")).toHaveCount(6);
-    await expect(page.locator(".proj-card:visible")).toHaveCount(6);
+    await expect(page.locator(".proj-card")).toHaveCount(featuredProductCount);
+    await expect(page.locator(".proj-card:visible")).toHaveCount(featuredProductCount);
 
-    const hiddenCount = orderedProducts.length - 6;
+    const hiddenCount = orderedProducts.length - featuredProductCount;
     await page.getByRole("button", { name: `Показать ещё ${hiddenCount}` }).click();
     await expect(page.locator(".proj-card")).toHaveCount(orderedProducts.length);
     await expect(page.locator(".proj-card:visible")).toHaveCount(orderedProducts.length);

@@ -103,11 +103,12 @@ test("FAQ remains a readable transcript and Quality makes risk-proportional prom
   await expect(page.locator("#faq")).toContainText(/Стоимость всегда обсуждается индивидуально/i);
   await expect(page.locator("#faq")).not.toContainText(/(?:\$|€|£|₽|USD|EUR|RUB|UZS)\s*\d|\d[\d\s.,]*\s*(?:₽|руб(?:лей)?)/i);
 
-  await expect(page.locator("#trust .proto-clause")).toHaveCount(6);
+  await expect(page.locator("#trust .quality-stage")).toHaveCount(3);
+  await expect(page.locator("#trust .quality-check")).toHaveCount(6);
   await expect(page.locator("#trust")).not.toContainText(/CI\/CD на каждый пуш|красный билд не уезжает/i);
   await expect(page.locator("#trust")).toContainText("Автопроверки до релиза");
   await expect(page.locator("#trust")).toContainText("Наблюдаемость по риску");
-  await expect(page.locator("#trust .proto-head-id")).toHaveText("QA / ПРОТОКОЛ");
+  await expect(page.locator("#trust .quality-decision-label")).toHaveText("Решение о релизе");
 });
 
 test("Stack, FAQ and Quality remain readable at phone and compact-landscape sizes", async ({ page }) => {
@@ -118,7 +119,7 @@ test("Stack, FAQ and Quality remain readable at phone and compact-landscape size
       skill: Number.parseFloat(getComputedStyle(document.querySelector(".skx-item")).fontSize),
       question: Number.parseFloat(getComputedStyle(document.querySelector(".dlg-line--q .dlg-text")).fontSize),
       answer: Number.parseFloat(getComputedStyle(document.querySelector(".dlg-line--a .dlg-text")).fontSize),
-      protocol: Number.parseFloat(getComputedStyle(document.querySelector(".proto-v")).fontSize),
+      protocol: Number.parseFloat(getComputedStyle(document.querySelector(".quality-check p")).fontSize),
     }));
     expect(typography.skill).toBeGreaterThanOrEqual(12);
     expect(typography.question).toBeGreaterThanOrEqual(17);

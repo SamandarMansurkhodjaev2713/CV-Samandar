@@ -271,7 +271,7 @@ test("mobile command dock reports the exact chapter with one truthful progress r
   await expectNoHorizontalOverflow(expect, page, "mobile command dock");
 });
 
-test("mobile Hero keeps its CTA, proof rail and Signal handoff collision-free", async ({ page }, testInfo) => {
+test("mobile Hero keeps its CTA and Signal handoff collision-free", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile-chromium", "mobile geometry contract");
   /* This is one deterministic 27-state matrix (3 locales × 9 viewports), not
      a single interaction. Resizing the real motion runtime repeatedly is
@@ -316,7 +316,9 @@ test("mobile Hero keeps its CTA, proof rail and Signal handoff collision-free", 
       const geometry = await page.evaluate(() => {
         const hero = document.getElementById("hero").getBoundingClientRect();
         const signal = document.getElementById("signal").getBoundingClientRect();
-        const proof = document.querySelector(".hero-proof").getBoundingClientRect();
+        const proofNode = document.querySelector(".hero-proof");
+        const proof = proofNode.getBoundingClientRect();
+        const proofVisible = getComputedStyle(proofNode).display !== "none" && proof.height > 0;
         const name = document.querySelector(".hero-name");
         const ink = Array.from(document.querySelectorAll(".hero-name .hero-statement-line"))
           .map((node) => node.getBoundingClientRect());
@@ -331,9 +333,11 @@ test("mobile Hero keeps its CTA, proof rail and Signal handoff collision-free", 
         });
         return {
           heroHeight: hero.height,
+          heroBottom: hero.bottom,
           signalTop: signal.top,
           proofTop: proof.top,
           proofBottom: proof.bottom,
+          proofVisible,
           nameOverflow: name.scrollWidth - name.clientWidth,
           inkLeft: Math.min(...ink.map((rect) => rect.left)),
           inkRight: Math.max(...ink.map((rect) => rect.right)),
@@ -346,12 +350,18 @@ test("mobile Hero keeps its CTA, proof rail and Signal handoff collision-free", 
       expect(geometry.nameOverflow, `masthead overflow at ${caseId}`).toBeLessThanOrEqual(1);
       expect(geometry.inkLeft, `left masthead ink at ${caseId}`).toBeGreaterThanOrEqual(-1);
       expect(geometry.inkRight, `right masthead ink at ${caseId}`).toBeLessThanOrEqual(viewport.width + 1);
-      expect(geometry.proofBottom, `proof below viewport at ${caseId}`).toBeLessThanOrEqual(viewport.height + 1);
+      if (geometry.proofVisible) {
+        expect(geometry.proofBottom, `proof below viewport at ${caseId}`).toBeLessThanOrEqual(viewport.height + 1);
+      }
       expect(geometry.buttons).toHaveLength(2);
       geometry.buttons.forEach((button) => {
         expect(button.height, `touch target at ${caseId}`).toBeGreaterThanOrEqual(44);
         expect(button.textFits, `CTA clipping at ${caseId}`).toBe(true);
-        expect(button.bottom + 7, `CTA/proof overlap at ${caseId}`).toBeLessThanOrEqual(geometry.proofTop);
+        if (geometry.proofVisible) {
+          expect(button.bottom + 7, `CTA/proof overlap at ${caseId}`).toBeLessThanOrEqual(geometry.proofTop);
+        } else {
+          expect(button.bottom, `CTA leaves Hero at ${caseId}`).toBeLessThanOrEqual(Math.min(geometry.heroBottom, geometry.signalTop) + 1);
+        }
         if (language === "UZ" && viewport.width <= 430) {
           expect(button.fontSize, `readable UZ CTA at ${caseId}`).toBeGreaterThanOrEqual(10.5);
         }
