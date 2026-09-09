@@ -697,9 +697,9 @@
       repositoryAliases: [repo("birthday-agent", "private", "source")],
       evidenceLevel: "private_source",
       claims: [
-        { id: "automated-tests", value: 718, unit: "tests", evidenceRef: "docs/PRODUCT-REGISTRY.md#7-birthday-agent", reviewedAt: "2026-08-11" },
-        { id: "authored-templates", value: 260, unit: "templates", evidenceRef: "docs/PRODUCT-REGISTRY.md#7-birthday-agent", reviewedAt: "2026-08-11" },
-        { id: "menu-sections", value: 20, unit: "sections", evidenceRef: "docs/PRODUCT-REGISTRY.md#7-birthday-agent", reviewedAt: "2026-08-11" },
+        { id: "automated-tests", value: 761, unit: "tests", evidenceRef: "docs/PRODUCT-REGISTRY.md#7-birthday-agent", reviewedAt: "2026-09-09" },
+        { id: "authored-templates", value: 260, unit: "templates", evidenceRef: "docs/PRODUCT-REGISTRY.md#7-birthday-agent", reviewedAt: "2026-09-09" },
+        { id: "menu-sections", value: 20, unit: "sections", evidenceRef: "docs/PRODUCT-REGISTRY.md#7-birthday-agent", reviewedAt: "2026-09-09" },
       ],
       privacyBoundary: ["employee names and birth dates", "departments and positions", "organization and channel configuration", "bot identifiers and private spreadsheet fixtures"],
       i18n: locale("Birthday Agent", "Надёжный HR-агент: одно точное поздравление, полный аудит и безопасное восстановление.", "A reliable HR agent: one exact greeting, full audit and safe recovery.", "Ishonchli HR-agent: bitta aniq tabrik, to‘liq audit va xavfsiz tiklash."),

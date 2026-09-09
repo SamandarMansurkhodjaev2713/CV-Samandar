@@ -1026,7 +1026,7 @@
           role: "Product Engineer + Backend + QA",
           signal: "Одна дата проходит через проверяемый workflow, который снижает риск пропуска, дубля и публичной ошибки в персональных данных.",
           quick: [
-            { v: "718 тестов · mypy --strict · risk-based QA" },
+            { v: "761 тест · mypy --strict · risk-based QA" },
             { v: "Excel preview/apply · exactly-once публикация · append-only audit" },
             { v: "PostgreSQL backup/recovery · Docker · документированный QA-контур" },
           ],
@@ -1036,7 +1036,7 @@
           why: "Две независимые защиты — блокировка планировщика и уникальность события — закрывают разные классы отказов. Импорт сначала создаёт черновик различий и ничего не меняет до подтверждения; append-only журнал, миграции и проверяемое восстановление делают эксплуатацию наблюдаемой, а не основанной на доверии к одному процессу.",
           unique: "Это не бот-напоминалка, а небольшой надёжный HR-workflow. Неизвестные колонки переживают round-trip Excel, пол не угадывается по имени, возраст не публикуется, а неоднозначная строка передаётся человеку вместо молчаливого решения.",
           employer: "Кейс показывает full-cycle ownership: разбор неидеальных бизнес-данных, доменные инварианты, Telegram UX, транзакции, безопасность, контейнеризация, миграции, recovery и QA-доказательства в одной поддерживаемой системе.",
-          quality: "718 автоматических проверок организованы по рискам вокруг домена, Excel, интеграций и Telegram-сценариев. Порог покрытия доменного и application-слоёв закреплён отдельно; исправленные дефекты получают регрессионные проверки. Сетевой Telegram и часы изолируются, а критические сценарии проверяются против реального PostgreSQL.",
+          quality: "761 автоматический тест организован по рискам вокруг домена, Excel, интеграций и Telegram-сценариев. Порог покрытия доменного и application-слоёв закреплён отдельно; исправленные дефекты получают регрессионные проверки. Сетевой Telegram и часы изолируются, а критические сценарии проверяются против реального PostgreSQL.",
           boundary: "Публичная визитка не раскрывает имена и даты рождения сотрудников, отделы, должности, исходные Excel-файлы, организацию, каналы, Telegram identifiers, credentials и приватный source. Числовые данные описывают проверенный test suite репозитория на дату аудита, а не production SLA.",
         },
         en: {
@@ -1044,7 +1044,7 @@
           role: "Product Engineer + Backend + QA",
           signal: "One date moves through a verifiable workflow designed to reduce omissions, duplicates and public personal-data mistakes.",
           quick: [
-            { v: "718 tests · mypy --strict · risk-based QA" },
+            { v: "761 tests · mypy --strict · risk-based QA" },
             { v: "Excel preview/apply · exactly-once publishing · append-only audit" },
             { v: "PostgreSQL backup/recovery · Docker · documented QA system" },
           ],
@@ -1054,7 +1054,7 @@
           why: "The scheduler lock and event uniqueness are independent protections against different failure classes. Import creates a change draft and mutates nothing before confirmation; an append-only audit trail, migrations and verified restore procedures make operation observable rather than dependent on one healthy process.",
           unique: "This is not a reminder bot but a compact reliable HR workflow. Unknown spreadsheet columns survive an import/export round trip, gender is never inferred from a name, age is never published, and ambiguous rows are delegated to a person instead of being silently guessed.",
           employer: "The case demonstrates full-cycle ownership across imperfect business data, domain invariants, Telegram UX, transactions, security, containers, migrations, recovery and QA evidence in one maintainable system.",
-          quality: "The 718 automated checks are organised by risk across the domain, Excel, integrations and Telegram scenarios. Domain and application coverage have a separate enforced threshold; corrected defects receive regression checks. Telegram networking and clocks are isolated, while critical scenarios run against real PostgreSQL.",
+          quality: "The 761 automated tests are organised by risk across the domain, Excel, integrations and Telegram scenarios. Domain and application coverage have a separate enforced threshold; corrected defects receive regression checks. Telegram networking and clocks are isolated, while critical scenarios run against real PostgreSQL.",
           boundary: "The public case exposes no employee names or birth dates, departments, roles, source spreadsheets, organization identity, channels, Telegram identifiers, credentials or private source. Numeric claims describe the repository test suite at audit time, not a production SLA.",
         },
         uz: {
@@ -1062,7 +1062,7 @@
           role: "Product Engineer + Backend + QA",
           signal: "Bitta sana o‘tkazib yuborish, dubl va shaxsiy ma’lumotdagi ommaviy xato xavfini kamaytiradigan tekshiriluvchi workflow’dan o‘tadi.",
           quick: [
-            { v: "718 test · mypy --strict · risk-based QA" },
+            { v: "761 test · mypy --strict · risk-based QA" },
             { v: "Excel preview/apply · exactly-once yuborish · append-only audit" },
             { v: "PostgreSQL backup/recovery · Docker · hujjatlashtirilgan QA-kontur" },
           ],
@@ -1072,7 +1072,7 @@
           why: "Scheduler lock va event uniqueness turli nosozlik sinflarini mustaqil yopadi. Import avval farqlar draftini yaratadi va tasdiqqacha ma’lumotni o‘zgartirmaydi; append-only audit, migration va tekshirilgan restore ekspluatatsiyani bitta process’ga ishonishdan ko‘ra kuzatiladigan qiladi.",
           unique: "Bu reminder-bot emas, kichik va ishonchli HR-workflow. Noma’lum Excel ustunlari import/export round-trip’dan omon qoladi, ism bo‘yicha jins taxmin qilinmaydi, yosh e’lon qilinmaydi, noaniq satr esa jim taxmin o‘rniga insonga beriladi.",
           employer: "Keys to‘liq ownership’ni ko‘rsatadi: nomukammal biznes-ma’lumot, domain invariant, Telegram UX, tranzaksiya, xavfsizlik, container, migration, recovery va QA-dalil bitta qo‘llab-quvvatlanadigan tizimda.",
-          quality: "718 avtomatik tekshiruv domain, Excel, integration va Telegram ssenariylari bo‘yicha risk asosida tashkil qilingan. Domain va application coverage uchun alohida majburiy threshold bor; tuzatilgan defect’lar regression tekshiruvlari bilan mustahkamlanadi. Telegram tarmog‘i va vaqt ajratiladi, kritik ssenariylar esa real PostgreSQL’da tekshiriladi.",
+          quality: "761 avtomatik test domain, Excel, integration va Telegram ssenariylari bo‘yicha risk asosida tashkil qilingan. Domain va application coverage uchun alohida majburiy threshold bor; tuzatilgan defect’lar regression tekshiruvlari bilan mustahkamlanadi. Telegram tarmog‘i va vaqt ajratiladi, kritik ssenariylar esa real PostgreSQL’da tekshiriladi.",
           boundary: "Ochiq vizitka xodim ismi va tug‘ilgan sanasi, bo‘lim, lavozim, boshlang‘ich Excel, tashkilot, kanal, Telegram identifier, credential va private source’ni ochmaydi. Raqamlar audit sanasidagi repository test suite’ni bildiradi, production SLA’ni emas.",
         },
       },

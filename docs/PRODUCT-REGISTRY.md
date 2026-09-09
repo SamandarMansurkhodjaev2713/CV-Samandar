@@ -189,10 +189,10 @@ evidence/index-инфраструктурой и карточек не полу�
 
 ### 7. Birthday Agent
 
-- `automated-tests`: **718 tests**;
+- `automated-tests`: **761 tests**;
 - `authored-templates`: **260 templates**;
 - `menu-sections`: **20 sections**;
-- reviewed at: `2026-08-11`;
+- reviewed at: `2026-09-09`;
 - scope: проверенный private repository и его документированный test suite;
   значения не являются production SLA или общим счётчиком портфолио.
 
