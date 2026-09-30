@@ -30,8 +30,8 @@ const CONTENT = {
       eyebrow_mobile: "Full-stack · AI Automation · QA",
       name: "Samandar",
       statement_lines: ["От задачи —", "к продукту."],
-      statement_aria: "От задачи — к работающему продукту.",
-      signature: "Samandar Mansurkhodjaev · Product engineer",
+      statement_aria: "От задачи — к продукту.",
+      signature: "Самандар Мансурходжаев · Product Engineer",
       title_lines: ["Product Engineer.", "Full-stack Developer.", "AI Automation · QA."],
       tagline:
         "Проектирую и выпускаю цифровые продукты: интерфейс, full-stack, AI-автоматизация и QA. Сам отвечаю за решения от первого разговора до проверенного релиза.",
@@ -73,7 +73,7 @@ const CONTENT = {
       ],
     },
     about: {
-      eyebrow: "Profile",
+      eyebrow: "Об авторе",
       title: "От задачи до релиза — один ответственный",
       title_lines: ["От задачи", "до релиза —", "один ответственный"],
       proof_label: "Личная отметка · Контур ответственности",
@@ -111,7 +111,7 @@ const CONTENT = {
       ],
     },
     projects: {
-      eyebrow: "Selected work",
+      eyebrow: "Проекты",
       title: "Избранные проекты",
       items: [
         {
@@ -250,14 +250,14 @@ const CONTENT = {
       cta: "Смотреть кейс",
     },
     skills: {
-      eyebrow: "Stack matrix",
+      eyebrow: "Компетенции",
       title: "Технический стек",
       // Rendered as a band ACROSS the matrix rather than as a sixth row — the
       // list used to put QA next to Frontend and Backend, which quietly said
       // "one of the six things I do" about the thing that is meant to be the
       // differentiator. See Skills() in components-1.jsx.
       qa_note: "слой поверх всего",
-      lead: "Не зоопарк логотипов — сетка инструментов, которыми реально работаю: full-stack, AI и QA-инженерия.",
+      lead: "Инструменты, которые использую в продуктах: интерфейс, сервер, AI и проверка качества.",
       groups: [
         { k: "Frontend", slug: "frontend", items: ["TypeScript", "React", "Next.js", "Vite", "Tailwind", "Three.js"] },
         { k: "Backend", slug: "backend", items: ["Python", "FastAPI", "Node.js", "NestJS", "Rust", "REST · WebSocket"] },
@@ -268,7 +268,7 @@ const CONTENT = {
       ],
     },
     services: {
-      eyebrow: "Services",
+      eyebrow: "Сотрудничество",
       title: "Что можно заказать",
       meta: "8 · услуг",
       flow_to: "в",
@@ -309,7 +309,7 @@ const CONTENT = {
       ],
     },
     cv: {
-      eyebrow: "Experience",
+      eyebrow: "Опыт",
       title: "CV / Опыт",
       lead: "Честный список того, что я сделал — без раздутого стажа.",
       document: {
@@ -382,7 +382,7 @@ const CONTENT = {
       },
     },
     process: {
-      eyebrow: "Method",
+      eyebrow: "Процесс",
       title: "Как я работаю",
       lead: "Работа движется через четыре проверяемых перехода — от общей задачи к управляемому релизу.",
       meta: "4 перехода · 4 результата · 4 QA-гейта",
@@ -560,7 +560,7 @@ const CONTENT = {
       ],
     },
     contact: {
-      eyebrow: "Project brief",
+      eyebrow: "Контакт",
       title: "Начнём с ясной задачи",
       // Closes the ring: the page opens on the name at full width and ends on
       // the same name, small, as a signature. See the finale block in Contact().
@@ -838,7 +838,7 @@ const CONTENT = {
       eyebrow: "Stack matrix",
       title: "Technical stack",
       qa_note: "a layer over everything",
-      lead: "Not a logo zoo — the toolkit I actually ship with: full-stack, AI and QA engineering.",
+      lead: "Tools I use to build and verify products: interfaces, backend, AI and quality assurance.",
       groups: [
         { k: "Frontend", slug: "frontend", items: ["TypeScript", "React", "Next.js", "Vite", "Tailwind", "Three.js"] },
         { k: "Backend", slug: "backend", items: ["Python", "FastAPI", "Node.js", "NestJS", "Rust", "REST · WebSocket"] },
@@ -1411,7 +1411,7 @@ const CONTENT = {
       eyebrow: "Stack matrix",
       title: "Texnik stek",
       qa_note: "hammasi ustidagi qatlam",
-      lead: "Logotiplar to'plami emas — haqiqatan ishlatadigan asboblar: full-stack, AI va QA-muhandislik.",
+      lead: "Mahsulotlarni yaratish va tekshirish uchun ishlatadigan vositalar: interfeys, server, AI va sifat nazorati.",
       groups: [
         { k: "Frontend", slug: "frontend", items: ["TypeScript", "React", "Next.js", "Vite", "Tailwind", "Three.js"] },
         { k: "Backend", slug: "backend", items: ["Python", "FastAPI", "Node.js", "NestJS", "Rust", "REST · WebSocket"] },
@@ -1983,8 +1983,8 @@ const PROJECT_ADDITIONS = [
   {
     slug: "dostupnoe-pravo",
     name: "Доступное Право",
-    status: "LIVE",
-    url: "https://dostupnoe-pravo-alpha.vercel.app/",
+    status: "PROTOTYPE",
+    url: "projects/dostupnoe-pravo/",
     github: "https://github.com/SamandarMansurkhodjaev2713/dostupnoe-pravo",
     stack: ["Next.js 16", "TypeScript", "Supabase", "PostgreSQL", "Vitest"],
     i18n: {
@@ -1993,21 +1993,21 @@ const PROJECT_ADDITIONS = [
         problem: "Юридическая практика теряет контекст между клиентом, статусом дела и следующим шагом.",
         solution: "Рабочая CRM с таблицей и Kanban, историей статусов, RLS, уведомлениями и изолированной демо-средой.",
         role: "Full-stack + Product + QA",
-        outcome: "live CRM · автоматическая регрессия · CI",
+        outcome: "CRM-прототип · публичный код · демо недоступно",
       },
       en: {
         tag: "LEGALTECH · CRM",
         problem: "A small legal practice loses context between client lists, notes, case status and the next action.",
         solution: "A working CRM with table and Kanban views, status history, RLS, notifications and an isolated demo workspace.",
         role: "Full-stack + Product + QA",
-        outcome: "live CRM · automated regression · CI",
+        outcome: "CRM prototype · public source · demo unavailable",
       },
       uz: {
         tag: "LEGALTECH · CRM",
         problem: "Xususiy yuridik amaliyot mijozlar, qaydlar, ish holati va keyingi qadam orasidagi kontekstni yo‘qotadi.",
         solution: "Jadval va Kanban, status tarixi, RLS, bildirishnomalar va izolyatsiyalangan demo muhiti bilan ishlaydigan CRM.",
         role: "Full-stack + Product + QA",
-        outcome: "live CRM · avtomatik regressiya · CI",
+        outcome: "CRM prototipi · ochiq kod · demo mavjud emas",
       },
     },
   },

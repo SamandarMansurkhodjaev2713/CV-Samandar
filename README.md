@@ -2,18 +2,21 @@
 
 Интерактивное трёхъязычное портфолио Product Engineer / AI Automation / QA. Это статический продуктовый сайт с кинематографичной навигацией, адаптивной motion-системой и отдельными доказательными страницами проектов — без runtime-бэкенда и клиентской JSX-компиляции.
 
-Текущий каталог содержит **29 канонических продуктов**:
+Текущий каталог содержит **30 канонических продуктов**:
 
-- **10 live-проектов** ведут на доступные внешние сайты;
-- **19 case-проектов** раскрываются на безопасных страницах внутри портфолио;
+- **9 live-проектов** ведут на доступные внешние сайты;
+- **21 case-проект** раскрывается на безопасной странице внутри портфолио;
 - главная и все case-страницы поддерживают **RU / EN / UZ**;
-- 19 кейсов × 3 языка генерируются как **57 самостоятельных HTML-страниц**.
+- 21 кейс × 3 языка генерируется как **63 самостоятельные HTML-страницы** (64 URL в sitemap).
 
-> Runtime `v2.14.1 / v237` опубликован на GitHub Pages из merge SHA `adc3e861`.
-> Pages workflow `32084173961` завершил build/deploy/verify-production;
-> независимый production smoke 3/3, live routes 9/9 и cache graph
-> 30 refs `v237` / 0 refs `v236` подтверждены. Physical-device/AT остаются
-> отдельными незавершёнными доказательствами.
+«Доступное Право» временно представлено кейсом с публичным кодом: прежнее демо
+на Vercel возвращает 404 (проверено 2026-10-01). Это не приватный проект и не
+обещание работающего демо.
+
+> Текущий кандидат — asset version `v250`. Проверки и границы доказательств
+> фиксируются в [QA matrix](docs/QA-MATRIX.md); статус production подтверждается
+> job `verify-production` соответствующего Pages workflow, не этим статическим
+> описанием. Physical-device/AT остаются отдельными внешними проверками.
 
 ## Технологии
 
@@ -57,7 +60,7 @@ node scripts/static-server.js 4173
 | `npm run qa:submission` | Снимает с production 8 submission stills, 60–90-секундный desktop review-video, manifest и contact sheet в `tmp/submission-media/`. |
 | `npm run test:a11y` | Запускает accessibility-набор с axe и keyboard/focus-проверками. |
 | `npm run scan:secrets` | Проверяет кандидатов на коммит на признаки секретов и приватных данных. |
-| `npm run check:live` | С сетевыми retry проверяет, что 10 live-маршрутов возвращают пригодный HTML. |
+| `npm run check:live` | С сетевыми retry проверяет, что 9 live-маршрутов возвращают пригодный HTML. |
 | `npm run test:production` | После deploy проверяет production-главную, 57 case URL и возврат к точной карточке. |
 | `npm run monitor:production` | Измеряет реальный Pages URL в desktop/mobile Chromium и сохраняет синтетический production-отчёт без пользовательского трекинга. |
 | `npm run bump:assets` | Перед релизной сборкой атомарно повышает единую версию cache-busting ссылок. |
@@ -131,7 +134,7 @@ Playwright покрывает:
 ## GitHub Pages
 
 - `.github/workflows/quality.yml` запускается для pull request и вручную: locked install, dependency audit, secret scan, deterministic build, документационные контракты, generated drift и полный test suite.
-- `.github/workflows/deploy-pages.yml` настроен на push в `main` и ручной запуск. Он повторяет quality gate, формирует минимальный статический `_site`, публикует Pages, а затем отдельным job запускает production smoke и проверку 10 live URL.
+- `.github/workflows/deploy-pages.yml` настроен на push в `main` и ручной запуск. Он повторяет quality gate, формирует минимальный статический `_site`, публикует Pages, а затем отдельным job запускает production smoke и проверку 9 live URL.
 - `.github/workflows/production-monitor.yml` каждые шесть часов и вручную повторяет production smoke, снимает синтетические desktop/mobile vitals и сохраняет JSON evidence на 14 дней.
 - Deploy job получает только `pages: write` и `id-token: write`; build job работает с `contents: read`.
 

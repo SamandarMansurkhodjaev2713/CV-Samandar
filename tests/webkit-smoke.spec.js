@@ -14,7 +14,7 @@ async function activateVerifiedControl(locator, label) {
     await locator.click({ timeout: 15000 });
     return;
   }
-  const state = await locator.evaluate((element) => {
+  const inspectControl = () => locator.evaluate((element) => {
     const rect = element.getBoundingClientRect();
     const x = rect.left + rect.width / 2;
     const y = rect.top + rect.height / 2;
@@ -50,6 +50,14 @@ async function activateVerifiedControl(locator, label) {
       disabled: Boolean(element.disabled),
     };
   });
+  // aria-expanded publishes intent before the authored opacity entrance has
+  // painted. Wait for the same real visibility/hit-test contract rather than
+  // mistaking the first zero-opacity frame for a permanently hidden control.
+  let state;
+  await expect.poll(async () => {
+    state = await inspectControl();
+    return state.visible && state.ownsHit;
+  }, { timeout: 7000, message: label + " must finish its readable entrance" }).toBe(true);
   expect(state.inViewport, label + " " + JSON.stringify(state)).toBe(true);
   expect(state.visible, label + " " + JSON.stringify(state)).toBe(true);
   expect(state.ownsHit, label + " " + JSON.stringify(state)).toBe(true);

@@ -8,14 +8,14 @@
 
 ## Decision
 
-`src/content/product-registry.js` является единственным source of truth для публичной идентичности 29 продуктов:
+`src/content/product-registry.js` является единственным source of truth для публичной идентичности 30 продуктов:
 
 - stable id/slug, порядок и portfolio state;
 - lifecycle, confidentiality, presentation (`live` или `case`) и evidence level;
 - live/GitHub/case routes, repository aliases, визуал и privacy boundary;
 - краткие RU/EN/UZ name/descriptor.
 
-Расширенный текст главной остаётся в `src/content/content.js`, а содержание всех 19 кейсов — в `src/projects/landings-data.js`. Валидатор связывает эти слои и останавливает build, если нарушены уникальность, порядок, 29/10/19 split, route contract, локальный паритет, asset contract или public-safety boundary.
+Расширенный текст главной остаётся в `src/content/content.js`, а содержание всех 21 кейсов — в `src/projects/landings-data.js`. Валидатор связывает эти слои и останавливает build, если нарушены уникальность, порядок, 30/9/21 split, route contract, локальный паритет, asset contract или public-safety boundary. Недоступное демо не остаётся live CTA: подтверждённый публичный код можно представить отдельным кейсом без изменения confidentiality.
 
 ## Consequences
 

@@ -90,7 +90,8 @@
 
 - Требуется Node.js 20+ и npm ci.
 - npm run check:build выполняет две сборки и требует байтовой идентичности
-54 generated artifact.
+всех generated artifacts (текущий каталог: 70). Набор вычисляется из generated
+файлов, а не ограничивается историческим количеством.
 - Asset version в index.html едина для всех ссылок. Поднимать её только один
   раз перед release командой npm run bump:assets -- NEXT, затем снова собирать
   и тестировать.

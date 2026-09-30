@@ -1361,10 +1361,61 @@
     },
   });
 
+  // Public demo returned 404 on 2026-10-01; retain source evidence, not a live claim.
+  LANDINGS["dostupnoe-pravo"] = {
+    slug: "dostupnoe-pravo", visual: "dostupnoe-pravo.webp", name: "Доступное Право",
+    status: "PROTOTYPE",
+    stack: ["Next.js 16", "React 19", "TypeScript", "Supabase", "PostgreSQL", "Zod", "Vitest"],
+    github: "https://github.com/SamandarMansurkhodjaev2713/dostupnoe-pravo",
+    qa: null,
+    i18n: {
+      ru: {
+        tag: "LEGALTECH · CRM", role: "Full-stack + Product + QA",
+        signal: "Клиент, история дела и следующий шаг — в одном рабочем контексте.",
+        quick: [{v: "Таблица и Kanban для работы с делами"}, {v: "Изоляция рабочих пространств и история статусов"}, {v: "Публичный код и проверяемые архитектурные решения"}],
+        what: "CRM-прототип для юридической практики: список клиентов, карточка дела, заметки, допустимые переходы статусов и ближайшее действие. Таблица и Kanban показывают одни и те же данные, а поиск и фильтры помогают быстро вернуться к нужному делу.",
+        problem: "Когда контакты, заметки и договорённости живут в разных местах, юрист теряет контекст и пропускает следующий шаг. Здесь вся работа с делом собрана в одном инструменте, без переключения между отдельными списками.",
+        architecture: "Next.js-интерфейс обращается к серверным действиям. Слои web, infrastructure, application и domain отделяют представление от правил дела. PostgreSQL хранит состояние и историю; workspace-границы ограничивают доступ, а смена статуса использует compare-and-swap вместо перезаписи чужого изменения.",
+        why: "Правила переходов и целостность данных важнее внешнего вида доски. Серверные границы и проверки базы позволяют развивать интерфейс, не переносить секреты в браузер и не смешивать рабочие пространства.",
+        unique: "В небольшом прототипе проработаны реальные рабочие детали: история статусов, следующий шаг, поиск, оптимистичные изменения и независимые уведомления. Ошибка внешнего канала не должна отменять сохранение клиента.",
+        employer: "Кейс показывает связку продуктового UX, типизированного фронтенда, серверных сценариев и защиты данных. Подходит для обсуждения CRM и внутренних инструментов, где важны контроль процесса и поддерживаемая архитектура.",
+        quality: "Публичный репозиторий описывает Vitest-проверки домена, use-cases, устойчивости, переводов и архитектурных границ. README отдельно документирует проверки инвариантов PostgreSQL. Это сведения из исходного проекта, а не новый прогон его тестов в рамках портфолио.",
+        boundary: "Это прототип, не обещание готовой CRM для реальной юридической практики. На 1 октября 2026 года публичное демо недоступно: прежний адрес возвращает 404. До восстановления демо здесь доступны описание и публичный код. Реальные клиенты, материалы дел и настройки развёртывания не раскрываются.",
+      },
+      en: {
+        tag: "LEGALTECH · CRM", role: "Full-stack + Product + QA",
+        signal: "The client, case history and next action share one working context.",
+        quick: [{v: "Table and Kanban views for case work"}, {v: "Workspace isolation and status history"}, {v: "Public source and inspectable architecture decisions"}],
+        what: "A legal-practice CRM prototype with client lists, case details, notes, valid status transitions and the next action. Table and Kanban views operate on the same data; search and filters help return to a specific case quickly.",
+        problem: "Scattered contacts, notes and agreements make it easy to lose context and miss the next action. This prototype puts case work in one tool instead of separate lists.",
+        architecture: "The Next.js interface calls server actions. Web, infrastructure, application and domain layers separate presentation from case rules. PostgreSQL stores state and history; workspace boundaries constrain access and status changes use compare-and-swap rather than overwriting another user's update.",
+        why: "Valid transitions and data integrity matter more than the appearance of a board. Server boundaries and database checks let the interface evolve without sending secrets to the browser or mixing workspaces.",
+        unique: "The compact prototype addresses real workflow details: status history, next actions, search, optimistic updates and independent notifications. An external channel failure should not undo a saved client.",
+        employer: "The case connects product UX, typed frontend development, server use-cases and data protection. It supports a discussion about CRM and internal tools where process control and maintainable architecture matter.",
+        quality: "The public repository documents Vitest checks for the domain, use-cases, resilience, translations and architectural boundaries. Its README also describes PostgreSQL invariant checks. These are source-project statements, not a fresh execution of its tests during this portfolio update.",
+        boundary: "This is a prototype, not a production CRM promise. As of 1 October 2026 the public demo is unavailable: its previous address returns 404. Until the demo is restored, the description and public source remain available here. No real client records, case materials or deployment configuration are exposed.",
+      },
+      uz: {
+        tag: "LEGALTECH · CRM", role: "Full-stack + Product + QA",
+        signal: "Mijoz, ish tarixi va keyingi qadam — bitta ish muhitida.",
+        quick: [{v: "Ishlar uchun jadval va Kanban ko‘rinishi"}, {v: "Workspace izolyatsiyasi va holatlar tarixi"}, {v: "Ochiq kod va tekshiriladigan arxitektura qarorlari"}],
+        what: "Yuridik amaliyot uchun CRM prototipi: mijozlar ro‘yxati, ish kartasi, qaydlar, ruxsat etilgan holat o‘tishlari va keyingi qadam. Jadval va Kanban bir xil ma’lumot bilan ishlaydi; qidiruv va filtrlar kerakli ishga tez qaytishga yordam beradi.",
+        problem: "Kontakt, qayd va kelishuvlar turli joylarda saqlansa, yurist kontekstni yo‘qotadi va keyingi qadamni o‘tkazib yuboradi. Prototip ish bilan bog‘liq amallarni alohida ro‘yxatlar o‘rniga bitta vositada jamlaydi.",
+        architecture: "Next.js interfeysi server action’larga murojaat qiladi. Web, infrastructure, application va domain qatlamlari ko‘rinishni ish qoidalaridan ajratadi. PostgreSQL holat va tarixni saqlaydi; workspace chegaralari kirishni cheklaydi, holat o‘zgarishi esa boshqa tahrirni ustidan yozish o‘rniga compare-and-swap’dan foydalanadi.",
+        why: "To‘g‘ri holat o‘tishlari va ma’lumot yaxlitligi doska ko‘rinishidan muhimroq. Server chegaralari va baza tekshiruvlari interfeysni rivojlantirish, sirlarni brauzerga yubormaslik va ish muhitlarini aralashtirmaslikka yordam beradi.",
+        unique: "Kichik prototipda amaliy tafsilotlar ishlangan: holat tarixi, keyingi qadam, qidiruv, optimistik o‘zgarishlar va mustaqil bildirishnomalar. Tashqi kanal xatosi saqlangan mijozni bekor qilmasligi kerak.",
+        employer: "Keys product UX, typed frontend, server ssenariylari va ma’lumot himoyasini birlashtiradi. Jarayon nazorati va qo‘llab-quvvatlanadigan arxitektura muhim bo‘lgan CRM hamda ichki vositalarni muhokama qilishga mos.",
+        quality: "Ochiq repozitoriy domain, use-case, barqarorlik, tarjima va arxitektura chegaralari uchun Vitest tekshiruvlarini hujjatlashtiradi. README PostgreSQL invariant tekshiruvlarini ham bayon qiladi. Bu asl loyiha dalillari; portfolioni yangilash vaqtida loyiha testlari qayta bajarilgani haqida da’vo emas.",
+        boundary: "Bu prototip, real yuridik amaliyot uchun tayyor CRM va’dasi emas. 2026-yil 1-oktabr holatida ochiq demo mavjud emas: avvalgi manzil 404 qaytaradi. Demo tiklanguncha bu yerda tavsif va ochiq kod mavjud. Haqiqiy mijozlar, ish materiallari va deployment sozlamalari oshkor etilmaydi.",
+      },
+    },
+  };
+
   // Every case page gets a small, code-native system map. Labels are technical
   // layer names rather than marketing copy, so they remain useful in RU/EN/UZ
   // and cannot drift from the architecture paragraph.
   var LANDING_FLOWS = {
+    "dostupnoe-pravo": ["Next.js UI", "Server actions", "Case domain", "PostgreSQL + workspaces", "History + notifications"],
     ttyl: ["Client apps", "API + RBAC", "Domain services", "PostgreSQL · Redis · MinIO", "Audit + QA"],
     "task-manager": ["Telegram", "Bot adapter", "Task domain", "SQLx · Outbox", "CI + regression"],
     marketbot: ["Offers", "gRPC services", "RabbitMQ events", "PostgreSQL", "Admin + alerts"],

@@ -1,6 +1,6 @@
 # Канонический реестр продуктов
 
-Актуально на: 2026-08-27
+Актуально на: 2026-10-01 (повторный аудит; состав каталога не изменён)
 
 Машинный источник истины: `src/content/product-registry.js`
 
@@ -10,11 +10,11 @@
 
 Портфолио содержит ровно **30 уникальных продуктов**:
 
-- **10 live-продуктов**: primary CTA ведёт на работающий внешний сайт;
-- **20 case-продуктов**: primary CTA ведёт на безопасную внутреннюю визитку;
+- **9 live-продуктов**: primary CTA ведёт на работающий внешний сайт;
+- **21 case-продукт**: primary CTA ведёт на безопасную внутреннюю визитку;
 - **3 полные локали**: `ru`, `en`, `uz`;
-- **60 generated landing HTML**: 20 case-продуктов × 3 локали;
-- **61 URL в sitemap**: главная + 60 локализованных case-маршрутов.
+- **63 generated landing HTML**: 21 case-продукт × 3 локали;
+- **64 URL в sitemap**: главная + 63 локализованных case-маршрута.
 
 Единица учёта — продукт, а не репозиторий. Публичная витрина, приватный source,
 предыдущая реализация, дочерний модуль и evidence-репозиторий могут принадлежать
@@ -45,7 +45,7 @@
 | 16 | `forge-learning-os` / `forge` | Forge / Learning OS | catalog / build / nda | `projects/forge/` | — |
 | 17 | `marketbot` / `marketbot` | Marketbot | catalog / build / nda | `projects/marketbot/` | — |
 | 18 | `gorilla-five-signals` / `gorilla-five-signals` | Gorilla — Five Signals Concept | catalog / demo / public | `https://samandarmansurkhodjaev2713.github.io/gorilla-five-signals-concept/uz/` | `https://github.com/SamandarMansurkhodjaev2713/gorilla-five-signals-concept` |
-| 19 | `dostupnoe-pravo` / `dostupnoe-pravo` | Доступное Право | catalog / live / public | `https://dostupnoe-pravo-alpha.vercel.app/` | `https://github.com/SamandarMansurkhodjaev2713/dostupnoe-pravo` |
+| 19 | `dostupnoe-pravo` / `dostupnoe-pravo` | Доступное Право | catalog / prototype / public case | `projects/dostupnoe-pravo/` | `https://github.com/SamandarMansurkhodjaev2713/dostupnoe-pravo` |
 | 20 | `car-superapp` / `car-superapp` | CAR Superapp | catalog / discovery / private_source | `projects/car-superapp/` | — |
 | 21 | `task-automation` / `task-manager` | Task-manager / Task Manage Bot | catalog / demo / private_source | `projects/task-manager/` | `https://github.com/SamandarMansurkhodjaev2713/Task-manager` |
 | 22 | `cardioguard` / `cardioguard` | CardioGuard | catalog / demo / public | `https://samandarmansurkhodjaev2713.github.io/cardioguard/` | `https://github.com/SamandarMansurkhodjaev2713/cardioguard` |
@@ -233,9 +233,20 @@ evidence/index-инфраструктурой и карточек не полу�
 
 ## 7. Машинные инварианты
 
+### Дополнительный audit — 2026-10-01
+
+Authenticated GitHub repository inventory сопоставлен с каноническими aliases.
+`YuliaCV` и `thirty-seven` исключены по прямому решению владельца.
+`ITPU_3D_Meta_VR_Game` — пустой public repository: contents API возвращает
+`This repository is empty`, опубликованного Pages-сайта нет. До появления
+проверяемого продукта он не получает карточку или выдуманное описание.
+Повторные aliases и служебные repos не превращены в продукты. Текущий состав
+остаётся 30 / 9 live / 21 case; числовые claims без нового source review не
+переписаны из кратких repository descriptions.
+
 Сборка останавливается, если нарушен хотя бы один контракт:
 
-- количество отличается от 30, а split — от 10 live / 20 case;
+- количество отличается от 30, а split — от 9 live / 21 case;
 - повторяются `id`, `slug`, display name, rank, live/GitHub/case URL;
 - route не соответствует `presentation` и `slug`;
 - публичный GitHub CTA не подтверждён public alias;

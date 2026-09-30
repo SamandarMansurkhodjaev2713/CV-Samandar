@@ -184,6 +184,18 @@
       return { from: from, to: to, label: label || "", via: via || null };
     }
     switch (slug) {
+      case "dostupnoe-pravo": return {
+        kind: "case-history",
+        nodes: [
+          n("table", "Таблица клиентов", "Client table", "Mijozlar jadvali", 32, 62, 170),
+          n("board", "Kanban-доска", "Kanban board", "Kanban doskasi", 32, 258, 170),
+          n("actions", "Серверные действия", "Server actions", "Server amallari", 270, 158, 176),
+          n("rules", "Правила статусов", "Status rules", "Holat qoidalari", 510, 158, 170),
+          n("state", "Состояние + история", "State + history", "Holat + tarix", 758, 62, 196),
+          n("notify", "Уведомления", "Notifications", "Bildirishnomalar", 758, 258, 176)
+        ],
+        edges: [e("table", "actions"), e("board", "actions"), e("actions", "rules"), e("rules", "state", "CAS"), e("rules", "notify", tr(lang, "после записи", "after save", "saqlangach"))]
+      };
       case "ttyl": return {
         kind: "boundary",
         nodes: [
@@ -643,7 +655,7 @@
     return (
       '<div class="lp-page lp-page--' + esc(p.slug) + '" style="--lp-accent:' + theme[0] + ';--lp-accent-rgb:' + theme[1] + '">' +
         '<header class="lp-bar">' +
-          '<a class="lp-back mono" href="' + base + "#proj-" + esc(p.slug) + '"><span class="lp-back-arr">←</span><span>SAMANDAR</span></a>' +
+          '<a class="lp-back mono" aria-label="' + esc(ui.allProjects + ' — Samandar') + '" href="' + base + "#proj-" + esc(p.slug) + '"><img class="lp-back-mark" src="' + base + 'assets/brand/samandar-mark.svg" width="32" height="32" alt=""><span class="lp-back-arr">←</span><span>SAMANDAR</span></a>' +
           '<div class="lp-current mono"><span class="lp-current-index">01</span><span class="lp-current-divider">/05</span><b class="lp-current-name">' + esc(ui.chapters[0]) + '</b></div>' +
           '<div class="lp-bar-right">' +
             (p.status ? '<span class="lp-status mono lp-status--' + esc(String(p.status).toLowerCase()) + '">' + esc(p.status) + "</span>" : "") +

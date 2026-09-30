@@ -4,8 +4,8 @@
 
 Порядок выпуска статического портфолио на GitHub Pages без ручного расхождения
 между source, generated HTML и production. Текущий контракт: 30 продуктов,
-10 live-маршрутов, 20 case-маршрутов, RU/EN/UZ, 60 generated case pages и
-61 URL в sitemap.
+9 live-маршрутов, 21 case-маршрут, RU/EN/UZ, 63 generated case pages и
+64 URL в sitemap.
 
 Production:
 https://samandarmansurkhodjaev2713.github.io/CV-Samandar/
@@ -45,10 +45,10 @@ Baseline rollback: tag pre-awwwards-v210.
 
 До визуальной приёмки отдельно подтвердить текущий продуктовый контракт:
 
-- validator сообщает 30 products / 10 live / 20 case / 3 locale, сборка — 60
-  case HTML, sitemap — 61 URL;
+- validator сообщает 30 products / 9 live / 21 case / 3 locale, сборка — 63
+  case HTML, sitemap — 64 URL;
 - desktop first view содержит DentForma, Klawis, TTYL Platform, BelfProctor,
-  Softly и GrowthOps AI, затем раскрывает остальные 24;
+  затем раскрывает остальные 26 без прыжка к концу каталога;
 - mobile сразу содержит все 30 карточек и рабочие category-фильтры;
 - Wedding Invitations Uzbekistan имеет rank 7, status
   `BUILD / sensitive / private case`, три project-scoped claim с review
@@ -58,7 +58,7 @@ Baseline rollback: tag pre-awwwards-v210.
   обозначены как индивидуальные.
 
 qa:visual сохраняет ignored-артефакты в tmp/release-qa/: 12 сцен главной и
-20 полноразмерных case pages на desktop/mobile плюс четыре contact sheet.
+21 полноразмерная case page на desktop/mobile плюс четыре contact sheet.
 Full-page case capture сначала выполняет реальный scroll-sweep, поэтому
 IntersectionObserver/lazy content входит в проверку.
 
@@ -113,7 +113,7 @@ Workflow обязан:
 5. выполнить полную Playwright-матрицу;
 6. сформировать Pages artifact только из allowlist;
 7. развернуть artifact;
-8. после deploy выполнить production smoke и проверить 10 live URL.
+8. после deploy выполнить production smoke и проверить 9 live URL.
 
 Не считать GitHub Pages зелёным только по завершению job deploy: обязательна
 зелёная verify-production.
@@ -129,7 +129,7 @@ test:production проверяет:
 
 - реальную главную и 30 карточек;
 - отсутствие first-party HTTP errors/runtime page errors;
-- 60 статических case URL и правильный lang;
+- 63 статических case URL и правильный lang;
 - возврат TTYL к #proj-ttyl без повторного intro.
 
 Ручной smoke:
@@ -137,7 +137,7 @@ test:production проверяет:
 - hard refresh production с уникальным query;
 - intro первого и повторного визита;
 - menu → Projects → case → back;
-- desktop top-6 → раскрытие 30 и mobile all-30 category filters;
+- desktop top-4 → раскрытие 30 и mobile all-30 category filters;
 - RU/EN/UZ;
 - mobile dock/landscape;
 - Scope Preview: пять обязательных результатов без цены/срока → Contact с

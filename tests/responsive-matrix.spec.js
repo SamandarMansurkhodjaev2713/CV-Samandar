@@ -147,15 +147,12 @@ async function expectProjectGalleryLayout(page, viewport) {
     expect.soft(geometry.pagerVisible, `${viewport.label}: mobile project pager is hidden`).toBe(true);
   } else {
     expect.soft(geometry.display, `${viewport.label}: desktop gallery is not a grid`).toBe("grid");
-    // The approved museum rhythm is deliberately asymmetric: the first row is
-    // a complementary 7/5 split and the second reverses it. Archive cards use
-    // three span-4 columns after expansion. Protect the editorial relationship
-    // instead of the superseded full-width feature-record layout.
-    expect.soft(geometry.columns.split(" ").filter(Boolean), `${viewport.label}: desktop gallery lost its twelve-column editorial grid`).toHaveLength(12);
-    expect.soft(geometry.firstWidth / geometry.clientWidth, `${viewport.label}: lead project lost its seven-column weight`).toBeGreaterThan(0.55);
-    expect.soft(geometry.firstWidth / geometry.clientWidth, `${viewport.label}: lead project overwhelms the editorial pair`).toBeLessThan(0.61);
-    expect.soft(geometry.secondWidth / geometry.clientWidth, `${viewport.label}: supporting project lost its five-column weight`).toBeGreaterThan(0.37);
-    expect.soft(geometry.secondWidth / geometry.clientWidth, `${viewport.label}: supporting project overwhelms the lead`).toBeLessThan(0.43);
+    // Equal columns keep all four featured records readable and rows aligned;
+    // product identity is conveyed by the artwork, not competing offsets.
+    expect.soft(geometry.columns.split(" ").filter(Boolean), `${viewport.label}: desktop gallery lost its two-column grid`).toHaveLength(2);
+    expect.soft(geometry.firstWidth / geometry.clientWidth, `${viewport.label}: first card is too narrow`).toBeGreaterThan(0.45);
+    expect.soft(geometry.firstWidth / geometry.clientWidth, `${viewport.label}: first card exceeds its column`).toBeLessThan(0.51);
+    expect.soft(Math.abs(geometry.firstWidth - geometry.secondWidth), `${viewport.label}: paired card widths diverge`).toBeLessThanOrEqual(1);
     expect.soft(geometry.scrollWidth, `${viewport.label}: desktop gallery retained horizontal carousel overflow`).toBeLessThanOrEqual(geometry.clientWidth + 1);
     expect.soft(geometry.pagerVisible, `${viewport.label}: mobile pager leaked into desktop layout`).toBe(false);
   }
@@ -200,6 +197,11 @@ async function expectAboutProofLayout(page, viewport) {
         right: headingRect.right,
         scrollWidth: heading.scrollWidth,
         clientWidth: heading.clientWidth,
+        children: Array.from(heading.querySelectorAll("span")).map((node) => ({
+          className: node.className, width: node.clientWidth, scroll: node.scrollWidth,
+          transform: getComputedStyle(node).transform,
+          spacing: getComputedStyle(node).letterSpacing,
+        })),
       },
       lines: lines.map((line) => {
         const rect = line.getBoundingClientRect();
@@ -221,7 +223,7 @@ async function expectAboutProofLayout(page, viewport) {
   expect.soft(geometry.proof.left, `${viewport.label}: About proof escapes the shell on the left`).toBeGreaterThanOrEqual(geometry.shell.left - 1);
   expect.soft(geometry.proof.right, `${viewport.label}: About proof escapes the shell on the right`).toBeLessThanOrEqual(geometry.shell.right + 1);
   expect.soft(geometry.proof.scrollWidth, `${viewport.label}: About proof has internal horizontal overflow`).toBeLessThanOrEqual(geometry.proof.clientWidth + 1);
-  expect.soft(geometry.heading.scrollWidth, `${viewport.label}: About heading overflows its box`).toBeLessThanOrEqual(geometry.heading.clientWidth + 1);
+  expect.soft(geometry.heading.scrollWidth, `${viewport.label}: About heading overflows its box: ${JSON.stringify(geometry.heading.children)}`).toBeLessThanOrEqual(geometry.heading.clientWidth + 1);
   expect.soft(geometry.lines).toHaveLength(3);
   for (const line of geometry.lines) {
     expect.soft(line.left, `${viewport.label}: About title line starts outside shell: ${line.text}`).toBeGreaterThanOrEqual(geometry.shell.left - 1);

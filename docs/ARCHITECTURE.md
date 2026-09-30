@@ -4,27 +4,27 @@
 
 Runtime: статический сайт для GitHub Pages, React без модульного bundler-runtime.
 
-Контентная модель: 30 canonical products, из них 10 live и 20 case.
+Контентная модель: 30 canonical products, из них 9 live и 21 case.
 
-Генерация кейсов: 20 routes × RU/EN/UZ = 60 статических HTML-страниц.
+Генерация кейсов: 21 routes × RU/EN/UZ = 63 статические HTML-страницы.
 
 ## 1. Границы системы
 
 Репозиторий содержит две связанные поверхности:
 
 1. Главная интерактивная страница с 12 сценами и 30 карточками продуктов.
-2. Статически сгенерированные case pages для 20 продуктов, которые нельзя или недостаточно честно показать прямым live-переходом.
+2. Статически сгенерированные case pages для 21 продукта, который нельзя или недостаточно честно показать прямым live-переходом.
 
 Сайт не имеет application backend, SSR, runtime transpilation, service worker или клиентского роутера общего назначения. Главная не зависит от runtime API: профиль, каталог и доказательные факты являются authored/static content. Главная требует JavaScript и предоставляет `<noscript>`-контакты; тело каждого кейса уже находится в generated HTML до выполнения JavaScript.
 
 ```mermaid
 flowchart TD
   R["Canonical product registry\n30 products"] --> C["Main content\nRU / EN / UZ cards"]
-  R --> L["Case data\n20 products × 3 locales"]
+  R --> L["Case data\n21 products × 3 locales"]
   C --> A["React main shell\n12 scenes"]
   L --> G["build.js + shared renderer"]
-  G --> H["60 static case pages"]
-  R --> S["sitemap.xml\n61 URLs"]
+  G --> H["63 static case pages"]
+  R --> S["sitemap.xml\n64 URLs"]
   P["Motion policy"] --> M["Shared frame runtime"]
   M --> A
   M --> X["Motion / Acts / ImgFx"]
@@ -41,8 +41,8 @@ flowchart TD
 | product id, slug, rank, lifecycle, confidentiality, presentation, live/GitHub/case route, image, accent, evidence boundary | `src/content/product-registry.js` | карточки, metadata, sitemap, route expectations |
 | тексты 12 сцен и 30 карточек на главной | `src/content/content.js` | runtime `window.CONTENT` |
 | React-компоненты | `src/components/*.jsx` | соседние `*.js`, создаваемые `build.js` |
-| полный набор 20 case definitions | `src/projects/landings-data.js` | baked body и runtime re-render |
-| единая HTML-разметка кейса и locale UI labels | `src/projects/render.js` | 60 `projects/**/index.html` и browser re-render |
+| полный набор 21 case definitions | `src/projects/landings-data.js` | baked body и runtime re-render |
+| единая HTML-разметка кейса и locale UI labels | `src/projects/render.js` | 63 `projects/**/index.html` и browser re-render |
 | case runtime: язык, chapter spy, reveal, image fallback | `src/projects/landing.js` | поведение уже сгенерированной страницы |
 | дизайн и responsive layout | authored `src/styles/*.css` (кроме generated bundle), `src/projects/landing.css` | `src/styles/app.bundle.min.css`, computed layout в браузере |
 | CSP, JSX/CSS compilation, case generation, sitemap | `build.js` | `index.html` CSP, compiled JS/CSS, case HTML, `sitemap.xml` |
@@ -61,17 +61,18 @@ Generated `.js`, `src/styles/app.bundle.min.css` и `projects/**/index.html` н�
 
 Приватность не считается уровнем зрелости, а наличие URL не доказывает production use. `repositoryAliases`, `evidenceLevel` и `privacyBoundary` задают публично безопасную границу. `scripts/validate-site.js` проверяет уникальность id/slug/rank/routes, допустимые enum-значения, HTTPS и approved hosts, связь GitHub CTA с публичным repository alias, локали и изображения.
 
-### 3.1 Live presentation — 10 продуктов
+### 3.1 Live presentation — 9 продуктов
 
-`klawis`, `echelon-desktop`, `softly`, `dostupnoe-pravo`, `helion`, `stones`,
+`klawis`, `echelon-desktop`, `softly`, `helion`, `stones`,
 `gorilla-five-signals`, `cardioguard`, `izatullo`, `3d-landing`.
 
 Primary CTA идёт на `liveUrl`. GitHub показывается вторично только если `githubUrl` разрешён реестром.
 
-### 3.2 Case presentation — 20 маршрутов
+### 3.2 Case presentation — 21 маршрут
 
 | Slug | RU route | EN / UZ routes |
 |---|---|---|
+| `dostupnoe-pravo` | `/projects/dostupnoe-pravo/` | `/en/`, `/uz/` внутри route; public source, demo unavailable |
 | `dentforma` | `/projects/dentforma/` | `/en/`, `/uz/` внутри route |
 | `growthops-ai` | `/projects/growthops-ai/` | `/en/`, `/uz/` внутри route |
 | `ttyl` | `/projects/ttyl/` | `/en/`, `/uz/` |
@@ -179,8 +180,8 @@ history; отдельные UI-поверхности не вычисляют с
 3. детерминированная сборка authored CSS через pinned `lightningcss` в
    `src/styles/app.bundle.min.css`;
 4. пересчёт CSP главной по точным hash всех inline data blocks;
-5. генерация 20 кейсов по 3 локали — 60 HTML-файлов;
-6. генерация sitemap: главная + 60 case locale URLs = 61 URL;
+5. генерация 21 кейса по 3 локали — 63 HTML-файла;
+6. генерация sitemap: главная + 63 case locale URLs = 64 URL;
 7. повторная validation уже с generated files и проверкой source/generated
    parity.
 
@@ -306,7 +307,7 @@ Meta CSP не содержит `upgrade-insecure-requests`: production уже о
 - `npm test` — validate и весь Playwright suite;
 - `npm run test:desktop`, `npm run test:mobile`, `npm run test:a11y`;
 - `npm run test:performance` — отдельный Chromium desktop/mobile gate с одним worker;
-- `npm run qa:visual` — opt-in capture 12 секций, fullscreen-меню и 20 кейсов на desktop/mobile;
+- `npm run qa:visual` — opt-in capture 12 секций, fullscreen-меню и 21 кейса на desktop/mobile;
 - `npm run scan:secrets` и `npm run check:live` — отдельные release checks.
 
 Наличие теста означает наличие контракта, но не означает, что он был запущен в текущем окружении. Результаты должны подтверждаться свежим test output или CI artifact, а ручные проверки — отдельным checklist.
