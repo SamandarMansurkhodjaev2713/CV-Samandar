@@ -3,7 +3,7 @@
 const { test, expect } = require("@playwright/test");
 const { settleMain, expectNoHorizontalOverflow } = require("./helpers");
 
-test("Builder + QA proof rail and authored type hierarchy survive every viewport", async ({ page }) => {
+test("author-led Hero and native phrase typography survive every viewport", async ({ page }) => {
   const remoteFontRequests = [];
   const retiredHeroMediaRequests = [];
   page.on("request", (request) => {
@@ -17,8 +17,10 @@ test("Builder + QA proof rail and authored type hierarchy survive every viewport
   });
 
   await settleMain(page, "#hero");
-  await expect(page.locator("#sm-hero-media .release-proof--static")).toBeVisible();
-  await expect(page.locator("#hero .release-proof")).toBeVisible();
+  await expect(page.locator("#sm-hero-media .release-proof--static")).toBeHidden();
+  await expect(page.locator("#hero .release-proof")).toBeHidden();
+  await expect(page.locator("#hero .hero-signature")).toBeVisible();
+  await expect(page.locator("#hero h1")).toHaveAttribute("aria-label", "От задачи — к продукту.");
   await expect(page.locator("#hero .release-proof-map li")).toHaveCount(3);
   await expect(page.locator("#hero .release-proof-ink")).toHaveCount(3);
   await expect(page.locator("#hero .hero-input-cluster")).toHaveCount(0);
@@ -41,14 +43,28 @@ test("Builder + QA proof rail and authored type hierarchy survive every viewport
       ),
     };
   });
-  expect(type.headingPrimary).toContain("Oswald");
-  expect(type.headingAccent).toContain("Oswald");
+  expect(type.headingPrimary).toContain("Inter");
+  expect(type.headingAccent).toContain("Cormorant");
   expect(type.body).toContain("Inter");
   expect(type.mono).toContain("JetBrains Mono");
   expect(type.headlineSettled).toBe(true);
   expect(remoteFontRequests).toEqual([]);
   expect(retiredHeroMediaRequests).toEqual([]);
   await expectNoHorizontalOverflow(expect, page, "design-system hero");
+});
+
+test("the authored monogram is shared by navigation, menu and footer", async ({ page }) => {
+  await settleMain(page, "#hero");
+  await expect(page.locator(".site-footer")).toBeAttached();
+  const marks = page.locator(".brand-mark img");
+  await expect(marks).toHaveCount(3);
+  await expect.poll(() => marks.evaluateAll(images => images.every(image => image.complete && image.naturalWidth > 0))).toBe(true);
+  expect(await marks.evaluateAll(images => [...new Set(images.map(image => image.getAttribute("src")))])).toEqual(["assets/brand/samandar-mark.svg"]);
+  await page.locator(".nav-burger").click();
+  await expect(page.locator(".nav-menu")).toHaveClass(/is-open/);
+  await expect(page.locator(".nav-menu-intro h2")).toHaveCSS("font-family", /Cormorant Garamond/);
+  await expect(page.locator(".nav-menu-word").first()).toHaveCSS("font-family", /Inter/);
+  await page.locator(".nav-menu-close").click();
 });
 
 test("Signal remains reader-controlled instead of auto-changing disclosure state", async ({ page }) => {
@@ -64,6 +80,9 @@ test("Signal remains reader-controlled instead of auto-changing disclosure state
 test("the twelve chapters keep one canonical order and truthful numbering", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-chromium", "DOM order is engine-independent");
   await settleMain(page, "#hero");
+  // Below-the-fold chapters mount progressively; measure after the authored
+  // twelve-chapter contract is present, not after the first six cheap scenes.
+  await expect(page.locator("section[data-section]")).toHaveCount(12);
   const chapters = await page.locator("section[data-section]").evaluateAll((sections) => sections.map((section) => ({
     id: section.getAttribute("data-section"),
     number: section.querySelector(".sec-head .num")?.textContent.trim().slice(0, 2) || "01",
@@ -89,8 +108,8 @@ test("fullscreen menu owns the interaction layer and its language controls recei
   await page.locator(".nav-burger").click();
   await expect(page.locator(".nav-menu")).toHaveClass(/is-open/);
   await expect(page.locator(".sc-ripple")).toHaveCount(0);
-  if (isMobile) await expect(page.locator(".nav-menu .nav-peek")).toBeHidden();
-  else await expect(page.locator(".nav-menu .nav-peek")).toBeVisible();
+  // The simplified table of contents has no redundant decorative preview.
+  await expect(page.locator(".nav-menu .nav-peek")).toBeHidden();
   await expect(page.locator(".nav-menu .nav-peek")).toHaveCSS("pointer-events", "none");
 
   const layers = await page.evaluate(() => ({
@@ -318,7 +337,8 @@ test("mobile Hero keeps its CTA and Signal handoff collision-free", async ({ pag
         const signal = document.getElementById("signal").getBoundingClientRect();
         const proofNode = document.querySelector(".hero-proof");
         const proof = proofNode.getBoundingClientRect();
-        const proofVisible = getComputedStyle(proofNode).display !== "none" && proof.height > 0;
+        const proofStyle = getComputedStyle(proofNode);
+        const proofVisible = proofStyle.display !== "none" && Number.parseFloat(proofStyle.opacity) > 0 && proof.height > 0;
         const name = document.querySelector(".hero-name");
         const ink = Array.from(document.querySelectorAll(".hero-name .hero-statement-line"))
           .map((node) => node.getBoundingClientRect());
@@ -368,10 +388,10 @@ test("mobile Hero keeps its CTA and Signal handoff collision-free", async ({ pag
       });
       if (viewport.height > viewport.width && viewport.width <= 430) {
         expect(geometry.heroHeight, `sticky Hero height at ${caseId}`).toBeGreaterThanOrEqual(viewport.height * 0.98);
-        expect(geometry.heroHeight, `sticky Hero height at ${caseId}`).toBeLessThanOrEqual(viewport.height * 1.02);
-        expect(Math.abs(geometry.signalTop - viewport.height), `Signal starts directly after Hero at ${caseId}`).toBeLessThanOrEqual(2);
+        expect(geometry.heroHeight, `content-led Hero height at ${caseId}`).toBeLessThanOrEqual(viewport.height * 1.5);
+        expect(Math.abs(geometry.signalTop - geometry.heroHeight), `Signal starts after the full Hero content at ${caseId}`).toBeLessThanOrEqual(2);
 
-        await page.evaluate((height) => window.scrollTo(0, Math.round(height * 0.68)), viewport.height);
+        await page.evaluate((position) => window.scrollTo(0, Math.round(position)), geometry.heroHeight - viewport.height * 0.32);
         await page.waitForTimeout(30);
         const handoff = await page.evaluate(() => ({
           heroTop: document.getElementById("hero").getBoundingClientRect().top,

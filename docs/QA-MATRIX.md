@@ -1,6 +1,6 @@
 # QA matrix и release gates
 
-Актуально на: 2026-08-30
+Актуально на: 2026-10-01
 
 Тестовый runner: Playwright 1.62.0 + Axe 4.12.1
 
@@ -29,6 +29,27 @@
 выполнен, а открытых critical/high дефектов нет.
 
 ## 2. Текущее доказательство этого изменения
+
+### Release candidate — v250
+
+Контракт: 30 продуктов, 9 live, 21 case, RU/EN/UZ, 63 case HTML и 64 sitemap URL.
+Новый знак SM общий для navbar, меню, footer и favicon; крупная типографика
+локализована без принудительного uppercase, мобильные ссылки и языки упрощены.
+Desktop показывает четыре feature-карточки, mobile — все 30 с фильтрами.
+«Доступное Право» с согласия автора переведено из недоступного live (HTTP 404)
+в честный public-source case. Исторические результаты ниже относятся к своим
+версиям и не доказывают готовность v250.
+
+| Gate | Статус | Доказательство |
+|---|---|---|
+| Build / catalog / locales | **GREEN (local candidate)** | 70 byte-identical generated artifacts; validate: 30 / 9 live / 21 case / 3 locales; 63 case HTML, 64 sitemap URL |
+| Full browser matrix | **GREEN (local candidate)** | 194 passed / 120 profile-specific skipped / 0 failed, без retry, 8.7 min; Chromium desktop/mobile, Firefox, WebKit, reduced motion |
+| Performance | **GREEN (local candidate)** | isolated desktop/mobile: 2/2, 18.8 s, без изменения порогов |
+| Security / docs / external links | **GREEN (local candidate)** | secret scan clean, audit 0 vulnerabilities; 17 required docs; 9/9 approved live routes HTTP 200 usable HTML |
+| Visual matrix | **GREEN (local candidate)** | qa:visual: 4/4 за 6.7 min; 26 main/menu + 42 full-page case PNG + 4 contact sheets. Четыре sheet просмотрены; scroll-sweep подтверждает появление всех case chapters |
+| Publish / production smoke | **NOT RUN** | Выполняются после commit, зелёного CI и deploy из main |
+
+Физические iOS/Android, NVDA и VoiceOver в этом изменении не запускались.
 
 ### Локальный release candidate — v248
 

@@ -259,8 +259,8 @@ html.lp-is-leaving::after { transform: translate3d(0, 0, 0); }
   font-family: var(--lp-display);
   font-size: clamp(68px, 7.2vw, 118px);
   font-weight: 480;
-  line-height: .88;
-  letter-spacing: -.055em;
+  line-height: 1.02;
+  letter-spacing: -.03em;
   overflow-wrap: break-word;
   text-wrap: balance;
 }
@@ -540,22 +540,23 @@ html.lp-is-leaving::after { transform: translate3d(0, 0, 0); }
   .lp-bar { grid-template-columns: auto 1fr auto; padding-inline: 8px; background: rgba(8,9,7,.96); }
   .lp-back { gap: 6px; font-size: 0; }
   .lp-back { min-width: 44px; }
-  .lp-back > span:last-child::after { content: "SA"; font-size: 9px; }
+  .lp-back > span { display: none; }
+  .lp-back { justify-content: center; }
   .lp-current { min-width: 0; gap: 5px; padding-inline: 8px; border-inline: 0; }
   .lp-current-name { display: none; }
   .lp-bar-right { gap: 0; }
   .lp-status { display: none; }
   .lp-lang-btn { width: 44px; min-height: 44px; }
   .lp-hero,
-  .lp-hero[class*="lp-hero--"] { min-height: auto; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 15px; padding: 44px 0 27px; }
+  .lp-hero[class*="lp-hero--"] { min-height: auto; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 15px; padding: 20px 0 27px; }
   .lp-hero::before { top: 22px; }
   .lp-hero::after { top: 18px; width: 72px; }
   .lp-hero .lp-hero-text,
-  .lp-hero[class*="lp-hero--"] .lp-hero-text { grid-column: 1; grid-row: 1; max-width: none; padding: 15px 0 0; }
+  .lp-hero[class*="lp-hero--"] .lp-hero-text { grid-column: 1; grid-row: 1; max-width: none; padding: 8px 0 0; }
   .lp-title,
   .lp-page--telegram-sheets-task-bot .lp-title,
   .lp-page--meetingflow-ru-uz .lp-title,
-  .lp-page--b24-sales-analyst .lp-title { max-width: 10.8ch; margin: 15px 0 12px; font-size: clamp(44px, 14.2vw, 64px); line-height: .9; letter-spacing: -.045em; }
+  .lp-page--b24-sales-analyst .lp-title { max-width: 10.8ch; margin: 15px 0 12px; font-size: clamp(44px, 14.2vw, 64px); line-height: 1.04; letter-spacing: -.03em; }
   .lp-signal { max-width: 34ch; font-size: clamp(16px, 4.65vw, 19px); line-height: 1.44; }
   .lp-cred { margin-top: 16px; font-size: 9px; line-height: 1.62; }
   .lp-cta { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 17px; }
@@ -637,12 +638,19 @@ html.lp-is-leaving::after { transform: translate3d(0, 0, 0); }
   .lp-page--telegram-sheets-task-bot .lp-title,
   .lp-page--meetingflow-ru-uz .lp-title,
   .lp-page--b24-sales-analyst .lp-title { margin: 7px 0 8px; font-size: clamp(38px, 5.6vw, 48px); }
-  .lp-signal { font-size: 13px; line-height: 1.35; }
+  .lp-signal { font-size: 16px; line-height: 1.5; }
   .lp-cred { margin-top: 7px; font-size: 7px; line-height: 1.4; }
   .lp-cta { margin-top: 9px; }
   .lp-btn { min-height: 46px; padding-inline: 12px; font-size: 8px; }
   .lp-hero-visual figcaption { display: none; }
 }
+
+/* Reader-first labels and actions match the main portfolio type roles. */
+.lp-back-mark { display: block; width: 32px; height: 32px; flex: 0 0 32px; }
+.lp-hero::before, .lp-diagram::before, .lp-final::after { content: none; }
+.lp-eyebrow { font-family: var(--lp-body); font-size: 12px; letter-spacing: 0; text-transform: none; }
+.lp-lang-btn { font-family: var(--lp-body); font-size: 12px; letter-spacing: 0; }
+.lp-btn { font-family: var(--lp-body); font-size: 12px; letter-spacing: 0; text-transform: none; }
 
 /* Content-identical performance paths. */
 html[data-perf-tier="low"] .lp-bar,

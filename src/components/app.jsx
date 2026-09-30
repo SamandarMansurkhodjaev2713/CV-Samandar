@@ -317,18 +317,18 @@ function Nav({ t, lang, setLang, active, contentRevision }) {
   const menuCopy = {
       ru: {
         dialog: "Навигация по сайту", open: "Открыть оглавление", close: "Закрыть оглавление",
-        trigger: "ОГЛАВЛЕНИЕ", language: "Язык", index: "Оглавление", choose: "Выберите главу",
-        note: "Один маршрут: позиционирование, работы, процесс и прямой контакт.", current: "Текущая глава",
+        trigger: "Меню", language: "Язык", index: "Навигация", choose: "С чего начнём?",
+        note: "Посмотрите работы, узнайте мой подход или сразу расскажите о задаче.", current: "Текущая глава",
       },
       en: {
         dialog: "Site navigation", open: "Open index", close: "Close index",
-        trigger: "INDEX", language: "Language", index: "Index", choose: "Choose a chapter",
-        note: "One route through positioning, work, process and direct contact.", current: "Current chapter",
+        trigger: "Menu", language: "Language", index: "Navigation", choose: "Where shall we start?",
+        note: "Explore the work, see how I build, or tell me what you need.", current: "Current chapter",
       },
       uz: {
         dialog: "Sayt bo‘yicha navigatsiya", open: "Mundarijani ochish", close: "Mundarijani yopish",
-        trigger: "MUNDARIJA", language: "Til", index: "Mundarija", choose: "Bo‘limni tanlang",
-        note: "Pozitsiya, ishlar, jarayon va bevosita aloqa bo‘ylab yagona yo‘l.", current: "Joriy bo‘lim",
+        trigger: "Menyu", language: "Til", index: "Navigatsiya", choose: "Nimadan boshlaymiz?",
+        note: "Loyihalarni ko‘ring, yondashuvim bilan tanishing yoki vazifangiz haqida yozing.", current: "Joriy bo‘lim",
       },
   }[lang] || { dialog: "Site navigation", open: "Open index", close: "Close index", trigger: "INDEX", language: "Language", index: "Index", choose: "Choose a chapter", note: "One clear route through the portfolio.", current: "Current chapter" };
 
@@ -508,8 +508,8 @@ function Nav({ t, lang, setLang, active, contentRevision }) {
       >
         <div className="nav-inner">
           <a href="#hero" className="brand" data-cursor="link" data-cursor-label="↑ top" onClick={(e) => go(e, "hero")}>
-            <span className="brand-mark" aria-hidden="true">S</span>
-            <span className="brand-name">SAMANDAR<span className="brand-sub"> / PRODUCT ENGINEER</span></span>
+            <span className="brand-mark" aria-hidden="true"><img src="assets/brand/samandar-mark.svg" width="40" height="40" alt="" /></span>
+            <span className="brand-name">Samandar</span>
           </a>
 
           <a className="nav-counter" href={`#${active}`} onClick={(e) => go(e, active)} aria-label={`${menuCopy.current}: ${activeLabel}`}>
@@ -557,8 +557,8 @@ function Nav({ t, lang, setLang, active, contentRevision }) {
         </button>
 
         <div className="nav-menu-brand">
-          <span className="brand-mark" aria-hidden="true">S</span>
-          <span>SAMANDAR</span>
+          <span className="brand-mark" aria-hidden="true"><img src="assets/brand/samandar-mark.svg" width="40" height="40" alt="" /></span>
+          <span className="brand-name">Samandar</span>
           <span className="mono">{menuCopy.index} / {String(total).padStart(2, "0")}</span>
         </div>
 

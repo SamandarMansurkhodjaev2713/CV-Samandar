@@ -17,7 +17,7 @@ for (const product of caseProducts) {
     await expect(page.locator("[data-lp-chapter]")).toHaveCount(5);
     await expect(page.locator(".lp-quick-item")).toHaveCount(3);
 
-    const image = page.locator("img").first();
+    const image = page.locator(".lp-photo img");
     await expect(image).toBeVisible();
     const dimensions = await image.evaluate((node) => ({
       complete: node.complete,
@@ -37,7 +37,8 @@ test("all case pages fit the mobile viewport", async ({ page, isMobile }) => {
     await test.step(product.slug, async () => {
       await page.goto("/" + product.casePage, { waitUntil: "domcontentloaded" });
       await expect(page.locator("h1")).toHaveText(product.i18n.ru.name);
-      await expect(page.locator("img").first()).toBeVisible();
+      await expect(page.locator(".lp-photo img")).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
       await expectNoHorizontalOverflow(expect, page, product.slug);
       const heroContract = await page.evaluate(() => {
         const rect = (selector) => document.querySelector(selector)?.getBoundingClientRect();

@@ -12,7 +12,7 @@ test.describe("honest degraded states", () => {
     await page.goto("/#hero", { waitUntil: "domcontentloaded" });
     const fallback = page.locator("[data-static-app-fallback]");
     await expect(fallback).toBeVisible({ timeout: 12000 });
-    await expect(fallback.getByRole("heading", { level: 1 })).toContainText("Из задачи");
+    await expect(fallback.getByRole("heading", { level: 1 })).toContainText("От задачи");
     await expect(fallback.getByRole("link", { name: "Написать" }))
       .toHaveAttribute("href", "https://t.me/killallofthem13");
     await expect(fallback.getByRole("link", { name: "GitHub" }))

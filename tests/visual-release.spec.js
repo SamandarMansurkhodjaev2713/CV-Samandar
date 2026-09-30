@@ -78,9 +78,9 @@ async function captureMain(page, label) {
   ), null, { timeout: 10000 });
   await waitForVisualReadiness(page);
   await page.evaluate(() => {
-    // Contact sheets compare the authored final poses, not a random frame from
-    // a scroll entrance. This also matches Playwright's `animations: disabled`
-    // screenshot contract while making the pre-capture landing deterministic.
+    // Contact sheets compare readable final text poses, not a random frame
+    // from a scroll entrance. Decorative compositor layers keep running so
+    // capture does not manufacture a black backdrop-filter frame on Windows.
     document.documentElement.classList.add("e2e-stable");
     if (window.__SM_MOTION_POLICY && window.__SM_MOTION_POLICY.__set) {
       window.__SM_MOTION_POLICY.__set("high");
@@ -132,7 +132,12 @@ async function captureMain(page, label) {
     // Visual QA is evidence for the CURRENT candidate, never a cache. Keeping
     // an older non-empty screenshot made a successful run silently assemble a
     // contact sheet from the previous release after visual source changed.
-    await page.screenshot({ path: file, animations: "disabled" });
+    // Do not fast-forward the entire production compositor: Windows Chromium
+    // can rasterize backdrop-filter layers as a black frame when every CSS
+    // animation is stopped together. The final-pose class above settles text;
+    // a small real element capture fences paint without mutating product UI.
+    await page.locator(".nav-inner").screenshot({ animations: "allow" });
+    await page.screenshot({ path: file, animations: "allow" });
     captures.push({ label: section, file });
   }
   // The fullscreen index is a primary authored scene, not merely a hidden

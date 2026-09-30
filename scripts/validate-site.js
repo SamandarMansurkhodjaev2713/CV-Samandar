@@ -233,8 +233,8 @@ function validateRegistry(registry) {
 
   const liveCount = registry.filter((p) => p.presentation === "live").length;
   const caseCount = registry.filter((p) => p.presentation === "case").length;
-  assert(liveCount === 10, "expected 10 live products, received " + liveCount);
-  assert(caseCount === 20, "expected 20 case products, received " + caseCount);
+  assert(liveCount === 9, "expected 9 live products, received " + liveCount);
+  assert(caseCount === 21, "expected 21 case products, received " + caseCount);
 }
 
 function validateMainContent(registry, content) {

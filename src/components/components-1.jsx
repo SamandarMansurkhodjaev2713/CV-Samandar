@@ -31,7 +31,7 @@ function SecHead({ num, eyebrow, title, lines, meta, em, titleId }) {
     // translate the whole block 48px and the two movements would fight.
     <header className="sec-head" data-reveal data-reveal-from="none" data-plx="0.045">
       <div>
-        <div className="num">{num ? <>{num} · </> : null}{eyebrow}</div>
+        <div className="num">{num ? <span className="sec-index" aria-hidden="true">{num}</span> : null}<span>{eyebrow}</span></div>
         <h2 id={titleId} style={{ marginTop: 14 }} aria-label={titleLines ? title : undefined}>
           <span className="lm"><span className="lm-i">
             {titleLines
@@ -940,6 +940,7 @@ function ProjectFilters({ items, active, onChange, labels }) {
 function Projects({ t }) {
   const ref = useRevealRoot([t]);
   const gridRef = useRef(null);
+  const catalogActionRef = useRef(null);
   const items = t.projects.items;
   // Four strongest product families lead the desktop section. The
   // complete catalog expands on intent; mobile keeps its swipe carousel, but
@@ -969,6 +970,29 @@ function Projects({ t }) {
     ? filteredItems
     : (expanded ? items : items.slice(0, FEATURED_PROJECT_COUNT));
   const catalogUnit = t.projects.catalog_unit || "products";
+
+  // Expanding a long catalogue must not anchor the viewport to the button
+  // that has just moved several screens down. Put the new reading position
+  // at the first newly available card; collapsing returns to the chapter.
+  useEffect(() => {
+    if (!catalogActionRef.current || isMobileCatalog) return undefined;
+    const action = catalogActionRef.current;
+    catalogActionRef.current = null;
+    const frame = requestAnimationFrame(() => {
+      const target = expanded
+        ? gridRef.current && gridRef.current.children[FEATURED_PROJECT_COUNT]
+        : ref.current;
+      if (!target) return;
+      if (action.keyboard) {
+        const focusTarget = expanded ? target.querySelector(".proj-cta") : target.querySelector(".proj-expand");
+        if (focusTarget) focusTarget.focus({ preventScroll: true });
+      }
+      const nav = document.querySelector(".nav");
+      const inset = (nav ? nav.getBoundingClientRect().bottom : 0) + 24;
+      window.scrollTo({ top: Math.max(0, window.scrollY + target.getBoundingClientRect().top - inset), behavior: "instant" });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [expanded, isMobileCatalog]);
 
   useEffect(() => {
     if (typeof window.matchMedia !== "function") return undefined;
@@ -1012,7 +1036,7 @@ function Projects({ t }) {
   // focus scroll and after any just-completed breakpoint reflow.
   function keepProjectFocusVisible(event) {
     const control = event.target && event.target.closest
-      ? event.target.closest(".proj-cta, .proj-repo, .proj-expand, .proj-chapters button, .proj-filter-chip")
+      ? event.target.closest(".proj-cta, .proj-repo, .proj-chapters button, .proj-filter-chip")
       : null;
     if (!control) return;
     function alignFocusedProjectControl() {
@@ -1066,7 +1090,10 @@ function Projects({ t }) {
             type="button"
             className="proj-expand mono"
             aria-expanded={expanded}
-            onClick={() => setExpanded((v) => !v)}
+            onClick={(event) => {
+              catalogActionRef.current = { keyboard: event.detail === 0 };
+              setExpanded((v) => !v);
+            }}
             data-cursor="link"
             data-cursor-label={expanded ? "collapse" : "show all"}
           >

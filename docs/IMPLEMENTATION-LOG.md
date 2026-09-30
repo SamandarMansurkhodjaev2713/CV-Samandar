@@ -1,9 +1,125 @@
 # Implementation log
 
+## 2026-10-01 — v250, public demo boundary
+
+Внешний release-check обнаружил HTTP 404 у прежнего Vercel-демо «Доступное
+Право». README и GitHub homepage по-прежнему содержат этот адрес; deployments
+API не предоставил другой маршрут. Автор согласовал переход на внутренний
+public-source кейс до восстановления демо. Это изменение presentation, а не
+новый продукт или приватизация репозитория: rank 19 и изображение сохранены.
+Новый кейс содержит RU/EN/UZ, явную границу недоступного демо, открытый код и
+схему «два представления → server actions → status rules → state/history и
+уведомления». Сведения QA атрибутированы README, свежий прогон CRM не заявлен.
+Текущий контракт: 30 / 9 live / 21 case, 63 HTML, 64 sitemap URL.
+
+Проверка после изменения: check:build — 70 byte-identical generated artifacts;
+check:docs — 17 документов; check:live — 9/9 HTTP 200 usable HTML. Полный
+browser/performance gate и публикация фиксируются отдельной записью по факту.
+
+Первый полный локальный прогон дал 193 pass / 120 profile skip / 1 fail:
+после более свободного line-height мобильный Hero DentForma превышал первый
+viewport на 9 px. Исправлены только верхние отступы кейсов, не размер шрифта
+или пороги теста. Геометрия теперь проверяется после document.fonts.ready и
+по реальной project photo, а не по brand image. Targeted sweep всех 21 кейса
+прошёл. SM добавлен и в case-header; старый пустой квадрат/SA удалён.
+
+После добавления case-brand image прежний структурный тест выбирал первый
+`img` и сравнивал SM с responsive WebP-контрактом обложки. Селектор уточнён до
+`.lp-photo img`; source, natural dimensions и responsive assertions сохранены.
+Этот диагностический прогон не объявляется clean full gate.
+
+После уточнения селектора целевой structural sweep прошёл 21/21. Чистый полный
+локальный gate: 194 passed / 120 profile-specific skipped / 0 failed, без retry,
+8.7 min. Отдельный performance gate: desktop/mobile 2/2 за 18.8 s. Все границы,
+таймауты и coverage сохранены; финальный visual capture и production фиксируются
+по завершении, не выводятся из local green.
+
+Финальный `qa:visual` завершён: 4/4 за 6.7 min; 72 PNG (26 main/menu,
+42 case captures и 4 contact sheets). Итоговые sheets просмотрены, case capture
+выполнял реальный scroll-sweep и проверку завершённых reveal. Release candidate
+v250 готов к внешнему CI; production до deploy/verify не заявляется.
+
 Этот журнал фиксирует не намерения, а уже проверенные контрольные точки
 Awwwards-переработки. План и критерии готовности находятся в
 `MASTER-IMPLEMENTATION-PLAN.md`; архитектурные контракты — в
 `ARCHITECTURE.md`.
+
+## Author / work / evidence — local candidate
+
+Identity refinement для v250: авторский SVG SM заменил font-glyph и status
+badge в navigation/menu/footer; favicon использует ту же геометрию. Menu
+сохраняет 12 маршрутов и focus contract, но links читаются Inter в sentence
+case. Mobile action/language размещены в одной строке. About/Quality/Contact
+получили Cormorant normal, рабочие главы сохранили Oswald; в карточках mobile
+основные описания подняты до 16 px. Case title ink получил line-height
+1.02–1.04 и tracking -0.03em, CTA/language перестали быть мелким mono.
+Новых шрифтов, CDN, dependencies и motion streams не добавлено.
+Удалён декоративный About frame; авторский текст и проверяемые факты сохранены.
+Remote main `98ecdd0` с обновлённым Birthday Agent evidence импортирован
+fast-forward до релиза; пользовательские изменения submission-media и
+`_otvety_extracted.txt` не затронуты и не включаются в commit.
+
+В in-app browser просмотрены новые desktop/mobile menu и mobile About.
+Targeted geometry: monogram sharing, short desktop menu, canonical viewports,
+About и 200% text zoom подтверждены; первый About run обнаружил 24.576 px
+lead на 1024 px, source minimum поднят до 27 px и повторная матрица прошла.
+Полный release gate v250 фиксируется ниже только по завершённым командам.
+
+Закрыты Hero shaping, конфликтующие navbar/span правила и прыжок desktop
+каталога к перенесённой в конец кнопке раскрытия. Четыре featured проекта
+сохранены; fifth-card landing проверен реальным кликом в браузере. Главы
+получили более свободную иерархию, кнопки — устойчивые прямые подписи, Quality
+— читаемые этапы вместо декоративной панели. Статический Hero синхронизирован
+с React-тезисом. 100 мёртвых proof-chamber CSS-блоков удалены.
+
+Выполнен просмотр desktop Hero, About, открытого menu, раскрытого Projects и
+Quality в in-app browser. Получена и просмотрена mobile contact-sheet всех
+12 глав и menu, а также всех 20 case hero. `npm run qa:visual`: 4 passed,
+desktop/mobile main и полностраничные cases; сами captures не заменяют
+physical-device QA. GitHub exclusions и границы зафиксированы в registry doc.
+Это локальный кандидат: production deploy, NVDA/VoiceOver и физические
+iOS/Android не заявляются. Автоматические gates записываются отдельно после
+фактического завершения, без выдачи локального результата за production.
+
+Дополнительные найденные дефекты: WebKit наследовал hidden для language
+controls открытого menu; About focus-текст после удаления декоративного
+индекса попадал в узкий grid track; landscape Hero сохранял прежний
+max-height и отсекал CTA. Все три устранены в source. 200% text zoom выявил
+ещё 3 px overflow из-за rotate(1.4deg) на полном heading block — entrance
+теперь вертикальный, без вращения текста. Новые canonical viewport, About,
+text zoom и 27-state Hero проверки подтверждены отдельными прогонами.
+
+Первый полный `npm test`: 180 passed / 6 failed / 118 skipped / 2 not run.
+В него попали прежние визуальные ожидания (печатный Hero, 12-column gallery),
+гонка progressive chapter mount и перечисленные реальные дефекты. Ожидания
+синхронизированы с новым дизайном; гонка ждёт весь 12-chapter contract;
+исправленные пути повторно проверены. Этот первый прогон не объявляется
+зелёным release gate и commit/deploy не выполнялся.
+`check:build`: 67 byte-identical artifacts; validate/docs/secrets/diff checks
+пройдены, audit: 0 vulnerabilities. Performance: 2 passed в изолированном
+desktop/mobile прогоне после парковки отдельного live-preview tab; два
+первых замера с параллельной GPU-нагрузкой не пройдены и не скрываются.
+Detector: три warning; CSS double-easing cursor geometry убран, два старых
+width-transition правила не активны в текущем final owner.
+
+Финальный main capture обновлён отдельно после исправлений: desktop/mobile
+12 глав и menu просмотрены повторно. В Windows screenshot harness обнаружена
+чёрная compositor-поза при глобальном `animations: disabled`; реальная страница
+в in-app browser сохраняла видимый контент. Capture теперь фиксирует читаемую
+финальную позу текста, оставляет compositor-анимации активными и ждёт paint
+через небольшой element screenshot. Новый mobile capture и contact sheet
+содержат фактически видимые пиксели, а не только зелёную DOM-проверку.
+WebKit helper теперь ждёт видимую позу открытого menu вместо
+измерения `opacity: 0` в первом кадре; hit ownership, enabled state и 44 px
+контракт сохранены. Этот сценарий прошёл 3/3 отдельным стресс-прогоном.
+
+Второй полный `npm test`: 187 passed / 1 failed / 118 profile-skipped за
+13.1 минуты. Единственное падение — проверка opacity первого кадра WebKit;
+полный worker загрузил прежний helper до его исправления. Исправленный helper
+затем подтверждён описанным выше 3/3 прогоном; это составное локальное
+доказательство, а не утверждение, что второй полный command завершился green.
+Перед будущим commit/deploy нужен единый полный green gate на неизменяемом
+release-кандидате. Asset version остаётся v249; production не изменён.
 
 ## Editorial air candidate — v249
 

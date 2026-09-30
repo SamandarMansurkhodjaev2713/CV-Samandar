@@ -44,9 +44,20 @@ test.describe("project catalog", () => {
       orderedProducts.map((p) => p.presentation === "live" ? p.liveUrl : p.casePage)
     );
     expect(new Set(state.map((item) => item.href)).size).toBe(orderedProducts.length);
-    expect(liveProducts).toHaveLength(10);
-    expect(caseProducts).toHaveLength(20);
+    expect(liveProducts).toHaveLength(9);
+    expect(caseProducts).toHaveLength(21);
     await expectNoHorizontalOverflow(expect, page, "catalog");
+  });
+
+  test("unavailable legal CRM demo has an honest public-source case", async ({ page }) => {
+    const product = orderedProducts.find((item) => item.slug === "dostupnoe-pravo");
+    expect(product.presentation).toBe("case");
+    expect(product.liveUrl).toBeNull();
+    await page.goto("/projects/dostupnoe-pravo/");
+    await expect(page.locator(".lp-title")).toContainText("Доступное Право");
+    await expect(page.locator(".lp-boundary")).toContainText("недоступно");
+    await expect(page.locator('a[href="https://dostupnoe-pravo-alpha.vercel.app/"]')).toHaveCount(0);
+    await expect(page.locator('a[href="https://github.com/SamandarMansurkhodjaev2713/dostupnoe-pravo"]').first()).toBeVisible();
   });
 
   test("featured set expands to the complete catalog with explicit control", async ({ page, isMobile }) => {
@@ -57,13 +68,26 @@ test.describe("project catalog", () => {
     await expect(page.locator(".proj-card:visible")).toHaveCount(featuredProductCount);
     const expand = page.getByRole("button", { name: `Показать ещё ${orderedProducts.length - featuredProductCount}` });
     await expect(expand).toBeVisible();
-    // The page deliberately uses scroll-linked transforms. Trigger the already
-    // verified visible control directly so this state contract cannot race a
-    // compositor frame while the mobile carousel settles.
-    await expand.evaluate((button) => button.click());
+    // Exercise the real pointer path: expanding must not retain focus on the
+    // button after it moves to the bottom of the thirty-card grid.
+    await expand.click();
     await expect(page.locator(".proj-card")).toHaveCount(orderedProducts.length);
     await expect(page.locator(".proj-card:visible")).toHaveCount(orderedProducts.length);
     await expect(page.getByRole("button", { name: "Свернуть" })).toBeVisible();
+    const fifthCard = page.locator(".proj-card").nth(featuredProductCount);
+    await expect.poll(() => fifthCard.evaluate((card) => {
+      const top = card.getBoundingClientRect().top;
+      const navBottom = document.querySelector(".nav").getBoundingClientRect().bottom;
+      return top >= navBottom && top < window.innerHeight / 2;
+    })).toBe(true);
+
+    await page.getByRole("button", { name: "Свернуть" }).click();
+    await expect(page.locator(".proj-card")).toHaveCount(featuredProductCount);
+    await expect.poll(() => page.locator("#projects").evaluate((section) => {
+      const top = section.getBoundingClientRect().top;
+      const navBottom = document.querySelector(".nav").getBoundingClientRect().bottom;
+      return top >= navBottom - 1 && top < window.innerHeight / 2;
+    })).toBe(true);
   });
 
   test("mobile exposes all products immediately and filters without duplicate cards", async ({ page }) => {
